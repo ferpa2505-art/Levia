@@ -84,7 +84,7 @@ export function ResultScreen({ route, navigation }: ResultScreenProps) {
 
         {/* Info Box */}
         <ThemedView variant="surface" style={styles.infoBox}>
-          <ThemedText variant="body" color="info" style={{ marginBottom: spacing.sm }}>
+          <ThemedText variant="body" color="text" style={{ marginBottom: spacing.sm }}>
             ℹ️ Sobre suas metas
           </ThemedText>
           <ThemedText variant="small" color="textSecondary">

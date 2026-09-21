@@ -1,35 +1,22 @@
 {
   "expo": {
-    "name": "pesos-app",
-    "slug": "pesos-app",
+    "name": "Levia",
+    "slug": "levia-app",
     "version": "0.1.0",
     "orientation": "portrait",
-    "icon": "./src/assets/icon.png",
-    "splash": {
-      "image": "./src/assets/splash.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
-    },
-    "assetBundlePatterns": [
-      "**/*"
-    ],
+    "assetBundlePatterns": ["**/*"],
     "ios": {
-      "supportsTabletMode": false,
-      "bundleIdentifier": "com.pesos.app"
+      "bundleIdentifier": "com.levia.app"
     },
     "android": {
-      "adaptiveIcon": {
-        "foregroundImage": "./src/assets/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
-      },
-      "package": "com.pesos.app"
+      "package": "com.levia.app"
     },
-    "web": {
-      "favicon": "./src/assets/favicon.png"
-    },
-    "plugins": [
-      "expo-router"
-    ],
-    "scheme": "pesos"
+    "plugins": ["expo-router"],
+    "scheme": "levia",
+    "extra": {
+      "eas": {
+        "projectId": "levia-dev-project"
+      }
+    }
   }
 }

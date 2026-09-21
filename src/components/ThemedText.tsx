@@ -3,7 +3,7 @@ import { colors, typography } from '@constants/colors';
 
 export interface ThemedTextProps extends TextProps {
   variant?: 'title' | 'heading' | 'subheading' | 'body' | 'small' | 'caption';
-  color?: keyof typeof colors;
+  color?: 'primary' | 'accent' | 'secondary' | 'background' | 'surface' | 'text' | 'textSecondary' | 'border' | 'success' | 'warning' | 'error';
 }
 
 export function ThemedText({

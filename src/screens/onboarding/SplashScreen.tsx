@@ -1,7 +1,6 @@
-import { View, StyleSheet, Animated, Easing } from 'react-native';
+import { View, StyleSheet, Animated, Easing, Text } from 'react-native';
 import { useEffect, useRef } from 'react';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { LeviaLogo } from '@components/LeviaLogo';
 import { ThemedText } from '@components/ThemedText';
 import { lightTheme } from '@theme/colors';
 import { OnboardingStackParamList } from '../OnboardingStack';
@@ -62,18 +61,15 @@ export function SplashScreen({ navigation }: SplashScreenProps) {
           },
         ]}
       >
-        {/* Logo */}
+        {/* Logo - Placeholder */}
         <View style={styles.logoContainer}>
-          <LeviaLogo 
-            size={240} 
-            variant="colored"
-          />
+          <Text style={{ fontSize: 120, fontWeight: 'bold' }}>🍃</Text>
         </View>
 
         {/* Texto principal */}
         <ThemedText 
           variant="title" 
-          color="textPrimary"
+          color="text"
           style={styles.mainText}
         >
           Bem-vindo à Levia

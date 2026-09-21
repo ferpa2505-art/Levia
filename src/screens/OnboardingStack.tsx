@@ -21,18 +21,11 @@ export function OnboardingStack() {
     <Stack.Navigator
       screenOptions={{
         headerShown: false,
-        animationEnabled: true,
-        cardStyle: {
-          backgroundColor: lightTheme.background,
-        },
       }}
     >
       <Stack.Screen 
         name="Splash" 
         component={SplashScreen}
-        options={{
-          animationEnabled: false,
-        }}
       />
       <Stack.Screen 
         name="Quiz" 
