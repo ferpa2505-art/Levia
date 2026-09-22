@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { View, ScrollView, StyleSheet } from 'react-native';
-import { Target, Pencil } from 'lucide-react-native';
+import { View, ScrollView, StyleSheet, Pressable } from 'react-native';
+import { useRouter } from 'expo-router';
+import { Target, Pencil, Syringe, ChevronRight } from 'lucide-react-native';
 import { ThemedView } from '@components/ThemedView';
 import { ThemedText } from '@components/ThemedText';
 import { Button } from '@components/Button';
@@ -10,6 +11,7 @@ import { useRecords } from '@context/RecordsContext';
 import { colors, spacing, radius } from '@constants/colors';
 
 export default function ProfileScreen() {
+  const router = useRouter();
   const { profile, updateProfile, salvarAlteracoes } = useProfile();
   const { pesoAtualKg } = useRecords();
   const pesoAtual = pesoAtualKg ?? profile.pesoAtualKg;
@@ -94,6 +96,21 @@ export default function ProfileScreen() {
             </ThemedText>
           )}
         </ThemedView>
+
+        <Pressable onPress={() => router.push('/glp1')}>
+          <ThemedView variant="surface" style={[styles.card, styles.cardShadow, styles.glp1Card]}>
+            <View style={styles.glp1IconCircle}>
+              <Syringe size={20} color={colors.primary} strokeWidth={2} />
+            </View>
+            <View style={{ flex: 1, marginLeft: spacing.md }}>
+              <ThemedText variant="subheading" color="text">Modo GLP-1</ThemedText>
+              <ThemedText variant="small" color="textSecondary">
+                Doses, rodízio de aplicação, sintomas e lembretes
+              </ThemedText>
+            </View>
+            <ChevronRight size={20} color={colors.textSecondary} strokeWidth={2} />
+          </ThemedView>
+        </Pressable>
       </ThemedView>
     </ScrollView>
   );
@@ -156,5 +173,17 @@ const styles = StyleSheet.create({
   editButtons: {
     flexDirection: 'row',
     marginTop: spacing.md,
+  },
+  glp1Card: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  glp1IconCircle: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(111,165,142,0.12)',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });
