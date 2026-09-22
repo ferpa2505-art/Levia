@@ -1,23 +1,23 @@
 export const colors = {
-  primary: '#10B981',      // Verde suave
-  accent: '#F59E0B',       // Pêssego/laranja
-  secondary: '#EC4899',    // Rosa suave
-  background: '#FFFFFF',
-  surface: '#F9FAFB',
-  text: '#1F2937',
-  textSecondary: '#6B7280',
-  border: '#E5E7EB',
+  primary: '#6FA58E',      // Sálvia — natureza, saúde, calma
+  accent: '#B7A6E0',       // Lavanda — premium, delicadeza
+  secondary: '#F4A983',    // Pêssego — calor humano, nutrição
+  background: '#FBF8F3',   // Marfim quente (em vez de branco clínico)
+  surface: '#FFFFFF',
+  text: '#2E3A35',         // Verde-carvão (em vez de preto puro)
+  textSecondary: '#8B8578',
+  border: '#EEEBE5',
   success: '#10B981',
   warning: '#F59E0B',
   error: '#EF4444',
-  
+
   // Modo escuro
   dark: {
-    background: '#111827',
-    surface: '#1F2937',
-    text: '#F9FAFB',
-    textSecondary: '#D1D5DB',
-    border: '#374151',
+    background: '#1A1F1C',
+    surface: '#2E3A35',
+    text: '#FBF8F3',
+    textSecondary: '#B8B1A7',
+    border: '#3A4240',
   }
 };
 
