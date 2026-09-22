@@ -5,6 +5,7 @@ import { colors } from '@constants/colors';
 import { ProfileProvider, useProfile } from '@context/ProfileContext';
 import { RecordsProvider } from '@context/RecordsContext';
 import { CustomRecipesProvider } from '@context/CustomRecipesContext';
+import { NewsProvider } from '@context/NewsContext';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -49,7 +50,9 @@ export default function RootLayout() {
     <ProfileProvider>
       <RecordsProvider>
         <CustomRecipesProvider>
-          <RootNavigation />
+          <NewsProvider>
+            <RootNavigation />
+          </NewsProvider>
         </CustomRecipesProvider>
       </RecordsProvider>
     </ProfileProvider>
