@@ -11,7 +11,7 @@ import { colors, spacing, radius } from '@constants/colors';
 
 export default function HomeScreen() {
   const { profile } = useProfile();
-  const { kcalHoje, proteinaHojeG, aguaHojeMl, pesoAtualKg, adicionarPeso } = useRecords();
+  const { kcalHoje, proteinaHojeG, aguaHojeMl, pesoAtualKg, adicionarPeso, kcalGastaHoje } = useRecords();
   const nome = profile.comoChamar || profile.nome || '';
 
   const [editandoPeso, setEditandoPeso] = useState(false);
@@ -62,6 +62,10 @@ export default function HomeScreen() {
             <View style={[styles.statChip, { backgroundColor: 'rgba(183,166,224,0.18)' }]}>
               <ThemedText variant="heading" color="accent">{aguaHojeMl}</ThemedText>
               <ThemedText variant="small" color="textSecondary">ml água</ThemedText>
+            </View>
+            <View style={[styles.statChip, { backgroundColor: 'rgba(244,169,131,0.12)' }]}>
+              <ThemedText variant="heading" color="secondary">{kcalGastaHoje}</ThemedText>
+              <ThemedText variant="small" color="textSecondary">kcal gastas</ThemedText>
             </View>
           </View>
         </ThemedView>
@@ -135,8 +139,15 @@ const styles = StyleSheet.create({
     shadowRadius: 12,
     elevation: 2,
   },
-  statsGrid: { flexDirection: 'row', justifyContent: 'space-between', marginTop: spacing.md },
-  statChip: { flex: 1, alignItems: 'center', paddingVertical: spacing.md, marginHorizontal: spacing.xs / 2, borderRadius: radius.lg },
+  statsGrid: { flexDirection: 'row', flexWrap: 'wrap', marginTop: spacing.md },
+  statChip: {
+    flexBasis: '48%',
+    alignItems: 'center',
+    paddingVertical: spacing.md,
+    marginHorizontal: spacing.xs / 2,
+    marginBottom: spacing.sm,
+    borderRadius: radius.lg,
+  },
   pesoHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   editRow: { marginTop: spacing.md },
   pesoInput: { textAlign: 'left' },
