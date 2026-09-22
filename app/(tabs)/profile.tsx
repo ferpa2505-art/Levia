@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { View, ScrollView, StyleSheet } from 'react-native';
+import { Target, Pencil } from 'lucide-react-native';
 import { ThemedView } from '@components/ThemedView';
 import { ThemedText } from '@components/ThemedText';
 import { Button } from '@components/Button';
@@ -49,14 +50,18 @@ export default function ProfileScreen() {
 
         <ThemedView variant="surface" style={[styles.card, styles.cardShadow]}>
           <View style={styles.metaHeader}>
-            <ThemedText variant="subheading" color="text">
-              Minha meta
-            </ThemedText>
+            <View style={styles.metaTituloRow}>
+              <Target size={18} color={colors.primary} strokeWidth={2} />
+              <ThemedText variant="subheading" color="text" style={{ marginLeft: spacing.xs }}>
+                Minha meta
+              </ThemedText>
+            </View>
             {!editandoMeta && (
               <Button
                 label="Editar"
                 variant="outline"
                 size="sm"
+                icon={<Pencil size={14} color={colors.primary} strokeWidth={2} />}
                 onPress={() => {
                   setMetaTexto(profile.metaPesoKg != null ? String(profile.metaPesoKg) : '');
                   setEditandoMeta(true);
@@ -97,16 +102,28 @@ export default function ProfileScreen() {
 function DadoLinha({ label, valor }: { label: string; valor: string }) {
   return (
     <View style={styles.dadoLinha}>
-      <ThemedText variant="body" color="textSecondary">{label}</ThemedText>
-      <ThemedText variant="body" color="text">{valor}</ThemedText>
+      <ThemedText variant="body" color="textSecondary">
+        {label}
+      </ThemedText>
+      <ThemedText variant="body" color="text">
+        {valor}
+      </ThemedText>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
-  header: { marginBottom: spacing['2xl'] },
-  card: { padding: spacing.lg, marginBottom: spacing.lg, borderRadius: radius.xl },
+  container: {
+    flex: 1,
+  },
+  header: {
+    marginBottom: spacing['2xl'],
+  },
+  card: {
+    padding: spacing.lg,
+    marginBottom: spacing.lg,
+    borderRadius: radius.xl,
+  },
   cardShadow: {
     shadowColor: colors.text,
     shadowOffset: { width: 0, height: 4 },
@@ -115,11 +132,29 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   dadoLinha: {
-    flexDirection: 'row', justifyContent: 'space-between',
-    paddingVertical: spacing.sm, borderBottomWidth: 1, borderBottomColor: colors.border,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingVertical: spacing.sm,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
   },
-  metaHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  editRow: { marginTop: spacing.md },
-  metaInput: { textAlign: 'left' },
-  editButtons: { flexDirection: 'row', marginTop: spacing.md },
+  metaHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  metaTituloRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  editRow: {
+    marginTop: spacing.md,
+  },
+  metaInput: {
+    textAlign: 'left',
+  },
+  editButtons: {
+    flexDirection: 'row',
+    marginTop: spacing.md,
+  },
 });
