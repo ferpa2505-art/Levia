@@ -8,6 +8,7 @@ import { Input } from '@components/Input';
 import { useRecords } from '@context/RecordsContext';
 import { useCustomRecipes } from '@context/CustomRecipesContext';
 import { buscarReceitas, ReceitaConhecida } from '@constants/recipes';
+import { buscarExercicios, Exercicio } from '@constants/exercises';
 import { ReceitaPersonalizada } from '@models/ingredients';
 import { colors, spacing, radius } from '@constants/colors';
 
@@ -23,6 +24,10 @@ export default function JournalScreen() {
     removerAgua,
     adicionarRefeicao,
     removerRefeicao,
+    exerciciosHoje,
+    kcalGastaHoje,
+    adicionarExercicio,
+    removerExercicio,
   } = useRecords();
   const { buscarReceitasPersonalizadas } = useCustomRecipes();
 
@@ -31,6 +36,12 @@ export default function JournalScreen() {
   const [nome, setNome] = useState('');
   const [kcal, setKcal] = useState('');
   const [proteina, setProteina] = useState('');
+
+  const [mostrarFormExercicio, setMostrarFormExercicio] = useState(false);
+  const [nomeExercicio, setNomeExercicio] = useState('');
+  const [duracaoExercicio, setDuracaoExercicio] = useState('');
+  const [kcalExercicio, setKcalExercicio] = useState('');
+  const [exercicioSelecionado, setExercicioSelecionado] = useState<Exercicio | null>(null);
 
   const sugestoes = buscarReceitas(nome);
   const sugestoesPersonalizadas = buscarReceitasPersonalizadas(nome);
@@ -60,6 +71,41 @@ export default function JournalScreen() {
     setKcal('');
     setProteina('');
     setMostrarForm(false);
+  }
+
+  const sugestoesExercicios = buscarExercicios(nomeExercicio);
+  const duracaoNum = parseInt(duracaoExercicio, 10);
+  const kcalExercicioNum = parseInt(kcalExercicio, 10);
+  const formExercicioValido =
+    nomeExercicio.trim().length > 0 &&
+    !isNaN(duracaoNum) && duracaoNum > 0 &&
+    !isNaN(kcalExercicioNum) && kcalExercicioNum >= 0;
+
+  function escolherExercicio(ex: Exercicio) {
+    setNomeExercicio(ex.nome);
+    setExercicioSelecionado(ex);
+    const duracaoAtual = parseInt(duracaoExercicio, 10);
+    if (!isNaN(duracaoAtual) && duracaoAtual > 0) {
+      setKcalExercicio(String(Math.round(duracaoAtual * ex.kcalPorMinuto)));
+    }
+  }
+
+  function handleDuracaoExercicioChange(texto: string) {
+    setDuracaoExercicio(texto);
+    const duracaoNova = parseInt(texto, 10);
+    if (exercicioSelecionado && !isNaN(duracaoNova) && duracaoNova > 0) {
+      setKcalExercicio(String(Math.round(duracaoNova * exercicioSelecionado.kcalPorMinuto)));
+    }
+  }
+
+  async function handleAdicionarExercicio() {
+    if (!formExercicioValido) return;
+    await adicionarExercicio(nomeExercicio.trim(), duracaoNum, kcalExercicioNum);
+    setNomeExercicio('');
+    setDuracaoExercicio('');
+    setKcalExercicio('');
+    setExercicioSelecionado(null);
+    setMostrarFormExercicio(false);
   }
 
   return (
@@ -224,6 +270,116 @@ export default function JournalScreen() {
                     </ThemedText>
                   </View>
                   <Pressable onPress={() => removerRefeicao(r.id)} style={styles.removerBotao}>
+                    <ThemedText variant="body" color="textSecondary">✕</ThemedText>
+                  </Pressable>
+                </View>
+              ))}
+            </View>
+          )}
+        </ThemedView>
+
+        {/* Exercícios */}
+        <ThemedView variant="surface" style={[styles.card, styles.cardShadow]}>
+          <View style={styles.refeicoesHeader}>
+            <ThemedText variant="subheading" color="text">Exercícios</ThemedText>
+            {!mostrarFormExercicio && (
+              <Button label="+ Adicionar" variant="outline" size="sm" onPress={() => setMostrarFormExercicio(true)} />
+            )}
+          </View>
+
+          {exerciciosHoje.length > 0 && (
+            <ThemedText variant="small" color="textSecondary" style={{ marginTop: spacing.xs }}>
+              {kcalGastaHoje} kcal gastas hoje
+            </ThemedText>
+          )}
+
+          {mostrarFormExercicio && (
+            <View style={styles.form}>
+              <Input
+                value={nomeExercicio}
+                onChangeText={(texto) => {
+                  setNomeExercicio(texto);
+                  setExercicioSelecionado(null);
+                }}
+                placeholder="Nome do exercício"
+                style={styles.formInput}
+                autoFocus
+              />
+
+              {sugestoesExercicios.length > 0 && (
+                <View style={styles.sugestoes}>
+                  {sugestoesExercicios.map((ex) => (
+                    <Pressable
+                      key={ex.nome}
+                      style={styles.sugestaoItem}
+                      onPress={() => escolherExercicio(ex)}
+                    >
+                      <ThemedText variant="small" color="text">{ex.nome}</ThemedText>
+                      <ThemedText variant="small" color="textSecondary">
+                        ≈ {ex.kcalPorMinuto} kcal/min · {ex.categoria}
+                      </ThemedText>
+                    </Pressable>
+                  ))}
+                </View>
+              )}
+
+              <View style={styles.formRow}>
+                <View style={styles.formCol}>
+                  <Input
+                    value={duracaoExercicio}
+                    onChangeText={handleDuracaoExercicioChange}
+                    placeholder="minutos"
+                    keyboardType="number-pad"
+                    style={styles.formInput}
+                  />
+                </View>
+                <View style={styles.formCol}>
+                  <Input
+                    value={kcalExercicio}
+                    onChangeText={setKcalExercicio}
+                    placeholder="kcal gastas"
+                    keyboardType="number-pad"
+                    style={styles.formInput}
+                  />
+                </View>
+              </View>
+              <View style={styles.formButtons}>
+                <Button
+                  label="Cancelar"
+                  variant="outline"
+                  size="sm"
+                  onPress={() => {
+                    setMostrarFormExercicio(false);
+                    setExercicioSelecionado(null);
+                  }}
+                  style={{ marginRight: spacing.sm }}
+                />
+                <Button
+                  label="Salvar"
+                  variant="primary"
+                  size="sm"
+                  onPress={handleAdicionarExercicio}
+                  disabled={!formExercicioValido}
+                />
+              </View>
+            </View>
+          )}
+
+          {exerciciosHoje.length === 0 && !mostrarFormExercicio ? (
+            <ThemedText variant="body" color="textSecondary" style={{ marginTop: spacing.md }}>
+              Nenhum exercício registrado ainda hoje.
+            </ThemedText>
+          ) : (
+            <View style={styles.lista}>
+              {exerciciosHoje.map((e) => (
+                <View key={e.id} style={styles.itemRefeicao}>
+                  <View style={{ flex: 1 }}>
+                    <ThemedText variant="body" color="text">{e.nome}</ThemedText>
+                    <ThemedText variant="small" color="textSecondary">
+                      {e.horario} · {e.duracaoMin} min · {e.kcalGasto} kcal
+                    </ThemedText>
+                  </View>
+                  <Pressable onPress={() => removerExercicio(e.id)} style={styles.removerBotao}>
                     <ThemedText variant="body" color="textSecondary">✕</ThemedText>
                   </Pressable>
                 </View>
