@@ -27,6 +27,9 @@ export interface RegistroExercicio {
   nome: string;
   duracaoMin: number;
   kcalGasto: number;
+  intensidade?: string;
+  local?: string;
+  grupoMuscular?: string;
 }
 
 export interface RecordsData {
