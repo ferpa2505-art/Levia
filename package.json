@@ -29,6 +29,7 @@
     "@babel/core": "^7.24.0",
     "@types/react": "~19.1.10",
     "babel-preset-expo": "^57.0.12",
+    "lucide-react-native": "^0.474.0",
     "typescript": "~5.9.2"
   },
   "private": true
