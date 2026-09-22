@@ -11,6 +11,7 @@ import {
 interface RecordsContextValue {
   loading: boolean;
   refeicoesHoje: Refeicao[];
+  aguasHoje: RegistroAgua[];
   aguaHojeMl: number;
   kcalHoje: number;
   proteinaHojeG: number;
@@ -18,6 +19,7 @@ interface RecordsContextValue {
   adicionarRefeicao: (nome: string, kcal: number, proteinaG: number) => Promise<void>;
   removerRefeicao: (id: string) => Promise<void>;
   adicionarAgua: (ml: number) => Promise<void>;
+  removerAgua: (id: string) => Promise<void>;
   adicionarPeso: (pesoKg: number) => Promise<void>;
 }
 
@@ -41,9 +43,10 @@ export function RecordsProvider({ children }: { children: ReactNode }) {
 
   const hoje = dataDeHoje();
   const refeicoesHoje = dados.refeicoes.filter((r) => r.data === hoje);
-  const aguaHojeMl = dados.aguas
+  const aguasHoje = dados.aguas
     .filter((a) => a.data === hoje)
-    .reduce((soma, a) => soma + a.ml, 0);
+    .sort((a, b) => (a.horario < b.horario ? 1 : -1));
+  const aguaHojeMl = aguasHoje.reduce((soma, a) => soma + a.ml, 0);
   const kcalHoje = refeicoesHoje.reduce((soma, r) => soma + r.kcal, 0);
   const proteinaHojeG = refeicoesHoje.reduce((soma, r) => soma + r.proteinaG, 0);
 
@@ -64,6 +67,10 @@ export function RecordsProvider({ children }: { children: ReactNode }) {
     await persistir({ ...dados, aguas: [...dados.aguas, novo] });
   }
 
+  async function removerAgua(id: string) {
+    await persistir({ ...dados, aguas: dados.aguas.filter((a) => a.id !== id) });
+  }
+
   async function adicionarPeso(pesoKg: number) {
     const novo: RegistroPeso = { id: gerarId(), data: hoje, pesoKg };
     await persistir({ ...dados, pesos: [...dados.pesos, novo] });
@@ -74,6 +81,7 @@ export function RecordsProvider({ children }: { children: ReactNode }) {
       value={{
         loading,
         refeicoesHoje,
+        aguasHoje,
         aguaHojeMl,
         kcalHoje,
         proteinaHojeG,
@@ -81,6 +89,7 @@ export function RecordsProvider({ children }: { children: ReactNode }) {
         adicionarRefeicao,
         removerRefeicao,
         adicionarAgua,
+        removerAgua,
         adicionarPeso,
       }}
     >
