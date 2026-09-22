@@ -6,6 +6,7 @@ import { ProfileProvider, useProfile } from '@context/ProfileContext';
 import { RecordsProvider } from '@context/RecordsContext';
 import { CustomRecipesProvider } from '@context/CustomRecipesContext';
 import { NewsProvider } from '@context/NewsContext';
+import { Glp1Provider } from '@context/Glp1Context';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -41,6 +42,7 @@ function RootNavigation() {
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
       <Stack.Screen name="onboarding" options={{ headerShown: false }} />
       <Stack.Screen name="recipe-builder" options={{ headerShown: true, title: 'Minhas receitas' }} />
+      <Stack.Screen name="glp1" options={{ headerShown: true, title: 'Modo GLP-1' }} />
     </Stack>
   );
 }
@@ -51,7 +53,9 @@ export default function RootLayout() {
       <RecordsProvider>
         <CustomRecipesProvider>
           <NewsProvider>
-            <RootNavigation />
+            <Glp1Provider>
+              <RootNavigation />
+            </Glp1Provider>
           </NewsProvider>
         </CustomRecipesProvider>
       </RecordsProvider>
