@@ -169,7 +169,12 @@ export default function Glp1Screen() {
               {formatarDiasRestantes(null)}
             </ThemedText>
           )}
-
+{configLembrete.ativo && isExpoGo && (
+  <ThemedText variant="caption" color="textSecondary" style={{ marginTop: spacing.sm }}>
+    No Expo Go a notificação não dispara de verdade — funciona só num development
+    build ou no app publicado.
+  </ThemedText>
+)}
           <View style={styles.lembreteRow}>
             <View style={styles.lembreteTituloRow}>
               <Bell size={16} color={colors.textSecondary} strokeWidth={2} />
