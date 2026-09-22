@@ -1,19 +1,37 @@
+import { useState } from 'react';
 import { View, ScrollView, StyleSheet } from 'react-native';
 import { ThemedView } from '@components/ThemedView';
 import { ThemedText } from '@components/ThemedText';
+import { Button } from '@components/Button';
+import { Input } from '@components/Input';
 import { LeviaLogo } from '@components/LeviaLogo';
 import { useProfile } from '@context/ProfileContext';
+import { useRecords } from '@context/RecordsContext';
 import { colors, spacing, radius } from '@constants/colors';
 
 export default function HomeScreen() {
   const { profile } = useProfile();
+  const { kcalHoje, proteinaHojeG, aguaHojeMl, pesoAtualKg, adicionarPeso } = useRecords();
   const nome = profile.comoChamar || profile.nome || '';
 
-  const temPesoEMeta = profile.pesoAtualKg != null && profile.metaPesoKg != null;
+  const [editandoPeso, setEditandoPeso] = useState(false);
+  const [pesoTexto, setPesoTexto] = useState('');
+
+  const pesoAtual = pesoAtualKg ?? profile.pesoAtualKg;
+  const temPesoEMeta = pesoAtual != null && profile.metaPesoKg != null;
   const diferenca = temPesoEMeta
-    ? Math.round(Math.abs(profile.pesoAtualKg! - profile.metaPesoKg!) * 10) / 10
+    ? Math.round(Math.abs(pesoAtual! - profile.metaPesoKg!) * 10) / 10
     : null;
   const jaNaMeta = diferenca !== null && diferenca === 0;
+
+  async function handleSalvarPeso() {
+    const novoPeso = parseFloat(pesoTexto.replace(',', '.'));
+    if (!isNaN(novoPeso) && novoPeso > 0) {
+      await adicionarPeso(novoPeso);
+    }
+    setEditandoPeso(false);
+    setPesoTexto('');
+  }
 
   return (
     <ScrollView style={{ flex: 1, backgroundColor: colors.background }} contentContainerStyle={{ padding: spacing.lg }}>
@@ -34,31 +52,65 @@ export default function HomeScreen() {
           <ThemedText variant="subheading" color="text">Resumo de Hoje</ThemedText>
           <View style={styles.statsGrid}>
             <View style={[styles.statChip, { backgroundColor: 'rgba(111,165,142,0.12)' }]}>
-              <ThemedText variant="heading" color="primary">0</ThemedText>
+              <ThemedText variant="heading" color="primary">{kcalHoje}</ThemedText>
               <ThemedText variant="small" color="textSecondary">kcal</ThemedText>
             </View>
             <View style={[styles.statChip, { backgroundColor: 'rgba(244,169,131,0.18)' }]}>
-              <ThemedText variant="heading" color="secondary">0</ThemedText>
+              <ThemedText variant="heading" color="secondary">{proteinaHojeG}</ThemedText>
               <ThemedText variant="small" color="textSecondary">g proteína</ThemedText>
             </View>
             <View style={[styles.statChip, { backgroundColor: 'rgba(183,166,224,0.18)' }]}>
-              <ThemedText variant="heading" color="accent">0</ThemedText>
+              <ThemedText variant="heading" color="accent">{aguaHojeMl}</ThemedText>
               <ThemedText variant="small" color="textSecondary">ml água</ThemedText>
             </View>
           </View>
         </ThemedView>
 
         <ThemedView variant="surface" style={[styles.card, styles.cardShadow]}>
-          <ThemedText variant="subheading" color="text">Seu Peso</ThemedText>
-          <ThemedText variant="title" color="primary" style={{ marginVertical: spacing.md }}>
-            {profile.pesoAtualKg != null ? `${profile.pesoAtualKg} kg` : '-- kg'}
-          </ThemedText>
-          {temPesoEMeta ? (
-            <ThemedText variant="small" color="textSecondary">
-              {jaNaMeta ? 'Você está na sua meta! 🎉' : `Meta: ${profile.metaPesoKg} kg · faltam ${diferenca} kg`}
-            </ThemedText>
+          <View style={styles.pesoHeader}>
+            <ThemedText variant="subheading" color="text">Seu Peso</ThemedText>
+            {!editandoPeso && (
+              <Button
+                label="Atualizar"
+                variant="outline"
+                size="sm"
+                onPress={() => {
+                  setPesoTexto(pesoAtual != null ? String(pesoAtual) : '');
+                  setEditandoPeso(true);
+                }}
+              />
+            )}
+          </View>
+
+          {editandoPeso ? (
+            <View style={styles.editRow}>
+              <Input
+                value={pesoTexto}
+                onChangeText={setPesoTexto}
+                keyboardType="decimal-pad"
+                placeholder="0"
+                autoFocus
+                style={styles.pesoInput}
+              />
+              <ThemedText variant="body" color="textSecondary" style={{ marginLeft: spacing.sm }}>kg</ThemedText>
+              <View style={styles.editButtons}>
+                <Button label="Cancelar" variant="outline" size="sm" onPress={() => setEditandoPeso(false)} style={{ marginRight: spacing.sm }} />
+                <Button label="Salvar" variant="primary" size="sm" onPress={handleSalvarPeso} />
+              </View>
+            </View>
           ) : (
-            <ThemedText variant="small" color="textSecondary">Última pesagem: --</ThemedText>
+            <>
+              <ThemedText variant="title" color="primary" style={{ marginVertical: spacing.md }}>
+                {pesoAtual != null ? `${pesoAtual} kg` : '-- kg'}
+              </ThemedText>
+              {temPesoEMeta ? (
+                <ThemedText variant="small" color="textSecondary">
+                  {jaNaMeta ? 'Você está na sua meta! 🎉' : `Meta: ${profile.metaPesoKg} kg · faltam ${diferenca} kg`}
+                </ThemedText>
+              ) : (
+                <ThemedText variant="small" color="textSecondary">Última pesagem: --</ThemedText>
+              )}
+            </>
           )}
         </ThemedView>
 
@@ -77,10 +129,17 @@ const styles = StyleSheet.create({
   greetingTitle: { marginLeft: spacing.sm },
   card: { padding: spacing.lg, marginBottom: spacing.lg, borderRadius: radius.xl },
   cardShadow: {
-    shadowColor: colors.text, shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.06, shadowRadius: 12, elevation: 2,
+    shadowColor: colors.text,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.06,
+    shadowRadius: 12,
+    elevation: 2,
   },
   statsGrid: { flexDirection: 'row', justifyContent: 'space-between', marginTop: spacing.md },
   statChip: { flex: 1, alignItems: 'center', paddingVertical: spacing.md, marginHorizontal: spacing.xs / 2, borderRadius: radius.lg },
+  pesoHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  editRow: { marginTop: spacing.md },
+  pesoInput: { textAlign: 'left' },
+  editButtons: { flexDirection: 'row', marginTop: spacing.md },
   status: { marginTop: spacing['2xl'], alignItems: 'center' },
 });
