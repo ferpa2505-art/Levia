@@ -3,6 +3,7 @@ import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 import { colors } from '@constants/colors';
 import { ProfileProvider, useProfile } from '@context/ProfileContext';
+import { RecordsProvider } from '@context/RecordsContext';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -42,7 +43,9 @@ function RootNavigation() {
 export default function RootLayout() {
   return (
     <ProfileProvider>
-      <RootNavigation />
+      <RecordsProvider>
+        <RootNavigation />
+      </RecordsProvider>
     </ProfileProvider>
   );
 }
