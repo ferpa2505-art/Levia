@@ -11,6 +11,8 @@ export function Button({
   label,
   variant = 'primary',
   size = 'md',
+  style,
+  disabled,
   ...rest
 }: ButtonProps) {
   const styles = StyleSheet.create({
@@ -21,40 +23,25 @@ export function Button({
       paddingVertical: size === 'sm' ? spacing.sm : size === 'lg' ? spacing.lg : spacing.md,
       paddingHorizontal: spacing.lg,
     },
-    primary: {
-      backgroundColor: colors.primary,
-    },
-    secondary: {
-      backgroundColor: colors.accent,
-    },
-    outline: {
-      backgroundColor: 'transparent',
-      borderWidth: 2,
-      borderColor: colors.primary,
-    },
+    primary: { backgroundColor: colors.primary },
+    secondary: { backgroundColor: colors.accent },
+    outline: { backgroundColor: 'transparent', borderWidth: 2, borderColor: colors.primary },
   });
 
-  const textColor =
-    variant === 'outline' ? colors.primary : colors.background;
+  const textColor = variant === 'outline' ? colors.primary : colors.background;
 
   return (
     <Pressable
-      style={({ pressed }) => [
+      disabled={disabled}
+      style={(state) => [
         styles.base,
         styles[variant],
-        { opacity: pressed ? 0.7 : 1 },
+        { opacity: disabled ? 0.5 : state.pressed ? 0.7 : 1 },
+        typeof style === 'function' ? style(state) : style,
       ]}
       {...rest}
     >
-      <Text
-        style={{
-          color: textColor,
-          fontWeight: '600',
-          fontSize: 16,
-        }}
-      >
-        {label}
-      </Text>
+      <Text style={{ color: textColor, fontWeight: '600', fontSize: 16 }}>{label}</Text>
     </Pressable>
   );
 }
