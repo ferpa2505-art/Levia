@@ -23,7 +23,12 @@ interface RecordsContextValue {
   adicionarAgua: (ml: number) => Promise<void>;
   removerAgua: (id: string) => Promise<void>;
   adicionarPeso: (pesoKg: number) => Promise<void>;
-  adicionarExercicio: (nome: string, duracaoMin: number, kcalGasto: number) => Promise<void>;
+  adicionarExercicio: (
+    nome: string,
+    duracaoMin: number,
+    kcalGasto: number,
+    detalhes?: { intensidade?: string; local?: string; grupoMuscular?: string }
+  ) => Promise<void>;
   removerExercicio: (id: string) => Promise<void>;
 }
 
@@ -85,8 +90,23 @@ export function RecordsProvider({ children }: { children: ReactNode }) {
     await persistir({ ...dados, pesos: [...dados.pesos, novo] });
   }
 
-  async function adicionarExercicio(nome: string, duracaoMin: number, kcalGasto: number) {
-    const novo: RegistroExercicio = { id: gerarId(), data: hoje, horario: horarioAgora(), nome, duracaoMin, kcalGasto };
+  async function adicionarExercicio(
+    nome: string,
+    duracaoMin: number,
+    kcalGasto: number,
+    detalhes?: { intensidade?: string; local?: string; grupoMuscular?: string }
+  ) {
+    const novo: RegistroExercicio = {
+      id: gerarId(),
+      data: hoje,
+      horario: horarioAgora(),
+      nome,
+      duracaoMin,
+      kcalGasto,
+      intensidade: detalhes?.intensidade,
+      local: detalhes?.local,
+      grupoMuscular: detalhes?.grupoMuscular,
+    };
     await persistir({ ...dados, exercicios: [...dados.exercicios, novo] });
   }
 
