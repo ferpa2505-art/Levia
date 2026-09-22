@@ -5,10 +5,13 @@ import { ThemedText } from '@components/ThemedText';
 import { Button } from '@components/Button';
 import { Input } from '@components/Input';
 import { useProfile } from '@context/ProfileContext';
+import { useRecords } from '@context/RecordsContext';
 import { colors, spacing, radius } from '@constants/colors';
 
 export default function ProfileScreen() {
   const { profile, updateProfile, salvarAlteracoes } = useProfile();
+  const { pesoAtualKg } = useRecords();
+  const pesoAtual = pesoAtualKg ?? profile.pesoAtualKg;
   const [editandoMeta, setEditandoMeta] = useState(false);
   const [metaTexto, setMetaTexto] = useState(
     profile.metaPesoKg != null ? String(profile.metaPesoKg) : ''
@@ -40,13 +43,15 @@ export default function ProfileScreen() {
             Meus dados
           </ThemedText>
           <DadoLinha label="Altura" valor={profile.alturaCm != null ? `${profile.alturaCm} cm` : '--'} />
-          <DadoLinha label="Peso atual" valor={profile.pesoAtualKg != null ? `${profile.pesoAtualKg} kg` : '--'} />
+          <DadoLinha label="Peso atual" valor={pesoAtual != null ? `${pesoAtual} kg` : '--'} />
           <DadoLinha label="Idade" valor={profile.idade != null ? `${profile.idade} anos` : '--'} />
         </ThemedView>
 
         <ThemedView variant="surface" style={[styles.card, styles.cardShadow]}>
           <View style={styles.metaHeader}>
-            <ThemedText variant="subheading" color="text">Minha meta</ThemedText>
+            <ThemedText variant="subheading" color="text">
+              Minha meta
+            </ThemedText>
             {!editandoMeta && (
               <Button
                 label="Editar"
@@ -70,7 +75,9 @@ export default function ProfileScreen() {
                 autoFocus
                 style={styles.metaInput}
               />
-              <ThemedText variant="body" color="textSecondary" style={{ marginLeft: spacing.sm }}>kg</ThemedText>
+              <ThemedText variant="body" color="textSecondary" style={{ marginLeft: spacing.sm }}>
+                kg
+              </ThemedText>
               <View style={styles.editButtons}>
                 <Button label="Cancelar" variant="outline" size="sm" onPress={() => setEditandoMeta(false)} style={{ marginRight: spacing.sm }} />
                 <Button label="Salvar" variant="primary" size="sm" onPress={handleSalvarMeta} />
@@ -101,8 +108,11 @@ const styles = StyleSheet.create({
   header: { marginBottom: spacing['2xl'] },
   card: { padding: spacing.lg, marginBottom: spacing.lg, borderRadius: radius.xl },
   cardShadow: {
-    shadowColor: colors.text, shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.06, shadowRadius: 12, elevation: 2,
+    shadowColor: colors.text,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.06,
+    shadowRadius: 12,
+    elevation: 2,
   },
   dadoLinha: {
     flexDirection: 'row', justifyContent: 'space-between',
