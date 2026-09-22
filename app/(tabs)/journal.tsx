@@ -1,16 +1,20 @@
 import { useState } from 'react';
 import { View, ScrollView, StyleSheet, Pressable } from 'react-native';
+import { useRouter } from 'expo-router';
 import { ThemedView } from '@components/ThemedView';
 import { ThemedText } from '@components/ThemedText';
 import { Button } from '@components/Button';
 import { Input } from '@components/Input';
 import { useRecords } from '@context/RecordsContext';
+import { useCustomRecipes } from '@context/CustomRecipesContext';
 import { buscarReceitas, ReceitaConhecida } from '@constants/recipes';
+import { ReceitaPersonalizada } from '@models/ingredients';
 import { colors, spacing, radius } from '@constants/colors';
 
 const OPCOES_AGUA = [200, 300, 500];
 
 export default function JournalScreen() {
+  const router = useRouter();
   const {
     refeicoesHoje,
     aguasHoje,
@@ -20,6 +24,7 @@ export default function JournalScreen() {
     adicionarRefeicao,
     removerRefeicao,
   } = useRecords();
+  const { buscarReceitasPersonalizadas } = useCustomRecipes();
 
   const [mostrarListaAgua, setMostrarListaAgua] = useState(false);
   const [mostrarForm, setMostrarForm] = useState(false);
@@ -28,6 +33,7 @@ export default function JournalScreen() {
   const [proteina, setProteina] = useState('');
 
   const sugestoes = buscarReceitas(nome);
+  const sugestoesPersonalizadas = buscarReceitasPersonalizadas(nome);
 
   const kcalNum = parseInt(kcal, 10);
   const proteinaNum = parseInt(proteina, 10) || 0;
@@ -37,6 +43,14 @@ export default function JournalScreen() {
     setNome(receita.nome);
     setKcal(String(receita.kcal));
     setProteina(String(receita.proteinaG));
+  }
+
+  function escolherReceitaPersonalizada(receita: ReceitaPersonalizada) {
+    // valores da receita personalizada são por 100g; o usuário pode ajustar
+    // a quantidade depois, editando os campos livremente.
+    setNome(receita.nome);
+    setKcal(String(receita.kcalPor100g));
+    setProteina(String(receita.proteinaGPor100g));
   }
 
   async function handleAdicionarRefeicao() {
@@ -104,7 +118,16 @@ export default function JournalScreen() {
           <View style={styles.refeicoesHeader}>
             <ThemedText variant="subheading" color="text">Refeições</ThemedText>
             {!mostrarForm && (
-              <Button label="+ Adicionar" variant="outline" size="sm" onPress={() => setMostrarForm(true)} />
+              <View style={{ flexDirection: 'row' }}>
+                <Button
+                  label="Minhas receitas"
+                  variant="outline"
+                  size="sm"
+                  onPress={() => router.push('/recipe-builder')}
+                  style={{ marginRight: spacing.sm }}
+                />
+                <Button label="+ Adicionar" variant="outline" size="sm" onPress={() => setMostrarForm(true)} />
+              </View>
             )}
           </View>
 
@@ -118,8 +141,20 @@ export default function JournalScreen() {
                 autoFocus
               />
 
-              {sugestoes.length > 0 && (
+              {(sugestoesPersonalizadas.length > 0 || sugestoes.length > 0) && (
                 <View style={styles.sugestoes}>
+                  {sugestoesPersonalizadas.map((r) => (
+                    <Pressable
+                      key={`personalizada-${r.id}`}
+                      style={styles.sugestaoItem}
+                      onPress={() => escolherReceitaPersonalizada(r)}
+                    >
+                      <ThemedText variant="small" color="text">{r.nome} · sua receita</ThemedText>
+                      <ThemedText variant="small" color="textSecondary">
+                        {r.kcalPor100g} kcal · {r.proteinaGPor100g} g proteína (por 100g)
+                      </ThemedText>
+                    </Pressable>
+                  ))}
                   {sugestoes.map((s) => (
                     <Pressable
                       key={s.nome}
