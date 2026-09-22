@@ -20,14 +20,25 @@ export interface RegistroPeso {
   pesoKg: number;
 }
 
+export interface RegistroExercicio {
+  id: string;
+  data: string;
+  horario: string;
+  nome: string;
+  duracaoMin: number;
+  kcalGasto: number;
+}
+
 export interface RecordsData {
   refeicoes: Refeicao[];
   aguas: RegistroAgua[];
   pesos: RegistroPeso[];
+  exercicios: RegistroExercicio[];
 }
 
 export const registrosVazios: RecordsData = {
   refeicoes: [],
   aguas: [],
   pesos: [],
+  exercicios: [],
 };
