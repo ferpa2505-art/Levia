@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { View, ScrollView, StyleSheet } from 'react-native';
+import { Flame, Beef, Droplet, Zap, Feather, Target } from 'lucide-react-native';
 import { ThemedView } from '@components/ThemedView';
 import { ThemedText } from '@components/ThemedText';
 import { Button } from '@components/Button';
@@ -52,18 +53,22 @@ export default function HomeScreen() {
           <ThemedText variant="subheading" color="text">Resumo de Hoje</ThemedText>
           <View style={styles.statsGrid}>
             <View style={[styles.statChip, { backgroundColor: 'rgba(111,165,142,0.12)' }]}>
+              <Flame size={20} color={colors.primary} strokeWidth={2.25} style={styles.statIcone} />
               <ThemedText variant="heading" color="primary">{kcalHoje}</ThemedText>
               <ThemedText variant="small" color="textSecondary">kcal</ThemedText>
             </View>
             <View style={[styles.statChip, { backgroundColor: 'rgba(244,169,131,0.18)' }]}>
+              <Beef size={20} color={colors.secondary} strokeWidth={2.25} style={styles.statIcone} />
               <ThemedText variant="heading" color="secondary">{proteinaHojeG}</ThemedText>
               <ThemedText variant="small" color="textSecondary">g proteína</ThemedText>
             </View>
             <View style={[styles.statChip, { backgroundColor: 'rgba(183,166,224,0.18)' }]}>
+              <Droplet size={20} color={colors.accent} strokeWidth={2.25} style={styles.statIcone} />
               <ThemedText variant="heading" color="accent">{aguaHojeMl}</ThemedText>
               <ThemedText variant="small" color="textSecondary">ml água</ThemedText>
             </View>
             <View style={[styles.statChip, { backgroundColor: 'rgba(244,169,131,0.12)' }]}>
+              <Zap size={20} color={colors.secondary} strokeWidth={2.25} style={styles.statIcone} />
               <ThemedText variant="heading" color="secondary">{kcalGastaHoje}</ThemedText>
               <ThemedText variant="small" color="textSecondary">kcal gastas</ThemedText>
             </View>
@@ -72,7 +77,12 @@ export default function HomeScreen() {
 
         <ThemedView variant="surface" style={[styles.card, styles.cardShadow]}>
           <View style={styles.pesoHeader}>
-            <ThemedText variant="subheading" color="text">Seu Peso</ThemedText>
+            <View style={styles.pesoTituloRow}>
+              <Feather size={18} color={colors.primary} strokeWidth={2} />
+              <ThemedText variant="subheading" color="text" style={{ marginLeft: spacing.xs }}>
+                Seu Peso
+              </ThemedText>
+            </View>
             {!editandoPeso && (
               <Button
                 label="Atualizar"
@@ -108,9 +118,16 @@ export default function HomeScreen() {
                 {pesoAtual != null ? `${pesoAtual} kg` : '-- kg'}
               </ThemedText>
               {temPesoEMeta ? (
-                <ThemedText variant="small" color="textSecondary">
-                  {jaNaMeta ? 'Você está na sua meta! 🎉' : `Meta: ${profile.metaPesoKg} kg · faltam ${diferenca} kg`}
-                </ThemedText>
+                <View style={styles.metaRow}>
+                  {!jaNaMeta && <Target size={14} color={colors.textSecondary} strokeWidth={2} />}
+                  <ThemedText
+                    variant="small"
+                    color="textSecondary"
+                    style={!jaNaMeta ? { marginLeft: spacing.xs } : undefined}
+                  >
+                    {jaNaMeta ? 'Você está na sua meta! 🎉' : `Meta: ${profile.metaPesoKg} kg · faltam ${diferenca} kg`}
+                  </ThemedText>
+                </View>
               ) : (
                 <ThemedText variant="small" color="textSecondary">Última pesagem: --</ThemedText>
               )}
@@ -148,7 +165,10 @@ const styles = StyleSheet.create({
     marginBottom: spacing.sm,
     borderRadius: radius.lg,
   },
+  statIcone: { marginBottom: 4 },
   pesoHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  pesoTituloRow: { flexDirection: 'row', alignItems: 'center' },
+  metaRow: { flexDirection: 'row', alignItems: 'center' },
   editRow: { marginTop: spacing.md },
   pesoInput: { textAlign: 'left' },
   editButtons: { flexDirection: 'row', marginTop: spacing.md },
