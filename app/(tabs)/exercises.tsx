@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { View, ScrollView, StyleSheet, Pressable } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { X, ChevronLeft } from 'lucide-react-native';
 import { ThemedView } from '@components/ThemedView';
 import { ThemedText } from '@components/ThemedText';
 import { Button } from '@components/Button';
@@ -100,8 +101,9 @@ export default function ExercisesScreen() {
           </View>
         ) : (
           <ThemedView variant="surface" style={[styles.card, styles.cardShadow]}>
-            <Pressable onPress={fecharForm} style={{ marginBottom: spacing.sm }}>
-              <ThemedText variant="small" color="accent">‹ Voltar</ThemedText>
+            <Pressable onPress={fecharForm} style={styles.voltarBotao}>
+              <ChevronLeft size={16} color={colors.accent} strokeWidth={2.25} />
+              <ThemedText variant="small" color="accent">Voltar</ThemedText>
             </Pressable>
 
             <View style={styles.formHeader}>
@@ -238,7 +240,7 @@ export default function ExercisesScreen() {
                     </ThemedText>
                   </View>
                   <Pressable onPress={() => removerExercicio(e.id)} style={styles.removerBotao}>
-                    <ThemedText variant="body" color="textSecondary">✕</ThemedText>
+                    <X size={16} color={colors.textSecondary} strokeWidth={2} />
                   </Pressable>
                 </View>
               ))}
@@ -276,6 +278,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  voltarBotao: { flexDirection: 'row', alignItems: 'center', marginBottom: spacing.sm },
   formHeader: { flexDirection: 'row', alignItems: 'center' },
   formInput: { textAlign: 'left' },
   formButtons: { flexDirection: 'row', marginTop: spacing.lg },
