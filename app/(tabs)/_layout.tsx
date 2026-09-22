@@ -1,5 +1,5 @@
 import { Tabs } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+import { Home, BookOpen, Dumbbell, Newspaper, User } from 'lucide-react-native';
 import { colors } from '@constants/colors';
 
 export default function TabsLayout() {
@@ -37,7 +37,7 @@ export default function TabsLayout() {
           title: 'Início',
           tabBarLabel: 'Início',
           tabBarIcon: ({ color, focused, size }) => (
-            <Ionicons name={focused ? 'home' : 'home-outline'} size={size} color={color} />
+            <Home size={size} color={color} strokeWidth={focused ? 2.5 : 2} />
           ),
         }}
       />
@@ -47,7 +47,7 @@ export default function TabsLayout() {
           title: 'Diário',
           tabBarLabel: 'Diário',
           tabBarIcon: ({ color, focused, size }) => (
-            <Ionicons name={focused ? 'book' : 'book-outline'} size={size} color={color} />
+            <BookOpen size={size} color={color} strokeWidth={focused ? 2.5 : 2} />
           ),
         }}
       />
@@ -57,7 +57,7 @@ export default function TabsLayout() {
           title: 'Exercícios',
           tabBarLabel: 'Exercícios',
           tabBarIcon: ({ color, focused, size }) => (
-            <Ionicons name={focused ? 'barbell' : 'barbell-outline'} size={size} color={color} />
+            <Dumbbell size={size} color={color} strokeWidth={focused ? 2.5 : 2} />
           ),
         }}
       />
@@ -67,7 +67,7 @@ export default function TabsLayout() {
           title: 'Notícias',
           tabBarLabel: 'Notícias',
           tabBarIcon: ({ color, focused, size }) => (
-            <Ionicons name={focused ? 'newspaper' : 'newspaper-outline'} size={size} color={color} />
+            <Newspaper size={size} color={color} strokeWidth={focused ? 2.5 : 2} />
           ),
         }}
       />
@@ -77,7 +77,7 @@ export default function TabsLayout() {
           title: 'Perfil',
           tabBarLabel: 'Perfil',
           tabBarIcon: ({ color, focused, size }) => (
-            <Ionicons name={focused ? 'person' : 'person-outline'} size={size} color={color} />
+            <User size={size} color={color} strokeWidth={focused ? 2.5 : 2} />
           ),
         }}
       />
