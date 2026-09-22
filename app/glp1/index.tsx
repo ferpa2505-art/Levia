@@ -15,6 +15,7 @@ import { ThemedText } from '@components/ThemedText';
 import { Button } from '@components/Button';
 import { Input } from '@components/Input';
 import { useGlp1 } from '@context/Glp1Context';
+import { isExpoGo } from '@utils/glp1Notifications';
 import {
   LOCAIS_APLICACAO,
   SINTOMAS_COMUNS,
