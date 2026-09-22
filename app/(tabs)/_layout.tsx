@@ -1,4 +1,5 @@
 import { Tabs } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 import { colors } from '@constants/colors';
 
 export default function TabsLayout() {
@@ -9,8 +10,15 @@ export default function TabsLayout() {
         tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.textSecondary,
         tabBarStyle: {
-          backgroundColor: colors.background,
+          backgroundColor: colors.surface,
           borderTopColor: colors.border,
+          height: 62,
+          paddingBottom: 8,
+          paddingTop: 8,
+        },
+        tabBarLabelStyle: {
+          fontSize: 12,
+          fontWeight: '600',
         },
         headerStyle: {
           backgroundColor: colors.background,
@@ -18,7 +26,8 @@ export default function TabsLayout() {
         },
         headerTintColor: colors.text,
         headerTitleStyle: {
-          fontWeight: '600',
+          fontWeight: '700',
+          color: colors.text,
         },
       }}
     >
@@ -27,6 +36,9 @@ export default function TabsLayout() {
         options={{
           title: 'Início',
           tabBarLabel: 'Início',
+          tabBarIcon: ({ color, focused, size }) => (
+            <Ionicons name={focused ? 'home' : 'home-outline'} size={size} color={color} />
+          ),
         }}
       />
       <Tabs.Screen
@@ -34,6 +46,9 @@ export default function TabsLayout() {
         options={{
           title: 'Diário',
           tabBarLabel: 'Diário',
+          tabBarIcon: ({ color, focused, size }) => (
+            <Ionicons name={focused ? 'book' : 'book-outline'} size={size} color={color} />
+          ),
         }}
       />
       <Tabs.Screen
@@ -41,6 +56,9 @@ export default function TabsLayout() {
         options={{
           title: 'Perfil',
           tabBarLabel: 'Perfil',
+          tabBarIcon: ({ color, focused, size }) => (
+            <Ionicons name={focused ? 'person' : 'person-outline'} size={size} color={color} />
+          ),
         }}
       />
     </Tabs>
