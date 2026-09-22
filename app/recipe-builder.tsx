@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { View, ScrollView, StyleSheet, Pressable } from 'react-native';
 import { useRouter } from 'expo-router';
+import { X } from 'lucide-react-native';
 import { ThemedView } from '@components/ThemedView';
 import { ThemedText } from '@components/ThemedText';
 import { Button } from '@components/Button';
@@ -197,7 +198,7 @@ export default function RecipeBuilderScreen() {
                     </ThemedText>
                   </View>
                   <Pressable onPress={() => removerItem(index)} style={styles.removerBotao}>
-                    <ThemedText variant="body" color="textSecondary">✕</ThemedText>
+                    <X size={16} color={colors.textSecondary} strokeWidth={2} />
                   </Pressable>
                 </View>
               ))}
@@ -252,7 +253,7 @@ export default function RecipeBuilderScreen() {
                     </ThemedText>
                   </View>
                   <Pressable onPress={() => removerReceita(r.id)} style={styles.removerBotao}>
-                    <ThemedText variant="body" color="textSecondary">✕</ThemedText>
+                    <X size={16} color={colors.textSecondary} strokeWidth={2} />
                   </Pressable>
                 </View>
               ))}
