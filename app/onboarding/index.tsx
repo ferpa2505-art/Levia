@@ -3,6 +3,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { ThemedText } from '@components/ThemedText';
 import { LeviaLogo } from '@components/LeviaLogo';
+import { LeviaWordmark } from '@components/LeviaWordmark';
 import { colors, spacing, radius } from '@constants/colors';
 
 export default function OnboardingWelcome() {
@@ -13,9 +14,7 @@ export default function OnboardingWelcome() {
       <SafeAreaView style={styles.safeArea}>
         <View style={styles.content}>
           <LeviaLogo variant="monochrome" size={110} />
-          <ThemedText variant="title" style={styles.wordmark}>
-            LEVIA
-          </ThemedText>
+          <LeviaWordmark size={34} color={colors.background} style={styles.wordmark} />
           <ThemedText variant="body" style={styles.tagline}>
             Mais leve a cada dia.
           </ThemedText>
@@ -41,13 +40,38 @@ export default function OnboardingWelcome() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.primary },
-  safeArea: { flex: 1, justifyContent: 'space-between' },
-  content: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  wordmark: { color: colors.background, letterSpacing: 4, marginTop: spacing.lg },
-  tagline: { color: colors.background, fontStyle: 'italic', opacity: 0.9, marginTop: spacing.sm },
-  footer: { padding: spacing.xl, alignItems: 'center' },
-  footerText: { color: colors.background, opacity: 0.85, textAlign: 'center', marginBottom: spacing.lg },
+  container: {
+    flex: 1,
+    backgroundColor: colors.primary,
+  },
+  safeArea: {
+    flex: 1,
+    justifyContent: 'space-between',
+  },
+  content: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  wordmark: {
+    marginTop: spacing.lg,
+  },
+  tagline: {
+    color: colors.background,
+    fontStyle: 'italic',
+    opacity: 0.9,
+    marginTop: spacing.sm,
+  },
+  footer: {
+    padding: spacing.xl,
+    alignItems: 'center',
+  },
+  footerText: {
+    color: colors.background,
+    opacity: 0.85,
+    textAlign: 'center',
+    marginBottom: spacing.lg,
+  },
   cta: {
     backgroundColor: colors.background,
     borderRadius: radius.full,
