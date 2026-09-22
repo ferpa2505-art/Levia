@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { RecordsData, registrosVazios, Refeicao, RegistroAgua, RegistroPeso } from '@models/records';
+import { RecordsData, registrosVazios, Refeicao, RegistroAgua, RegistroPeso, RegistroExercicio } from '@models/records';
 import {
   carregarRegistros,
   salvarRegistros,
@@ -16,11 +16,15 @@ interface RecordsContextValue {
   kcalHoje: number;
   proteinaHojeG: number;
   pesoAtualKg: number | null;
+  exerciciosHoje: RegistroExercicio[];
+  kcalGastaHoje: number;
   adicionarRefeicao: (nome: string, kcal: number, proteinaG: number) => Promise<void>;
   removerRefeicao: (id: string) => Promise<void>;
   adicionarAgua: (ml: number) => Promise<void>;
   removerAgua: (id: string) => Promise<void>;
   adicionarPeso: (pesoKg: number) => Promise<void>;
+  adicionarExercicio: (nome: string, duracaoMin: number, kcalGasto: number) => Promise<void>;
+  removerExercicio: (id: string) => Promise<void>;
 }
 
 const RecordsContext = createContext<RecordsContextValue | undefined>(undefined);
@@ -50,6 +54,11 @@ export function RecordsProvider({ children }: { children: ReactNode }) {
   const kcalHoje = refeicoesHoje.reduce((soma, r) => soma + r.kcal, 0);
   const proteinaHojeG = refeicoesHoje.reduce((soma, r) => soma + r.proteinaG, 0);
 
+  const exerciciosHoje = dados.exercicios
+    .filter((e) => e.data === hoje)
+    .sort((a, b) => (a.horario < b.horario ? 1 : -1));
+  const kcalGastaHoje = exerciciosHoje.reduce((soma, e) => soma + e.kcalGasto, 0);
+
   const pesosOrdenados = [...dados.pesos].sort((a, b) => (a.data < b.data ? 1 : -1));
   const pesoAtualKg = pesosOrdenados.length > 0 ? pesosOrdenados[0].pesoKg : null;
 
@@ -76,6 +85,15 @@ export function RecordsProvider({ children }: { children: ReactNode }) {
     await persistir({ ...dados, pesos: [...dados.pesos, novo] });
   }
 
+  async function adicionarExercicio(nome: string, duracaoMin: number, kcalGasto: number) {
+    const novo: RegistroExercicio = { id: gerarId(), data: hoje, horario: horarioAgora(), nome, duracaoMin, kcalGasto };
+    await persistir({ ...dados, exercicios: [...dados.exercicios, novo] });
+  }
+
+  async function removerExercicio(id: string) {
+    await persistir({ ...dados, exercicios: dados.exercicios.filter((e) => e.id !== id) });
+  }
+
   return (
     <RecordsContext.Provider
       value={{
@@ -86,11 +104,15 @@ export function RecordsProvider({ children }: { children: ReactNode }) {
         kcalHoje,
         proteinaHojeG,
         pesoAtualKg,
+        exerciciosHoje,
+        kcalGastaHoje,
         adicionarRefeicao,
         removerRefeicao,
         adicionarAgua,
         removerAgua,
         adicionarPeso,
+        adicionarExercicio,
+        removerExercicio,
       }}
     >
       {children}
