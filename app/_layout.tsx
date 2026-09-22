@@ -4,6 +4,7 @@ import { useEffect } from 'react';
 import { colors } from '@constants/colors';
 import { ProfileProvider, useProfile } from '@context/ProfileContext';
 import { RecordsProvider } from '@context/RecordsContext';
+import { CustomRecipesProvider } from '@context/CustomRecipesContext';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -31,11 +32,14 @@ function RootNavigation() {
     <Stack
       screenOptions={{
         headerShown: false,
-        contentStyle: { backgroundColor: colors.background },
+        contentStyle: {
+          backgroundColor: colors.background,
+        },
       }}
     >
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
       <Stack.Screen name="onboarding" options={{ headerShown: false }} />
+      <Stack.Screen name="recipe-builder" options={{ headerShown: true, title: 'Minhas receitas' }} />
     </Stack>
   );
 }
@@ -44,7 +48,9 @@ export default function RootLayout() {
   return (
     <ProfileProvider>
       <RecordsProvider>
-        <RootNavigation />
+        <CustomRecipesProvider>
+          <RootNavigation />
+        </CustomRecipesProvider>
       </RecordsProvider>
     </ProfileProvider>
   );
