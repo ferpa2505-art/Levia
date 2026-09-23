@@ -1,5 +1,6 @@
 import { Platform } from 'react-native';
 import Constants from 'expo-constants';
+import { traduzirAtual } from '@/i18n';
 
 /**
  * Desde a SDK 53, importar 'expo-notifications' no Expo Go (Android) já gera
@@ -34,7 +35,7 @@ function getNotifications(): NotificationsModule | null {
 
   if (Platform.OS === 'android') {
     Notifications.setNotificationChannelAsync('lembretes-glp1', {
-      name: 'Lembretes de dose',
+      name: traduzirAtual('notif.canal'),
       importance: Notifications.AndroidImportance.HIGH,
     }).catch(() => {});
   }
@@ -84,8 +85,8 @@ export async function agendarLembreteDose(dataProximaDose: Date): Promise<string
   try {
     const id = await Notifications.scheduleNotificationAsync({
       content: {
-        title: 'Hora da sua próxima dose 💉',
-        body: 'Não esqueça de aplicar e registrar a dose de hoje no Levia.',
+        title: traduzirAtual('notif.titulo'),
+        body: traduzirAtual('notif.corpo'),
         ...(Platform.OS === 'android' ? { channelId: 'lembretes-glp1' } : null),
       },
       trigger: {

@@ -4,9 +4,11 @@ import { aplicarTema, NomeTema } from '@constants/colors';
 import {
   CodigoIdioma,
   ChaveTraducao,
+  definirIdiomaAtual,
   detectarIdiomaDoCelular,
   idiomaValido,
   traduzir,
+  traduzirCatalogo,
 } from '@/i18n';
 
 /**
@@ -32,6 +34,8 @@ interface PreferencesContextValue {
   confirmarIdioma: (idioma: CodigoIdioma) => void;
   /** Tradução: t('home.seuPeso') ou t('home.ola', { nome: 'Fer' }) */
   t: (chave: ChaveTraducao, params?: Record<string, string | number>) => string;
+  /** Tradução de itens de catálogo salvos em português: tc('Caminhada') */
+  tc: (textoPt: string) => string;
 }
 
 const PreferencesContext = createContext<PreferencesContextValue | undefined>(undefined);
@@ -107,6 +111,11 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
     [prefs.idioma]
   );
 
+  const tc = useCallback((textoPt: string) => traduzirCatalogo(prefs.idioma, textoPt), [prefs.idioma]);
+
+  // Mantém o idioma disponível para código fora das telas (notificações)
+  definirIdiomaAtual(prefs.idioma);
+
   // Enquanto lê as preferências salvas, não mostra nada (a splash continua na tela)
   if (!carregado) return null;
 
@@ -120,6 +129,7 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
         mudarIdioma,
         confirmarIdioma,
         t,
+        tc,
       }}
     >
       {children}

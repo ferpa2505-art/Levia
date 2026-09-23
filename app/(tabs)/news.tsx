@@ -5,18 +5,24 @@ import { ThemedText } from '@components/ThemedText';
 import { useNews } from '@context/NewsContext';
 import { colors, spacing, radius } from '@constants/colors';
 import { estilosTema } from '@theme/estilos';
+import { usePreferences } from '@context/PreferencesContext';
 
-function formatarData(valor: string): string {
+function formatarData(valor: string, idioma: string): string {
   const data = new Date(valor);
   if (isNaN(data.getTime())) return valor;
-  const dia = String(data.getDate()).padStart(2, '0');
-  const mes = String(data.getMonth() + 1).padStart(2, '0');
-  const hora = String(data.getHours()).padStart(2, '0');
-  const min = String(data.getMinutes()).padStart(2, '0');
-  return `${dia}/${mes} às ${hora}:${min}`;
+  try {
+    return data.toLocaleString(idioma, { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+  } catch {
+    const dia = String(data.getDate()).padStart(2, '0');
+    const mes = String(data.getMonth() + 1).padStart(2, '0');
+    const hora = String(data.getHours()).padStart(2, '0');
+    const min = String(data.getMinutes()).padStart(2, '0');
+    return `${dia}/${mes} ${hora}:${min}`;
+  }
 }
 
 export default function NewsScreen() {
+  const { t, idioma } = usePreferences();
   const { noticias, loading, atualizando, erro, atualizarNoticias } = useNews();
 
   const onRefresh = useCallback(() => {
@@ -33,10 +39,15 @@ export default function NewsScreen() {
     >
       <ThemedView style={styles.container}>
         <View style={styles.header}>
-          <ThemedText variant="heading" color="text">Notícias</ThemedText>
+          <ThemedText variant="heading" color="text">{t('abas.noticias')}</ThemedText>
           <ThemedText variant="body" color="textSecondary" style={{ marginTop: spacing.xs }}>
-            Novidades sobre dieta, nutrição e exercícios
+            {t('n.sub')}
           </ThemedText>
+          {!idioma.startsWith('pt') ? (
+            <ThemedText variant="caption" color="textSecondary" style={{ marginTop: spacing.xs }}>
+              {t('n.avisoPt')}
+            </ThemedText>
+          ) : null}
         </View>
 
         {erro && (
@@ -44,15 +55,15 @@ export default function NewsScreen() {
             variant="surface"
             style={[styles.card, styles.cardShadow, { borderColor: colors.warning, borderWidth: 1 }]}
           >
-            <ThemedText variant="small" color="textSecondary">{erro}</ThemedText>
+            <ThemedText variant="small" color="textSecondary">{t('n.erro')}</ThemedText>
           </ThemedView>
         )}
 
         {loading && noticias.length === 0 ? (
-          <ThemedText variant="body" color="textSecondary">Carregando notícias...</ThemedText>
+          <ThemedText variant="body" color="textSecondary">{t('n.carregando')}</ThemedText>
         ) : noticias.length === 0 ? (
           <ThemedText variant="body" color="textSecondary">
-            Nenhuma notícia disponível no momento. Puxe a tela pra baixo pra tentar de novo.
+            {t('n.vazio')}
           </ThemedText>
         ) : (
           noticias.map((item) => (
@@ -65,7 +76,7 @@ export default function NewsScreen() {
                   </ThemedText>
                 ) : null}
                 <ThemedText variant="small" color="accent" style={{ marginTop: spacing.sm }}>
-                  {item.fonte} · {formatarData(item.publicadoEm)}
+                  {item.fonte} · {formatarData(item.publicadoEm, idioma)}
                 </ThemedText>
               </ThemedView>
             </Pressable>

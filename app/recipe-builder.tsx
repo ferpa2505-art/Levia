@@ -12,8 +12,10 @@ import { formasDePreparo } from '@constants/preparationMethods';
 import { Ingrediente, IngredienteUsado } from '@models/ingredients';
 import { colors, spacing, radius } from '@constants/colors';
 import { estilosTema } from '@theme/estilos';
+import { usePreferences } from '@context/PreferencesContext';
 
 export default function RecipeBuilderScreen() {
+  const { t, tc, idioma } = usePreferences();
   const router = useRouter();
   const { receitasPersonalizadas, criarReceita, removerReceita } = useCustomRecipes();
 
@@ -87,24 +89,29 @@ export default function RecipeBuilderScreen() {
     <ScrollView style={{ flex: 1, backgroundColor: colors.background }} contentContainerStyle={{ padding: spacing.lg }}>
       <ThemedView style={styles.container}>
         <View style={styles.header}>
-          <ThemedText variant="heading" color="text">Monte sua receita</ThemedText>
+          <ThemedText variant="heading" color="text">{t('r.titulo')}</ThemedText>
           <ThemedText variant="body" color="textSecondary" style={{ marginTop: spacing.xs }}>
-            Junte os ingredientes que você usou, com a quantidade em gramas, e a gente calcula o total por 100g pra você.
+            {t('r.sub')}
           </ThemedText>
         </View>
 
         {/* Buscar e adicionar ingrediente */}
         <ThemedView variant="surface" style={[styles.card, styles.cardShadow]}>
           <ThemedText variant="subheading" color="text" style={{ marginBottom: spacing.sm }}>
-            Adicionar ingrediente
+            {t('r.adicionarIng')}
           </ThemedText>
 
           {!ingredienteSelecionado ? (
             <>
+              {!idioma.startsWith('pt') ? (
+                <ThemedText variant="caption" color="textSecondary" style={{ marginBottom: spacing.xs }}>
+                  {t('r.avisoLista')}
+                </ThemedText>
+              ) : null}
               <Input
                 value={busca}
                 onChangeText={setBusca}
-                placeholder="Buscar ingrediente (ex: ovo, batata, queijo...)"
+                placeholder={t('r.buscar')}
                 style={styles.formInput}
               />
               {sugestoesIngredientes.length > 0 && (
@@ -117,7 +124,7 @@ export default function RecipeBuilderScreen() {
                     >
                       <ThemedText variant="small" color="text">{ing.nome}</ThemedText>
                       <ThemedText variant="small" color="textSecondary">
-                        {ing.kcalPor100g} kcal / 100g · {ing.unidadeComum ?? `${ing.gramaPadrao}g padrão`}
+                        {ing.kcalPor100g} kcal / 100g · {ing.unidadeComum ?? t('r.padrao', { g: ing.gramaPadrao })}
                       </ThemedText>
                     </Pressable>
                   ))}
@@ -135,7 +142,7 @@ export default function RecipeBuilderScreen() {
                   <Input
                     value={gramasTexto}
                     onChangeText={setGramasTexto}
-                    placeholder="Gramas"
+                    placeholder={t('r.gramas')}
                     keyboardType="decimal-pad"
                     style={styles.formInput}
                     autoFocus
@@ -147,7 +154,7 @@ export default function RecipeBuilderScreen() {
               </View>
 
               <ThemedText variant="small" color="textSecondary" style={{ marginTop: spacing.sm, marginBottom: spacing.xs }}>
-                Forma de preparo (opcional)
+                {t('r.forma')}
               </ThemedText>
               <View style={styles.chipsRow}>
                 {formasDePreparo.map((f) => {
@@ -159,7 +166,7 @@ export default function RecipeBuilderScreen() {
                       onPress={() => setFormaSelecionadaNome(selecionada ? undefined : f.nome)}
                     >
                       <ThemedText variant="small" color={selecionada ? 'primary' : 'textSecondary'}>
-                        {f.nome}
+                        {tc(f.nome)}
                       </ThemedText>
                     </Pressable>
                   );
@@ -167,9 +174,9 @@ export default function RecipeBuilderScreen() {
               </View>
 
               <View style={styles.formButtons}>
-                <Button label="Cancelar" variant="outline" size="sm" onPress={cancelarSelecao} style={{ marginRight: spacing.sm }} />
+                <Button label={t('comum.cancelar')} variant="outline" size="sm" onPress={cancelarSelecao} style={{ marginRight: spacing.sm }} />
                 <Button
-                  label="Adicionar à receita"
+                  label={t('r.adicionarReceita')}
                   variant="primary"
                   size="sm"
                   onPress={adicionarItem}
@@ -184,7 +191,7 @@ export default function RecipeBuilderScreen() {
         {itens.length > 0 && (
           <ThemedView variant="surface" style={[styles.card, styles.cardShadow]}>
             <ThemedText variant="subheading" color="text" style={{ marginBottom: spacing.sm }}>
-              Ingredientes da receita
+              {t('r.ingredientes')}
             </ThemedText>
             <View style={styles.lista}>
               {itens.map((item, index) => (
@@ -192,10 +199,10 @@ export default function RecipeBuilderScreen() {
                   <View style={{ flex: 1 }}>
                     <ThemedText variant="body" color="text">
                       {item.ingredienteNome} · {item.gramas}g
-                      {item.formaPreparoNome ? ` · ${item.formaPreparoNome}` : ''}
+                      {item.formaPreparoNome ? ` · ${tc(item.formaPreparoNome)}` : ''}
                     </ThemedText>
                     <ThemedText variant="small" color="textSecondary">
-                      {item.kcal} kcal · {item.proteinaG} g proteína
+                      {t('d.valores', { kcal: item.kcal, prot: item.proteinaG })}
                     </ThemedText>
                   </View>
                   <Pressable onPress={() => removerItem(index)} style={styles.removerBotao}>
@@ -207,10 +214,10 @@ export default function RecipeBuilderScreen() {
 
             <View style={styles.totalBox}>
               <ThemedText variant="body" color="text">
-                Total: {Math.round(pesoTotalG)}g · {Math.round(kcalTotal)} kcal · {Math.round(proteinaGTotal * 10) / 10} g proteína
+                {t('r.total', { g: Math.round(pesoTotalG), kcal: Math.round(kcalTotal), prot: Math.round(proteinaGTotal * 10) / 10 })}
               </ThemedText>
               <ThemedText variant="small" color="accent" style={{ marginTop: spacing.xs }}>
-                Por 100g desta receita: {kcalPor100gPreview} kcal · {proteinaPor100gPreview} g proteína
+                {t('r.por100', { kcal: kcalPor100gPreview, prot: proteinaPor100gPreview })}
               </ThemedText>
             </View>
           </ThemedView>
@@ -220,16 +227,16 @@ export default function RecipeBuilderScreen() {
         {itens.length > 0 && (
           <ThemedView variant="surface" style={[styles.card, styles.cardShadow]}>
             <ThemedText variant="subheading" color="text" style={{ marginBottom: spacing.sm }}>
-              Nome da receita
+              {t('r.nome')}
             </ThemedText>
             <Input
               value={nomeReceita}
               onChangeText={setNomeReceita}
-              placeholder='Ex: "Torta da Rê"'
+              placeholder={t('r.nomePh')}
               style={styles.formInput}
             />
             <Button
-              label="Salvar receita"
+              label={t('r.salvar')}
               variant="primary"
               onPress={handleSalvar}
               disabled={!podeSalvar}
@@ -242,7 +249,7 @@ export default function RecipeBuilderScreen() {
         {receitasPersonalizadas.length > 0 && (
           <ThemedView variant="surface" style={[styles.card, styles.cardShadow]}>
             <ThemedText variant="subheading" color="text" style={{ marginBottom: spacing.sm }}>
-              Minhas receitas salvas
+              {t('r.salvas')}
             </ThemedText>
             <View style={styles.lista}>
               {receitasPersonalizadas.map((r) => (
@@ -250,7 +257,7 @@ export default function RecipeBuilderScreen() {
                   <View style={{ flex: 1 }}>
                     <ThemedText variant="body" color="text">{r.nome}</ThemedText>
                     <ThemedText variant="small" color="textSecondary">
-                      {r.kcalPor100g} kcal / 100g · {r.proteinaGPor100g} g proteína / 100g · total {Math.round(r.pesoTotalG)}g
+                      {t('r.itemSalva', { kcal: r.kcalPor100g, prot: r.proteinaGPor100g, g: Math.round(r.pesoTotalG) })}
                     </ThemedText>
                   </View>
                   <Pressable onPress={() => removerReceita(r.id)} style={styles.removerBotao}>

@@ -16,8 +16,10 @@ import {
 } from '@constants/exerciseTypes';
 import { colors, spacing, radius } from '@constants/colors';
 import { estilosTema } from '@theme/estilos';
+import { usePreferences } from '@context/PreferencesContext';
 
 export default function ExercisesScreen() {
+  const { t, tc } = usePreferences();
   const { exerciciosHoje, kcalGastaHoje, adicionarExercicio, removerExercicio } = useRecords();
 
   const [tipoSelecionado, setTipoSelecionado] = useState<TipoExercicio | null>(null);
@@ -81,9 +83,9 @@ export default function ExercisesScreen() {
     <ScrollView style={{ flex: 1, backgroundColor: colors.background }} contentContainerStyle={{ padding: spacing.lg }}>
       <ThemedView style={styles.container}>
         <View style={styles.header}>
-          <ThemedText variant="heading" color="text">Exercícios</ThemedText>
+          <ThemedText variant="heading" color="text">{t('abas.exercicios')}</ThemedText>
           <ThemedText variant="body" color="textSecondary" style={{ marginTop: spacing.xs }}>
-            Toque no tipo de exercício que você fez
+            {t('e.sub')}
           </ThemedText>
         </View>
 
@@ -95,7 +97,7 @@ export default function ExercisesScreen() {
                   <MaterialCommunityIcons name={tipo.icone as any} size={28} color={colors.primary} />
                 </View>
                 <ThemedText variant="small" color="text" style={{ marginTop: spacing.xs, textAlign: 'center' }}>
-                  {tipo.nome}
+                  {tc(tipo.nome)}
                 </ThemedText>
               </Pressable>
             ))}
@@ -104,7 +106,7 @@ export default function ExercisesScreen() {
           <ThemedView variant="surface" style={[styles.card, styles.cardShadow]}>
             <Pressable onPress={fecharForm} style={styles.voltarBotao}>
               <ChevronLeft size={16} color={colors.accent} strokeWidth={2.25} />
-              <ThemedText variant="small" color="accent">Voltar</ThemedText>
+              <ThemedText variant="small" color="accent">{t('comum.voltarTexto')}</ThemedText>
             </Pressable>
 
             <View style={styles.formHeader}>
@@ -112,24 +114,24 @@ export default function ExercisesScreen() {
                 <MaterialCommunityIcons name={tipoSelecionado.icone as any} size={26} color={colors.primary} />
               </View>
               <ThemedText variant="subheading" color="text" style={{ marginLeft: spacing.sm }}>
-                {tipoSelecionado.nome}
+                {tc(tipoSelecionado.nome)}
               </ThemedText>
             </View>
 
             <ThemedText variant="small" color="textSecondary" style={{ marginTop: spacing.lg, marginBottom: spacing.xs }}>
-              Tempo (minutos)
+              {t('e.tempo')}
             </ThemedText>
             <Input
               value={tempoTexto}
               onChangeText={handleTempoChange}
-              placeholder="minutos"
+              placeholder={t('e.minutos')}
               keyboardType="number-pad"
               style={styles.formInput}
               autoFocus
             />
 
             <ThemedText variant="small" color="textSecondary" style={{ marginTop: spacing.md, marginBottom: spacing.xs }}>
-              Intensidade
+              {t('e.intensidade')}
             </ThemedText>
             <View style={styles.chipsRow}>
               {NIVEIS_INTENSIDADE.map((nivel) => {
@@ -141,7 +143,7 @@ export default function ExercisesScreen() {
                     onPress={() => handleIntensidadeChange(nivel)}
                   >
                     <ThemedText variant="small" color={selecionada ? 'primary' : 'textSecondary'}>
-                      {nivel}
+                      {tc(nivel)}
                     </ThemedText>
                   </Pressable>
                 );
@@ -151,7 +153,7 @@ export default function ExercisesScreen() {
             {tipoSelecionado.opcoesLocal && (
               <>
                 <ThemedText variant="small" color="textSecondary" style={{ marginTop: spacing.md, marginBottom: spacing.xs }}>
-                  Local
+                  {t('e.local')}
                 </ThemedText>
                 <View style={styles.chipsRow}>
                   {tipoSelecionado.opcoesLocal.map((opcao) => {
@@ -163,7 +165,7 @@ export default function ExercisesScreen() {
                         onPress={() => setLocal(opcao)}
                       >
                         <ThemedText variant="small" color={selecionada ? 'primary' : 'textSecondary'}>
-                          {opcao}
+                          {tc(opcao)}
                         </ThemedText>
                       </Pressable>
                     );
@@ -175,7 +177,7 @@ export default function ExercisesScreen() {
             {tipoSelecionado.opcoesGrupoMuscular && (
               <>
                 <ThemedText variant="small" color="textSecondary" style={{ marginTop: spacing.md, marginBottom: spacing.xs }}>
-                  Grupo muscular
+                  {t('e.grupo')}
                 </ThemedText>
                 <View style={styles.chipsRow}>
                   {tipoSelecionado.opcoesGrupoMuscular.map((opcao) => {
@@ -187,7 +189,7 @@ export default function ExercisesScreen() {
                         onPress={() => setGrupoMuscular(opcao)}
                       >
                         <ThemedText variant="small" color={selecionada ? 'primary' : 'textSecondary'}>
-                          {opcao}
+                          {tc(opcao)}
                         </ThemedText>
                       </Pressable>
                     );
@@ -197,47 +199,47 @@ export default function ExercisesScreen() {
             )}
 
             <ThemedText variant="small" color="textSecondary" style={{ marginTop: spacing.md, marginBottom: spacing.xs }}>
-              Kcal estimadas (pode ajustar)
+              {t('e.kcalEstimadas')}
             </ThemedText>
             <Input
               value={kcalTexto}
               onChangeText={setKcalTexto}
-              placeholder="kcal"
+              placeholder={t('home.kcal')}
               keyboardType="number-pad"
               style={styles.formInput}
             />
 
             <View style={styles.formButtons}>
-              <Button label="Cancelar" variant="outline" size="sm" onPress={fecharForm} style={{ marginRight: spacing.sm }} />
-              <Button label="Salvar" variant="primary" size="sm" onPress={handleSalvar} disabled={!formValido} />
+              <Button label={t('comum.cancelar')} variant="outline" size="sm" onPress={fecharForm} style={{ marginRight: spacing.sm }} />
+              <Button label={t('comum.salvar')} variant="primary" size="sm" onPress={handleSalvar} disabled={!formValido} />
             </View>
           </ThemedView>
         )}
 
         {/* Registros de hoje */}
         <ThemedView variant="surface" style={[styles.card, styles.cardShadow]}>
-          <ThemedText variant="subheading" color="text">Hoje</ThemedText>
+          <ThemedText variant="subheading" color="text">{t('e.hoje')}</ThemedText>
           {exerciciosHoje.length > 0 && (
             <ThemedText variant="small" color="textSecondary" style={{ marginTop: spacing.xs }}>
-              {kcalGastaHoje} kcal gastas
+              {t('e.kcalGastas', { kcal: kcalGastaHoje })}
             </ThemedText>
           )}
 
           {exerciciosHoje.length === 0 ? (
             <ThemedText variant="body" color="textSecondary" style={{ marginTop: spacing.md }}>
-              Nenhum exercício registrado ainda hoje.
+              {t('e.vazio')}
             </ThemedText>
           ) : (
             <View style={styles.lista}>
               {exerciciosHoje.map((e) => (
                 <View key={e.id} style={styles.itemLista}>
                   <View style={{ flex: 1 }}>
-                    <ThemedText variant="body" color="text">{e.nome}</ThemedText>
+                    <ThemedText variant="body" color="text">{tc(e.nome)}</ThemedText>
                     <ThemedText variant="small" color="textSecondary">
                       {e.horario} · {e.duracaoMin} min · {e.kcalGasto} kcal
-                      {e.intensidade ? ` · ${e.intensidade}` : ''}
-                      {e.local ? ` · ${e.local}` : ''}
-                      {e.grupoMuscular ? ` · ${e.grupoMuscular}` : ''}
+                      {e.intensidade ? ` · ${tc(e.intensidade)}` : ''}
+                      {e.local ? ` · ${tc(e.local)}` : ''}
+                      {e.grupoMuscular ? ` · ${tc(e.grupoMuscular)}` : ''}
                     </ThemedText>
                   </View>
                   <Pressable onPress={() => removerExercicio(e.id)} style={styles.removerBotao}>

@@ -26,22 +26,44 @@ import {
 import { NivelIntensidadeSintoma } from '@models/glp1';
 import { colors, spacing, radius } from '@constants/colors';
 import { estilosTema } from '@theme/estilos';
+import { usePreferences } from '@context/PreferencesContext';
 
-function formatarDiasRestantes(dias: number | null): string {
-  if (dias === null) return 'Registre sua primeira dose pra começar a acompanhar';
-  if (dias === 0) return 'Prevista para hoje';
-  if (dias === 1) return 'Prevista para amanhã';
-  if (dias > 1) return `Prevista em ${dias} dias`;
-  if (dias === -1) return 'Atrasada há 1 dia';
-  return `Atrasada há ${Math.abs(dias)} dias`;
+type Tradutor = ReturnType<typeof usePreferences>['t'];
+
+function formatarDiasRestantes(dias: number | null, t: Tradutor): string {
+  if (dias === null) return t('g.primeira');
+  if (dias === 0) return t('g.hoje');
+  if (dias === 1) return t('g.amanha');
+  if (dias > 1) return t('g.emDias', { n: dias });
+  if (dias === -1) return t('g.atrasada1');
+  return t('g.atrasadaN', { n: Math.abs(dias) });
 }
 
-function formatarDataCurta(data: Date | null): string {
+function formatarDataCurta(data: Date | null, idioma: string): string {
   if (!data) return '--';
-  return data.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+  try {
+    return data.toLocaleDateString(idioma, { day: '2-digit', month: '2-digit' });
+  } catch {
+    return data.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+  }
+}
+
+/** Data salva como "AAAA-MM-DD" → formato do idioma escolhido */
+function formatarDataRegistro(dataIso: string, idioma: string): string {
+  const [a, m, d] = dataIso.split('-').map(Number);
+  const data = new Date(a, (m || 1) - 1, d || 1);
+  if (isNaN(data.getTime())) return dataIso.split('-').reverse().join('/');
+  try {
+    return data.toLocaleDateString(idioma, { day: '2-digit', month: '2-digit', year: 'numeric' });
+  } catch {
+    return dataIso.split('-').reverse().join('/');
+  }
 }
 
 export default function Glp1Screen() {
+  const { t, tc, idioma } = usePreferences();
+  // separador decimal do exemplo: vírgula ou ponto, conforme o idioma
+  const exemploDecimal = (0.5).toLocaleString(idioma);
   const {
     doses,
     sintomas,
@@ -138,9 +160,9 @@ export default function Glp1Screen() {
     <ScrollView style={{ flex: 1, backgroundColor: colors.background }} contentContainerStyle={{ padding: spacing.lg }}>
       <ThemedView style={styles.container}>
         <View style={styles.header}>
-          <ThemedText variant="heading" color="text">Modo GLP-1</ThemedText>
+          <ThemedText variant="heading" color="text">{t('titulos.glp1')}</ThemedText>
           <ThemedText variant="body" color="textSecondary" style={{ marginTop: spacing.xs }}>
-            Doses, rodízio de aplicação, sintomas e lembretes num só lugar
+            {t('g.sub')}
           </ThemedText>
         </View>
 
@@ -149,38 +171,37 @@ export default function Glp1Screen() {
           <View style={styles.cardTituloRow}>
             <Calendar size={18} color={colors.primary} strokeWidth={2} />
             <ThemedText variant="subheading" color="text" style={{ marginLeft: spacing.xs }}>
-              Próxima dose
+              {t('g.proxima')}
             </ThemedText>
           </View>
 
           {ultimaDose ? (
             <>
               <ThemedText variant="title" color="primary" style={{ marginTop: spacing.sm }}>
-                {formatarDataCurta(proximaDoseData)}
+                {formatarDataCurta(proximaDoseData, idioma)}
               </ThemedText>
               <ThemedText variant="small" color="textSecondary" style={{ marginTop: spacing.xs }}>
-                {formatarDiasRestantes(diasAteProximaDose)}
+                {formatarDiasRestantes(diasAteProximaDose, t)}
               </ThemedText>
               <ThemedText variant="small" color="textSecondary" style={{ marginTop: spacing.xs }}>
-                Última: {ultimaDose.medicamento} · {ultimaDose.dosagemMg} mg · {ultimaDose.local}
+                {t('g.ultima', { med: tc(ultimaDose.medicamento), mg: ultimaDose.dosagemMg, local: tc(ultimaDose.local) })}
               </ThemedText>
             </>
           ) : (
             <ThemedText variant="body" color="textSecondary" style={{ marginTop: spacing.sm }}>
-              {formatarDiasRestantes(null)}
+              {formatarDiasRestantes(null, t)}
             </ThemedText>
           )}
 {configLembrete.ativo && isExpoGo && (
   <ThemedText variant="caption" color="textSecondary" style={{ marginTop: spacing.sm }}>
-    No Expo Go a notificação não dispara de verdade — funciona só num development
-    build ou no app publicado.
+    {t('g.expoGo')}
   </ThemedText>
 )}
           <View style={styles.lembreteRow}>
             <View style={styles.lembreteTituloRow}>
               <Bell size={16} color={colors.textSecondary} strokeWidth={2} />
               <ThemedText variant="small" color="textSecondary" style={{ marginLeft: spacing.xs }}>
-                Lembrete de próxima dose
+                {t('g.lembrete')}
               </ThemedText>
             </View>
             <Pressable
@@ -188,7 +209,7 @@ export default function Glp1Screen() {
               style={[styles.toggle, configLembrete.ativo && styles.toggleAtivo]}
             >
               <ThemedText variant="small" color={configLembrete.ativo ? 'primary' : 'textSecondary'}>
-                {configLembrete.ativo ? 'Ativado' : 'Desativado'}
+                {configLembrete.ativo ? t('g.ativado') : t('g.desativado')}
               </ThemedText>
             </Pressable>
           </View>
@@ -204,7 +225,7 @@ export default function Glp1Screen() {
                     onPress={() => handleEscolherFrequencia(f.dias)}
                   >
                     <ThemedText variant="small" color={selecionada ? 'primary' : 'textSecondary'}>
-                      {f.label}
+                      {tc(f.label)}
                     </ThemedText>
                   </Pressable>
                 );
@@ -219,18 +240,18 @@ export default function Glp1Screen() {
             <View style={styles.cardTituloRow}>
               <Syringe size={18} color={colors.primary} strokeWidth={2} />
               <ThemedText variant="subheading" color="text" style={{ marginLeft: spacing.xs }}>
-                Registrar dose
+                {t('g.registrarDose')}
               </ThemedText>
             </View>
             {!mostrarFormDose && (
-              <Button label="+ Registrar" variant="outline" size="sm" onPress={abrirFormDose} />
+              <Button label={t('g.registrar')} variant="outline" size="sm" onPress={abrirFormDose} />
             )}
           </View>
 
           {mostrarFormDose && (
             <View style={styles.form}>
               <ThemedText variant="small" color="textSecondary" style={styles.rotulo}>
-                Medicamento
+                {t('g.medicamento')}
               </ThemedText>
               <View style={styles.chipsRow}>
                 {MEDICAMENTOS_GLP1.map((m) => {
@@ -242,7 +263,7 @@ export default function Glp1Screen() {
                       onPress={() => setMedicamento(m)}
                     >
                       <ThemedText variant="small" color={selecionado ? 'primary' : 'textSecondary'}>
-                        {m}
+                        {tc(m)}
                       </ThemedText>
                     </Pressable>
                   );
@@ -250,18 +271,18 @@ export default function Glp1Screen() {
               </View>
 
               <ThemedText variant="small" color="textSecondary" style={styles.rotulo}>
-                Dosagem (mg)
+                {t('g.dosagem')}
               </ThemedText>
               <Input
                 value={dosagemTexto}
                 onChangeText={setDosagemTexto}
-                placeholder="ex: 0,5"
+                placeholder={t('g.exemplo', { v: exemploDecimal })}
                 keyboardType="decimal-pad"
                 style={styles.formInput}
               />
 
               <ThemedText variant="small" color="textSecondary" style={styles.rotulo}>
-                Local da aplicação
+                {t('g.local')}
               </ThemedText>
               <View style={styles.chipsRow}>
                 {LOCAIS_APLICACAO.map((opcao) => {
@@ -284,7 +305,7 @@ export default function Glp1Screen() {
                           color={selecionado ? 'primary' : 'textSecondary'}
                           style={{ marginLeft: 4 }}
                         >
-                          {opcao}{sugerido ? ' · sugerido' : ''}
+                          {tc(opcao)}{sugerido ? ` · ${t('g.sugerido')}` : ''}
                         </ThemedText>
                       </View>
                     </Pressable>
@@ -293,24 +314,24 @@ export default function Glp1Screen() {
               </View>
 
               <ThemedText variant="small" color="textSecondary" style={styles.rotulo}>
-                Observações (opcional)
+                {t('g.obs')}
               </ThemedText>
               <Input
                 value={observacoesDose}
                 onChangeText={setObservacoesDose}
-                placeholder="Alguma observação sobre essa aplicação"
+                placeholder={t('g.obsDosePh')}
                 style={[styles.formInput, { textAlign: 'left' }]}
               />
 
               <View style={styles.formButtons}>
                 <Button
-                  label="Cancelar"
+                  label={t('comum.cancelar')}
                   variant="outline"
                   size="sm"
                   onPress={() => setMostrarFormDose(false)}
                   style={{ marginRight: spacing.sm }}
                 />
-                <Button label="Salvar" variant="primary" size="sm" onPress={handleSalvarDose} disabled={!doseValida} />
+                <Button label={t('comum.salvar')} variant="primary" size="sm" onPress={handleSalvarDose} disabled={!doseValida} />
               </View>
             </View>
           )}
@@ -321,10 +342,10 @@ export default function Glp1Screen() {
                 <View key={d.id} style={styles.itemLista}>
                   <View style={{ flex: 1 }}>
                     <ThemedText variant="body" color="text">
-                      {d.medicamento} · {d.dosagemMg} mg
+                      {tc(d.medicamento)} · {d.dosagemMg} mg
                     </ThemedText>
                     <ThemedText variant="small" color="textSecondary">
-                      {d.data.split('-').reverse().join('/')} · {d.horario} · {d.local}
+                      {formatarDataRegistro(d.data, idioma)} · {d.horario} · {tc(d.local)}
                     </ThemedText>
                   </View>
                   <Pressable onPress={() => removerDose(d.id)} style={styles.removerBotao}>
@@ -341,35 +362,34 @@ export default function Glp1Screen() {
           <View style={styles.cardTituloRow}>
             <RotateCw size={18} color={colors.primary} strokeWidth={2} />
             <ThemedText variant="subheading" color="text" style={{ marginLeft: spacing.xs }}>
-              Calculadora de cliques
+              {t('g.calc')}
             </ThemedText>
           </View>
           <ThemedText variant="small" color="textSecondary" style={{ marginTop: spacing.xs }}>
-            Pra canetas manipuladas com dose ajustável por cliques. Informe os dados da sua caneta
-            (conforme o rótulo/receita) e a dose que você quer aplicar.
+            {t('g.calcSub')}
           </ThemedText>
 
           <View style={styles.formRow}>
             <View style={styles.formCol}>
               <ThemedText variant="small" color="textSecondary" style={styles.rotulo}>
-                Total de mg na caneta
+                {t('g.mgCaneta')}
               </ThemedText>
               <Input
                 value={mgCanetaTexto}
                 onChangeText={setMgCanetaTexto}
-                placeholder="ex: 5"
+                placeholder={t('g.exemplo', { v: 5 })}
                 keyboardType="decimal-pad"
                 style={styles.formInput}
               />
             </View>
             <View style={styles.formCol}>
               <ThemedText variant="small" color="textSecondary" style={styles.rotulo}>
-                Total de cliques na caneta
+                {t('g.cliquesCaneta')}
               </ThemedText>
               <Input
                 value={cliquesCanetaTexto}
                 onChangeText={setCliquesCanetaTexto}
-                placeholder="ex: 60"
+                placeholder={t('g.exemplo', { v: 60 })}
                 keyboardType="number-pad"
                 style={styles.formInput}
               />
@@ -377,7 +397,7 @@ export default function Glp1Screen() {
           </View>
 
           <Button
-            label="Salvar dados da caneta"
+            label={t('g.salvarCaneta')}
             variant="outline"
             size="sm"
             onPress={handleSalvarConfigCaneta}
@@ -386,12 +406,12 @@ export default function Glp1Screen() {
           />
 
           <ThemedText variant="small" color="textSecondary" style={styles.rotulo}>
-            Dose que você quer aplicar (mg)
+            {t('g.doseDesejada')}
           </ThemedText>
           <Input
             value={doseDesejadaTexto}
             onChangeText={setDoseDesejadaTexto}
-            placeholder="ex: 0,5"
+            placeholder={t('g.exemplo', { v: exemploDecimal })}
             keyboardType="decimal-pad"
             style={styles.formInput}
             editable={configCanetaValida}
@@ -399,16 +419,14 @@ export default function Glp1Screen() {
 
           {cliquesCalculados !== null && (
             <ThemedText variant="title" color="primary" style={{ marginTop: spacing.md }}>
-              ≈ {cliquesCalculados} cliques
+              {t('g.cliques', { n: cliquesCalculados })}
             </ThemedText>
           )}
 
           <View style={styles.avisoBox}>
             <Info size={14} color={colors.textSecondary} strokeWidth={2} />
             <ThemedText variant="caption" color="textSecondary" style={{ marginLeft: spacing.xs, flex: 1 }}>
-              Confira sempre esses números com o rótulo da sua caneta, a farmácia de manipulação ou
-              seu médico antes de aplicar — a relação entre mg e cliques varia de fabricante pra
-              fabricante e essa conta é só uma referência baseada no que você mesmo informou.
+              {t('g.aviso')}
             </ThemedText>
           </View>
         </ThemedView>
@@ -419,18 +437,18 @@ export default function Glp1Screen() {
             <View style={styles.cardTituloRow}>
               <Activity size={18} color={colors.primary} strokeWidth={2} />
               <ThemedText variant="subheading" color="text" style={{ marginLeft: spacing.xs }}>
-                Sintomas
+                {t('g.sintomas')}
               </ThemedText>
             </View>
             {!mostrarFormSintoma && (
-              <Button label="+ Registrar" variant="outline" size="sm" onPress={abrirFormSintoma} />
+              <Button label={t('g.registrar')} variant="outline" size="sm" onPress={abrirFormSintoma} />
             )}
           </View>
 
           {mostrarFormSintoma && (
             <View style={styles.form}>
               <ThemedText variant="small" color="textSecondary" style={styles.rotulo}>
-                Sintoma
+                {t('g.sintoma')}
               </ThemedText>
               <View style={styles.chipsRow}>
                 {SINTOMAS_COMUNS.map((s) => {
@@ -442,7 +460,7 @@ export default function Glp1Screen() {
                       onPress={() => setSintomaSelecionado(s)}
                     >
                       <ThemedText variant="small" color={selecionado ? 'primary' : 'textSecondary'}>
-                        {s}
+                        {tc(s)}
                       </ThemedText>
                     </Pressable>
                   );
@@ -450,7 +468,7 @@ export default function Glp1Screen() {
               </View>
 
               <ThemedText variant="small" color="textSecondary" style={styles.rotulo}>
-                Intensidade
+                {t('e.intensidade')}
               </ThemedText>
               <View style={styles.chipsRow}>
                 {NIVEIS_INTENSIDADE_SINTOMA.map((nivel) => {
@@ -462,7 +480,7 @@ export default function Glp1Screen() {
                       onPress={() => setIntensidade(nivel)}
                     >
                       <ThemedText variant="small" color={selecionado ? 'primary' : 'textSecondary'}>
-                        {nivel}
+                        {tc(nivel)}
                       </ThemedText>
                     </Pressable>
                   );
@@ -470,31 +488,31 @@ export default function Glp1Screen() {
               </View>
 
               <ThemedText variant="small" color="textSecondary" style={styles.rotulo}>
-                Observações (opcional)
+                {t('g.obs')}
               </ThemedText>
               <Input
                 value={observacoesSintoma}
                 onChangeText={setObservacoesSintoma}
-                placeholder="Quando começou, o que ajudou..."
+                placeholder={t('g.obsSintPh')}
                 style={[styles.formInput, { textAlign: 'left' }]}
               />
 
               <View style={styles.formButtons}>
                 <Button
-                  label="Cancelar"
+                  label={t('comum.cancelar')}
                   variant="outline"
                   size="sm"
                   onPress={() => setMostrarFormSintoma(false)}
                   style={{ marginRight: spacing.sm }}
                 />
-                <Button label="Salvar" variant="primary" size="sm" onPress={handleSalvarSintoma} />
+                <Button label={t('comum.salvar')} variant="primary" size="sm" onPress={handleSalvarSintoma} />
               </View>
             </View>
           )}
 
           {sintomas.length === 0 && !mostrarFormSintoma ? (
             <ThemedText variant="body" color="textSecondary" style={{ marginTop: spacing.md }}>
-              Nenhum sintoma registrado ainda.
+              {t('g.semSintomas')}
             </ThemedText>
           ) : (
             <View style={styles.lista}>
@@ -502,10 +520,10 @@ export default function Glp1Screen() {
                 <View key={s.id} style={styles.itemLista}>
                   <View style={{ flex: 1 }}>
                     <ThemedText variant="body" color="text">
-                      {s.sintoma} · {s.intensidade}
+                      {tc(s.sintoma)} · {tc(s.intensidade)}
                     </ThemedText>
                     <ThemedText variant="small" color="textSecondary">
-                      {s.data.split('-').reverse().join('/')} · {s.horario}
+                      {formatarDataRegistro(s.data, idioma)} · {s.horario}
                       {s.observacoes ? ` · ${s.observacoes}` : ''}
                     </ThemedText>
                   </View>

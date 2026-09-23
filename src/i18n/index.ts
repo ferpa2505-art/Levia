@@ -96,3 +96,34 @@ export function traduzir(
   }
   return texto;
 }
+
+/* ------------------------------------------------------------------
+ * Itens de catálogo (exercícios, locais, sintomas, medicamentos...)
+ * ------------------------------------------------------------------ */
+import { CATALOGO } from './catalogo';
+
+/**
+ * Traduz um item de catálogo a partir do texto original em português.
+ * Se não houver tradução, devolve o próprio texto (ex.: nomes próprios).
+ */
+export function traduzirCatalogo(idioma: CodigoIdioma, textoPt: string): string {
+  return CATALOGO[idioma]?.[textoPt] ?? textoPt;
+}
+
+/* ------------------------------------------------------------------
+ * Idioma atual para código fora das telas (ex.: notificações)
+ * ------------------------------------------------------------------ */
+let idiomaAtual: CodigoIdioma = 'pt-BR';
+
+export function definirIdiomaAtual(idioma: CodigoIdioma) {
+  idiomaAtual = idioma;
+}
+
+export function obterIdiomaAtual(): CodigoIdioma {
+  return idiomaAtual;
+}
+
+/** Traduz usando o idioma escolhido no app — para usar fora dos componentes. */
+export function traduzirAtual(chave: ChaveTraducao, params?: Record<string, string | number>): string {
+  return traduzir(idiomaAtual, chave, params);
+}

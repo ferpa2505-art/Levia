@@ -12,10 +12,12 @@ import { buscarReceitas, ReceitaConhecida } from '@constants/recipes';
 import { ReceitaPersonalizada } from '@models/ingredients';
 import { colors, spacing, radius } from '@constants/colors';
 import { estilosTema } from '@theme/estilos';
+import { usePreferences } from '@context/PreferencesContext';
 
 const OPCOES_AGUA = [200, 300, 500];
 
 export default function JournalScreen() {
+  const { t } = usePreferences();
   const router = useRouter();
   const {
     refeicoesHoje,
@@ -68,20 +70,20 @@ export default function JournalScreen() {
     <ScrollView style={{ flex: 1, backgroundColor: colors.background }} contentContainerStyle={{ padding: spacing.lg }}>
       <ThemedView style={styles.container}>
         <View style={styles.header}>
-          <ThemedText variant="heading" color="text">Diário</ThemedText>
+          <ThemedText variant="heading" color="text">{t('abas.diario')}</ThemedText>
           <ThemedText variant="body" color="textSecondary" style={{ marginTop: spacing.xs }}>
-            Suas refeições e água de hoje
+            {t('d.sub')}
           </ThemedText>
         </View>
 
         {/* Água */}
         <ThemedView variant="surface" style={[styles.card, styles.cardShadow]}>
           <View style={styles.aguaHeader}>
-            <ThemedText variant="subheading" color="text">Água</ThemedText>
+            <ThemedText variant="subheading" color="text">{t('d.agua')}</ThemedText>
             {aguasHoje.length > 0 && (
               <Pressable onPress={() => setMostrarListaAgua((v) => !v)}>
                 <ThemedText variant="small" color="accent">
-                  {mostrarListaAgua ? 'ocultar registros' : 'ver registros'}
+                  {mostrarListaAgua ? t('d.ocultar') : t('d.ver')}
                 </ThemedText>
               </Pressable>
             )}
@@ -118,17 +120,17 @@ export default function JournalScreen() {
         {/* Refeições */}
         <ThemedView variant="surface" style={[styles.card, styles.cardShadow]}>
           <View style={styles.refeicoesHeader}>
-            <ThemedText variant="subheading" color="text">Refeições</ThemedText>
+            <ThemedText variant="subheading" color="text">{t('d.refeicoes')}</ThemedText>
             {!mostrarForm && (
               <View style={{ flexDirection: 'row' }}>
                 <Button
-                  label="Minhas receitas"
+                  label={t('titulos.receitas')}
                   variant="outline"
                   size="sm"
                   onPress={() => router.push('/recipe-builder')}
                   style={{ marginRight: spacing.sm }}
                 />
-                <Button label="+ Adicionar" variant="outline" size="sm" onPress={() => setMostrarForm(true)} />
+                <Button label={t('d.adicionar')} variant="outline" size="sm" onPress={() => setMostrarForm(true)} />
               </View>
             )}
           </View>
@@ -138,7 +140,7 @@ export default function JournalScreen() {
               <Input
                 value={nome}
                 onChangeText={setNome}
-                placeholder="Nome da refeição"
+                placeholder={t('d.nomeRefeicao')}
                 style={styles.formInput}
                 autoFocus
               />
@@ -151,9 +153,9 @@ export default function JournalScreen() {
                       style={styles.sugestaoItem}
                       onPress={() => escolherReceitaPersonalizada(r)}
                     >
-                      <ThemedText variant="small" color="text">{r.nome} · sua receita</ThemedText>
+                      <ThemedText variant="small" color="text">{t('d.suaReceita', { nome: r.nome })}</ThemedText>
                       <ThemedText variant="small" color="textSecondary">
-                        {r.kcalPor100g} kcal · {r.proteinaGPor100g} g proteína (por 100g)
+                        {t('d.valores100', { kcal: r.kcalPor100g, prot: r.proteinaGPor100g })}
                       </ThemedText>
                     </Pressable>
                   ))}
@@ -165,7 +167,7 @@ export default function JournalScreen() {
                     >
                       <ThemedText variant="small" color="text">{s.nome}</ThemedText>
                       <ThemedText variant="small" color="textSecondary">
-                        {s.kcal} kcal · {s.proteinaG} g proteína
+                        {t('d.valores', { kcal: s.kcal, prot: s.proteinaG })}
                       </ThemedText>
                     </Pressable>
                   ))}
@@ -177,7 +179,7 @@ export default function JournalScreen() {
                   <Input
                     value={kcal}
                     onChangeText={setKcal}
-                    placeholder="kcal"
+                    placeholder={t('home.kcal')}
                     keyboardType="number-pad"
                     style={styles.formInput}
                   />
@@ -186,7 +188,7 @@ export default function JournalScreen() {
                   <Input
                     value={proteina}
                     onChangeText={setProteina}
-                    placeholder="g proteína"
+                    placeholder={t('home.proteina')}
                     keyboardType="number-pad"
                     style={styles.formInput}
                   />
@@ -194,14 +196,14 @@ export default function JournalScreen() {
               </View>
               <View style={styles.formButtons}>
                 <Button
-                  label="Cancelar"
+                  label={t('comum.cancelar')}
                   variant="outline"
                   size="sm"
                   onPress={() => setMostrarForm(false)}
                   style={{ marginRight: spacing.sm }}
                 />
                 <Button
-                  label="Salvar"
+                  label={t('comum.salvar')}
                   variant="primary"
                   size="sm"
                   onPress={handleAdicionarRefeicao}
@@ -213,7 +215,7 @@ export default function JournalScreen() {
 
           {refeicoesHoje.length === 0 && !mostrarForm ? (
             <ThemedText variant="body" color="textSecondary" style={{ marginTop: spacing.md }}>
-              Nenhuma refeição registrada ainda hoje.
+              {t('d.vazio')}
             </ThemedText>
           ) : (
             <View style={styles.lista}>
@@ -222,7 +224,7 @@ export default function JournalScreen() {
                   <View style={{ flex: 1 }}>
                     <ThemedText variant="body" color="text">{r.nome}</ThemedText>
                     <ThemedText variant="small" color="textSecondary">
-                      {r.horario} · {r.kcal} kcal · {r.proteinaG} g proteína
+                      {r.horario} · {t('d.valores', { kcal: r.kcal, prot: r.proteinaG })}
                     </ThemedText>
                   </View>
                   <Pressable onPress={() => removerRefeicao(r.id)} style={styles.removerBotao}>
