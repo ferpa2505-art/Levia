@@ -1,9 +1,14 @@
-import { View, StyleSheet, Pressable, Image, useWindowDimensions } from 'react-native';
+import { useState } from 'react';
+import { View, Pressable, Image, ScrollView, Platform, useWindowDimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import Svg, { Defs, LinearGradient, Stop, Rect } from 'react-native-svg';
 import { ThemedText } from '@components/ThemedText';
+import { ListaIdiomas } from '@components/ListaIdiomas';
+import { usePreferences } from '@context/PreferencesContext';
+import { CodigoIdioma } from '@/i18n';
 import { colors, spacing, radius } from '@constants/colors';
+import { estilosTema } from '@theme/estilos';
 
 /* ============================================================
  * AJUSTES FINOS — mude só estes números se precisar
@@ -39,8 +44,83 @@ const imgSimbolo = require('../../src/assets/images/levia-simbolo.png');
 const imgNome = require('../../src/assets/images/levia-nome.png');
 const imgSlogan = require('../../src/assets/images/levia-slogan.png');
 
+/** Fundo em degradê horizontal usado nas duas etapas desta tela */
+function FundoDegrade() {
+  return (
+    <Svg style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }} width="100%" height="100%">
+      <Defs>
+        <LinearGradient id="fundoLevia" x1="0" y1="0" x2="1" y2="0">
+          <Stop offset="0" stopColor={COR_DEGRADE_INICIO} />
+          <Stop offset="1" stopColor={COR_DEGRADE_FIM} />
+        </LinearGradient>
+      </Defs>
+      <Rect x="0" y="0" width="100%" height="100%" fill="url(#fundoLevia)" />
+    </Svg>
+  );
+}
+
 export default function OnboardingWelcome() {
+  const { idiomaConfirmado } = usePreferences();
+
+  // 1ª etapa: escolher o idioma. 2ª etapa: boas-vindas.
+  return idiomaConfirmado ? <BoasVindas /> : <EscolhaDeIdioma />;
+}
+
+/* ---------------- ETAPA 1 — ESCOLHA DE IDIOMA ---------------- */
+
+function EscolhaDeIdioma() {
+  const { idioma, mudarIdioma, confirmarIdioma, t } = usePreferences();
+  const [selecionado, setSelecionado] = useState<CodigoIdioma>(idioma);
+  const { width } = useWindowDimensions();
+  const penaW = width * 0.14;
+
+  function selecionar(codigo: CodigoIdioma) {
+    setSelecionado(codigo);
+    mudarIdioma(codigo); // os textos da tela já mudam para o idioma escolhido
+  }
+
+  return (
+    <View style={styles.container}>
+      <FundoDegrade />
+      <SafeAreaView style={styles.safeArea}>
+        <View style={styles.idiomaTopo}>
+          <Image
+            source={imgSimbolo}
+            style={{ width: penaW, height: penaW / PROPORCAO_SIMBOLO }}
+            resizeMode="contain"
+          />
+          <ThemedText variant="heading" style={styles.idiomaTitulo}>
+            {t('idioma.titulo')}
+          </ThemedText>
+          <ThemedText variant="small" style={styles.idiomaSubtitulo}>
+            {t('idioma.subtitulo')}
+          </ThemedText>
+        </View>
+
+        <ScrollView style={styles.idiomaLista} contentContainerStyle={{ paddingBottom: spacing.lg }}>
+          <ListaIdiomas selecionado={selecionado} onSelecionar={selecionar} aparencia="claro" />
+        </ScrollView>
+
+        <View style={styles.footer}>
+          <Pressable
+            style={({ pressed }) => [styles.cta, { opacity: pressed ? 0.85 : 1 }]}
+            onPress={() => confirmarIdioma(selecionado)}
+          >
+            <ThemedText variant="subheading" style={styles.ctaTexto}>
+              {t('comum.continuar')}
+            </ThemedText>
+          </Pressable>
+        </View>
+      </SafeAreaView>
+    </View>
+  );
+}
+
+/* ---------------- ETAPA 2 — BOAS-VINDAS ---------------- */
+
+function BoasVindas() {
   const router = useRouter();
+  const { idioma, t } = usePreferences();
   const { width } = useWindowDimensions();
 
   const penaCantoW = width * PENA_CANTO_LARGURA;
@@ -49,18 +129,12 @@ export default function OnboardingWelcome() {
   const penaAH = penaAW / PROPORCAO_SIMBOLO;
   const sloganW = width * SLOGAN_LARGURA;
 
+  // A imagem do slogan está em português; nos outros idiomas mostramos o texto traduzido
+  const sloganEmImagem = idioma === 'pt-BR' || idioma === 'pt-PT';
+
   return (
     <View style={styles.container}>
-      {/* Fundo em degradê horizontal */}
-      <Svg style={StyleSheet.absoluteFill} width="100%" height="100%">
-        <Defs>
-          <LinearGradient id="fundoLevia" x1="0" y1="0" x2="1" y2="0">
-            <Stop offset="0" stopColor={COR_DEGRADE_INICIO} />
-            <Stop offset="1" stopColor={COR_DEGRADE_FIM} />
-          </LinearGradient>
-        </Defs>
-        <Rect x="0" y="0" width="100%" height="100%" fill="url(#fundoLevia)" />
-      </Svg>
+      <FundoDegrade />
 
       <SafeAreaView style={styles.safeArea}>
         {/* Pena grande no canto */}
@@ -93,24 +167,29 @@ export default function OnboardingWelcome() {
           </View>
 
           {/* Slogan */}
-          <Image
-            source={imgSlogan}
-            style={[styles.slogan, { width: sloganW, height: sloganW / PROPORCAO_SLOGAN }]}
-            resizeMode="contain"
-          />
+          {sloganEmImagem ? (
+            <Image
+              source={imgSlogan}
+              style={[styles.slogan, { width: sloganW, height: sloganW / PROPORCAO_SLOGAN }]}
+              resizeMode="contain"
+            />
+          ) : (
+            <ThemedText style={[styles.slogan, styles.sloganTexto]}>
+              {t('boasVindas.slogan')}
+            </ThemedText>
+          )}
         </View>
 
         <View style={styles.footer}>
           <ThemedText variant="small" style={styles.footerText}>
-            Antes de começar, vamos nos conhecer melhor — com calma, uma
-            pergunta de cada vez.
+            {t('boasVindas.intro')}
           </ThemedText>
           <Pressable
             style={({ pressed }) => [styles.cta, { opacity: pressed ? 0.85 : 1 }]}
             onPress={() => router.push('/onboarding/name')}
           >
-            <ThemedText variant="subheading" color="primary">
-              Vamos começar
+            <ThemedText variant="subheading" style={styles.ctaTexto}>
+              {t('boasVindas.comecar')}
             </ThemedText>
           </Pressable>
         </View>
@@ -119,7 +198,7 @@ export default function OnboardingWelcome() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = estilosTema(() => ({
   container: {
     flex: 1,
     backgroundColor: COR_DEGRADE_INICIO,
@@ -141,22 +220,53 @@ const styles = StyleSheet.create({
   slogan: {
     marginTop: spacing.lg,
   },
+  sloganTexto: {
+    color: '#FBF8F3',
+    fontSize: 26,
+    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif', default: undefined }),
+    textAlign: 'center',
+    paddingHorizontal: spacing.xl,
+  },
   footer: {
     padding: spacing.xl,
     alignItems: 'center',
   },
   footerText: {
-    color: colors.background,
+    color: '#FBF8F3',
     opacity: 0.9,
     textAlign: 'center',
     marginBottom: spacing.lg,
   },
   cta: {
-    backgroundColor: colors.background,
+    backgroundColor: '#FBF8F3',
     borderRadius: radius.full,
     paddingVertical: spacing.md,
     paddingHorizontal: spacing['2xl'],
     width: '100%',
     alignItems: 'center',
   },
-});
+  ctaTexto: {
+    color: COR_DEGRADE_INICIO,
+  },
+  idiomaTopo: {
+    alignItems: 'center',
+    paddingTop: spacing['2xl'],
+    paddingHorizontal: spacing.xl,
+  },
+  idiomaTitulo: {
+    color: '#FBF8F3',
+    marginTop: spacing.lg,
+    textAlign: 'center',
+  },
+  idiomaSubtitulo: {
+    color: '#FBF8F3',
+    opacity: 0.85,
+    marginTop: spacing.xs,
+    textAlign: 'center',
+  },
+  idiomaLista: {
+    flex: 1,
+    marginTop: spacing.xl,
+    paddingHorizontal: spacing.xl,
+  },
+}));

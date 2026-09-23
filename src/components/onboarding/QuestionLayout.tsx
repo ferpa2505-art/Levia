@@ -1,9 +1,11 @@
-import { View, StyleSheet, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
+import { View, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
 import { ReactNode } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ThemedText } from '@components/ThemedText';
 import { Button } from '@components/Button';
 import { colors, spacing } from '@constants/colors';
+import { estilosTema } from '@theme/estilos';
+import { useT } from '@context/PreferencesContext';
 
 interface QuestionLayoutProps {
   step: number;
@@ -25,9 +27,10 @@ export function QuestionLayout({
   children,
   onNext,
   onBack,
-  nextLabel = 'Continuar',
+  nextLabel,
   nextDisabled = false,
 }: QuestionLayoutProps) {
+  const t = useT();
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
       <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
@@ -54,10 +57,10 @@ export function QuestionLayout({
 
         <View style={styles.footer}>
           {onBack ? (
-            <Button label="← Voltar" variant="outline" onPress={onBack} style={styles.backButton} />
+            <Button label={t('comum.voltar')} variant="outline" onPress={onBack} style={styles.backButton} />
           ) : null}
           <Button
-            label={nextLabel}
+            label={nextLabel ?? t('comum.continuar')}
             variant="primary"
             size="lg"
             onPress={onNext}
@@ -70,7 +73,7 @@ export function QuestionLayout({
   );
 }
 
-const styles = StyleSheet.create({
+const styles = estilosTema(() => ({
   safeArea: { flex: 1, backgroundColor: colors.background },
   flex: { flex: 1 },
   scrollContent: { flexGrow: 1, padding: spacing.xl, justifyContent: 'center' },
@@ -85,4 +88,4 @@ const styles = StyleSheet.create({
   footer: { padding: spacing.xl },
   backButton: { marginBottom: spacing.md },
   nextButton: {},
-});
+}));

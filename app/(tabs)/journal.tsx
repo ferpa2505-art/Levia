@@ -11,6 +11,7 @@ import { useCustomRecipes } from '@context/CustomRecipesContext';
 import { buscarReceitas, ReceitaConhecida } from '@constants/recipes';
 import { ReceitaPersonalizada } from '@models/ingredients';
 import { colors, spacing, radius } from '@constants/colors';
+import { estilosTema } from '@theme/estilos';
 
 const OPCOES_AGUA = [200, 300, 500];
 
@@ -237,7 +238,7 @@ export default function JournalScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = estilosTema(() => ({
   container: { flex: 1 },
   header: { marginBottom: spacing['2xl'] },
   card: { padding: spacing.lg, marginBottom: spacing.lg, borderRadius: radius.xl },
@@ -294,4 +295,4 @@ const styles = StyleSheet.create({
     borderBottomColor: colors.border,
   },
   removerBotao: { padding: spacing.sm },
-});
+}));

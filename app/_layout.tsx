@@ -7,11 +7,13 @@ import { RecordsProvider } from '@context/RecordsContext';
 import { CustomRecipesProvider } from '@context/CustomRecipesContext';
 import { NewsProvider } from '@context/NewsContext';
 import { Glp1Provider } from '@context/Glp1Context';
+import { PreferencesProvider, usePreferences } from '@context/PreferencesContext';
 
 SplashScreen.preventAutoHideAsync();
 
 function RootNavigation() {
   const { profile, loading } = useProfile();
+  const { t } = usePreferences();
   const segments = useSegments();
   const router = useRouter();
 
@@ -37,28 +39,41 @@ function RootNavigation() {
         contentStyle: {
           backgroundColor: colors.background,
         },
+        headerStyle: { backgroundColor: colors.background },
+        headerTintColor: colors.text,
       }}
     >
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
       <Stack.Screen name="onboarding" options={{ headerShown: false }} />
-      <Stack.Screen name="recipe-builder" options={{ headerShown: true, title: 'Minhas receitas' }} />
-      <Stack.Screen name="glp1" options={{ headerShown: true, title: 'Modo GLP-1' }} />
+      <Stack.Screen name="recipe-builder" options={{ headerShown: true, title: t('titulos.receitas') }} />
+      <Stack.Screen name="glp1" options={{ headerShown: true, title: t('titulos.glp1') }} />
     </Stack>
   );
 }
 
+/**
+ * Quando o tema muda, a "key" muda e a navegação é remontada —
+ * assim todas as telas são redesenhadas com as cores novas.
+ */
+function NavegacaoComTema() {
+  const { tema } = usePreferences();
+  return <RootNavigation key={tema} />;
+}
+
 export default function RootLayout() {
   return (
-    <ProfileProvider>
-      <RecordsProvider>
-        <CustomRecipesProvider>
-          <NewsProvider>
-            <Glp1Provider>
-              <RootNavigation />
-            </Glp1Provider>
-          </NewsProvider>
-        </CustomRecipesProvider>
-      </RecordsProvider>
-    </ProfileProvider>
+    <PreferencesProvider>
+      <ProfileProvider>
+        <RecordsProvider>
+          <CustomRecipesProvider>
+            <NewsProvider>
+              <Glp1Provider>
+                <NavegacaoComTema />
+              </Glp1Provider>
+            </NewsProvider>
+          </CustomRecipesProvider>
+        </RecordsProvider>
+      </ProfileProvider>
+    </PreferencesProvider>
   );
 }

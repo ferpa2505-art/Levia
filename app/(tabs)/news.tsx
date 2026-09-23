@@ -4,6 +4,7 @@ import { ThemedView } from '@components/ThemedView';
 import { ThemedText } from '@components/ThemedText';
 import { useNews } from '@context/NewsContext';
 import { colors, spacing, radius } from '@constants/colors';
+import { estilosTema } from '@theme/estilos';
 
 function formatarData(valor: string): string {
   const data = new Date(valor);
@@ -75,7 +76,7 @@ export default function NewsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = estilosTema(() => ({
   container: { flex: 1 },
   header: { marginBottom: spacing['2xl'] },
   card: { padding: spacing.lg, marginBottom: spacing.lg, borderRadius: radius.xl },
@@ -86,4 +87,4 @@ const styles = StyleSheet.create({
     shadowRadius: 12,
     elevation: 2,
   },
-});
+}));

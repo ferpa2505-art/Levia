@@ -25,6 +25,7 @@ import {
 } from '@constants/glp1';
 import { NivelIntensidadeSintoma } from '@models/glp1';
 import { colors, spacing, radius } from '@constants/colors';
+import { estilosTema } from '@theme/estilos';
 
 function formatarDiasRestantes(dias: number | null): string {
   if (dias === null) return 'Registre sua primeira dose pra começar a acompanhar';
@@ -521,7 +522,7 @@ export default function Glp1Screen() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = estilosTema(() => ({
   container: { flex: 1 },
   header: { marginBottom: spacing['2xl'] },
   card: { padding: spacing.lg, marginBottom: spacing.lg, borderRadius: radius.xl },
@@ -553,7 +554,7 @@ const styles = StyleSheet.create({
   },
   toggleAtivo: {
     borderColor: colors.primary,
-    backgroundColor: 'rgba(111,165,142,0.12)',
+    backgroundColor: colors.primarySoft,
   },
   form: { marginTop: spacing.md },
   rotulo: { marginTop: spacing.md, marginBottom: spacing.xs },
@@ -582,7 +583,7 @@ const styles = StyleSheet.create({
     marginTop: spacing.md,
     padding: spacing.md,
     borderRadius: radius.md,
-    backgroundColor: 'rgba(183,166,224,0.12)',
+    backgroundColor: colors.accentSoft,
   },
   lista: { marginTop: spacing.md },
   itemLista: {
@@ -594,4 +595,4 @@ const styles = StyleSheet.create({
     borderBottomColor: colors.border,
   },
   removerBotao: { padding: spacing.sm },
-});
+}));

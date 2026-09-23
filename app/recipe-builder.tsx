@@ -11,6 +11,7 @@ import { buscarIngredientes } from '@constants/ingredients';
 import { formasDePreparo } from '@constants/preparationMethods';
 import { Ingrediente, IngredienteUsado } from '@models/ingredients';
 import { colors, spacing, radius } from '@constants/colors';
+import { estilosTema } from '@theme/estilos';
 
 export default function RecipeBuilderScreen() {
   const router = useRouter();
@@ -265,7 +266,7 @@ export default function RecipeBuilderScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = estilosTema(() => ({
   container: { flex: 1 },
   header: { marginBottom: spacing['2xl'] },
   card: { padding: spacing.lg, marginBottom: spacing.lg, borderRadius: radius.xl },
@@ -317,4 +318,4 @@ const styles = StyleSheet.create({
   },
   removerBotao: { padding: spacing.sm },
   totalBox: { marginTop: spacing.md },
-});
+}));

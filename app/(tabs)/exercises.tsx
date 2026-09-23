@@ -15,6 +15,7 @@ import {
   NivelIntensidade,
 } from '@constants/exerciseTypes';
 import { colors, spacing, radius } from '@constants/colors';
+import { estilosTema } from '@theme/estilos';
 
 export default function ExercisesScreen() {
   const { exerciciosHoje, kcalGastaHoje, adicionarExercicio, removerExercicio } = useRecords();
@@ -252,7 +253,7 @@ export default function ExercisesScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = estilosTema(() => ({
   container: { flex: 1 },
   header: { marginBottom: spacing['2xl'] },
   card: { padding: spacing.lg, marginBottom: spacing.lg, borderRadius: radius.xl },
@@ -274,7 +275,7 @@ const styles = StyleSheet.create({
     width: 52,
     height: 52,
     borderRadius: 26,
-    backgroundColor: 'rgba(111,165,142,0.12)',
+    backgroundColor: colors.primarySoft,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -306,4 +307,4 @@ const styles = StyleSheet.create({
     borderBottomColor: colors.border,
   },
   removerBotao: { padding: spacing.sm },
-});
+}));

@@ -6,8 +6,10 @@ import { Input } from '@components/Input';
 import { ThemedText } from '@components/ThemedText';
 import { useProfile } from '@context/ProfileContext';
 import { spacing } from '@constants/colors';
+import { useT } from '@context/PreferencesContext';
 
 export default function OnboardingWeight() {
+  const t = useT();
   const router = useRouter();
   const { profile, updateProfile } = useProfile();
   const [peso, setPeso] = useState(profile.pesoAtualKg ? String(profile.pesoAtualKg) : '');
@@ -25,8 +27,8 @@ export default function OnboardingWeight() {
     <QuestionLayout
       step={4}
       totalSteps={8}
-      question="Qual o seu peso atual?"
-      subtitle="Sem julgamentos — é só o ponto de partida."
+      question={t('onb.peso.pergunta')}
+      subtitle={t('onb.peso.sub')}
       onNext={handleNext}
       onBack={() => router.back()}
       nextDisabled={!valido}
@@ -43,7 +45,7 @@ export default function OnboardingWeight() {
           onSubmitEditing={handleNext}
         />
         <ThemedText variant="body" color="textSecondary" style={{ marginTop: spacing.sm }}>
-          quilos
+          {t('onb.peso.unidade')}
         </ThemedText>
       </View>
     </QuestionLayout>

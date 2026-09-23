@@ -1,5 +1,6 @@
-import { TextInput, TextInputProps, StyleSheet } from 'react-native';
+import { TextInput, TextInputProps } from 'react-native';
 import { colors, spacing, radius, typography } from '@constants/colors';
+import { estilosTema } from '@theme/estilos';
 
 export function Input({ style, ...rest }: TextInputProps) {
   return (
@@ -11,7 +12,7 @@ export function Input({ style, ...rest }: TextInputProps) {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = estilosTema(() => ({
   input: {
     backgroundColor: colors.surface,
     borderWidth: 1,
@@ -23,4 +24,4 @@ const styles = StyleSheet.create({
     color: colors.text,
     textAlign: 'center',
   },
-});
+}));

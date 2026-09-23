@@ -1,8 +1,12 @@
 import { Tabs } from 'expo-router';
 import { Home, BookOpen, Dumbbell, Newspaper, User } from 'lucide-react-native';
 import { colors } from '@constants/colors';
+import { MenuOpcoes } from '@components/MenuOpcoes';
+import { useT } from '@context/PreferencesContext';
 
 export default function TabsLayout() {
+  const t = useT();
+
   return (
     <Tabs
       screenOptions={{
@@ -25,6 +29,7 @@ export default function TabsLayout() {
           borderBottomColor: colors.border,
         },
         headerTintColor: colors.text,
+        headerRight: () => <MenuOpcoes />,
         headerTitleStyle: {
           fontWeight: '700',
           color: colors.text,
@@ -34,8 +39,8 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Início',
-          tabBarLabel: 'Início',
+          title: t('abas.inicio'),
+          tabBarLabel: t('abas.inicio'),
           tabBarIcon: ({ color, focused, size }) => (
             <Home size={size} color={color} strokeWidth={focused ? 2.5 : 2} />
           ),
@@ -44,8 +49,8 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="journal"
         options={{
-          title: 'Diário',
-          tabBarLabel: 'Diário',
+          title: t('abas.diario'),
+          tabBarLabel: t('abas.diario'),
           tabBarIcon: ({ color, focused, size }) => (
             <BookOpen size={size} color={color} strokeWidth={focused ? 2.5 : 2} />
           ),
@@ -54,8 +59,8 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="exercises"
         options={{
-          title: 'Exercícios',
-          tabBarLabel: 'Exercícios',
+          title: t('abas.exercicios'),
+          tabBarLabel: t('abas.exercicios'),
           tabBarIcon: ({ color, focused, size }) => (
             <Dumbbell size={size} color={color} strokeWidth={focused ? 2.5 : 2} />
           ),
@@ -64,8 +69,8 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="news"
         options={{
-          title: 'Notícias',
-          tabBarLabel: 'Notícias',
+          title: t('abas.noticias'),
+          tabBarLabel: t('abas.noticias'),
           tabBarIcon: ({ color, focused, size }) => (
             <Newspaper size={size} color={color} strokeWidth={focused ? 2.5 : 2} />
           ),
@@ -74,8 +79,8 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="profile"
         options={{
-          title: 'Perfil',
-          tabBarLabel: 'Perfil',
+          title: t('abas.perfil'),
+          tabBarLabel: t('abas.perfil'),
           tabBarIcon: ({ color, focused, size }) => (
             <User size={size} color={color} strokeWidth={focused ? 2.5 : 2} />
           ),

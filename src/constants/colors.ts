@@ -1,12 +1,47 @@
+/**
+ * TEMAS DO LEVIA
+ *
+ * O objeto `colors` é usado no app inteiro. Quando o tema muda, os valores
+ * dele são trocados por aplicarTema() e o app é remontado (ver app/_layout.tsx),
+ * então todas as telas passam a usar as cores novas.
+ */
+
+export type NomeTema = 'salvia' | 'petroleo';
+
+const temas = {
+  // Tema original — Sálvia (verde suave, acolhedor)
+  salvia: {
+    primary: '#6FA58E',      // Sálvia — natureza, saúde, calma
+    accent: '#B7A6E0',       // Lavanda — premium, delicadeza
+    secondary: '#F4A983',    // Pêssego — calor humano, nutrição
+    background: '#FBF8F3',   // Marfim quente (em vez de branco clínico)
+    surface: '#FFFFFF',
+    text: '#2E3A35',         // Verde-carvão (em vez de preto puro)
+    textSecondary: '#8B8578',
+    border: '#EEEBE5',
+    primarySoft: 'rgba(111,165,142,0.12)',
+    accentSoft: 'rgba(183,166,224,0.18)',
+    secondarySoft: 'rgba(244,169,131,0.18)',
+  },
+
+  // Tema Azul-petróleo — mais sóbrio/masculino, puxado do degradê da abertura
+  petroleo: {
+    primary: '#0A6E80',      // Azul-petróleo
+    accent: '#6FA3C7',       // Azul-aço
+    secondary: '#F29E6D',    // Pêssego mais forte (o ponto da pena)
+    background: '#F3F6F7',   // Cinza-azulado bem claro
+    surface: '#FFFFFF',
+    text: '#1B2B33',         // Azul-grafite
+    textSecondary: '#66788A',
+    border: '#DDE5E9',
+    primarySoft: 'rgba(10,110,128,0.12)',
+    accentSoft: 'rgba(111,163,199,0.18)',
+    secondarySoft: 'rgba(242,158,109,0.18)',
+  },
+};
+
 export const colors = {
-  primary: '#6FA58E',      // Sálvia — natureza, saúde, calma
-  accent: '#B7A6E0',       // Lavanda — premium, delicadeza
-  secondary: '#F4A983',    // Pêssego — calor humano, nutrição
-  background: '#FBF8F3',   // Marfim quente (em vez de branco clínico)
-  surface: '#FFFFFF',
-  text: '#2E3A35',         // Verde-carvão (em vez de preto puro)
-  textSecondary: '#8B8578',
-  border: '#EEEBE5',
+  ...temas.salvia,
   success: '#10B981',
   warning: '#F59E0B',
   error: '#EF4444',
@@ -18,8 +53,27 @@ export const colors = {
     text: '#FBF8F3',
     textSecondary: '#B8B1A7',
     border: '#3A4240',
-  }
+  },
 };
+
+let temaAtual: NomeTema = 'salvia';
+let versaoTema = 0;
+
+/** Troca as cores do app para o tema escolhido. */
+export function aplicarTema(nome: NomeTema) {
+  if (!temas[nome]) return;
+  Object.assign(colors, temas[nome]);
+  temaAtual = nome;
+  versaoTema++;
+}
+
+export function obterTemaAtual(): NomeTema {
+  return temaAtual;
+}
+
+export function obterVersaoTema(): number {
+  return versaoTema;
+}
 
 export const typography = {
   family: {

@@ -1,6 +1,7 @@
-import { Pressable, StyleSheet } from 'react-native';
+import { Pressable } from 'react-native';
 import { ThemedText } from '@components/ThemedText';
 import { colors, spacing, radius } from '@constants/colors';
+import { estilosTema } from '@theme/estilos';
 
 interface OptionPillProps {
   label: string;
@@ -21,7 +22,7 @@ export function OptionPill({ label, selected, onPress }: OptionPillProps) {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = estilosTema(() => ({
   pill: {
     borderWidth: 2,
     borderColor: colors.border,
@@ -36,4 +37,4 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primary,
     borderColor: colors.primary,
   },
-});
+}));

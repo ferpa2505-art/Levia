@@ -6,8 +6,10 @@ import { Input } from '@components/Input';
 import { ThemedText } from '@components/ThemedText';
 import { useProfile } from '@context/ProfileContext';
 import { spacing } from '@constants/colors';
+import { useT } from '@context/PreferencesContext';
 
 export default function OnboardingAge() {
+  const t = useT();
   const router = useRouter();
   const { profile, updateProfile } = useProfile();
   const [idade, setIdade] = useState(profile.idade ? String(profile.idade) : '');
@@ -25,7 +27,7 @@ export default function OnboardingAge() {
     <QuestionLayout
       step={5}
       totalSteps={8}
-      question="Qual a sua idade?"
+      question={t('onb.idade.pergunta')}
       onNext={handleNext}
       onBack={() => router.back()}
       nextDisabled={!valido}
@@ -42,7 +44,7 @@ export default function OnboardingAge() {
           onSubmitEditing={handleNext}
         />
         <ThemedText variant="body" color="textSecondary" style={{ marginTop: spacing.sm }}>
-          anos
+          {t('onb.idade.unidade')}
         </ThemedText>
       </View>
     </QuestionLayout>

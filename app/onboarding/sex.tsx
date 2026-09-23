@@ -5,8 +5,10 @@ import { QuestionLayout } from '@components/onboarding/QuestionLayout';
 import { OptionPill } from '@components/onboarding/OptionPill';
 import { useProfile } from '@context/ProfileContext';
 import { SexoBiologico } from '@models/profile';
+import { useT } from '@context/PreferencesContext';
 
 export default function OnboardingSex() {
+  const t = useT();
   const router = useRouter();
   const { profile, updateProfile } = useProfile();
   const [sexo, setSexo] = useState<SexoBiologico | null>(profile.sexoBiologico);
@@ -21,15 +23,15 @@ export default function OnboardingSex() {
     <QuestionLayout
       step={6}
       totalSteps={8}
-      question="Qual o seu sexo biológico?"
-      subtitle="Usamos isso só  para calcular sua faixa de peso saudável com precisão."
+      question={t('onb.sexo.pergunta')}
+      subtitle={t('onb.sexo.sub')}
       onNext={handleNext}
       onBack={() => router.back()}
       nextDisabled={!sexo}
     >
       <View style={{ width: '100%' }}>
-        <OptionPill label="Feminino" selected={sexo === 'feminino'} onPress={() => setSexo('feminino')} />
-        <OptionPill label="Masculino" selected={sexo === 'masculino'} onPress={() => setSexo('masculino')} />
+        <OptionPill label={t('onb.sexo.feminino')} selected={sexo === 'feminino'} onPress={() => setSexo('feminino')} />
+        <OptionPill label={t('onb.sexo.masculino')} selected={sexo === 'masculino'} onPress={() => setSexo('masculino')} />
       </View>
     </QuestionLayout>
   );

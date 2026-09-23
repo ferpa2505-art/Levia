@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { View, ScrollView, StyleSheet, Pressable } from 'react-native';
+import { View, ScrollView, Pressable } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Flame, Beef, Droplet, Zap, Feather, Target, Syringe, ChevronRight } from 'lucide-react-native';
 import { ThemedView } from '@components/ThemedView';
@@ -10,9 +10,12 @@ import { LeviaPena } from '@components/LeviaPena';
 import { useProfile } from '@context/ProfileContext';
 import { useRecords } from '@context/RecordsContext';
 import { colors, spacing, radius } from '@constants/colors';
+import { useT } from '@context/PreferencesContext';
+import { estilosTema } from '@theme/estilos';
 
 export default function HomeScreen() {
   const router = useRouter();
+  const t = useT();
   const { profile } = useProfile();
   const { kcalHoje, proteinaHojeG, aguaHojeMl, pesoAtualKg, adicionarPeso, kcalGastaHoje } = useRecords();
   const nome = profile.comoChamar || profile.nome || '';
@@ -43,36 +46,36 @@ export default function HomeScreen() {
           <View style={styles.greetingRow}>
             <LeviaPena size={44} />
             <ThemedText variant="title" color="primary" style={styles.greetingTitle}>
-              Olá{nome ? `, ${nome}` : ''}! 👋
+              {nome ? t('home.ola', { nome }) : t('home.olaSemNome')}
             </ThemedText>
           </View>
           <ThemedText variant="body" color="textSecondary" style={{ marginTop: spacing.xs }}>
-            Bem-vindo ao seu acompanhamento de saúde
+            {t('home.subtitulo')}
           </ThemedText>
         </View>
 
         <ThemedView variant="surface" style={[styles.card, styles.cardShadow]}>
-          <ThemedText variant="subheading" color="text">Resumo de Hoje</ThemedText>
+          <ThemedText variant="subheading" color="text">{t('home.resumo')}</ThemedText>
           <View style={styles.statsGrid}>
-            <View style={[styles.statChip, { backgroundColor: 'rgba(111,165,142,0.12)' }]}>
+            <View style={[styles.statChip, { backgroundColor: colors.primarySoft }]}>
               <Flame size={20} color={colors.primary} strokeWidth={2.25} style={styles.statIcone} />
               <ThemedText variant="heading" color="primary">{kcalHoje}</ThemedText>
-              <ThemedText variant="small" color="textSecondary">kcal</ThemedText>
+              <ThemedText variant="small" color="textSecondary">{t('home.kcal')}</ThemedText>
             </View>
-            <View style={[styles.statChip, { backgroundColor: 'rgba(244,169,131,0.18)' }]}>
+            <View style={[styles.statChip, { backgroundColor: colors.secondarySoft }]}>
               <Beef size={20} color={colors.secondary} strokeWidth={2.25} style={styles.statIcone} />
               <ThemedText variant="heading" color="secondary">{proteinaHojeG}</ThemedText>
-              <ThemedText variant="small" color="textSecondary">g proteína</ThemedText>
+              <ThemedText variant="small" color="textSecondary">{t('home.proteina')}</ThemedText>
             </View>
-            <View style={[styles.statChip, { backgroundColor: 'rgba(183,166,224,0.18)' }]}>
+            <View style={[styles.statChip, { backgroundColor: colors.accentSoft }]}>
               <Droplet size={20} color={colors.accent} strokeWidth={2.25} style={styles.statIcone} />
               <ThemedText variant="heading" color="accent">{aguaHojeMl}</ThemedText>
-              <ThemedText variant="small" color="textSecondary">ml água</ThemedText>
+              <ThemedText variant="small" color="textSecondary">{t('home.agua')}</ThemedText>
             </View>
-            <View style={[styles.statChip, { backgroundColor: 'rgba(244,169,131,0.12)' }]}>
+            <View style={[styles.statChip, { backgroundColor: colors.secondarySoft }]}>
               <Zap size={20} color={colors.secondary} strokeWidth={2.25} style={styles.statIcone} />
               <ThemedText variant="heading" color="secondary">{kcalGastaHoje}</ThemedText>
-              <ThemedText variant="small" color="textSecondary">kcal gastas</ThemedText>
+              <ThemedText variant="small" color="textSecondary">{t('home.kcalGastas')}</ThemedText>
             </View>
           </View>
         </ThemedView>
@@ -82,12 +85,12 @@ export default function HomeScreen() {
             <View style={styles.pesoTituloRow}>
               <Feather size={18} color={colors.primary} strokeWidth={2} />
               <ThemedText variant="subheading" color="text" style={{ marginLeft: spacing.xs }}>
-                Seu Peso
+                {t('home.seuPeso')}
               </ThemedText>
             </View>
             {!editandoPeso && (
               <Button
-                label="Atualizar"
+                label={t('comum.atualizar')}
                 variant="outline"
                 size="sm"
                 onPress={() => {
@@ -110,8 +113,8 @@ export default function HomeScreen() {
               />
               <ThemedText variant="body" color="textSecondary" style={{ marginLeft: spacing.sm }}>kg</ThemedText>
               <View style={styles.editButtons}>
-                <Button label="Cancelar" variant="outline" size="sm" onPress={() => setEditandoPeso(false)} style={{ marginRight: spacing.sm }} />
-                <Button label="Salvar" variant="primary" size="sm" onPress={handleSalvarPeso} />
+                <Button label={t('comum.cancelar')} variant="outline" size="sm" onPress={() => setEditandoPeso(false)} style={{ marginRight: spacing.sm }} />
+                <Button label={t('comum.salvar')} variant="primary" size="sm" onPress={handleSalvarPeso} />
               </View>
             </View>
           ) : (
@@ -127,11 +130,13 @@ export default function HomeScreen() {
                     color="textSecondary"
                     style={!jaNaMeta ? { marginLeft: spacing.xs } : undefined}
                   >
-                    {jaNaMeta ? 'Você está na sua meta! 🎉' : `Meta: ${profile.metaPesoKg} kg · faltam ${diferenca} kg`}
+                    {jaNaMeta
+                      ? t('home.naMeta')
+                      : t('home.meta', { meta: profile.metaPesoKg!, falta: diferenca! })}
                   </ThemedText>
                 </View>
               ) : (
-                <ThemedText variant="small" color="textSecondary">Última pesagem: --</ThemedText>
+                <ThemedText variant="small" color="textSecondary">{t('home.ultimaPesagem')}</ThemedText>
               )}
             </>
           )}
@@ -143,9 +148,9 @@ export default function HomeScreen() {
               <Syringe size={20} color={colors.primary} strokeWidth={2} />
             </View>
             <View style={{ flex: 1, marginLeft: spacing.md }}>
-              <ThemedText variant="subheading" color="text">Modo GLP-1</ThemedText>
+              <ThemedText variant="subheading" color="text">{t('titulos.glp1')}</ThemedText>
               <ThemedText variant="small" color="textSecondary">
-                Doses, rodízio de aplicação, sintomas e lembretes
+                {t('home.glp1Desc')}
               </ThemedText>
             </View>
             <ChevronRight size={20} color={colors.textSecondary} strokeWidth={2} />
@@ -153,14 +158,14 @@ export default function HomeScreen() {
         </Pressable>
 
         <View style={styles.status}>
-          <ThemedText variant="caption" color="textSecondary">v0.1.0 • Fase 1 de Desenvolvimento</ThemedText>
+          <ThemedText variant="caption" color="textSecondary">v0.1.0 • {t('home.versao')}</ThemedText>
         </View>
       </ThemedView>
     </ScrollView>
   );
 }
 
-const styles = StyleSheet.create({
+const styles = estilosTema(() => ({
   container: { flex: 1 },
   greeting: { marginBottom: spacing['2xl'] },
   greetingRow: { flexDirection: 'row', alignItems: 'center' },
@@ -195,8 +200,8 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: 'rgba(111,165,142,0.12)',
+    backgroundColor: colors.primarySoft,
     alignItems: 'center',
     justifyContent: 'center',
   },
-});
+}));

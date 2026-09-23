@@ -6,8 +6,10 @@ import { Input } from '@components/Input';
 import { ThemedText } from '@components/ThemedText';
 import { useProfile } from '@context/ProfileContext';
 import { spacing } from '@constants/colors';
+import { useT } from '@context/PreferencesContext';
 
 export default function OnboardingHeight() {
+  const t = useT();
   const router = useRouter();
   const { profile, updateProfile } = useProfile();
   const [altura, setAltura] = useState(profile.alturaCm ? String(profile.alturaCm) : '');
@@ -25,7 +27,7 @@ export default function OnboardingHeight() {
     <QuestionLayout
       step={3}
       totalSteps={8}
-      question={`Qual a sua altura, ${profile.comoChamar || ''}?`}
+      question={t('onb.altura.pergunta', { nome: profile.comoChamar || '' })}
       onNext={handleNext}
       onBack={() => router.back()}
       nextDisabled={!valido}
@@ -42,7 +44,7 @@ export default function OnboardingHeight() {
           onSubmitEditing={handleNext}
         />
         <ThemedText variant="body" color="textSecondary" style={{ marginTop: spacing.sm }}>
-          centímetros
+          {t('onb.altura.unidade')}
         </ThemedText>
       </View>
     </QuestionLayout>

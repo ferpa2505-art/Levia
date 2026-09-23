@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { View, ScrollView, StyleSheet } from 'react-native';
+import { View, ScrollView } from 'react-native';
 import { Target, Pencil } from 'lucide-react-native';
 import { ThemedView } from '@components/ThemedView';
 import { ThemedText } from '@components/ThemedText';
@@ -8,8 +8,11 @@ import { Input } from '@components/Input';
 import { useProfile } from '@context/ProfileContext';
 import { useRecords } from '@context/RecordsContext';
 import { colors, spacing, radius } from '@constants/colors';
+import { useT } from '@context/PreferencesContext';
+import { estilosTema } from '@theme/estilos';
 
 export default function ProfileScreen() {
+  const t = useT();
   const { profile, updateProfile, salvarAlteracoes } = useProfile();
   const { pesoAtualKg } = useRecords();
   const pesoAtual = pesoAtualKg ?? profile.pesoAtualKg;
@@ -32,20 +35,20 @@ export default function ProfileScreen() {
       <ThemedView style={styles.container}>
         <View style={styles.header}>
           <ThemedText variant="heading" color="text">
-            {profile.comoChamar || profile.nome || 'Seu perfil'}
+            {profile.comoChamar || profile.nome || t('perfil.seuPerfil')}
           </ThemedText>
           <ThemedText variant="body" color="textSecondary" style={{ marginTop: spacing.xs }}>
-            Seus dados e metas
+            {t('perfil.subtitulo')}
           </ThemedText>
         </View>
 
         <ThemedView variant="surface" style={[styles.card, styles.cardShadow]}>
           <ThemedText variant="subheading" color="text" style={{ marginBottom: spacing.md }}>
-            Meus dados
+            {t('perfil.meusDados')}
           </ThemedText>
-          <DadoLinha label="Altura" valor={profile.alturaCm != null ? `${profile.alturaCm} cm` : '--'} />
-          <DadoLinha label="Peso atual" valor={pesoAtual != null ? `${pesoAtual} kg` : '--'} />
-          <DadoLinha label="Idade" valor={profile.idade != null ? `${profile.idade} anos` : '--'} />
+          <DadoLinha label={t('perfil.altura')} valor={profile.alturaCm != null ? `${profile.alturaCm} cm` : '--'} />
+          <DadoLinha label={t('perfil.pesoAtual')} valor={pesoAtual != null ? `${pesoAtual} kg` : '--'} />
+          <DadoLinha label={t('perfil.idade')} valor={profile.idade != null ? t('perfil.anos', { n: profile.idade }) : '--'} />
         </ThemedView>
 
         <ThemedView variant="surface" style={[styles.card, styles.cardShadow]}>
@@ -53,12 +56,12 @@ export default function ProfileScreen() {
             <View style={styles.metaTituloRow}>
               <Target size={18} color={colors.primary} strokeWidth={2} />
               <ThemedText variant="subheading" color="text" style={{ marginLeft: spacing.xs }}>
-                Minha meta
+                {t('perfil.minhaMeta')}
               </ThemedText>
             </View>
             {!editandoMeta && (
               <Button
-                label="Editar"
+                label={t('comum.editar')}
                 variant="outline"
                 size="sm"
                 icon={<Pencil size={14} color={colors.primary} strokeWidth={2} />}
@@ -84,13 +87,13 @@ export default function ProfileScreen() {
                 kg
               </ThemedText>
               <View style={styles.editButtons}>
-                <Button label="Cancelar" variant="outline" size="sm" onPress={() => setEditandoMeta(false)} style={{ marginRight: spacing.sm }} />
-                <Button label="Salvar" variant="primary" size="sm" onPress={handleSalvarMeta} />
+                <Button label={t('comum.cancelar')} variant="outline" size="sm" onPress={() => setEditandoMeta(false)} style={{ marginRight: spacing.sm }} />
+                <Button label={t('comum.salvar')} variant="primary" size="sm" onPress={handleSalvarMeta} />
               </View>
             </View>
           ) : (
             <ThemedText variant="title" color="primary" style={{ marginTop: spacing.sm }}>
-              {profile.metaPesoKg != null ? `${profile.metaPesoKg} kg` : 'Defina sua meta'}
+              {profile.metaPesoKg != null ? `${profile.metaPesoKg} kg` : t('perfil.definaMeta')}
             </ThemedText>
           )}
         </ThemedView>
@@ -113,7 +116,7 @@ function DadoLinha({ label, valor }: { label: string; valor: string }) {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = estilosTema(() => ({
   container: {
     flex: 1,
   },
@@ -158,4 +161,4 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     marginTop: spacing.md,
   },
-});
+}));

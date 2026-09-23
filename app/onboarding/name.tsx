@@ -3,8 +3,10 @@ import { useRouter } from 'expo-router';
 import { QuestionLayout } from '@components/onboarding/QuestionLayout';
 import { Input } from '@components/Input';
 import { useProfile } from '@context/ProfileContext';
+import { useT } from '@context/PreferencesContext';
 
 export default function OnboardingName() {
+  const t = useT();
   const router = useRouter();
   const { profile, updateProfile } = useProfile();
   const [nome, setNome] = useState(profile.nome);
@@ -19,8 +21,8 @@ export default function OnboardingName() {
     <QuestionLayout
       step={0}
       totalSteps={8}
-      question="Qual é o seu nome?"
-      subtitle="Pra gente te chamar do jeito certo daqui pra frente."
+      question={t('onb.nome.pergunta')}
+      subtitle={t('onb.nome.sub')}
       onNext={handleNext}
       onBack={() => router.back()}
       nextDisabled={nome.trim().length === 0}
@@ -28,7 +30,7 @@ export default function OnboardingName() {
       <Input
         value={nome}
         onChangeText={setNome}
-        placeholder="Seu nome"
+        placeholder={t('onb.nome.ph')}
         autoFocus
         autoCapitalize="words"
         returnKeyType="next"

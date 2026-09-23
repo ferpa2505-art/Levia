@@ -3,8 +3,10 @@ import { useRouter } from 'expo-router';
 import { QuestionLayout } from '@components/onboarding/QuestionLayout';
 import { Input } from '@components/Input';
 import { useProfile } from '@context/ProfileContext';
+import { useT } from '@context/PreferencesContext';
 
 export default function OnboardingNickname() {
+  const t = useT();
   const router = useRouter();
   const { profile, updateProfile } = useProfile();
   const [comoChamar, setComoChamar] = useState(profile.comoChamar);
@@ -18,8 +20,8 @@ export default function OnboardingNickname() {
     <QuestionLayout
       step={1}
       totalSteps={8}
-      question="Como você prefere que a gente te chame?"
-      subtitle="Pode ser um apelido — é assim que vamos te chamar no app."
+      question={t('onb.apelido.pergunta')}
+      subtitle={t('onb.apelido.sub')}
       onNext={handleNext}
       onBack={() => router.back()}
       nextDisabled={comoChamar.trim().length === 0}
@@ -27,7 +29,7 @@ export default function OnboardingNickname() {
       <Input
         value={comoChamar}
         onChangeText={setComoChamar}
-        placeholder="Nome ou apelido"
+        placeholder={t('onb.apelido.ph')}
         autoFocus
         autoCapitalize="words"
         returnKeyType="next"
