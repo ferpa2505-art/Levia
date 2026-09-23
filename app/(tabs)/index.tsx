@@ -6,7 +6,7 @@ import { ThemedView } from '@components/ThemedView';
 import { ThemedText } from '@components/ThemedText';
 import { Button } from '@components/Button';
 import { Input } from '@components/Input';
-import { LeviaLogo } from '@components/LeviaLogo';
+import { LeviaPena } from '@components/LeviaPena';
 import { useProfile } from '@context/ProfileContext';
 import { useRecords } from '@context/RecordsContext';
 import { colors, spacing, radius } from '@constants/colors';
@@ -41,7 +41,7 @@ export default function HomeScreen() {
       <ThemedView style={styles.container}>
         <View style={styles.greeting}>
           <View style={styles.greetingRow}>
-            <LeviaLogo variant="outline" size={34} />
+            <LeviaPena size={44} />
             <ThemedText variant="title" color="primary" style={styles.greetingTitle}>
               Olá{nome ? `, ${nome}` : ''}! 👋
             </ThemedText>
