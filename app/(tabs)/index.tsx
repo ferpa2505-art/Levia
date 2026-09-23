@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { View, ScrollView, StyleSheet } from 'react-native';
-import { Flame, Beef, Droplet, Zap, Feather, Target } from 'lucide-react-native';
+import { View, ScrollView, StyleSheet, Pressable } from 'react-native';
+import { useRouter } from 'expo-router';
+import { Flame, Beef, Droplet, Zap, Feather, Target, Syringe, ChevronRight } from 'lucide-react-native';
 import { ThemedView } from '@components/ThemedView';
 import { ThemedText } from '@components/ThemedText';
 import { Button } from '@components/Button';
@@ -11,6 +12,7 @@ import { useRecords } from '@context/RecordsContext';
 import { colors, spacing, radius } from '@constants/colors';
 
 export default function HomeScreen() {
+  const router = useRouter();
   const { profile } = useProfile();
   const { kcalHoje, proteinaHojeG, aguaHojeMl, pesoAtualKg, adicionarPeso, kcalGastaHoje } = useRecords();
   const nome = profile.comoChamar || profile.nome || '';
@@ -135,6 +137,21 @@ export default function HomeScreen() {
           )}
         </ThemedView>
 
+        <Pressable onPress={() => router.push('/glp1')}>
+          <ThemedView variant="surface" style={[styles.card, styles.cardShadow, styles.glp1Card]}>
+            <View style={styles.glp1IconCircle}>
+              <Syringe size={20} color={colors.primary} strokeWidth={2} />
+            </View>
+            <View style={{ flex: 1, marginLeft: spacing.md }}>
+              <ThemedText variant="subheading" color="text">Modo GLP-1</ThemedText>
+              <ThemedText variant="small" color="textSecondary">
+                Doses, rodízio de aplicação, sintomas e lembretes
+              </ThemedText>
+            </View>
+            <ChevronRight size={20} color={colors.textSecondary} strokeWidth={2} />
+          </ThemedView>
+        </Pressable>
+
         <View style={styles.status}>
           <ThemedText variant="caption" color="textSecondary">v0.1.0 • Fase 1 de Desenvolvimento</ThemedText>
         </View>
@@ -173,4 +190,13 @@ const styles = StyleSheet.create({
   pesoInput: { textAlign: 'left' },
   editButtons: { flexDirection: 'row', marginTop: spacing.md },
   status: { marginTop: spacing['2xl'], alignItems: 'center' },
+  glp1Card: { flexDirection: 'row', alignItems: 'center' },
+  glp1IconCircle: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(111,165,142,0.12)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
 });

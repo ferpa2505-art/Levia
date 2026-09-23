@@ -1,25 +1,44 @@
-import * as Notifications from 'expo-notifications';
 import { Platform } from 'react-native';
 import Constants from 'expo-constants';
 
 /**
- * A partir da SDK 53, o Expo Go não suporta mais a API de notificações
- * (não só push remoto — praticamente tudo). Detectamos isso aqui pra evitar
- * que o app trave: dentro do Expo Go, essas funções simplesmente não fazem
- * nada (o lembrete fica "ativado" nas configurações, mas a notificação em
- * si só dispara de verdade num development build ou build de produção).
+ * Desde a SDK 53, importar 'expo-notifications' no Expo Go (Android) já gera
+ * erro e derruba o app. Por isso o módulo é carregado sob demanda (require),
+ * só fora do Expo Go. No Expo Go as funções abaixo não fazem nada; no app
+ * instalado (development build ou produção) os lembretes funcionam normal.
  */
 const isExpoGo =
   Constants.appOwnership === 'expo' || Constants.executionEnvironment === 'storeClient';
 
-if (Platform.OS === 'android' && !isExpoGo) {
-  Notifications.setNotificationChannelAsync('lembretes-glp1', {
-    name: 'Lembretes de dose',
-    importance: Notifications.AndroidImportance.HIGH,
-  }).catch(() => {});
+type NotificationsModule = typeof import('expo-notifications');
+
+let notificationsModule: NotificationsModule | null = null;
+let jaTentouCarregar = false;
+
+function getNotifications(): NotificationsModule | null {
+  if (isExpoGo) return null;
+  if (jaTentouCarregar) return notificationsModule;
+  jaTentouCarregar = true;
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    notificationsModule = require('expo-notifications') as NotificationsModule;
+  } catch {
+    notificationsModule = null;
+  }
+  return notificationsModule;
 }
 
-if (!isExpoGo) {
+(function configurarNotificacoes() {
+  const Notifications = getNotifications();
+  if (!Notifications) return;
+
+  if (Platform.OS === 'android') {
+    Notifications.setNotificationChannelAsync('lembretes-glp1', {
+      name: 'Lembretes de dose',
+      importance: Notifications.AndroidImportance.HIGH,
+    }).catch(() => {});
+  }
+
   Notifications.setNotificationHandler({
     handleNotification: async () => ({
       shouldShowAlert: true,
@@ -29,14 +48,11 @@ if (!isExpoGo) {
       shouldShowList: true,
     }),
   });
-}
+})();
 
-/**
- * Pede permissão de notificação ao sistema, se ainda não foi concedida.
- * Retorna true se o usuário permitiu. No Expo Go, sempre retorna false.
- */
 export async function solicitarPermissaoNotificacao(): Promise<boolean> {
-  if (isExpoGo) return false;
+  const Notifications = getNotifications();
+  if (!Notifications) return false;
   try {
     const atual = await Notifications.getPermissionsAsync();
     if ((atual as { granted: boolean }).granted) return true;
@@ -47,11 +63,9 @@ export async function solicitarPermissaoNotificacao(): Promise<boolean> {
   }
 }
 
-/**
- * Cancela um lembrete agendado anteriormente (se existir).
- */
 export async function cancelarLembreteDose(notificationId?: string | null): Promise<void> {
-  if (isExpoGo || !notificationId) return;
+  const Notifications = getNotifications();
+  if (!Notifications || !notificationId) return;
   try {
     await Notifications.cancelScheduledNotificationAsync(notificationId);
   } catch {
@@ -59,13 +73,9 @@ export async function cancelarLembreteDose(notificationId?: string | null): Prom
   }
 }
 
-/**
- * Agenda um lembrete de próxima dose para a data informada.
- * Retorna o id da notificação agendada, ou null se não foi possível agendar
- * (Expo Go, sem permissão, ou data já no passado).
- */
 export async function agendarLembreteDose(dataProximaDose: Date): Promise<string | null> {
-  if (isExpoGo) return null;
+  const Notifications = getNotifications();
+  if (!Notifications) return null;
   if (dataProximaDose.getTime() <= Date.now()) return null;
 
   const permitido = await solicitarPermissaoNotificacao();
@@ -75,7 +85,7 @@ export async function agendarLembreteDose(dataProximaDose: Date): Promise<string
     const id = await Notifications.scheduleNotificationAsync({
       content: {
         title: 'Hora da sua próxima dose 💉',
-        body: 'Não esqueça de aplicar e registrar a dose de hoje no Leviã.',
+        body: 'Não esqueça de aplicar e registrar a dose de hoje no Levia.',
         ...(Platform.OS === 'android' ? { channelId: 'lembretes-glp1' } : null),
       },
       trigger: {
