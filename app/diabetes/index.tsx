@@ -374,7 +374,7 @@ export default function DiabetesScreen() {
             </View>
             <Button
               label="+"
-              variant="accent"
+              variant="secondary"
               size="sm"
               onPress={() => setMostrarFormRefeicao(true)}
             />
@@ -449,7 +449,7 @@ export default function DiabetesScreen() {
                 />
                 <Button
                   label="Salvar"
-                  variant="accent"
+                  variant="secondary"
                   size="sm"
                   onPress={salvarRefeicao}
                 />
