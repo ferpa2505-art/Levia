@@ -157,6 +157,21 @@ export default function HomeScreen() {
           </ThemedView>
         </Pressable>
 
+        <Pressable onPress={() => router.push('/diabetes')}>
+          <ThemedView variant="surface" style={[styles.card, styles.cardShadow, styles.glp1Card]}>
+            <View style={[styles.glp1IconCircle, { backgroundColor: colors.primarySoft }]}>
+              <Droplet size={20} color={colors.primary} strokeWidth={2} />
+            </View>
+            <View style={{ flex: 1, marginLeft: spacing.md }}>
+              <ThemedText variant="subheading" color="text">{t('titulos.diabetes', { defaultValue: 'Diabetes' })}</ThemedText>
+              <ThemedText variant="small" color="textSecondary">
+                {t('home.diabetesDesc', { defaultValue: 'Rastreie glicemia e medicações' })}
+              </ThemedText>
+            </View>
+            <ChevronRight size={20} color={colors.textSecondary} strokeWidth={2} />
+          </ThemedView>
+        </Pressable>
+
         <View style={styles.status}>
           <ThemedText variant="caption" color="textSecondary">v0.1.0 • {t('home.versao')}</ThemedText>
         </View>
