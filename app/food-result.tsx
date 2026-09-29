@@ -13,9 +13,8 @@ import {
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { useContext } from 'react';
-import { DiabetesContext } from '@/src/context/DiabetesContext';
-import { useProfile } from '@/src/context/ProfileContext';
+import { useDiabetes } from '@context/DiabetesContext';
+import { useProfile } from '@context/ProfileContext';
 
 interface FoodAnalysis {
   nome: string;
@@ -136,7 +135,7 @@ export default function FoodResultScreen() {
   const router = useRouter();
   const params = useLocalSearchParams();
   const photoUri = params.photoUri as string;
-  const diabetesContext = useContext(DiabetesContext);
+  const diabetesContext = useDiabetes();
   const profileContext = useProfile();
 
   const [analysis, setAnalysis] = useState<FoodAnalysis | null>(null);
@@ -150,7 +149,7 @@ export default function FoodResultScreen() {
       try {
         setIsLoading(true);
         // Simular delay de processamento
-        await new Promise((resolve) => setTimeout(resolve, 2000));
+        await new Promise<void>((resolve) => setTimeout(resolve, 2000));
 
         // Em produção, usaria ML real
         // Por enquanto, seleciona aleatoriamente do banco de dados para MVP
@@ -193,7 +192,12 @@ export default function FoodResultScreen() {
 
       // Adicionar ao contexto do Diário
       if (diabetesContext) {
-        diabetesContext.adicionarRefeicao(foodEntry);
+        await diabetesContext.adicionarRefeicao(
+          analysis.nome,
+          analysis.carboidratos,
+          `${quantity}x ${analysis.porcao}`,
+          `Foto: ${photoUri}`
+        );
       }
 
       Alert.alert(

@@ -11,8 +11,8 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { useSubscription } from '@/src/context/SubscriptionContext';
-import { useT } from '@/src/context/PreferencesContext';
+import { useSubscription } from '@context/SubscriptionContext';
+import { useT } from '@context/PreferencesContext';
 import { colors, spacing, radius } from '@constants/colors';
 
 interface PricingOption {

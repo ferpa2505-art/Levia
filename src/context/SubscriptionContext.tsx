@@ -10,7 +10,7 @@ export interface SubscriptionContextType {
   customerInfo: CustomerInfo | null;
   availablePackages: any[];
   purchasePackage: (packageId: string) => Promise<void>;
-  restorePurchases: () Promise<void>;
+  restorePurchases: () => Promise<void>;
   isInitialized: boolean;
 }
 
@@ -116,15 +116,14 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
       // Salvar info localmente
       await AsyncStorage.setItem('subscription_purchased_at', new Date().toISOString());
       await AsyncStorage.setItem('subscription_active', hasActiveSubscription ? 'true' : 'false');
-    } catch (err) {
-      if (err instanceof PurchasesError) {
-        if (err.code === 'PurchaseCancelledError') {
-          setError('Compra cancelada');
-        } else {
-          setError(`Erro na compra: ${err.message}`);
-        }
+    } catch (err: unknown) {
+      const error = err as any;
+      if (error?.code === 'PurchaseCancelledError') {
+        setError('Compra cancelada');
+      } else if (error?.message) {
+        setError(`Erro na compra: ${error.message}`);
       } else {
-        setError((err as Error).message || 'Erro ao processar compra');
+        setError('Erro ao processar compra');
       }
       throw err;
     } finally {

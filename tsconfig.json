@@ -6,6 +6,7 @@
     "declarationMap": true,
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
+    "ignoreDeprecations": "6.0",
     "jsx": "react-jsx",
     "lib": ["ES2020"],
     "module": "ESNext",
@@ -15,6 +16,7 @@
     "skipLibCheck": true,
     "strict": true,
     "target": "ES2020",
+    "types": ["jest", "react", "react-native"],
     "baseUrl": ".",
     "paths": {
       "@/*": ["src/*"],
