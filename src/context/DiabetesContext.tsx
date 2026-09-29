@@ -1,13 +1,13 @@
 import { createContext, useContext, useState, ReactNode } from 'react';
-import {
+import type {
   DiabetesData,
-  diabetesDadosVazios,
   RegistroGlicemia,
   RegistroMedicacao,
   RegistroRefeicao,
   NotaDiaria,
   ConfiguracaoAlarme,
-} from '@types/diabetes';
+} from '@/types/diabetes';
+import { diabetesDadosVazios } from '@/types/diabetes';
 import { dataDeHoje, horarioAgora, gerarId } from '@utils/recordsStorage';
 
 // Dados mockados iniciais

@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { RegistroMedicacao } from '@types/diabetes';
+import type { RegistroMedicacao } from '@/types/diabetes';
 import { colors } from '@constants/colors';
 import { Clock, AlertCircle } from 'lucide-react-native';
 import { calcularProximoAlarme, ProximoAlarmeInfo } from '@hooks/useMedicacaoAlarmes';

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, Switch, TouchableOpacity, Alert } from 'react-native';
-import { RegistroMedicacao, FrequenciaAlarme, TipoMedicacao, ConfiguracaoAlarme } from '@types/diabetes';
+import type { RegistroMedicacao, FrequenciaAlarme, TipoMedicacao, ConfiguracaoAlarme } from '@/types/diabetes';
 import { colors } from '@constants/colors';
 import { Clock, Bell } from 'lucide-react-native';
 import { gerarHorariosPorFrequencia } from '@hooks/useMedicacaoAlarmes';

@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import * as Notifications from 'expo-notifications';
-import { RegistroMedicacao, FrequenciaAlarme } from '@types/diabetes';
+import type { RegistroMedicacao, FrequenciaAlarme } from '@/types/diabetes';
 
 // Configurar handler de notificações
 Notifications.setNotificationHandler({
@@ -8,6 +8,8 @@ Notifications.setNotificationHandler({
     shouldShowAlert: true,
     shouldPlaySound: true,
     shouldSetBadge: true,
+    shouldShowBanner: true,
+    shouldShowList: true,
   }),
 });
 
@@ -160,8 +162,8 @@ export const enviarNotificacaoMedicacao = async (medicacao: RegistroMedicacao) =
         sound: 'default',
       },
       trigger: {
-        seconds: 60, // Enviar em 1 minuto
-      },
+        seconds: 60,
+      } as any,
     });
   } catch (error) {
     console.error('Erro ao agendar notificação:', error);

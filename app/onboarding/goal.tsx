@@ -14,7 +14,7 @@ const PASSO_KG = 0.5;
 export default function OnboardingGoal() {
   const t = useT();
   const router = useRouter();
-  const { profile, finalizarOnboarding } = useProfile();
+  const { profile, updateProfile, finalizarOnboarding } = useProfile();
 
   const faixa = useMemo(
     () => calcularFaixaSaudavel(profile.alturaCm ?? 165),
