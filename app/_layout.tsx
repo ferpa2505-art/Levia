@@ -8,6 +8,7 @@ import { CustomRecipesProvider } from '@context/CustomRecipesContext';
 import { NewsProvider } from '@context/NewsContext';
 import { Glp1Provider } from '@context/Glp1Context';
 import { DiabetesProvider } from '@context/DiabetesContext';
+import { SubscriptionProvider } from '@context/SubscriptionContext';
 import { PreferencesProvider, usePreferences } from '@context/PreferencesContext';
 
 SplashScreen.preventAutoHideAsync();
@@ -46,6 +47,9 @@ function RootNavigation() {
     >
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
       <Stack.Screen name="onboarding" options={{ headerShown: false }} />
+      <Stack.Screen name="camera" options={{ headerShown: false, presentation: 'modal' }} />
+      <Stack.Screen name="food-result" options={{ headerShown: false, presentation: 'modal' }} />
+      <Stack.Screen name="paywall" options={{ headerShown: false, presentation: 'modal' }} />
       <Stack.Screen name="recipe-builder" options={{ headerShown: true, title: t('titulos.receitas') }} />
       <Stack.Screen name="glp1" options={{ headerShown: true, title: t('titulos.glp1') }} />
       <Stack.Screen name="diabetes" options={{ headerShown: true, title: t('titulos.diabetes') }} />
@@ -71,7 +75,9 @@ export default function RootLayout() {
             <NewsProvider>
               <Glp1Provider>
                 <DiabetesProvider>
-                  <NavegacaoComTema />
+                  <SubscriptionProvider>
+                    <NavegacaoComTema />
+                  </SubscriptionProvider>
                 </DiabetesProvider>
               </Glp1Provider>
             </NewsProvider>
