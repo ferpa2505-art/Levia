@@ -15,121 +15,9 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useDiabetes } from '@context/DiabetesContext';
 import { useProfile } from '@context/ProfileContext';
+import { analyzeImageWithGoogleVision, FoodNutritionData } from '@services/googleVisionService';
 
-interface FoodAnalysis {
-  nome: string;
-  porcao: string;
-  calorias: number;
-  proteina: number;
-  carboidratos: number;
-  gordura: number;
-  fibra: number;
-  confianca: number;
-}
-
-// Análise simulada baseada em padrões de cores/formas da imagem
-const FOOD_DATABASE: { [key: string]: FoodAnalysis } = {
-  'banana': {
-    nome: 'Banana',
-    porcao: '1 unidade (100g)',
-    calorias: 89,
-    proteina: 1.1,
-    carboidratos: 23,
-    gordura: 0.3,
-    fibra: 2.6,
-    confianca: 0.85,
-  },
-  'apple': {
-    nome: 'Maçã',
-    porcao: '1 unidade (182g)',
-    calorias: 95,
-    proteina: 0.5,
-    carboidratos: 25,
-    gordura: 0.3,
-    fibra: 4.4,
-    confianca: 0.80,
-  },
-  'bread': {
-    nome: 'Pão',
-    porcao: '1 fatia (28g)',
-    calorias: 79,
-    proteina: 2.7,
-    carboidratos: 14,
-    gordura: 1,
-    fibra: 2,
-    confianca: 0.78,
-  },
-  'rice': {
-    nome: 'Arroz Cozido',
-    porcao: '1 xícara (158g)',
-    calorias: 206,
-    proteina: 4.3,
-    carboidratos: 45,
-    gordura: 0.2,
-    fibra: 0.6,
-    confianca: 0.82,
-  },
-  'chicken': {
-    nome: 'Frango Assado',
-    porcao: '100g',
-    calorias: 165,
-    proteina: 31,
-    carboidratos: 0,
-    gordura: 3.6,
-    fibra: 0,
-    confianca: 0.88,
-  },
-  'broccoli': {
-    nome: 'Brócolis',
-    porcao: '1 xícara (91g)',
-    calorias: 34,
-    proteina: 3.7,
-    carboidratos: 7,
-    gordura: 0.4,
-    fibra: 2.4,
-    confianca: 0.84,
-  },
-  'egg': {
-    nome: 'Ovo',
-    porcao: '1 unidade (50g)',
-    calorias: 78,
-    proteina: 6.3,
-    carboidratos: 0.6,
-    gordura: 5.3,
-    fibra: 0,
-    confianca: 0.86,
-  },
-  'salad': {
-    nome: 'Salada Verde',
-    porcao: '1 prato (100g)',
-    calorias: 15,
-    proteina: 1.2,
-    carboidratos: 3,
-    gordura: 0.1,
-    fibra: 2,
-    confianca: 0.75,
-  },
-  'pasta': {
-    nome: 'Massa Cozida',
-    porcao: '1 xícara (140g)',
-    calorias: 221,
-    proteina: 8.1,
-    carboidratos: 43,
-    gordura: 1.1,
-    fibra: 2.4,
-    confianca: 0.80,
-  },
-  'default': {
-    nome: 'Alimento Desconhecido',
-    porcao: '100g',
-    calorias: 100,
-    proteina: 5,
-    carboidratos: 15,
-    gordura: 3,
-    fibra: 1,
-    confianca: 0.50,
-  },
-};
+type FoodAnalysis = FoodNutritionData;
 
 export default function FoodResultScreen() {
   const router = useRouter();
@@ -143,30 +31,26 @@ export default function FoodResultScreen() {
   const [quantity, setQuantity] = useState('1');
   const [isSaving, setIsSaving] = useState(false);
 
-  // Simula análise de imagem (em produção seria ML.js ou API)
+  // Analisa imagem usando Google Vision API (com fallback para mock)
   useEffect(() => {
     const analyzeImage = async () => {
       try {
         setIsLoading(true);
-        // Simular delay de processamento
-        await new Promise<void>((resolve) => setTimeout(resolve, 2000));
-
-        // Em produção, usaria ML real
-        // Por enquanto, seleciona aleatoriamente do banco de dados para MVP
-        const keys = Object.keys(FOOD_DATABASE).filter((k) => k !== 'default');
-        const randomFood = keys[Math.floor(Math.random() * keys.length)];
-        const detectedFood = FOOD_DATABASE[randomFood] || FOOD_DATABASE.default;
-
+        
+        // Usar Google Vision API para análise real
+        const detectedFood = await analyzeImageWithGoogleVision(photoUri);
         setAnalysis(detectedFood);
       } catch (error) {
-        console.error('Erro ao analisar:', error);
-        setAnalysis(FOOD_DATABASE.default);
+        console.error('Erro ao analisar imagem:', error);
+        // Fallback já implementado no serviço
       } finally {
         setIsLoading(false);
       }
     };
 
-    analyzeImage();
+    if (photoUri) {
+      analyzeImage();
+    }
   }, [photoUri]);
 
   const handleAddToDiary = async () => {
@@ -253,16 +137,16 @@ export default function FoodResultScreen() {
                     styles.confidenceBadge,
                     {
                       backgroundColor:
-                        analysis.confianca > 0.8
+                        (analysis.confianca ?? 0.75) > 0.8
                           ? '#4CAF50'
-                          : analysis.confianca > 0.6
+                          : (analysis.confianca ?? 0.75) > 0.6
                           ? '#FFC107'
                           : '#FF9800',
                     },
                   ]}
                 >
                   <Text style={styles.confidenceText}>
-                    {Math.round(analysis.confianca * 100)}%
+                    {Math.round((analysis.confianca ?? 0.75) * 100)}%
                   </Text>
                 </View>
               </View>

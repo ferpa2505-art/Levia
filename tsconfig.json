@@ -27,7 +27,8 @@
       "@types/*": ["src/types/*"],
       "@models/*": ["src/types/*"],
       "@theme/*": ["src/theme/*"],
-      "@context/*": ["src/context/*"]
+      "@context/*": ["src/context/*"],
+      "@services/*": ["src/services/*"]
     }
   },
   "include": ["**/*.ts", "**/*.tsx"],
