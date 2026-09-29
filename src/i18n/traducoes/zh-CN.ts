@@ -10,6 +10,7 @@ const traducoes: Traducoes = {
   "comum.fechar": "关闭",
   "abas.inicio": "首页",
   "abas.diario": "日记",
+  "abas.diabetes": "Diabetes",
   "abas.exercicios": "运动",
   "abas.noticias": "资讯",
   "abas.perfil": "我的",
@@ -159,3 +160,4 @@ const traducoes: Traducoes = {
 };
 
 export default traducoes;
+

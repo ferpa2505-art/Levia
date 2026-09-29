@@ -10,6 +10,7 @@ const traducoes: Traducoes = {
   "comum.fechar": "닫기",
   "abas.inicio": "홈",
   "abas.diario": "일지",
+  "abas.diabetes": "Diabetes",
   "abas.exercicios": "운동",
   "abas.noticias": "뉴스",
   "abas.perfil": "프로필",
@@ -159,3 +160,4 @@ const traducoes: Traducoes = {
 };
 
 export default traducoes;
+

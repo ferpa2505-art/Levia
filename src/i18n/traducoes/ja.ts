@@ -10,6 +10,7 @@ const traducoes: Traducoes = {
   "comum.fechar": "閉じる",
   "abas.inicio": "ホーム",
   "abas.diario": "日記",
+  "abas.diabetes": "Diabetes",
   "abas.exercicios": "エクササイズ",
   "abas.noticias": "ニュース",
   "abas.perfil": "プロフィール",
@@ -159,3 +160,4 @@ const traducoes: Traducoes = {
 };
 
 export default traducoes;
+

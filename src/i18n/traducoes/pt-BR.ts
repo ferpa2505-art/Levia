@@ -9,6 +9,7 @@ const ptBR = {
   "comum.fechar": "Fechar",
   "abas.inicio": "Início",
   "abas.diario": "Diário",
+  "abas.diabetes": "Diabetes",
   "abas.exercicios": "Exercícios",
   "abas.noticias": "Notícias",
   "abas.perfil": "Perfil",

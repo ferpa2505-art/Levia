@@ -10,6 +10,7 @@ const traducoes: Traducoes = {
   "comum.fechar": "Fechar",
   "abas.inicio": "Início",
   "abas.diario": "Diário",
+  "abas.diabetes": "Diabetes",
   "abas.exercicios": "Exercício",
   "abas.noticias": "Notícias",
   "abas.perfil": "Perfil",
