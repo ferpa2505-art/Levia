@@ -29,14 +29,14 @@ export default function OnboardingGoal() {
   const foraDaFaixa = meta < faixa.min || meta > faixa.max;
 
   async function handleConfirmar() {
-    await finalizarOnboarding({ metaPesoKg: meta });
-    router.replace('/');
+    updateProfile({ metaPesoKg: meta });
+    router.push('/onboarding/diabetes-type');
   }
 
   return (
     <QuestionLayout
       step={7}
-      totalSteps={8}
+      totalSteps={9}
       question={t('onb.meta.pergunta', { nome: profile.comoChamar || '' })}
       subtitle={t('onb.meta.sub', { min: faixa.min, max: faixa.max })}
       onNext={handleConfirmar}

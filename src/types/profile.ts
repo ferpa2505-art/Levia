@@ -1,5 +1,6 @@
 export type Pronome = 'ela' | 'ele';
 export type SexoBiologico = 'feminino' | 'masculino';
+export type TipoDiabetes = 'tipo1' | 'tipo2' | null;
 
 export interface UserProfile {
   nome: string;
@@ -10,6 +11,7 @@ export interface UserProfile {
   idade: number | null;
   sexoBiologico: SexoBiologico | null;
   metaPesoKg: number | null;
+  tipoDiabetes: TipoDiabetes;
   onboardingConcluido: boolean;
 }
 
@@ -22,5 +24,6 @@ export const perfilVazio: UserProfile = {
   idade: null,
   sexoBiologico: null,
   metaPesoKg: null,
+  tipoDiabetes: null,
   onboardingConcluido: false,
 };

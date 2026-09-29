@@ -1,9 +1,6 @@
 import { useEffect } from 'react';
 import * as Notifications from 'expo-notifications';
-import * as TaskManager from 'expo-task-manager';
 import { RegistroMedicacao, FrequenciaAlarme } from '@types/diabetes';
-
-const TAREFA_ALARME_MEDICACAO = 'ALARME_MEDICACAO_DIABETES';
 
 // Configurar handler de notificações
 Notifications.setNotificationHandler({
@@ -12,12 +9,6 @@ Notifications.setNotificationHandler({
     shouldPlaySound: true,
     shouldSetBadge: true,
   }),
-});
-
-// Registrar tarefa de background
-TaskManager.defineTask(TAREFA_ALARME_MEDICACAO, async () => {
-  // Esta função é chamada em intervalos configurados
-  console.log('✓ Tarefa de alarme de medicação executada');
 });
 
 export interface ProximoAlarmeInfo {
