@@ -34,7 +34,7 @@ export default function DiabetesScreen() {
     removerGlicemia,
     adicionarMedicacao,
     removerMedicacao,
-    atualizarAlarmeМedicacao,
+    atualizarAlarmeMedicacao,
     adicionarRefeicao,
     removerRefeicao,
     adicionarNota,
@@ -598,7 +598,7 @@ export default function DiabetesScreen() {
             <ConfiguradorAlarmesMedicacao
               medicacao={medicacaoSelecionadaAlarme}
               onConfirm={async (alarme) => {
-                await atualizarAlarmeМedicacao(medicacaoSelecionadaAlarme.id, alarme);
+                await atualizarAlarmeMedicacao(medicacaoSelecionadaAlarme.id, alarme);
                 fecharConfigurador();
               }}
               onCancel={fecharConfigurador}
