@@ -1,0 +1,33 @@
+{
+  "cli": {
+    "version": ">= 24.0.0"
+  },
+  "build": {
+    "development": {
+      "distribution": "internal",
+      "android": {
+        "gradleCommand": ":app:assembleDebug"
+      }
+    },
+    "preview": {
+      "distribution": "internal",
+      "android": {
+        "buildType": "apk"
+      }
+    },
+    "production": {
+      "distribution": "store",
+      "android": {
+        "buildType": "app-bundle"
+      }
+    }
+  },
+  "submit": {
+    "production": {
+      "android": {
+        "serviceAccountKeyPath": "gc_keys.json",
+        "track": "internal"
+      }
+    }
+  }
+}

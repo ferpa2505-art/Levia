@@ -4,19 +4,26 @@
     "slug": "levia-app",
     "version": "0.1.0",
     "orientation": "portrait",
-    "assetBundlePatterns": ["**/*"],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
       "bundleIdentifier": "com.levia.app"
     },
     "android": {
       "package": "com.levia.app"
     },
-    "plugins": ["expo-router", "expo-notifications"],
+    "plugins": [
+      "expo-router",
+      "expo-notifications"
+    ],
     "scheme": "levia",
     "extra": {
       "eas": {
-        "projectId": "levia-dev-project"
-      }
-    }
+        "projectId": "c19a5f1e-5fbd-4100-ad78-43b05b47a977"
+      },
+      "router": {}
+    },
+    "owner": "ferpa2505-art"
   }
 }
