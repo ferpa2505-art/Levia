@@ -1,5 +1,5 @@
 import { Tabs } from 'expo-router';
-import { Home, BookOpen, Dumbbell, Newspaper, User } from 'lucide-react-native';
+import { Home, BookOpen, Dumbbell, Newspaper, User, Droplet } from 'lucide-react-native';
 import { colors } from '@constants/colors';
 import { MenuOpcoes } from '@components/MenuOpcoes';
 import { useT } from '@context/PreferencesContext';
@@ -53,6 +53,16 @@ export default function TabsLayout() {
           tabBarLabel: t('abas.diario'),
           tabBarIcon: ({ color, focused, size }) => (
             <BookOpen size={size} color={color} strokeWidth={focused ? 2.5 : 2} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="diabetes"
+        options={{
+          title: t('abas.diabetes') || 'Diabetes',
+          tabBarLabel: t('abas.diabetes') || 'Diabetes',
+          tabBarIcon: ({ color, focused, size }) => (
+            <Droplet size={size} color={color} strokeWidth={focused ? 2.5 : 2} />
           ),
         }}
       />
