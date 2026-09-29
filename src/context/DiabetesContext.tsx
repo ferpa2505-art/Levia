@@ -6,7 +6,8 @@ import {
   RegistroMedicacao,
   RegistroRefeicao,
   NotaDiaria,
-} from '@models/diabetes';
+  ConfiguracaoAlarme,
+} from '@types/diabetes';
 import { dataDeHoje, horarioAgora, gerarId } from '@utils/recordsStorage';
 
 // Dados mockados iniciais
@@ -107,6 +108,7 @@ interface DiabetesContextValue {
   removerGlicemia: (id: string) => Promise<void>;
   adicionarMedicacao: (medicamento: string, dosagem: string, observacoes?: string) => Promise<void>;
   removerMedicacao: (id: string) => Promise<void>;
+  atualizarAlarmeМedicacao: (medicacaoId: string, alarme: ConfiguracaoAlarme) => Promise<void>;
   adicionarRefeicao: (
     tipo: string,
     carboidratos: number,
@@ -227,6 +229,15 @@ export function DiabetesProvider({ children }: { children: ReactNode }) {
     }));
   }
 
+  async function atualizarAlarmeМedicacao(medicacaoId: string, alarme: ConfiguracaoAlarme) {
+    setDados((prev) => ({
+      ...prev,
+      medicacoes: prev.medicacoes.map((med) =>
+        med.id === medicacaoId ? { ...med, alarme } : med
+      ),
+    }));
+  }
+
   return (
     <DiabetesContext.Provider
       value={{
@@ -242,6 +253,7 @@ export function DiabetesProvider({ children }: { children: ReactNode }) {
         removerGlicemia,
         adicionarMedicacao,
         removerMedicacao,
+        atualizarAlarmeМedicacao,
         adicionarRefeicao,
         removerRefeicao,
         adicionarNota,

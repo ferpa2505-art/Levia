@@ -9,6 +9,19 @@ export interface RegistroGlicemia {
   notas?: string;
 }
 
+export type FrequenciaAlarme = 'hora' | '2h' | '3h' | '4h' | '6h' | '8h' | '12h' | 'diaria' | 'semanal' | 'quinzenal' | 'mensal';
+export type TipoMedicacao = 'insulina' | 'diabetes-tratamento' | 'outro';
+
+export interface ConfiguracaoAlarme {
+  ativado: boolean;
+  frequencia: FrequenciaAlarme;
+  horarios: string[]; // Horas no formato HH:mm
+  diasDaSemana?: number[]; // 0-6 (domingo-sábado), para semanal
+  diaDoMes?: number; // 1-28, para mensal/quinzenal
+  usoContinuo?: boolean; // Se é medicação de uso contínuo
+  notificacaoAtivada?: boolean;
+}
+
 export interface RegistroMedicacao {
   id: string;
   data: string;
@@ -16,6 +29,8 @@ export interface RegistroMedicacao {
   medicamento: string;
   dosagem: string;
   observacoes?: string;
+  tipo?: TipoMedicacao; // Novo: tipo de medicação
+  alarme?: ConfiguracaoAlarme; // Novo: configuração de alarme
 }
 
 export interface RegistroRefeicao {

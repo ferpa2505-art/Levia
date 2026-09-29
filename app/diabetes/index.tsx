@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { View, ScrollView, Pressable } from 'react-native';
+import { useState, useCallback } from 'react';
+import { View, ScrollView, Pressable, Modal } from 'react-native';
 import {
   Droplet,
   Pill,
@@ -7,12 +7,15 @@ import {
   FileText,
   Plus,
   Trash2,
+  Clock,
 } from 'lucide-react-native';
 import { ThemedView } from '@components/ThemedView';
 import { ThemedText } from '@components/ThemedText';
 import { Button } from '@components/Button';
 import { Input } from '@components/Input';
+import { ConfiguradorAlarmesMedicacao, StatusAlarmeIndicador } from '@components/diabetes';
 import { useDiabetes } from '@context/DiabetesContext';
+import { useMedicacaoAlarmes } from '@hooks/useMedicacaoAlarmes';
 import { MEDICAMENTOS_DIABETES, TIPOS_REFEICAO } from '@constants/diabetes';
 import { colors, spacing, radius } from '@constants/colors';
 import { estilosTema } from '@theme/estilos';
@@ -31,6 +34,7 @@ export default function DiabetesScreen() {
     removerGlicemia,
     adicionarMedicacao,
     removerMedicacao,
+    atualizarAlarmeМedicacao,
     adicionarRefeicao,
     removerRefeicao,
     adicionarNota,
@@ -54,6 +58,10 @@ export default function DiabetesScreen() {
   const [dosagemMedicacao, setDosagemMedicacao] = useState('');
   const [observacoesMedicacao, setObservacoesMedicacao] = useState('');
 
+  // Estados para configuração de alarmes
+  const [mostrarConfiguradorAlarmes, setMostrarConfiguradorAlarmes] = useState(false);
+  const [medicacaoSelecionadaAlarme, setMedicacaoSelecionadaAlarme] = useState<any>(null);
+
   const [mostrarFormRefeicao, setMostrarFormRefeicao] = useState(false);
   const [tipoRefeicaoSelecionado, setTipoRefeicaoSelecionado] = useState(TIPOS_REFEICAO[0]);
   const [carboidratosTexto, setCarboidratosTexto] = useState('');
@@ -62,6 +70,20 @@ export default function DiabetesScreen() {
 
   const [mostrarFormNota, setMostrarFormNota] = useState(false);
   const [conteudoNota, setConteudoNota] = useState('');
+
+  // Hook para gerenciar alarmes
+  useMedicacaoAlarmes(medicacoes);
+
+  // Funções para alarmes
+  const abrirConfigurador = useCallback((medicacao: any) => {
+    setMedicacaoSelecionadaAlarme(medicacao);
+    setMostrarConfiguradorAlarmes(true);
+  }, []);
+
+  const fecharConfigurador = useCallback(() => {
+    setMostrarConfiguradorAlarmes(false);
+    setMedicacaoSelecionadaAlarme(null);
+  }, []);
 
   // Funções para salvar registros
   async function salvarGlicemia() {
@@ -334,23 +356,31 @@ export default function DiabetesScreen() {
           {medicacoesHoje.length > 0 && (
             <View>
               {medicacoesHoje.map((med) => (
-                <View key={med.id} style={styles.registroItem}>
-                  <View style={styles.registroConteudo}>
-                    <ThemedText variant="body" color="text">
-                      {med.horario} - {med.medicamento}
-                    </ThemedText>
-                    <ThemedText variant="small" color="textSecondary">
-                      {med.dosagem}
-                    </ThemedText>
-                    {med.observacoes && (
-                      <ThemedText variant="small" color="textSecondary">
-                        {med.observacoes}
+                <View key={med.id}>
+                  <View style={styles.registroItem}>
+                    <View style={styles.registroConteudo}>
+                      <ThemedText variant="body" color="text">
+                        {med.horario} - {med.medicamento}
                       </ThemedText>
-                    )}
+                      <ThemedText variant="small" color="textSecondary">
+                        {med.dosagem}
+                      </ThemedText>
+                      {med.observacoes && (
+                        <ThemedText variant="small" color="textSecondary">
+                          {med.observacoes}
+                        </ThemedText>
+                      )}
+                    </View>
+                    <View style={{ flexDirection: 'row', gap: spacing.sm, alignItems: 'center' }}>
+                      <Pressable onPress={() => abrirConfigurador(med)}>
+                        <Clock size={18} color={colors.primary} strokeWidth={2} />
+                      </Pressable>
+                      <Pressable onPress={() => removerMedicacao(med.id)}>
+                        <Trash2 size={18} color={colors.error} strokeWidth={2} />
+                      </Pressable>
+                    </View>
                   </View>
-                  <Pressable onPress={() => removerMedicacao(med.id)}>
-                    <Trash2 size={18} color={colors.error} strokeWidth={2} />
-                  </Pressable>
+                  <StatusAlarmeIndicador medicacao={med} />
                 </View>
               ))}
             </View>
@@ -555,6 +585,27 @@ export default function DiabetesScreen() {
 
         <View style={styles.spacer} />
       </ThemedView>
+
+      {/* Modal Configurador de Alarmes */}
+      <Modal
+        visible={mostrarConfiguradorAlarmes}
+        transparent
+        animationType="slide"
+        onRequestClose={fecharConfigurador}
+      >
+        <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' }}>
+          {medicacaoSelecionadaAlarme && (
+            <ConfiguradorAlarmesMedicacao
+              medicacao={medicacaoSelecionadaAlarme}
+              onConfirm={async (alarme) => {
+                await atualizarAlarmeМedicacao(medicacaoSelecionadaAlarme.id, alarme);
+                fecharConfigurador();
+              }}
+              onCancel={fecharConfigurador}
+            />
+          )}
+        </View>
+      </Modal>
     </ScrollView>
   );
 }
