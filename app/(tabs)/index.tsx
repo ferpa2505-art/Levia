@@ -172,6 +172,21 @@ export default function HomeScreen() {
           </ThemedView>
         </Pressable>
 
+        <Pressable onPress={() => router.push('/camera')}>
+          <ThemedView variant="surface" style={[styles.card, styles.cardShadow, styles.glp1Card]}>
+            <View style={[styles.glp1IconCircle, { backgroundColor: '#FF6B6B20' }]}>
+              <Flame size={20} color="#FF6B6B" strokeWidth={2} />
+            </View>
+            <View style={{ flex: 1, marginLeft: spacing.md }}>
+              <ThemedText variant="subheading" color="text">{t('home.reconhecerComida', { defaultValue: '📷 Reconhecer Alimento' })}</ThemedText>
+              <ThemedText variant="small" color="textSecondary">
+                {t('home.reconhecerComidaDesc', { defaultValue: 'Use câmera para adicionar refeição' })}
+              </ThemedText>
+            </View>
+            <ChevronRight size={20} color={colors.textSecondary} strokeWidth={2} />
+          </ThemedView>
+        </Pressable>
+
         <View style={styles.status}>
           <ThemedText variant="caption" color="textSecondary">v0.1.0 • {t('home.versao')}</ThemedText>
         </View>
