@@ -1,0 +1,391 @@
+╔════════════════════════════════════════════════════════════════════════════╗
+║                                                                            ║
+║           📊 RASTREADOR DE TESTES EM TEMPO REAL - PASSO A PASSO           ║
+║                                                                            ║
+║          Cole este tracker em outra aba/window e atualize conforme         ║
+║                        você executa os testes!                            ║
+║                                                                            ║
+╚════════════════════════════════════════════════════════════════════════════╝
+
+
+START TIME: _______________   |   PLATAFORMA: [ ] Web  [ ] Android  [ ] iOS
+
+
+════════════════════════════════════════════════════════════════════════════════
+PASSO 1: Expo Iniciado
+════════════════════════════════════════════════════════════════════════════════
+
+  Status: ✅ FEITO
+  
+  ✅ Porta 8083 confirmada
+  ✅ Metro Bundler iniciando
+  ✅ QR code gerado
+
+
+════════════════════════════════════════════════════════════════════════════════
+PASSO 2: Verificar Card Diabetes (Est: 1 min)
+════════════════════════════════════════════════════════════════════════════════
+
+START: _________    |    END: _________    |    TEMPO: _____ min
+
+[ ] App carregou sem erro
+[ ] Home screen visível
+[ ] Card 💧 Diabetes encontrado
+[ ] Descrição "Rastreie glicemia e medicações" presente
+[ ] Clique sem erro
+
+RESULTADO: [ ] ✅ PASSOU  [ ] ❌ FALHOU
+
+Se falhou: _________________________________________________________________
+
+
+════════════════════════════════════════════════════════════════════════════════
+PASSO 3: Navegação (Est: 1 min)
+════════════════════════════════════════════════════════════════════════════════
+
+START: _________    |    END: _________    |    TEMPO: _____ min
+
+[ ] Navega para /diabetes sem erro
+[ ] Header "Diabetes" aparece
+[ ] Seção 📊 Glicemia visível
+[ ] Seção 💊 Medicações visível
+[ ] Seção 🍽️  Refeições visível
+[ ] Seção 📝 Notas visível
+
+RESULTADO: [ ] ✅ PASSOU  [ ] ❌ FALHOU
+
+Se falhou: _________________________________________________________________
+
+
+════════════════════════════════════════════════════════════════════════════════
+PASSO 4: Glicemia - Add/Delete (Est: 3 min)
+════════════════════════════════════════════════════════════════════════════════
+
+START: _________    |    END: _________    |    TEMPO: _____ min
+
+VERIFICAR MOCK DATA:
+[ ] 118 mg/dL - 08:30
+[ ] 145 mg/dL - 12:15
+[ ] 128 mg/dL - 18:00
+
+ADICIONAR NOVO:
+[ ] Clique "+ Adicionar"
+[ ] Form abre
+[ ] Digite "95" no campo
+[ ] Clique "Registrar"
+[ ] 95 aparece na lista
+
+DELETAR:
+[ ] Clique 🗑️ em um registro
+[ ] Registro desaparece
+
+RESULTADO: [ ] ✅ PASSOU  [ ] ❌ FALHOU
+
+Se falhou: _________________________________________________________________
+
+
+════════════════════════════════════════════════════════════════════════════════
+PASSO 5: Medicações - Add/Delete (Est: 2 min)
+════════════════════════════════════════════════════════════════════════════════
+
+START: _________    |    END: _________    |    TEMPO: _____ min
+
+VERIFICAR MOCK DATA:
+[ ] Metformina 500mg - 08:00
+[ ] Metformina 500mg - 20:00
+
+ADICIONAR NOVO:
+[ ] Clique "+ Adicionar"
+[ ] Form abre com dropdown
+[ ] Escolha medicamento
+[ ] Digite dosagem ex: "750"
+[ ] Clique "Registrar"
+[ ] Novo medicamento aparece
+
+DELETAR:
+[ ] Clique 🗑️
+[ ] Desaparece
+
+RESULTADO: [ ] ✅ PASSOU  [ ] ❌ FALHOU
+
+Se falhou: _________________________________________________________________
+
+
+════════════════════════════════════════════════════════════════════════════════
+PASSO 6: Refeições - Add/Delete (Est: 2 min)
+════════════════════════════════════════════════════════════════════════════════
+
+START: _________    |    END: _________    |    TEMPO: _____ min
+
+VERIFICAR MOCK DATA:
+[ ] Café da manhã - 45g carbs
+[ ] Almoço - 60g carbs
+[ ] Jantar - 50g carbs
+
+ADICIONAR NOVO:
+[ ] Clique "+ Adicionar"
+[ ] Form abre
+[ ] Escolha tipo (dropdown)
+[ ] Digite carbs ex: "75"
+[ ] Clique "Registrar"
+[ ] Nova refeição aparece
+
+DELETAR:
+[ ] Clique 🗑️
+[ ] Desaparece
+
+RESULTADO: [ ] ✅ PASSOU  [ ] ❌ FALHOU
+
+Se falhou: _________________________________________________________________
+
+
+════════════════════════════════════════════════════════════════════════════════
+PASSO 7: Notas - Add/Delete (Est: 2 min)
+════════════════════════════════════════════════════════════════════════════════
+
+START: _________    |    END: _________    |    TEMPO: _____ min
+
+VERIFICAR MOCK DATA:
+[ ] 1 nota presente: "Dia com níveis bem controlados..."
+
+ADICIONAR NOVO:
+[ ] Clique "+ Adicionar"
+[ ] Form abre
+[ ] Digite texto qualquer
+[ ] Clique "Registrar"
+[ ] Nova nota aparece
+
+DELETAR:
+[ ] Clique 🗑️
+[ ] Desaparece
+
+RESULTADO: [ ] ✅ PASSOU  [ ] ❌ FALHOU
+
+Se falhou: _________________________________________________________________
+
+
+════════════════════════════════════════════════════════════════════════════════
+PASSO 8: Design e UI (Est: 2 min)
+════════════════════════════════════════════════════════════════════════════════
+
+START: _________    |    END: _________    |    TEMPO: _____ min
+
+CORES:
+[ ] Fundo branco/cinza (ok)
+[ ] Texto preto/cinza escuro (legível)
+[ ] Botões com cor primária (ok)
+
+ÍCONES:
+[ ] 💧 Droplet em Glicemia
+[ ] 💊 Pill em Medicações
+[ ] 🍽️  Utensils em Refeições
+[ ] 📝 FileText em Notas
+[ ] 🗑️ Trash nos botões delete
+
+LAYOUT:
+[ ] ScrollView funciona
+[ ] Cards têm espaçamento ok
+[ ] Sem elementos cortados
+[ ] Tudo legível
+
+RESULTADO: [ ] ✅ PASSOU  [ ] ❌ FALHOU
+
+Se falhou: _________________________________________________________________
+
+
+════════════════════════════════════════════════════════════════════════════════
+PASSO 9: Validação de Formulários (Est: 2 min)
+════════════════════════════════════════════════════════════════════════════════
+
+START: _________    |    END: _________    |    TEMPO: _____ min
+
+TESTE: Glicemia = 0 (deve rejeitar):
+[ ] Clique "+ Adicionar"
+[ ] Digite "0"
+[ ] Clique "Registrar"
+[ ] ❌ É bloqueado ou erro aparece
+
+TESTE: Glicemia negativa (deve rejeitar):
+[ ] Clique "+ Adicionar"
+[ ] Digite "-50"
+[ ] Clique "Registrar"
+[ ] ❌ É bloqueado ou erro aparece
+
+TESTE: Glicemia com decimal (deve aceitar):
+[ ] Clique "+ Adicionar"
+[ ] Digite "95.5" ou "95,5"
+[ ] Clique "Registrar"
+[ ] ✅ Aceita e aparece
+
+TESTE: Campo vazio (deve rejeitar):
+[ ] Clique "+ Adicionar"
+[ ] DEIXE VAZIO
+[ ] Clique "Registrar"
+[ ] ❌ É bloqueado
+
+RESULTADO: [ ] ✅ PASSOU  [ ] ❌ FALHOU
+
+Se falhou: _________________________________________________________________
+
+
+════════════════════════════════════════════════════════════════════════════════
+PASSO 10: Hot-Reload (Est: 2 min)
+════════════════════════════════════════════════════════════════════════════════
+
+START: _________    |    END: _________    |    TEMPO: _____ min
+
+1. APP RODANDO com dados visíveis
+
+[ ] Memória dos dados antes: __________________________________
+
+2. ABRA arquivo: app/diabetes/index.tsx
+
+3. EDITE algo (ex: mude um texto)
+
+4. SALVE arquivo (Ctrl+S)
+
+5. AGUARDE reload automático
+
+[ ] App recarregou sem erro
+[ ] Dados AINDA ESTÃO LÁ (não se perderam)
+[ ] Mudança visual apareceu
+
+Memória dos dados depois: __________________________________
+
+RESULTADO: [ ] ✅ PASSOU  [ ] ❌ FALHOU
+
+Se falhou: _________________________________________________________________
+
+
+════════════════════════════════════════════════════════════════════════════════
+PASSO 11: Tradução (Est: 2 min)
+════════════════════════════════════════════════════════════════════════════════
+
+START: _________    |    END: _________    |    TEMPO: _____ min
+
+TESTE: pt-BR (Português Brasil)
+[ ] "Diabetes" aparece em português
+[ ] Descrição em português
+[ ] Todos os labels em português
+
+TESTE: Mudar para en-US (Inglês)
+[ ] Abra menu idioma
+[ ] Escolha English/en-US
+[ ] Volte para Diabetes
+[ ] "Diabetes" em inglês
+[ ] Labels em inglês
+[ ] Sem texto quebrado [???]
+
+TESTE: Voltar para pt-BR
+[ ] Menu idioma
+[ ] Escolha Português
+[ ] Volte para Diabetes
+[ ] Tudo em português novamente
+[ ] Legível
+
+RESULTADO: [ ] ✅ PASSOU  [ ] ❌ FALHOU
+
+Se falhou: _________________________________________________________________
+
+
+════════════════════════════════════════════════════════════════════════════════
+PASSO 12: Fluxo Completo End-to-End (Est: 3 min)
+════════════════════════════════════════════════════════════════════════════════
+
+START: _________    |    END: _________    |    TEMPO: _____ min
+
+SEQUÊNCIA COMPLETA:
+
+[ ] 1. Home: Vê card Diabetes
+[ ] 2. Clique no card
+[ ] 3. Navega para /diabetes
+[ ] 4. Clique "+ Adicionar" em Glicemia → Digite "110" → Registrar
+[ ] 5. Clique "+ Adicionar" em Medicações → Escolha → Digite "750" → Registrar
+[ ] 6. Clique "+ Adicionar" em Refeições → Escolha "Almoço" → Digite "75" → Registrar
+[ ] 7. Clique "+ Adicionar" em Notas → Digite texto → Registrar
+[ ] 8. Volta para Home (clique botão voltar ou Home tab)
+[ ] 9. Clique no card Diabetes NOVAMENTE
+
+TESTE CRUCIAL: Dados ainda estão lá?
+[ ] ✅ 110 em Glicemia?
+[ ] ✅ Medicação 750 em Medicações?
+[ ] ✅ Almoço 75g em Refeições?
+[ ] ✅ Nota em Notas?
+
+RESULTADO: [ ] ✅ PASSOU (persistência OK)  [ ] ❌ FALHOU (dados se perderam)
+
+Se falhou: _________________________________________________________________
+
+
+════════════════════════════════════════════════════════════════════════════════
+PASSO 13: Documentar Erros (se houver)
+════════════════════════════════════════════════════════════════════════════════
+
+SE NENHUM TESTE FALHOU:
+[ ] Pular para RESUMO FINAL
+
+SE ALGUM TESTE FALHOU:
+
+ERRO #1:
+Qual passo? _________________________________________________________________
+Descrição:  _________________________________________________________________
+            _________________________________________________________________
+
+ERRO #2:
+Qual passo? _________________________________________________________________
+Descrição:  _________________________________________________________________
+            _________________________________________________________________
+
+ERRO #3:
+Qual passo? _________________________________________________________________
+Descrição:  _________________________________________________________________
+            _________________________________________________________________
+
+
+════════════════════════════════════════════════════════════════════════════════
+📊 RESUMO FINAL DOS TESTES
+════════════════════════════════════════════════════════════════════════════════
+
+TOTAL TIME: _________ min (estimado: 25 min)
+START TIME: _________    |    END TIME: _________
+
+PASSO 2:  [ ] ✅ PASSOU  [ ] ❌ FALHOU
+PASSO 3:  [ ] ✅ PASSOU  [ ] ❌ FALHOU
+PASSO 4:  [ ] ✅ PASSOU  [ ] ❌ FALHOU
+PASSO 5:  [ ] ✅ PASSOU  [ ] ❌ FALHOU
+PASSO 6:  [ ] ✅ PASSOU  [ ] ❌ FALHOU
+PASSO 7:  [ ] ✅ PASSOU  [ ] ❌ FALHOU
+PASSO 8:  [ ] ✅ PASSOU  [ ] ❌ FALHOU
+PASSO 9:  [ ] ✅ PASSOU  [ ] ❌ FALHOU
+PASSO 10: [ ] ✅ PASSOU  [ ] ❌ FALHOU
+PASSO 11: [ ] ✅ PASSOU  [ ] ❌ FALHOU
+PASSO 12: [ ] ✅ PASSOU  [ ] ❌ FALHOU
+PASSO 13: [ ] N/A - Sem erros  [ ] Erros documentados
+
+═══════════════════════════════════════════════════════════════
+
+TOTAL PASSARAM: _____ / 12
+
+CONCLUSÃO:
+
+[ ] ✅ TUDO PASSOU - PRONTO PARA PRODUÇÃO
+[ ] ⚠️  ALGUNS FALHARAM - PRECISA FIX
+[ ] ❌ BLOQUEADOR - NÃO MERGEÁVEL
+
+Passos que falharam: _______________________________________________________
+
+════════════════════════════════════════════════════════════════════════════════
+
+🎯 PRÓXIMA AÇÃO:
+
+Quando terminar todos os passos (2-13), copie este resumo final e envie:
+
+"Terminei os testes!
+
+Passo 2-13: X/12 passaram
+Tempo total: X minutos
+Plataforma: Web / Android / iOS
+
+[Resumo dos erros encontrados, se houver]"
+
+════════════════════════════════════════════════════════════════════════════════
