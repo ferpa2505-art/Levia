@@ -8,6 +8,7 @@ import { CustomRecipesProvider } from '@context/CustomRecipesContext';
 import { NewsProvider } from '@context/NewsContext';
 import { Glp1Provider } from '@context/Glp1Context';
 import { PreferencesProvider, usePreferences } from '@context/PreferencesContext';
+import { OmniRouteProvider } from '@context/OmniRouteContext';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -64,15 +65,17 @@ export default function RootLayout() {
   return (
     <PreferencesProvider>
       <ProfileProvider>
-        <RecordsProvider>
-          <CustomRecipesProvider>
-            <NewsProvider>
-              <Glp1Provider>
-                <NavegacaoComTema />
-              </Glp1Provider>
-            </NewsProvider>
-          </CustomRecipesProvider>
-        </RecordsProvider>
+        <OmniRouteProvider>
+          <RecordsProvider>
+            <CustomRecipesProvider>
+              <NewsProvider>
+                <Glp1Provider>
+                  <NavegacaoComTema />
+                </Glp1Provider>
+              </NewsProvider>
+            </CustomRecipesProvider>
+          </RecordsProvider>
+        </OmniRouteProvider>
       </ProfileProvider>
     </PreferencesProvider>
   );
