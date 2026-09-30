@@ -6,6 +6,7 @@
     "declarationMap": true,
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
+    "ignoreDeprecations": "6.0",
     "jsx": "react-jsx",
     "lib": ["ES2020"],
     "module": "ESNext",
@@ -25,7 +26,8 @@
       "@types/*": ["src/types/*"],
       "@models/*": ["src/types/*"],
       "@theme/*": ["src/theme/*"],
-      "@context/*": ["src/context/*"]
+      "@context/*": ["src/context/*"],
+      "@services/*": ["src/services/*"]
     }
   },
   "include": ["**/*.ts", "**/*.tsx"],
