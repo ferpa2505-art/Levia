@@ -10,7 +10,8 @@ import { Input } from '@components/Input';
 import { useRecords } from '@context/RecordsContext';
 import { useCustomRecipes } from '@context/CustomRecipesContext';
 import { buscarReceitas, ReceitaConhecida } from '@constants/recipes';
-import { ReceitaPersonalizada, PORCAO_PADRAO_G, valoresDaPorcao } from '@models/ingredients';
+import { AlimentoPor100g, Ingrediente, PORCAO_PADRAO_G, valoresDaPorcao } from '@models/ingredients';
+import { buscarIngredientes } from '@constants/ingredients';
 import { colors, spacing, radius } from '@constants/colors';
 import { estilosTema } from '@theme/estilos';
 import { usePreferences } from '@context/PreferencesContext';
@@ -37,10 +38,11 @@ export default function JournalScreen() {
   const [kcal, setKcal] = useState('');
   const [proteina, setProteina] = useState('');
   // Receita salva escolhida: kcal/proteína acompanham a quantidade em gramas
-  const [receitaEscolhida, setReceitaEscolhida] = useState<ReceitaPersonalizada | null>(null);
+  const [receitaEscolhida, setReceitaEscolhida] = useState<AlimentoPor100g | null>(null);
   const [gramasTexto, setGramasTexto] = useState('');
 
-  const sugestoes = buscarReceitas(nome);
+  const sugestoes = receitaEscolhida ? [] : buscarReceitas(nome);
+  const sugestoesAlimentos = receitaEscolhida || !nome.trim() ? [] : buscarIngredientes(nome, 6);
   // Com o nome vazio, mostra as receitas salvas para repetir com um toque
   const sugestoesPersonalizadas = receitaEscolhida
     ? []
@@ -58,7 +60,7 @@ export default function JournalScreen() {
     setProteina(String(receita.proteinaG));
   }
 
-  function aplicarPorcao(receita: ReceitaPersonalizada, texto: string) {
+  function aplicarPorcao(receita: AlimentoPor100g, texto: string) {
     setGramasTexto(texto);
     const gramas = parseFloat(texto.replace(',', '.'));
     if (isNaN(gramas) || gramas <= 0) return;
@@ -67,7 +69,11 @@ export default function JournalScreen() {
     setProteina(String(proteinaG));
   }
 
-  function escolherReceitaPersonalizada(receita: ReceitaPersonalizada) {
+  function escolherAlimento(alimento: Ingrediente) {
+    escolherReceitaPersonalizada({ ...alimento, porcaoPadraoG: alimento.gramaPadrao });
+  }
+
+  function escolherReceitaPersonalizada(receita: AlimentoPor100g) {
     setNome(receita.nome);
     setReceitaEscolhida(receita);
     aplicarPorcao(receita, String(receita.porcaoPadraoG ?? PORCAO_PADRAO_G));
@@ -172,7 +178,7 @@ export default function JournalScreen() {
                 autoFocus
               />
 
-              {(sugestoesPersonalizadas.length > 0 || sugestoes.length > 0) && (
+              {(sugestoesPersonalizadas.length > 0 || sugestoes.length > 0 || sugestoesAlimentos.length > 0) && (
                 <View style={styles.sugestoes}>
                   {nome.trim().length === 0 && sugestoesPersonalizadas.length > 0 && (
                     <ThemedText variant="caption" color="textSecondary" style={styles.sugestaoTitulo}>
@@ -200,6 +206,18 @@ export default function JournalScreen() {
                       <ThemedText variant="small" color="text">{s.nome}</ThemedText>
                       <ThemedText variant="small" color="textSecondary">
                         {t('d.valores', { kcal: s.kcal, prot: s.proteinaG })}
+                      </ThemedText>
+                    </Pressable>
+                  ))}
+                  {sugestoesAlimentos.map((a) => (
+                    <Pressable
+                      key={`alimento-${a.nome}`}
+                      style={styles.sugestaoItem}
+                      onPress={() => escolherAlimento(a)}
+                    >
+                      <ThemedText variant="small" color="text">{a.nome}</ThemedText>
+                      <ThemedText variant="small" color="textSecondary">
+                        {t('d.valores100', { kcal: a.kcalPor100g, prot: a.proteinaGPor100g })}
                       </ThemedText>
                     </Pressable>
                   ))}

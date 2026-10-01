@@ -1,3 +1,5 @@
+import { buscarPorNome } from '@utils/buscaAlimentos';
+
 export interface ReceitaConhecida {
   nome: string;
   kcal: number;
@@ -70,9 +72,5 @@ export const receitasConhecidas: ReceitaConhecida[] = [
 ];
 
 export function buscarReceitas(termo: string): ReceitaConhecida[] {
-  const termoLimpo = termo.trim().toLowerCase();
-  if (termoLimpo.length < 2) return [];
-  return receitasConhecidas
-    .filter((r) => r.nome.toLowerCase().includes(termoLimpo))
-    .slice(0, 5);
+  return buscarPorNome(receitasConhecidas, termo, (r) => r.nome, 4);
 }

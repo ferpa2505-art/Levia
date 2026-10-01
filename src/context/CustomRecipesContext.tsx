@@ -5,6 +5,7 @@ import {
   salvarReceitasPersonalizadas,
 } from '@utils/customRecipesStorage';
 import { gerarId } from '@utils/recordsStorage';
+import { buscarPorNome } from '@utils/buscaAlimentos';
 
 interface CustomRecipesContextValue {
   loading: boolean;
@@ -74,11 +75,7 @@ export function CustomRecipesProvider({ children }: { children: ReactNode }) {
   }
 
   function buscarReceitasPersonalizadas(termo: string): ReceitaPersonalizada[] {
-    const termoLimpo = termo.trim().toLowerCase();
-    if (termoLimpo.length < 2) return [];
-    return receitas
-      .filter((r) => r.nome.toLowerCase().includes(termoLimpo))
-      .slice(0, 5);
+    return buscarPorNome(receitas, termo, (r) => r.nome, 5);
   }
 
   return (

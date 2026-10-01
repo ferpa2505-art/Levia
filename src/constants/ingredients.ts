@@ -1,4 +1,6 @@
 import { Ingrediente } from '@models/ingredients';
+import { alimentosTaco } from '@constants/taco';
+import { buscarPorNome, normalizarTexto } from '@utils/buscaAlimentos';
 
 /**
  * Banco de ingredientes isolados, sempre padronizados para valores
@@ -90,10 +92,16 @@ export const ingredientes: Ingrediente[] = [
   { nome: 'Mel de abelha', kcalPor100g: 300, proteinaGPor100g: 0, gramaPadrao: 20, unidadeComum: '1 colher de sopa (≈20g)' },
 ];
 
-export function buscarIngredientes(termo: string): Ingrediente[] {
-  const termoLimpo = termo.trim().toLowerCase();
-  if (termoLimpo.length < 2) return [];
-  return ingredientes
-    .filter((i) => i.nome.toLowerCase().includes(termoLimpo))
-    .slice(0, 8);
+/**
+ * Lista curada (com porções caseiras) primeiro, depois os ~590 alimentos da
+ * TACO que não repetem um nome da lista curada.
+ */
+const nomesCurados = new Set(ingredientes.map((i) => normalizarTexto(i.nome)));
+export const todosIngredientes: Ingrediente[] = [
+  ...ingredientes,
+  ...alimentosTaco.filter((a) => !nomesCurados.has(normalizarTexto(a.nome))),
+];
+
+export function buscarIngredientes(termo: string, limite = 8): Ingrediente[] {
+  return buscarPorNome(todosIngredientes, termo, (i) => i.nome, limite);
 }
