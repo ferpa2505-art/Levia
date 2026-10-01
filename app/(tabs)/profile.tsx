@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { View, ScrollView } from 'react-native';
-import { Target, Pencil } from 'lucide-react-native';
+import { View, ScrollView, TouchableOpacity, Pressable } from 'react-native';
+import { Target, Pencil, Crown, ChevronRight } from 'lucide-react-native';
+import { useRouter } from 'expo-router';
 import { ThemedView } from '@components/ThemedView';
 import { ThemedText } from '@components/ThemedText';
 import { Button } from '@components/Button';
@@ -12,6 +13,7 @@ import { useT } from '@context/PreferencesContext';
 import { estilosTema } from '@theme/estilos';
 
 export default function ProfileScreen() {
+  const router = useRouter();
   const t = useT();
   const { profile, updateProfile, salvarAlteracoes } = useProfile();
   const { pesoAtualKg } = useRecords();
@@ -98,6 +100,7 @@ export default function ProfileScreen() {
           )}
         </ThemedView>
 
+
       </ThemedView>
     </ScrollView>
   );
@@ -160,5 +163,23 @@ const styles = estilosTema(() => ({
   editButtons: {
     flexDirection: 'row',
     marginTop: spacing.md,
+  },
+  premiumCard: {
+    backgroundColor: 'linear-gradient(135deg, #FFF9E6 0%, #FFF0D9 100%)',
+    borderWidth: 2,
+    borderColor: '#FFD700',
+  },
+  premiumContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+  },
+  premiumIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: '#FFE55C',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 }));

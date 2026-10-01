@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+﻿import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import OmniRouteService, {
   OmniRouteResponse,
   AnalyzeDataRequest,
@@ -7,7 +7,7 @@ import OmniRouteService, {
   SuggestEconomyResponse,
 } from '@services/omnirouteService';
 
-interface OmniRouteContextValue {
+export interface OmniRouteContextValue {
   isOnline: boolean;
   isLoading: boolean;
   error: string | null;

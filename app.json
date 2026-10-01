@@ -2,7 +2,7 @@
   "expo": {
     "name": "Leviã",
     "slug": "levia-app",
-    "version": "0.1.0",
+    "version": "0.2.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "assetBundlePatterns": [
@@ -16,6 +16,9 @@
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#6FA58E"
+      },
+      "runtimeVersion": {
+        "policy": "appVersion"
       }
     },
     "plugins": [
@@ -37,6 +40,9 @@
         "projectId": "c19a5f1e-5fbd-4100-ad78-43b05b47a977"
       }
     },
-    "owner": "ferpa2505-art"
+    "owner": "ferpa2505-art",
+    "updates": {
+      "url": "https://u.expo.dev/c19a5f1e-5fbd-4100-ad78-43b05b47a977"
+    }
   }
 }

@@ -16,7 +16,7 @@ type NotificationsModule = typeof import('expo-notifications');
 let notificationsModule: NotificationsModule | null = null;
 let jaTentouCarregar = false;
 
-function getNotifications(): NotificationsModule | null {
+export function getNotifications(): NotificationsModule | null {
   if (isExpoGo) return null;
   if (jaTentouCarregar) return notificationsModule;
   jaTentouCarregar = true;
