@@ -1,6 +1,7 @@
 export type Pronome = 'ela' | 'ele';
 export type SexoBiologico = 'feminino' | 'masculino';
-export type TipoDiabetes = 'tipo1' | 'tipo2' | null;
+/** null = ainda não respondeu; 'nenhum' = não tem diabetes */
+export type TipoDiabetes = 'tipo1' | 'tipo2' | 'nenhum' | null;
 
 export interface UserProfile {
   nome: string;

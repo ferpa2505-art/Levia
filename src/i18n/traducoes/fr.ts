@@ -76,8 +76,8 @@ const traducoes: Traducoes = {
   "onb.meta.sub": "Pour votre taille, la fourchette saine se situe entre {min} kg et {max} kg. Choisissez où vous voulez arriver — vous pourrez l'ajuster plus tard, à tout moment.",
   "onb.meta.confirmar": "Confirmer l'objectif",
   "onb.meta.fora": "Cet objectif est en dehors de la fourchette saine suggérée — ce n'est pas grave, c'est votre choix. En parler à un professionnel de santé peut vous aider à ajuster ce chiffre en toute sécurité.",
-  "onb.tipodiabetes.pergunta": "Avez-vous un diabète de type 1 ou de type 2?",
-  "onb.tipodiabetes.sub": "Cela nous aide à personnaliser vos conseils et rappels de médicaments. Vous pouvez modifier ceci plus tard.",
+  "onb.tipodiabetes.pergunta": "Avez-vous du diabète ?",
+  "onb.tipodiabetes.sub": "Cela nous aide à personnaliser vos conseils et rappels. Vous pourrez changer plus tard.",
   "onb.tipodiabetes.tipo1_nome": "Diabète de type 1",
   "onb.tipodiabetes.tipo1_desc": "Auto-immun — votre pancréas ne produit pas d'insuline. Nécessite une insuline quotidienne.",
   "onb.tipodiabetes.tipo2_nome": "Diabète de type 2",
@@ -256,6 +256,8 @@ const traducoes: Traducoes = {
   "r.porcaoAtual": "Portion par défaut : {g} g",
   "r.toque": "Touchez une recette pour l'enregistrer à nouveau et choisir la quantité.",
   "menu.privacidade": "Politique de confidentialité",
+  "onb.tipodiabetes.nenhum_nome": "Je n'ai pas de diabète",
+  "onb.tipodiabetes.nenhum_desc": "Vous pouvez quand même utiliser le module Diabète quand vous voulez.",
 };
 
 export default traducoes;

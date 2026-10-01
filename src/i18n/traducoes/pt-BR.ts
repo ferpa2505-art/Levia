@@ -75,8 +75,8 @@ const ptBR = {
   "onb.meta.sub": "Com sua altura, a faixa saudável fica entre {min} kg e {max} kg. Escolha onde quer chegar — você pode ajustar isso depois, a qualquer momento.",
   "onb.meta.confirmar": "Confirmar meta",
   "onb.meta.fora": "Essa meta está fora da faixa saudável sugerida — tudo bem, é a sua escolha. Conversar com um profissional de saúde pode ajudar a ajustar esse número com segurança.",
-  "onb.tipodiabetes.pergunta": "Você tem diabetes tipo 1 ou tipo 2?",
-  "onb.tipodiabetes.sub": "Isso nos ajuda a personalizar suas dicas e lembretes de medicação. Você pode alterar isso depois.",
+  "onb.tipodiabetes.pergunta": "Você tem diabetes?",
+  "onb.tipodiabetes.sub": "Isso nos ajuda a personalizar suas dicas e lembretes. Você pode alterar depois.",
   "onb.tipodiabetes.tipo1_nome": "Diabetes Tipo 1",
   "onb.tipodiabetes.tipo1_desc": "Autoimune — o pâncreas não produz insulina. Requer insulina diariamente.",
   "onb.tipodiabetes.tipo2_nome": "Diabetes Tipo 2",
@@ -255,6 +255,8 @@ const ptBR = {
   "r.porcaoAtual": "Porção padrão: {g} g",
   "r.toque": "Toque em uma receita para registrar de novo e escolher a quantidade.",
   "menu.privacidade": "Política de privacidade",
+  "onb.tipodiabetes.nenhum_nome": "Não tenho diabetes",
+  "onb.tipodiabetes.nenhum_desc": "Você ainda pode usar o módulo Diabetes quando quiser.",
 };
 
 export type ChaveTraducao = keyof typeof ptBR;

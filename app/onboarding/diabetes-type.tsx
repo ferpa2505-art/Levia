@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { View, Pressable } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Heart } from 'lucide-react-native';
+import { Heart, Smile } from 'lucide-react-native';
+import { TipoDiabetes } from '@models/profile';
 import { QuestionLayout } from '@components/onboarding/QuestionLayout';
 import { ThemedText } from '@components/ThemedText';
 import { useProfile } from '@context/ProfileContext';
@@ -13,7 +14,7 @@ export default function OnboardingDiabetesType() {
   const t = useT();
   const router = useRouter();
   const { profile, finalizarOnboarding } = useProfile();
-  const [tipo, setTipo] = useState<'tipo1' | 'tipo2' | null>(profile.tipoDiabetes);
+  const [tipo, setTipo] = useState<TipoDiabetes>(profile.tipoDiabetes);
 
   async function handleConfirmar() {
     if (tipo) {
@@ -30,10 +31,17 @@ export default function OnboardingDiabetesType() {
       subtitle={t('onb.tipodiabetes.sub')}
       onNext={handleConfirmar}
       onBack={() => router.back()}
-      nextLabel={t('onb.tipodiabetes.confirmar')}
+      nextLabel={t('comum.continuar')}
       nextDisabled={!tipo}
     >
       <View style={styles.opcoes}>
+        <CardTipo
+          titulo={t('onb.tipodiabetes.nenhum_nome')}
+          descricao={t('onb.tipodiabetes.nenhum_desc')}
+          selecionado={tipo === 'nenhum'}
+          onPress={() => setTipo('nenhum')}
+          icone="nenhum"
+        />
         <CardTipo
           titulo={t('onb.tipodiabetes.tipo1_nome')}
           descricao={t('onb.tipodiabetes.tipo1_desc')}
@@ -56,9 +64,11 @@ interface CardTipoProps {
   descricao: string;
   selecionado: boolean;
   onPress: () => void;
+  icone?: 'diabetes' | 'nenhum';
 }
 
-function CardTipo({ titulo, descricao, selecionado, onPress }: CardTipoProps) {
+function CardTipo({ titulo, descricao, selecionado, onPress, icone = 'diabetes' }: CardTipoProps) {
+  const Icone = icone === 'nenhum' ? Smile : Heart;
   return (
     <Pressable
       style={({ pressed }) => [
@@ -68,7 +78,7 @@ function CardTipo({ titulo, descricao, selecionado, onPress }: CardTipoProps) {
       ]}
       onPress={onPress}
     >
-      <Heart
+      <Icone
         size={32}
         color={selecionado ? colors.primary : colors.textSecondary}
         strokeWidth={2}

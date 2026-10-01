@@ -76,8 +76,8 @@ const traducoes: Traducoes = {
   "onb.meta.sub": "Com a sua altura, o intervalo saudável fica entre {min} kg e {max} kg. Escolha onde quer chegar — pode ajustar isto mais tarde, a qualquer momento.",
   "onb.meta.confirmar": "Confirmar meta",
   "onb.meta.fora": "Esta meta está fora do intervalo saudável sugerido — não faz mal, a escolha é sua. Falar com um profissional de saúde pode ajudar a ajustar este número com segurança.",
-  "onb.tipodiabetes.pergunta": "Tem diabetes tipo 1 ou tipo 2?",
-  "onb.tipodiabetes.sub": "Isto ajuda-nos a personalizar as suas dicas e lembretes de medicamentos. Pode alterar isto mais tarde.",
+  "onb.tipodiabetes.pergunta": "Tem diabetes?",
+  "onb.tipodiabetes.sub": "Isto ajuda-nos a personalizar as suas dicas e lembretes. Pode alterar depois.",
   "onb.tipodiabetes.tipo1_nome": "Diabetes Tipo 1",
   "onb.tipodiabetes.tipo1_desc": "Autoimune — o seu pâncreas não produz insulina. Requer insulina diária.",
   "onb.tipodiabetes.tipo2_nome": "Diabetes Tipo 2",
@@ -256,6 +256,8 @@ const traducoes: Traducoes = {
   "r.porcaoAtual": "Porção padrão: {g} g",
   "r.toque": "Toque numa receita para a registar de novo e escolher a quantidade.",
   "menu.privacidade": "Política de privacidade",
+  "onb.tipodiabetes.nenhum_nome": "Não tenho diabetes",
+  "onb.tipodiabetes.nenhum_desc": "Pode usar o módulo Diabetes sempre que quiser.",
 };
 
 export default traducoes;

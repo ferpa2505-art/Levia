@@ -76,8 +76,8 @@ const traducoes: Traducoes = {
   "onb.meta.sub": "Przy Twoim wzroÅ›cie zdrowy zakres to od {min} kg do {max} kg. Wybierz, dokÄ…d chcesz dojÅ›Ä‡ â€” moÅ¼esz to pÃ³Åºniej zmieniÄ‡ w dowolnym momencie.",
   "onb.meta.confirmar": "PotwierdÅº cel",
   "onb.meta.fora": "Ten cel jest poza sugerowanym zdrowym zakresem â€” to w porzÄ…dku, to TwÃ³j wybÃ³r. Rozmowa z pracownikiem ochrony zdrowia moÅ¼e pomÃ³c bezpiecznie dopasowaÄ‡ tÄ™ liczbÄ™.",
-  "onb.tipodiabetes.pergunta": "Czy masz cukrzycÄ™ typu 1 czy typu 2?",
-  "onb.tipodiabetes.sub": "Pomaga nam to spersonalizowaÄ‡ Twoje porady i przypomnienia o lekach. MoÅ¼esz to zmieniÄ‡ pÃ³Åºniej.",
+  "onb.tipodiabetes.pergunta": "Czy masz cukrzycę?",
+  "onb.tipodiabetes.sub": "To pomaga nam dopasować wskazówki i przypomnienia. Możesz to później zmienić.",
   "onb.tipodiabetes.tipo1_nome": "Cukrzyca typu 1",
   "onb.tipodiabetes.tipo1_desc": "Autoimmunologiczna â€” trzustka nie produkuje insuliny. Wymaga codziennego insuliny.",
   "onb.tipodiabetes.tipo2_nome": "Cukrzyca typu 2",
@@ -256,6 +256,8 @@ const traducoes: Traducoes = {
   "r.porcaoAtual": "Domyślna porcja: {g} g",
   "r.toque": "Dotknij przepisu, aby zapisać go ponownie i wybrać ilość.",
   "menu.privacidade": "Polityka prywatności",
+  "onb.tipodiabetes.nenhum_nome": "Nie mam cukrzycy",
+  "onb.tipodiabetes.nenhum_desc": "Nadal możesz korzystać z modułu Cukrzyca, kiedy chcesz.",
 };
 
 export default traducoes;
