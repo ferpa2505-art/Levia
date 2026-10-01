@@ -76,8 +76,8 @@ const traducoes: Traducoes = {
   "onb.meta.sub": "For your height, the healthy range is between {min} kg and {max} kg. Choose where you want to get to â€” you can adjust this later, at any time.",
   "onb.meta.confirmar": "Confirm goal",
   "onb.meta.fora": "This goal is outside the suggested healthy range â€” that's okay, it's your choice. Talking to a health professional can help you adjust this number safely.",
-  "onb.tipodiabetes.pergunta": "Do you have type 1 or type 2 diabetes?",
-  "onb.tipodiabetes.sub": "This helps us personalise your tips and medication reminders. You can change this later.",
+  "onb.tipodiabetes.pergunta": "Do you have diabetes?",
+  "onb.tipodiabetes.sub": "This helps us personalise your tips and reminders. You can change it later.",
   "onb.tipodiabetes.tipo1_nome": "Type 1 Diabetes",
   "onb.tipodiabetes.tipo1_desc": "Autoimmune â€” your pancreas doesn't produce insulin. Requires daily insulin.",
   "onb.tipodiabetes.tipo2_nome": "Type 2 Diabetes",
@@ -256,6 +256,8 @@ const traducoes: Traducoes = {
   "r.porcaoAtual": "Default portion: {g} g",
   "r.toque": "Tap a recipe to log it again and choose the amount.",
   "menu.privacidade": "Privacy policy",
+  "onb.tipodiabetes.nenhum_nome": "I don't have diabetes",
+  "onb.tipodiabetes.nenhum_desc": "You can still use the Diabetes module whenever you like.",
 };
 
 export default traducoes;

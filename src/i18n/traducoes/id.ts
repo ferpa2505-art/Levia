@@ -76,8 +76,8 @@ const traducoes: Traducoes = {
   "onb.meta.sub": "Dengan tinggi badanmu, rentang sehatnya antara {min} kg dan {max} kg. Pilih ke mana kamu ingin sampai â€” kamu bisa mengubahnya nanti kapan saja.",
   "onb.meta.confirmar": "Konfirmasi target",
   "onb.meta.fora": "Target ini di luar rentang sehat yang disarankan â€” tidak apa-apa, itu pilihanmu. Berbicara dengan tenaga kesehatan dapat membantu menyesuaikan angka ini dengan aman.",
-  "onb.tipodiabetes.pergunta": "Apakah Anda menderita diabetes tipe 1 atau tipe 2?",
-  "onb.tipodiabetes.sub": "Ini membantu kami mempersonalisasi tips dan pengingat obat Anda. Anda dapat mengubah ini nanti.",
+  "onb.tipodiabetes.pergunta": "Apakah kamu menderita diabetes?",
+  "onb.tipodiabetes.sub": "Ini membantu kami menyesuaikan tips dan pengingat. Kamu bisa mengubahnya nanti.",
   "onb.tipodiabetes.tipo1_nome": "Diabetes Tipe 1",
   "onb.tipodiabetes.tipo1_desc": "Autoimun â€” pankreas Anda tidak memproduksi insulin. Memerlukan insulin harian.",
   "onb.tipodiabetes.tipo2_nome": "Diabetes Tipe 2",
@@ -256,6 +256,8 @@ const traducoes: Traducoes = {
   "r.porcaoAtual": "Porsi bawaan: {g} g",
   "r.toque": "Ketuk resep untuk mencatatnya lagi dan memilih jumlahnya.",
   "menu.privacidade": "Kebijakan privasi",
+  "onb.tipodiabetes.nenhum_nome": "Saya tidak menderita diabetes",
+  "onb.tipodiabetes.nenhum_desc": "Kamu tetap bisa memakai modul Diabetes kapan saja.",
 };
 
 export default traducoes;

@@ -76,8 +76,8 @@ const traducoes: Traducoes = {
   "onb.meta.sub": "Boyuna gÃ¶re saÄŸlÄ±klÄ± aralÄ±k {min} kg ile {max} kg arasÄ±nda. Nereye ulaÅŸmak istediÄŸini seÃ§ â€” bunu daha sonra istediÄŸin zaman deÄŸiÅŸtirebilirsin.",
   "onb.meta.confirmar": "Hedefi onayla",
   "onb.meta.fora": "Bu hedef Ã¶nerilen saÄŸlÄ±klÄ± aralÄ±ÄŸÄ±n dÄ±ÅŸÄ±nda â€” sorun deÄŸil, karar senin. Bir saÄŸlÄ±k uzmanÄ±yla konuÅŸmak bu sayÄ±yÄ± gÃ¼venle ayarlamana yardÄ±mcÄ± olabilir.",
-  "onb.tipodiabetes.pergunta": "Tip 1 veya Tip 2 ÅŸeker hastasÄ±z mÄ±?",
-  "onb.tipodiabetes.sub": "Bu, ipuÃ§larÄ± ve ilaÃ§ hatÄ±rlatÄ±cÄ±larÄ±nÄ± kiÅŸiselleÅŸtirmemize yardÄ±mcÄ± olur. Bunu daha sonra deÄŸiÅŸtirebilirsiniz.",
+  "onb.tipodiabetes.pergunta": "Diyabetin var mı?",
+  "onb.tipodiabetes.sub": "Bu, ipuçlarını ve hatırlatıcıları kişiselleştirmemize yardımcı olur. Sonra değiştirebilirsin.",
   "onb.tipodiabetes.tipo1_nome": "Tip 1 Diyabet",
   "onb.tipodiabetes.tipo1_desc": "OtoimmÃ¼n â€” pankreasÄ±nÄ±z insÃ¼lin Ã¼retmez. GÃ¼nlÃ¼k insÃ¼lin gerektirir.",
   "onb.tipodiabetes.tipo2_nome": "Tip 2 Diyabet",
@@ -256,6 +256,8 @@ const traducoes: Traducoes = {
   "r.porcaoAtual": "Varsayılan porsiyon: {g} g",
   "r.toque": "Tekrar kaydetmek ve miktarı seçmek için bir tarife dokun.",
   "menu.privacidade": "Gizlilik politikası",
+  "onb.tipodiabetes.nenhum_nome": "Diyabetim yok",
+  "onb.tipodiabetes.nenhum_desc": "Diyabet modülünü yine de istediğin zaman kullanabilirsin.",
 };
 
 export default traducoes;

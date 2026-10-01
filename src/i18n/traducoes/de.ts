@@ -76,8 +76,8 @@ const traducoes: Traducoes = {
   "onb.meta.sub": "Bei deiner Größe liegt der gesunde Bereich zwischen {min} kg und {max} kg. Wähle, wo du hinwillst — du kannst es später jederzeit anpassen.",
   "onb.meta.confirmar": "Ziel bestätigen",
   "onb.meta.fora": "Dieses Ziel liegt außerhalb des empfohlenen gesunden Bereichs — das ist okay, es ist deine Entscheidung. Ein Gespräch mit medizinischem Fachpersonal kann helfen, diesen Wert sicher anzupassen.",
-  "onb.tipodiabetes.pergunta": "Hast du Diabetes Typ 1 oder Typ 2?",
-  "onb.tipodiabetes.sub": "Dies hilft uns, deine Tipps und Erinnerungen für Medikamente zu personalisieren. Du kannst dies später ändern.",
+  "onb.tipodiabetes.pergunta": "Hast du Diabetes?",
+  "onb.tipodiabetes.sub": "So können wir Tipps und Erinnerungen anpassen. Du kannst das später ändern.",
   "onb.tipodiabetes.tipo1_nome": "Diabetes Typ 1",
   "onb.tipodiabetes.tipo1_desc": "Autoimmun — deine Bauchspeicheldrüse produziert kein Insulin. Erfordert tägliches Insulin.",
   "onb.tipodiabetes.tipo2_nome": "Diabetes Typ 2",
@@ -256,6 +256,8 @@ const traducoes: Traducoes = {
   "r.porcaoAtual": "Standardportion: {g} g",
   "r.toque": "Tippe auf ein Rezept, um es erneut zu erfassen und die Menge zu wählen.",
   "menu.privacidade": "Datenschutzerklärung",
+  "onb.tipodiabetes.nenhum_nome": "Ich habe keinen Diabetes",
+  "onb.tipodiabetes.nenhum_desc": "Du kannst das Diabetes-Modul trotzdem jederzeit nutzen.",
 };
 
 export default traducoes;

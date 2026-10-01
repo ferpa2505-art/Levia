@@ -76,8 +76,8 @@ const traducoes: Traducoes = {
   "onb.meta.sub": "Bij jouw lengte ligt het gezonde bereik tussen {min} kg en {max} kg. Kies waar je naartoe wilt â€” je kunt dit later altijd aanpassen.",
   "onb.meta.confirmar": "Doel bevestigen",
   "onb.meta.fora": "Dit doel valt buiten het voorgestelde gezonde bereik â€” dat is okÃ©, het is jouw keuze. Een gesprek met een zorgprofessional kan helpen dit getal veilig aan te passen.",
-  "onb.tipodiabetes.pergunta": "Heb je diabetes type 1 of type 2?",
-  "onb.tipodiabetes.sub": "Dit helpt ons je tips en medicijnherinneringen aan te passen. Je kunt dit later wijzigen.",
+  "onb.tipodiabetes.pergunta": "Heb je diabetes?",
+  "onb.tipodiabetes.sub": "Dit helpt ons je tips en herinneringen aan te passen. Je kunt dit later wijzigen.",
   "onb.tipodiabetes.tipo1_nome": "Diabetes type 1",
   "onb.tipodiabetes.tipo1_desc": "Auto-immuun â€” je alvleesklier produceert geen insuline. Vereist dagelijks insuline.",
   "onb.tipodiabetes.tipo2_nome": "Diabetes type 2",
@@ -256,6 +256,8 @@ const traducoes: Traducoes = {
   "r.porcaoAtual": "Standaardportie: {g} g",
   "r.toque": "Tik op een recept om het opnieuw te registreren en de hoeveelheid te kiezen.",
   "menu.privacidade": "Privacybeleid",
+  "onb.tipodiabetes.nenhum_nome": "Ik heb geen diabetes",
+  "onb.tipodiabetes.nenhum_desc": "Je kunt de Diabetes-module toch altijd gebruiken.",
 };
 
 export default traducoes;

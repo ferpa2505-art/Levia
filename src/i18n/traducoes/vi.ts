@@ -76,8 +76,8 @@ const traducoes: Traducoes = {
   "onb.meta.sub": "Vá»›i chiá»u cao cá»§a báº¡n, khoáº£ng khá»e máº¡nh lÃ  tá»« {min} kg Ä‘áº¿n {max} kg. HÃ£y chá»n nÆ¡i báº¡n muá»‘n Ä‘áº¿n â€” báº¡n cÃ³ thá»ƒ Ä‘iá»u chá»‰nh sau báº¥t cá»© lÃºc nÃ o.",
   "onb.meta.confirmar": "XÃ¡c nháº­n má»¥c tiÃªu",
   "onb.meta.fora": "Má»¥c tiÃªu nÃ y náº±m ngoÃ i khoáº£ng khá»e máº¡nh Ä‘Æ°á»£c gá»£i Ã½ â€” khÃ´ng sao, Ä‘Ã³ lÃ  lá»±a chá»n cá»§a báº¡n. Trao Ä‘á»•i vá»›i chuyÃªn gia y táº¿ cÃ³ thá»ƒ giÃºp báº¡n Ä‘iá»u chá»‰nh con sá»‘ nÃ y má»™t cÃ¡ch an toÃ n.",
-  "onb.tipodiabetes.pergunta": "Báº¡n bá»‹ tiá»ƒu Ä‘Æ°á»ng typ 1 hay typ 2?",
-  "onb.tipodiabetes.sub": "Äiá»u nÃ y giÃºp chÃºng tÃ´i cÃ¡ nhÃ¢n hÃ³a cÃ¡c máº¹o vÃ  lá»i nháº¯c thuá»‘c cá»§a báº¡n. Báº¡n cÃ³ thá»ƒ thay Ä‘á»•i Ä‘iá»u nÃ y sau.",
+  "onb.tipodiabetes.pergunta": "Bạn có bị tiểu đường không?",
+  "onb.tipodiabetes.sub": "Điều này giúp chúng tôi cá nhân hóa lời khuyên và nhắc nhở. Bạn có thể đổi sau.",
   "onb.tipodiabetes.tipo1_nome": "Tiá»ƒu Ä‘Æ°á»ng type 1",
   "onb.tipodiabetes.tipo1_desc": "Tá»± miá»…n dá»‹ch â€” tuyáº¿n tá»¥y cá»§a báº¡n khÃ´ng sáº£n xuáº¥t insulin. YÃªu cáº§u insulin hÃ ng ngÃ y.",
   "onb.tipodiabetes.tipo2_nome": "Tiá»ƒu Ä‘Æ°á»ng type 2",
@@ -256,6 +256,8 @@ const traducoes: Traducoes = {
   "r.porcaoAtual": "Khẩu phần mặc định: {g} g",
   "r.toque": "Chạm vào một công thức để ghi lại và chọn khối lượng.",
   "menu.privacidade": "Chính sách quyền riêng tư",
+  "onb.tipodiabetes.nenhum_nome": "Tôi không bị tiểu đường",
+  "onb.tipodiabetes.nenhum_desc": "Bạn vẫn có thể dùng mục Tiểu đường bất cứ lúc nào.",
 };
 
 export default traducoes;

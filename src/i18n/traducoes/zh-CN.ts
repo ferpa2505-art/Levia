@@ -76,8 +76,8 @@ const traducoes: Traducoes = {
   "onb.meta.sub": "æ ¹æ®ä½ çš„èº«é«˜ï¼Œå¥åº·èŒƒå›´åœ¨ {min} å…¬æ–¤åˆ° {max} å…¬æ–¤ä¹‹é—´ã€‚é€‰æ‹©ä½ æƒ³è¾¾åˆ°çš„ç›®æ ‡â€”â€”ä¹‹åŽå¯ä»¥éšæ—¶è°ƒæ•´ã€‚",
   "onb.meta.confirmar": "ç¡®è®¤ç›®æ ‡",
   "onb.meta.fora": "è¿™ä¸ªç›®æ ‡è¶…å‡ºäº†å»ºè®®çš„å¥åº·èŒƒå›´â€”â€”æ²¡å…³ç³»ï¼Œè¿™æ˜¯ä½ çš„é€‰æ‹©ã€‚å’¨è¯¢åŒ»ç–—ä¸“ä¸šäººå‘˜å¯ä»¥å¸®åŠ©ä½ å®‰å…¨åœ°è°ƒæ•´è¿™ä¸ªæ•°å­—ã€‚",
-  "onb.tipodiabetes.pergunta": "æ‚¨æ‚£æœ‰1åž‹æˆ–2åž‹ç³–å°¿ç—…å—ï¼Ÿ",
-  "onb.tipodiabetes.sub": "è¿™æœ‰åŠ©äºŽæˆ‘ä»¬ä¸ªæ€§åŒ–æ‚¨çš„æç¤ºå’Œè¯ç‰©æé†’ã€‚ æ‚¨å¯ä»¥ç¨åŽæ›´æ”¹æ­¤è®¾ç½®ã€‚",
+  "onb.tipodiabetes.pergunta": "你有糖尿病吗？",
+  "onb.tipodiabetes.sub": "这能帮助我们个性化你的建议和提醒，之后可以修改。",
   "onb.tipodiabetes.tipo1_nome": "1åž‹ç³–å°¿ç—…",
   "onb.tipodiabetes.tipo1_desc": "è‡ªèº«å…ç–«æ€§â€”â€”æ‚¨çš„èƒ°è…ºä¸äº§ç”Ÿèƒ°å²›ç´ ã€‚ éœ€è¦æ¯å¤©æ³¨å°„èƒ°å²›ç´ ã€‚",
   "onb.tipodiabetes.tipo2_nome": "2åž‹ç³–å°¿ç—…",
@@ -256,6 +256,8 @@ const traducoes: Traducoes = {
   "r.porcaoAtual": "默认份量：{g} g",
   "r.toque": "点击食谱即可再次记录并选择份量。",
   "menu.privacidade": "隐私政策",
+  "onb.tipodiabetes.nenhum_nome": "我没有糖尿病",
+  "onb.tipodiabetes.nenhum_desc": "你仍可随时使用糖尿病模块。",
 };
 
 export default traducoes;
