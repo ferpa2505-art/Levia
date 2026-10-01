@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, Switch, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Switch, TouchableOpacity, Alert, TextInput } from 'react-native';
 import type { RegistroMedicacao, FrequenciaAlarme, TipoMedicacao, ConfiguracaoAlarme } from '@/types/diabetes';
 import { colors } from '@constants/colors';
 import { Clock, Bell } from 'lucide-react-native';
-import { gerarHorariosPorFrequencia } from '@hooks/useMedicacaoAlarmes';
+import { gerarHorariosPorFrequencia, normalizarHorario } from '@hooks/useMedicacaoAlarmes';
+import { enviarLembreteTeste } from '@utils/diabetesNotifications';
 
 interface Props {
   medicacao: RegistroMedicacao;
@@ -53,6 +54,26 @@ export const ConfiguradorAlarmesMedicacao: React.FC<Props> = ({
   const [frequenciaSelecionada, setFrequenciaSelecionada] = useState<FrequenciaAlarme>(
     alarme.frequencia
   );
+  const [primeiroHorario, setPrimeiroHorario] = useState(alarme.horarios?.[0] ?? '08:00');
+  const horarioValido = normalizarHorario(primeiroHorario) != null;
+
+  const handleMudarHorario = (texto: string) => {
+    setPrimeiroHorario(texto);
+    const normalizado = normalizarHorario(texto);
+    if (normalizado) {
+      setAlarme((atual) => ({ ...atual, horarios: gerarHorariosPorFrequencia(atual.frequencia, normalizado) }));
+    }
+  };
+
+  const handleTestar = async () => {
+    const ok = await enviarLembreteTeste(medicacao);
+    Alert.alert(
+      ok ? 'Lembrete de teste enviado' : 'Notificações bloqueadas',
+      ok
+        ? 'Feche o app agora: a notificação deve chegar em cerca de 10 segundos.'
+        : 'Permita as notificações do Leviã em Configurações do Android > Apps > Leviã > Notificações.'
+    );
+  };
 
   const ehMedicacaoDiabetes = medicacao.tipo === 'insulina' || medicacao.tipo === 'diabetes-tratamento';
   const ehUsoContinum = alarme.usoContinuo;
@@ -71,7 +92,7 @@ export const ConfiguradorAlarmesMedicacao: React.FC<Props> = ({
 
   const handleMudarFrequencia = (freq: FrequenciaAlarme) => {
     setFrequenciaSelecionada(freq);
-    const horarios = gerarHorariosPorFrequencia(freq, alarme.horarios?.[0]);
+    const horarios = gerarHorariosPorFrequencia(freq, normalizarHorario(primeiroHorario) ?? alarme.horarios?.[0]);
     setAlarme({
       ...alarme,
       frequencia: freq,
@@ -93,6 +114,11 @@ export const ConfiguradorAlarmesMedicacao: React.FC<Props> = ({
 
     if (notificacaoObrigatoria && !alarme.notificacaoAtivada) {
       Alert.alert('Erro', 'Notificações são obrigatórias para esta medicação');
+      return;
+    }
+
+    if (!horarioValido) {
+      Alert.alert('Horário inválido', 'Digite o horário no formato HH:MM, por exemplo 07:30');
       return;
     }
 
@@ -184,6 +210,20 @@ export const ConfiguradorAlarmesMedicacao: React.FC<Props> = ({
               </ScrollView>
             </View>
 
+            {/* Seção: Primeiro horário (os demais são calculados a partir dele) */}
+            <View style={styles.secao}>
+              <Text style={styles.label}>Primeiro horário do dia (HH:MM):</Text>
+              <TextInput
+                value={primeiroHorario}
+                onChangeText={handleMudarHorario}
+                placeholder="08:00"
+                keyboardType="numbers-and-punctuation"
+                maxLength={5}
+                style={[styles.horarioInput, !horarioValido && styles.horarioInputErro]}
+                placeholderTextColor={colors.textSecondary}
+              />
+            </View>
+
             {/* Seção: Horários Sugeridos */}
             <View style={styles.secao}>
               <Text style={styles.label}>Horários para tomar:</Text>
@@ -225,6 +265,9 @@ export const ConfiguradorAlarmesMedicacao: React.FC<Props> = ({
                   💬 Você receberá lembretes nos horários configurados
                 </Text>
               )}
+              <TouchableOpacity style={styles.botaoTeste} onPress={handleTestar}>
+                <Text style={styles.botaoTesteTexto}>🔔 Enviar lembrete de teste</Text>
+              </TouchableOpacity>
             </View>
           </>
         )}
@@ -244,6 +287,27 @@ export const ConfiguradorAlarmesMedicacao: React.FC<Props> = ({
 };
 
 const styles = StyleSheet.create({
+  horarioInput: {
+    marginTop: 8,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 10,
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    fontSize: 18,
+    color: colors.text,
+    width: 120,
+  },
+  horarioInputErro: { borderColor: colors.error },
+  botaoTeste: {
+    marginTop: 12,
+    borderWidth: 1,
+    borderColor: colors.primary,
+    borderRadius: 10,
+    paddingVertical: 10,
+    alignItems: 'center',
+  },
+  botaoTesteTexto: { color: colors.primary, fontWeight: '600' },
   container: {
     backgroundColor: colors.surface,
     borderTopLeftRadius: 16,

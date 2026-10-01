@@ -57,77 +57,41 @@ export const calcularProximoAlarme = (medicacao: RegistroMedicacao): ProximoAlar
   };
 };
 
+const INTERVALO_HORAS: Partial<Record<FrequenciaAlarme, number>> = {
+  hora: 1,
+  '2h': 2,
+  '3h': 3,
+  '4h': 4,
+  '6h': 6,
+  '8h': 8,
+  '12h': 12,
+};
+
+/** "8:5" ou "08:05" → "08:05"; devolve null se não for um horário válido */
+export const normalizarHorario = (texto: string): string | null => {
+  const m = texto.trim().match(/^(\d{1,2})[:h.]?(\d{2})$/);
+  if (!m) return null;
+  const h = Number(m[1]);
+  const min = Number(m[2]);
+  if (h > 23 || min > 59) return null;
+  return `${String(h).padStart(2, '0')}:${String(min).padStart(2, '0')}`;
+};
+
 /**
- * Gera horários baseado na frequência
+ * Gera os horários do dia a partir do primeiro horário escolhido.
+ * Ex.: a cada 8h começando 07:30 → 07:30, 15:30, 23:30.
+ * Frequências diária/semanal/quinzenal/mensal usam só o horário escolhido.
  */
 export const gerarHorariosPorFrequencia = (frequencia: FrequenciaAlarme, horarioInicial?: string): string[] => {
+  const inicio = normalizarHorario(horarioInicial ?? '') ?? '08:00';
+  const intervalo = INTERVALO_HORAS[frequencia];
+  if (!intervalo) return [inicio];
+
+  const [h, min] = inicio.split(':').map(Number);
   const horarios: string[] = [];
-  const inicio = horarioInicial ? parseInt(horarioInicial.split(':')[0]) : 8;
-
-  switch (frequencia) {
-    case 'hora':
-      // A cada hora
-      for (let h = 0; h < 24; h++) {
-        horarios.push(`${String(h).padStart(2, '0')}:00`);
-      }
-      break;
-
-    case '2h':
-      // A cada 2 horas
-      for (let h = inicio; h < 24; h += 2) {
-        horarios.push(`${String(h).padStart(2, '0')}:00`);
-      }
-      break;
-
-    case '3h':
-      // A cada 3 horas
-      for (let h = inicio; h < 24; h += 3) {
-        horarios.push(`${String(h).padStart(2, '0')}:00`);
-      }
-      break;
-
-    case '4h':
-      // A cada 4 horas
-      for (let h = inicio; h < 24; h += 4) {
-        horarios.push(`${String(h).padStart(2, '0')}:00`);
-      }
-      break;
-
-    case '6h':
-      // A cada 6 horas (06:00, 12:00, 18:00, 00:00)
-      horarios.push('06:00', '12:00', '18:00', '00:00');
-      break;
-
-    case '8h':
-      // A cada 8 horas (08:00, 16:00, 00:00)
-      horarios.push('08:00', '16:00', '00:00');
-      break;
-
-    case '12h':
-      // A cada 12 horas (08:00, 20:00)
-      horarios.push('08:00', '20:00');
-      break;
-
-    case 'diaria':
-      // Uma vez por dia
-      horarios.push(horarioInicial || '08:00');
-      break;
-
-    case 'semanal':
-      // Uma vez por semana
-      horarios.push(horarioInicial || '08:00');
-      break;
-
-    case 'quinzenal':
-      // A cada 15 dias
-      horarios.push(horarioInicial || '08:00');
-      break;
-
-    case 'mensal':
-      // Uma vez por mês
-      horarios.push(horarioInicial || '08:00');
-      break;
+  for (let k = 0; k < 24 / intervalo; k++) {
+    const hora = (h + k * intervalo) % 24;
+    horarios.push(`${String(hora).padStart(2, '0')}:${String(min).padStart(2, '0')}`);
   }
-
-  return horarios;
+  return horarios.sort();
 };

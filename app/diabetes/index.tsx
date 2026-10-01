@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { View, ScrollView, Pressable, Modal } from 'react-native';
+import { View, ScrollView, Pressable, Modal, Alert, KeyboardAvoidingView } from 'react-native';
 import { TelaRolavel } from '@components/TelaRolavel';
 import {
   Droplet,
@@ -587,18 +587,29 @@ export default function DiabetesScreen() {
         animationType="slide"
         onRequestClose={fecharConfigurador}
       >
-        <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' }}>
+        <KeyboardAvoidingView
+          behavior="padding"
+          style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' }}
+        >
           {medicacaoSelecionadaAlarme && (
             <ConfiguradorAlarmesMedicacao
               medicacao={medicacaoSelecionadaAlarme}
               onConfirm={async (alarme) => {
-                await atualizarAlarmeMedicacao(medicacaoSelecionadaAlarme.id, alarme);
+                const agendados = await atualizarAlarmeMedicacao(medicacaoSelecionadaAlarme.id, alarme);
                 fecharConfigurador();
+                if (alarme.ativado && alarme.notificacaoAtivada) {
+                  Alert.alert(
+                    agendados > 0 ? 'Lembretes agendados ✅' : 'Lembretes não agendados',
+                    agendados > 0
+                      ? `Próximos horários: ${alarme.horarios.join(', ')}. Eles tocam mesmo com o app fechado.`
+                      : 'Permita as notificações do Leviã em Configurações do Android > Apps > Leviã > Notificações e salve o alarme de novo.'
+                  );
+                }
               }}
               onCancel={fecharConfigurador}
             />
           )}
-        </View>
+        </KeyboardAvoidingView>
       </Modal>
     </TelaRolavel>
   );

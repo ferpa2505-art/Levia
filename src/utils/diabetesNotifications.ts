@@ -21,6 +21,31 @@ async function garantirCanal() {
   }).catch(() => {});
 }
 
+/** Dispara um lembrete daqui a alguns segundos, para conferir se as notificações chegam */
+export async function enviarLembreteTeste(medicacao: RegistroMedicacao): Promise<boolean> {
+  const Notifications = getNotifications();
+  if (!Notifications) return false;
+  if (!(await solicitarPermissaoNotificacao())) return false;
+  await garantirCanal();
+  try {
+    await Notifications.scheduleNotificationAsync({
+      content: {
+        title: '💊 Lembrete de medicação (teste)',
+        body: `Hora de tomar ${medicacao.medicamento} (${medicacao.dosagem})`,
+        ...(Platform.OS === 'android' ? { channelId: CANAL } : null),
+      },
+      trigger: {
+        type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
+        seconds: 10,
+        ...(Platform.OS === 'android' ? { channelId: CANAL } : null),
+      } as never,
+    });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 export async function cancelarAlarmesMedicacao(ids?: string[]): Promise<void> {
   const Notifications = getNotifications();
   if (!Notifications || !ids?.length) return;

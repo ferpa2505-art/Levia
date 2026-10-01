@@ -25,7 +25,8 @@ interface DiabetesContextValue {
   removerGlicemia: (id: string) => Promise<void>;
   adicionarMedicacao: (medicamento: string, dosagem: string, observacoes?: string) => Promise<void>;
   removerMedicacao: (id: string) => Promise<void>;
-  atualizarAlarmeMedicacao: (medicacaoId: string, alarme: ConfiguracaoAlarme) => Promise<void>;
+  /** Devolve quantos lembretes ficaram agendados no aparelho */
+  atualizarAlarmeMedicacao: (medicacaoId: string, alarme: ConfiguracaoAlarme) => Promise<number>;
   adicionarRefeicao: (
     tipo: string,
     carboidratos: number,
@@ -160,7 +161,7 @@ export function DiabetesProvider({ children }: { children: ReactNode }) {
     }));
   }
 
-  async function atualizarAlarmeMedicacao(medicacaoId: string, alarme: ConfiguracaoAlarme) {
+  async function atualizarAlarmeMedicacao(medicacaoId: string, alarme: ConfiguracaoAlarme): Promise<number> {
     const medicacao = dados.medicacoes.find((m) => m.id === medicacaoId);
     if (medicacao) {
       const anteriores = medicacao.alarme?.notificationIds;
@@ -176,6 +177,7 @@ export function DiabetesProvider({ children }: { children: ReactNode }) {
         med.id === medicacaoId ? { ...med, alarme } : med
       ),
     }));
+    return alarme.notificationIds?.length ?? 0;
   }
 
   return (
