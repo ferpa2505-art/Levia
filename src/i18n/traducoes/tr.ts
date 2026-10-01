@@ -245,6 +245,16 @@ const traducoes: Traducoes = {
   "ap.diaDose0": "Doz günü",
   "ap.diaDoseN": "Dozdan sonraki {n}. gün",
   "g.apetiteDesc": "Günlük açlığını kaydet ve dozlarla ilişkisini gör",
+  "d.quantidade": "Miktar (g)",
+  "d.porcaoInfo": "{g} g içinde {kcal} kcal · {prot} g protein",
+  "d.minhasReceitas": "Tariflerin",
+  "r.porcaoPadrao": "Varsayılan porsiyon (g)",
+  "r.porcaoDica": "Bu tarifi kaydederken önerilen miktar. Her öğünde değiştirebilirsin.",
+  "r.registrarHoje": "Bugünkü Günlüğe kaydet",
+  "r.usarPadrao": "Varsayılan porsiyon yap",
+  "r.registrada": "Bugünkü Günlüğe eklendi ✅",
+  "r.porcaoAtual": "Varsayılan porsiyon: {g} g",
+  "r.toque": "Tekrar kaydetmek ve miktarı seçmek için bir tarife dokun.",
 };
 
 export default traducoes;

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { View, ScrollView, StyleSheet, Pressable } from 'react-native';
+import { TelaRolavel } from '@components/TelaRolavel';
 import {
   Syringe,
   Calendar,
@@ -161,7 +162,7 @@ export default function Glp1Screen() {
   }
 
   return (
-    <ScrollView style={{ flex: 1, backgroundColor: colors.background }} contentContainerStyle={{ padding: spacing.lg }}>
+    <TelaRolavel>
       <ThemedView style={styles.container}>
         <View style={styles.header}>
           <ThemedText variant="heading" color="text">{t('titulos.glp1')}</ThemedText>
@@ -551,7 +552,7 @@ export default function Glp1Screen() {
           )}
         </ThemedView>
       </ThemedView>
-    </ScrollView>
+    </TelaRolavel>
   );
 }
 

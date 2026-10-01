@@ -245,6 +245,16 @@ const traducoes: Traducoes = {
   "ap.diaDose0": "Dia da dose",
   "ap.diaDoseN": "{n}.º dia após a dose",
   "g.apetiteDesc": "Registe a sua fome do dia e veja a relação com as doses",
+  "d.quantidade": "Quantidade (g)",
+  "d.porcaoInfo": "{kcal} kcal · {prot} g proteína em {g} g",
+  "d.minhasReceitas": "As suas receitas",
+  "r.porcaoPadrao": "Porção padrão (g)",
+  "r.porcaoDica": "Quantidade sugerida quando registar esta receita. Pode mudar em cada refeição.",
+  "r.registrarHoje": "Registar no Diário de hoje",
+  "r.usarPadrao": "Usar como porção padrão",
+  "r.registrada": "Adicionada ao Diário de hoje ✅",
+  "r.porcaoAtual": "Porção padrão: {g} g",
+  "r.toque": "Toque numa receita para a registar de novo e escolher a quantidade.",
 };
 
 export default traducoes;

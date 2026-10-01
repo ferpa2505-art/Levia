@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { View, ScrollView, Pressable } from 'react-native';
+import { TelaRolavel } from '@components/TelaRolavel';
 import { Beef, X } from 'lucide-react-native';
 import { ThemedView } from '@components/ThemedView';
 import { ThemedText } from '@components/ThemedText';
@@ -64,7 +65,7 @@ export default function ApetiteScreen() {
   }
 
   return (
-    <ScrollView style={{ flex: 1, backgroundColor: colors.background }} contentContainerStyle={{ padding: spacing.lg }}>
+    <TelaRolavel>
       <ThemedView style={styles.container}>
         <ThemedText variant="body" color="textSecondary" style={{ marginBottom: spacing.lg }}>
           {t('ap.sub')}
@@ -168,7 +169,7 @@ export default function ApetiteScreen() {
           )}
         </ThemedView>
       </ThemedView>
-    </ScrollView>
+    </TelaRolavel>
   );
 }
 

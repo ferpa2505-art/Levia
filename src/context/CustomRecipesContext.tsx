@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { ReceitaPersonalizada, IngredienteUsado } from '@models/ingredients';
+import { ReceitaPersonalizada, IngredienteUsado, PORCAO_PADRAO_G } from '@models/ingredients';
 import {
   carregarReceitasPersonalizadas,
   salvarReceitasPersonalizadas,
@@ -9,7 +9,8 @@ import { gerarId } from '@utils/recordsStorage';
 interface CustomRecipesContextValue {
   loading: boolean;
   receitasPersonalizadas: ReceitaPersonalizada[];
-  criarReceita: (nome: string, itens: IngredienteUsado[]) => Promise<ReceitaPersonalizada | null>;
+  criarReceita: (nome: string, itens: IngredienteUsado[], porcaoPadraoG?: number) => Promise<ReceitaPersonalizada | null>;
+  atualizarPorcaoPadrao: (id: string, gramas: number) => Promise<void>;
   removerReceita: (id: string) => Promise<void>;
   buscarReceitasPersonalizadas: (termo: string) => ReceitaPersonalizada[];
 }
@@ -32,7 +33,11 @@ export function CustomRecipesProvider({ children }: { children: ReactNode }) {
     await salvarReceitasPersonalizadas(novasReceitas);
   }
 
-  async function criarReceita(nome: string, itens: IngredienteUsado[]): Promise<ReceitaPersonalizada | null> {
+  async function criarReceita(
+    nome: string,
+    itens: IngredienteUsado[],
+    porcaoPadraoG: number = PORCAO_PADRAO_G
+  ): Promise<ReceitaPersonalizada | null> {
     const nomeLimpo = nome.trim();
     if (!nomeLimpo || itens.length === 0) return null;
 
@@ -51,11 +56,17 @@ export function CustomRecipesProvider({ children }: { children: ReactNode }) {
       proteinaGTotal: Math.round(proteinaGTotal * 10) / 10,
       kcalPor100g: Math.round((kcalTotal / pesoTotalG) * 100),
       proteinaGPor100g: Math.round(((proteinaGTotal / pesoTotalG) * 100) * 10) / 10,
+      porcaoPadraoG,
       criadaEm: new Date().toISOString(),
     };
 
     await persistir([...receitas, nova]);
     return nova;
+  }
+
+  async function atualizarPorcaoPadrao(id: string, gramas: number) {
+    if (!(gramas > 0)) return;
+    await persistir(receitas.map((r) => (r.id === id ? { ...r, porcaoPadraoG: gramas } : r)));
   }
 
   async function removerReceita(id: string) {
@@ -72,7 +83,14 @@ export function CustomRecipesProvider({ children }: { children: ReactNode }) {
 
   return (
     <CustomRecipesContext.Provider
-      value={{ loading, receitasPersonalizadas: receitas, criarReceita, removerReceita, buscarReceitasPersonalizadas }}
+      value={{
+        loading,
+        receitasPersonalizadas: receitas,
+        criarReceita,
+        atualizarPorcaoPadrao,
+        removerReceita,
+        buscarReceitasPersonalizadas,
+      }}
     >
       {children}
     </CustomRecipesContext.Provider>

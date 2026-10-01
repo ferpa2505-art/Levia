@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { View, ScrollView, StyleSheet, Pressable } from 'react-native';
+import { TelaRolavel } from '@components/TelaRolavel';
 import { useRouter } from 'expo-router';
 import { X } from 'lucide-react-native';
 import { ThemedView } from '@components/ThemedView';
@@ -9,7 +10,7 @@ import { Input } from '@components/Input';
 import { useRecords } from '@context/RecordsContext';
 import { useCustomRecipes } from '@context/CustomRecipesContext';
 import { buscarReceitas, ReceitaConhecida } from '@constants/recipes';
-import { ReceitaPersonalizada } from '@models/ingredients';
+import { ReceitaPersonalizada, PORCAO_PADRAO_G, valoresDaPorcao } from '@models/ingredients';
 import { colors, spacing, radius } from '@constants/colors';
 import { estilosTema } from '@theme/estilos';
 import { usePreferences } from '@context/PreferencesContext';
@@ -28,19 +29,27 @@ export default function JournalScreen() {
     adicionarRefeicao,
     removerRefeicao,
   } = useRecords();
-  const { buscarReceitasPersonalizadas } = useCustomRecipes();
+  const { buscarReceitasPersonalizadas, receitasPersonalizadas } = useCustomRecipes();
 
   const [mostrarListaAgua, setMostrarListaAgua] = useState(false);
   const [mostrarForm, setMostrarForm] = useState(false);
   const [nome, setNome] = useState('');
   const [kcal, setKcal] = useState('');
   const [proteina, setProteina] = useState('');
+  // Receita salva escolhida: kcal/proteína acompanham a quantidade em gramas
+  const [receitaEscolhida, setReceitaEscolhida] = useState<ReceitaPersonalizada | null>(null);
+  const [gramasTexto, setGramasTexto] = useState('');
 
   const sugestoes = buscarReceitas(nome);
-  const sugestoesPersonalizadas = buscarReceitasPersonalizadas(nome);
+  // Com o nome vazio, mostra as receitas salvas para repetir com um toque
+  const sugestoesPersonalizadas = receitaEscolhida
+    ? []
+    : nome.trim().length === 0
+      ? receitasPersonalizadas.slice(-5).reverse()
+      : buscarReceitasPersonalizadas(nome);
 
   const kcalNum = parseInt(kcal, 10);
-  const proteinaNum = parseInt(proteina, 10) || 0;
+  const proteinaNum = parseFloat(proteina.replace(',', '.')) || 0;
   const formValido = nome.trim().length > 0 && !isNaN(kcalNum) && kcalNum > 0;
 
   function escolherSugestao(receita: ReceitaConhecida) {
@@ -49,25 +58,40 @@ export default function JournalScreen() {
     setProteina(String(receita.proteinaG));
   }
 
+  function aplicarPorcao(receita: ReceitaPersonalizada, texto: string) {
+    setGramasTexto(texto);
+    const gramas = parseFloat(texto.replace(',', '.'));
+    if (isNaN(gramas) || gramas <= 0) return;
+    const { kcal: k, proteinaG } = valoresDaPorcao(receita, gramas);
+    setKcal(String(k));
+    setProteina(String(proteinaG));
+  }
+
   function escolherReceitaPersonalizada(receita: ReceitaPersonalizada) {
-    // valores da receita personalizada são por 100g; o usuário pode ajustar
-    // a quantidade depois, editando os campos livremente.
     setNome(receita.nome);
-    setKcal(String(receita.kcalPor100g));
-    setProteina(String(receita.proteinaGPor100g));
+    setReceitaEscolhida(receita);
+    aplicarPorcao(receita, String(receita.porcaoPadraoG ?? PORCAO_PADRAO_G));
+  }
+
+  function limparForm() {
+    setNome('');
+    setKcal('');
+    setProteina('');
+    setReceitaEscolhida(null);
+    setGramasTexto('');
   }
 
   async function handleAdicionarRefeicao() {
     if (!formValido) return;
-    await adicionarRefeicao(nome.trim(), kcalNum, proteinaNum);
-    setNome('');
-    setKcal('');
-    setProteina('');
+    const gramas = parseFloat(gramasTexto.replace(',', '.'));
+    const nomeFinal = receitaEscolhida && gramas > 0 ? `${nome.trim()} (${gramas} g)` : nome.trim();
+    await adicionarRefeicao(nomeFinal, kcalNum, proteinaNum);
+    limparForm();
     setMostrarForm(false);
   }
 
   return (
-    <ScrollView style={{ flex: 1, backgroundColor: colors.background }} contentContainerStyle={{ padding: spacing.lg }}>
+    <TelaRolavel>
       <ThemedView style={styles.container}>
         <View style={styles.header}>
           <ThemedText variant="heading" color="text">{t('abas.diario')}</ThemedText>
@@ -139,7 +163,10 @@ export default function JournalScreen() {
             <View style={styles.form}>
               <Input
                 value={nome}
-                onChangeText={setNome}
+                onChangeText={(v) => {
+                  setNome(v);
+                  setReceitaEscolhida(null);
+                }}
                 placeholder={t('d.nomeRefeicao')}
                 style={styles.formInput}
                 autoFocus
@@ -147,6 +174,11 @@ export default function JournalScreen() {
 
               {(sugestoesPersonalizadas.length > 0 || sugestoes.length > 0) && (
                 <View style={styles.sugestoes}>
+                  {nome.trim().length === 0 && sugestoesPersonalizadas.length > 0 && (
+                    <ThemedText variant="caption" color="textSecondary" style={styles.sugestaoTitulo}>
+                      {t('d.minhasReceitas')}
+                    </ThemedText>
+                  )}
                   {sugestoesPersonalizadas.map((r) => (
                     <Pressable
                       key={`personalizada-${r.id}`}
@@ -174,6 +206,18 @@ export default function JournalScreen() {
                 </View>
               )}
 
+              {receitaEscolhida && (
+                <View style={styles.quantidadeBox}>
+                  <ThemedText variant="small" color="text">{t('d.quantidade')}</ThemedText>
+                  <Input
+                    value={gramasTexto}
+                    onChangeText={(v) => aplicarPorcao(receitaEscolhida, v)}
+                    keyboardType="decimal-pad"
+                    style={[styles.formInput, { marginTop: spacing.xs }]}
+                  />
+                </View>
+              )}
+
               <View style={styles.formRow}>
                 <View style={styles.formCol}>
                   <Input
@@ -189,7 +233,7 @@ export default function JournalScreen() {
                     value={proteina}
                     onChangeText={setProteina}
                     placeholder={t('home.proteina')}
-                    keyboardType="number-pad"
+                    keyboardType="decimal-pad"
                     style={styles.formInput}
                   />
                 </View>
@@ -199,7 +243,10 @@ export default function JournalScreen() {
                   label={t('comum.cancelar')}
                   variant="outline"
                   size="sm"
-                  onPress={() => setMostrarForm(false)}
+                  onPress={() => {
+                    limparForm();
+                    setMostrarForm(false);
+                  }}
                   style={{ marginRight: spacing.sm }}
                 />
                 <Button
@@ -236,7 +283,7 @@ export default function JournalScreen() {
           )}
         </ThemedView>
       </ThemedView>
-    </ScrollView>
+    </TelaRolavel>
   );
 }
 
@@ -278,6 +325,8 @@ const styles = estilosTema(() => ({
     borderBottomColor: colors.border,
   },
   formRow: { flexDirection: 'row', gap: spacing.sm },
+  quantidadeBox: { marginBottom: spacing.xs },
+  sugestaoTitulo: { paddingHorizontal: spacing.md, paddingTop: spacing.sm },
   formCol: { flex: 1 },
   formButtons: { flexDirection: 'row', marginTop: spacing.sm },
   lista: { marginTop: spacing.md },

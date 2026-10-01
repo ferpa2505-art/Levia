@@ -245,6 +245,16 @@ const traducoes: Traducoes = {
   "ap.diaDose0": "Hari dosis",
   "ap.diaDoseN": "Hari ke-{n} setelah dosis",
   "g.apetiteDesc": "Catat rasa lapar harian dan lihat hubungannya dengan dosis",
+  "d.quantidade": "Jumlah (g)",
+  "d.porcaoInfo": "{kcal} kcal · {prot} g protein dalam {g} g",
+  "d.minhasReceitas": "Resepmu",
+  "r.porcaoPadrao": "Porsi bawaan (g)",
+  "r.porcaoDica": "Jumlah yang disarankan saat mencatat resep ini. Bisa diubah setiap makan.",
+  "r.registrarHoje": "Catat di Jurnal hari ini",
+  "r.usarPadrao": "Jadikan porsi bawaan",
+  "r.registrada": "Ditambahkan ke Jurnal hari ini ✅",
+  "r.porcaoAtual": "Porsi bawaan: {g} g",
+  "r.toque": "Ketuk resep untuk mencatatnya lagi dan memilih jumlahnya.",
 };
 
 export default traducoes;

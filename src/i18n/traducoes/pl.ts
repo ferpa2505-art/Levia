@@ -245,6 +245,16 @@ const traducoes: Traducoes = {
   "ap.diaDose0": "Dzień dawki",
   "ap.diaDoseN": "{n}. dzień po dawce",
   "g.apetiteDesc": "Zapisuj głód i zobacz związek z dawkami",
+  "d.quantidade": "Ilość (g)",
+  "d.porcaoInfo": "{kcal} kcal · {prot} g białka w {g} g",
+  "d.minhasReceitas": "Twoje przepisy",
+  "r.porcaoPadrao": "Domyślna porcja (g)",
+  "r.porcaoDica": "Proponowana ilość przy zapisywaniu tego przepisu. Można ją zmienić przy każdym posiłku.",
+  "r.registrarHoje": "Zapisz w dzisiejszym Dzienniku",
+  "r.usarPadrao": "Ustaw jako domyślną porcję",
+  "r.registrada": "Dodano do dzisiejszego Dziennika ✅",
+  "r.porcaoAtual": "Domyślna porcja: {g} g",
+  "r.toque": "Dotknij przepisu, aby zapisać go ponownie i wybrać ilość.",
 };
 
 export default traducoes;

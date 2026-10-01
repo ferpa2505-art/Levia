@@ -28,5 +28,17 @@ export interface ReceitaPersonalizada {
   proteinaGTotal: number;
   kcalPor100g: number;
   proteinaGPor100g: number;
+  /** Quantidade sugerida ao registrar a receita no Diário (padrão 100 g) */
+  porcaoPadraoG?: number;
   criadaEm: string;
+}
+
+export const PORCAO_PADRAO_G = 100;
+
+/** kcal e proteína de uma porção da receita, em gramas */
+export function valoresDaPorcao(receita: ReceitaPersonalizada, gramas: number) {
+  return {
+    kcal: Math.round((receita.kcalPor100g * gramas) / 100),
+    proteinaG: Math.round((receita.proteinaGPor100g * gramas) / 100 * 10) / 10,
+  };
 }

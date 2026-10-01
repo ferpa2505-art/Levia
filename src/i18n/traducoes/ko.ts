@@ -245,6 +245,16 @@ const traducoes: Traducoes = {
   "ap.diaDose0": "투여일",
   "ap.diaDoseN": "투여 후 {n}일째",
   "g.apetiteDesc": "하루 배고픔을 기록하고 투여와의 관계를 확인하세요",
+  "d.quantidade": "양(g)",
+  "d.porcaoInfo": "{g} g 기준 {kcal} kcal · 단백질 {prot} g",
+  "d.minhasReceitas": "내 레시피",
+  "r.porcaoPadrao": "기본 1회 분량(g)",
+  "r.porcaoDica": "이 레시피를 기록할 때 제안되는 양이에요. 식사마다 바꿀 수 있어요.",
+  "r.registrarHoje": "오늘 일기에 기록",
+  "r.usarPadrao": "기본 분량으로 사용",
+  "r.registrada": "오늘 일기에 추가했어요 ✅",
+  "r.porcaoAtual": "기본 분량: {g} g",
+  "r.toque": "레시피를 눌러 양을 정하고 다시 기록하세요.",
 };
 
 export default traducoes;

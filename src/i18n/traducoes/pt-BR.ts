@@ -244,6 +244,16 @@ const ptBR = {
   "ap.diaDose0": "Dia da dose",
   "ap.diaDoseN": "{n}º dia após a dose",
   "g.apetiteDesc": "Registre sua fome do dia e veja a relação com as doses",
+  "d.quantidade": "Quantidade (g)",
+  "d.porcaoInfo": "{kcal} kcal · {prot} g proteína em {g} g",
+  "d.minhasReceitas": "Suas receitas",
+  "r.porcaoPadrao": "Porção padrão (g)",
+  "r.porcaoDica": "Quantidade sugerida quando você registrar esta receita. Dá para mudar a cada refeição.",
+  "r.registrarHoje": "Registrar no Diário de hoje",
+  "r.usarPadrao": "Usar como porção padrão",
+  "r.registrada": "Adicionada ao Diário de hoje ✅",
+  "r.porcaoAtual": "Porção padrão: {g} g",
+  "r.toque": "Toque em uma receita para registrar de novo e escolher a quantidade.",
 };
 
 export type ChaveTraducao = keyof typeof ptBR;

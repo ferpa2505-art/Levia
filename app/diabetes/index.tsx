@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react';
 import { View, ScrollView, Pressable, Modal } from 'react-native';
+import { TelaRolavel } from '@components/TelaRolavel';
 import {
   Droplet,
   Pill,
@@ -126,10 +127,7 @@ export default function DiabetesScreen() {
   }
 
   return (
-    <ScrollView
-      style={{ flex: 1, backgroundColor: colors.background }}
-      contentContainerStyle={{ padding: spacing.lg }}
-    >
+    <TelaRolavel>
       <ThemedView style={styles.container}>
         {/* Resumo da Glicemia */}
         <ThemedView variant="surface" style={[styles.card, styles.cardShadow]}>
@@ -602,7 +600,7 @@ export default function DiabetesScreen() {
           )}
         </View>
       </Modal>
-    </ScrollView>
+    </TelaRolavel>
   );
 }
 

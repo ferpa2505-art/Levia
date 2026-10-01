@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { View, ScrollView, Pressable, LayoutChangeEvent } from 'react-native';
+import { TelaRolavel } from '@components/TelaRolavel';
 import Svg, { Polyline, Circle, Line } from 'react-native-svg';
 import { TrendingDown, TrendingUp, Target, X } from 'lucide-react-native';
 import { ThemedView } from '@components/ThemedView';
@@ -104,7 +105,7 @@ export default function PesoScreen() {
   const historico = [...pesos].reverse();
 
   return (
-    <ScrollView style={{ flex: 1, backgroundColor: colors.background }} contentContainerStyle={{ padding: spacing.lg }}>
+    <TelaRolavel>
       <ThemedView style={styles.container}>
         {/* Resumo */}
         <View style={styles.resumoRow}>
@@ -203,7 +204,7 @@ export default function PesoScreen() {
           )}
         </ThemedView>
       </ThemedView>
-    </ScrollView>
+    </TelaRolavel>
   );
 }
 

@@ -245,6 +245,16 @@ const traducoes: Traducoes = {
   "ap.diaDose0": "Ngày dùng thuốc",
   "ap.diaDoseN": "Ngày thứ {n} sau liều",
   "g.apetiteDesc": "Ghi lại mức đói mỗi ngày và xem liên hệ với các liều",
+  "d.quantidade": "Khối lượng (g)",
+  "d.porcaoInfo": "{kcal} kcal · {prot} g protein trong {g} g",
+  "d.minhasReceitas": "Công thức của bạn",
+  "r.porcaoPadrao": "Khẩu phần mặc định (g)",
+  "r.porcaoDica": "Khối lượng gợi ý khi ghi công thức này. Có thể đổi ở mỗi bữa.",
+  "r.registrarHoje": "Ghi vào Nhật ký hôm nay",
+  "r.usarPadrao": "Đặt làm khẩu phần mặc định",
+  "r.registrada": "Đã thêm vào Nhật ký hôm nay ✅",
+  "r.porcaoAtual": "Khẩu phần mặc định: {g} g",
+  "r.toque": "Chạm vào một công thức để ghi lại và chọn khối lượng.",
 };
 
 export default traducoes;

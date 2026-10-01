@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { View, ScrollView, StyleSheet, Pressable } from 'react-native';
+import { TelaRolavel } from '@components/TelaRolavel';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { X, ChevronLeft } from 'lucide-react-native';
 import { ThemedView } from '@components/ThemedView';
@@ -80,7 +81,7 @@ export default function ExercisesScreen() {
   }
 
   return (
-    <ScrollView style={{ flex: 1, backgroundColor: colors.background }} contentContainerStyle={{ padding: spacing.lg }}>
+    <TelaRolavel>
       <ThemedView style={styles.container}>
         <View style={styles.header}>
           <ThemedText variant="heading" color="text">{t('abas.exercicios')}</ThemedText>
@@ -251,7 +252,7 @@ export default function ExercisesScreen() {
           )}
         </ThemedView>
       </ThemedView>
-    </ScrollView>
+    </TelaRolavel>
   );
 }
 

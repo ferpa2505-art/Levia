@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { View, ScrollView, Pressable } from 'react-native';
+import { TelaRolavel } from '@components/TelaRolavel';
 import { useRouter } from 'expo-router';
 import { Flame, Beef, Droplet, Zap, Feather, Target, Syringe, ChevronRight, TrendingDown } from 'lucide-react-native';
 import { ThemedView } from '@components/ThemedView';
@@ -40,7 +41,7 @@ export default function HomeScreen() {
   }
 
   return (
-    <ScrollView style={{ flex: 1, backgroundColor: colors.background }} contentContainerStyle={{ padding: spacing.lg }}>
+    <TelaRolavel>
       <ThemedView style={styles.container}>
         <View style={styles.greeting}>
           <View style={styles.greetingRow}>
@@ -183,7 +184,7 @@ export default function HomeScreen() {
           <ThemedText variant="caption" color="textSecondary">v0.2.0 • {t('home.versao')}</ThemedText>
         </View>
       </ThemedView>
-    </ScrollView>
+    </TelaRolavel>
   );
 }
 

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { View, ScrollView, StyleSheet, Pressable } from 'react-native';
+import { TelaRolavel } from '@components/TelaRolavel';
 import { useRouter } from 'expo-router';
 import { X } from 'lucide-react-native';
 import { ThemedView } from '@components/ThemedView';
@@ -9,7 +10,8 @@ import { Input } from '@components/Input';
 import { useCustomRecipes } from '@context/CustomRecipesContext';
 import { buscarIngredientes } from '@constants/ingredients';
 import { formasDePreparo } from '@constants/preparationMethods';
-import { Ingrediente, IngredienteUsado } from '@models/ingredients';
+import { Ingrediente, IngredienteUsado, PORCAO_PADRAO_G, ReceitaPersonalizada, valoresDaPorcao } from '@models/ingredients';
+import { useRecords } from '@context/RecordsContext';
 import { colors, spacing, radius } from '@constants/colors';
 import { estilosTema } from '@theme/estilos';
 import { usePreferences } from '@context/PreferencesContext';
@@ -17,7 +19,38 @@ import { usePreferences } from '@context/PreferencesContext';
 export default function RecipeBuilderScreen() {
   const { t, tc, idioma } = usePreferences();
   const router = useRouter();
-  const { receitasPersonalizadas, criarReceita, removerReceita } = useCustomRecipes();
+  const { receitasPersonalizadas, criarReceita, removerReceita, atualizarPorcaoPadrao } = useCustomRecipes();
+  const { adicionarRefeicao } = useRecords();
+
+  const [porcaoPadraoTexto, setPorcaoPadraoTexto] = useState(String(PORCAO_PADRAO_G));
+
+  // Receita salva aberta para registrar de novo
+  const [receitaAbertaId, setReceitaAbertaId] = useState<string | null>(null);
+  const [porcaoTexto, setPorcaoTexto] = useState('');
+  const [registradaId, setRegistradaId] = useState<string | null>(null);
+
+  function lerGramas(texto: string): number {
+    const g = parseFloat(texto.replace(',', '.'));
+    return isNaN(g) || g <= 0 ? 0 : g;
+  }
+
+  function abrirReceita(r: ReceitaPersonalizada) {
+    if (receitaAbertaId === r.id) {
+      setReceitaAbertaId(null);
+      return;
+    }
+    setReceitaAbertaId(r.id);
+    setPorcaoTexto(String(r.porcaoPadraoG ?? PORCAO_PADRAO_G));
+    setRegistradaId(null);
+  }
+
+  async function registrarReceita(r: ReceitaPersonalizada) {
+    const gramas = lerGramas(porcaoTexto);
+    if (!gramas) return;
+    const { kcal, proteinaG } = valoresDaPorcao(r, gramas);
+    await adicionarRefeicao(`${r.nome} (${gramas} g)`, kcal, proteinaG);
+    setRegistradaId(r.id);
+  }
 
   const [nomeReceita, setNomeReceita] = useState('');
   const [itens, setItens] = useState<IngredienteUsado[]>([]);
@@ -77,16 +110,17 @@ export default function RecipeBuilderScreen() {
 
   async function handleSalvar() {
     if (!podeSalvar) return;
-    const receita = await criarReceita(nomeReceita.trim(), itens);
+    const receita = await criarReceita(nomeReceita.trim(), itens, lerGramas(porcaoPadraoTexto) || PORCAO_PADRAO_G);
     if (receita) {
       setNomeReceita('');
+      setPorcaoPadraoTexto(String(PORCAO_PADRAO_G));
       setItens([]);
       router.back();
     }
   }
 
   return (
-    <ScrollView style={{ flex: 1, backgroundColor: colors.background }} contentContainerStyle={{ padding: spacing.lg }}>
+    <TelaRolavel>
       <ThemedView style={styles.container}>
         <View style={styles.header}>
           <ThemedText variant="heading" color="text">{t('r.titulo')}</ThemedText>
@@ -235,6 +269,19 @@ export default function RecipeBuilderScreen() {
               placeholder={t('r.nomePh')}
               style={styles.formInput}
             />
+            <ThemedText variant="small" color="text" style={{ marginTop: spacing.sm }}>
+              {t('r.porcaoPadrao')}
+            </ThemedText>
+            <View style={styles.porcaoRow}>
+              <Input
+                value={porcaoPadraoTexto}
+                onChangeText={setPorcaoPadraoTexto}
+                keyboardType="decimal-pad"
+                style={[styles.formInput, styles.porcaoInput]}
+              />
+              <ThemedText variant="body" color="textSecondary" style={{ marginLeft: spacing.sm }}>g</ThemedText>
+            </View>
+            <ThemedText variant="caption" color="textSecondary">{t('r.porcaoDica')}</ThemedText>
             <Button
               label={t('r.salvar')}
               variant="primary"
@@ -248,28 +295,86 @@ export default function RecipeBuilderScreen() {
         {/* Receitas já salvas */}
         {receitasPersonalizadas.length > 0 && (
           <ThemedView variant="surface" style={[styles.card, styles.cardShadow]}>
-            <ThemedText variant="subheading" color="text" style={{ marginBottom: spacing.sm }}>
+            <ThemedText variant="subheading" color="text">
               {t('r.salvas')}
             </ThemedText>
+            <ThemedText variant="caption" color="textSecondary" style={{ marginBottom: spacing.sm }}>
+              {t('r.toque')}
+            </ThemedText>
             <View style={styles.lista}>
-              {receitasPersonalizadas.map((r) => (
-                <View key={r.id} style={styles.itemLista}>
-                  <View style={{ flex: 1 }}>
-                    <ThemedText variant="body" color="text">{r.nome}</ThemedText>
-                    <ThemedText variant="small" color="textSecondary">
-                      {t('r.itemSalva', { kcal: r.kcalPor100g, prot: r.proteinaGPor100g, g: Math.round(r.pesoTotalG) })}
-                    </ThemedText>
+              {receitasPersonalizadas.map((r) => {
+                const aberta = receitaAbertaId === r.id;
+                const gramas = lerGramas(porcaoTexto);
+                const porcao = valoresDaPorcao(r, gramas);
+                const padrao = r.porcaoPadraoG ?? PORCAO_PADRAO_G;
+                return (
+                  <View key={r.id} style={styles.receitaSalva}>
+                    <View style={styles.itemLinha}>
+                      <Pressable onPress={() => abrirReceita(r)} style={{ flex: 1 }}>
+                        <ThemedText variant="body" color={aberta ? 'primary' : 'text'}>{r.nome}</ThemedText>
+                        <ThemedText variant="small" color="textSecondary">
+                          {t('r.itemSalva', { kcal: r.kcalPor100g, prot: r.proteinaGPor100g, g: Math.round(r.pesoTotalG) })}
+                        </ThemedText>
+                        <ThemedText variant="caption" color="textSecondary">{t('r.porcaoAtual', { g: padrao })}</ThemedText>
+                      </Pressable>
+                      <Pressable onPress={() => removerReceita(r.id)} style={styles.removerBotao}>
+                        <X size={16} color={colors.textSecondary} strokeWidth={2} />
+                      </Pressable>
+                    </View>
+
+                    {aberta && (
+                      <View style={styles.registrarBox}>
+                        <ThemedText variant="small" color="text">{t('d.quantidade')}</ThemedText>
+                        <View style={styles.porcaoRow}>
+                          <Input
+                            value={porcaoTexto}
+                            onChangeText={(v) => {
+                              setPorcaoTexto(v);
+                              setRegistradaId(null);
+                            }}
+                            keyboardType="decimal-pad"
+                            style={[styles.formInput, styles.porcaoInput]}
+                          />
+                          <ThemedText variant="body" color="textSecondary" style={{ marginLeft: spacing.sm }}>g</ThemedText>
+                        </View>
+                        {gramas > 0 && (
+                          <ThemedText variant="small" color="primary">
+                            {t('d.porcaoInfo', { kcal: porcao.kcal, prot: porcao.proteinaG, g: gramas })}
+                          </ThemedText>
+                        )}
+                        {registradaId === r.id ? (
+                          <ThemedText variant="body" color="primary" style={{ marginTop: spacing.sm }}>
+                            {t('r.registrada')}
+                          </ThemedText>
+                        ) : (
+                          <Button
+                            label={t('r.registrarHoje')}
+                            variant="primary"
+                            size="sm"
+                            onPress={() => registrarReceita(r)}
+                            disabled={!gramas}
+                            style={{ marginTop: spacing.sm }}
+                          />
+                        )}
+                        {gramas > 0 && gramas !== padrao && (
+                          <Button
+                            label={t('r.usarPadrao')}
+                            variant="outline"
+                            size="sm"
+                            onPress={() => atualizarPorcaoPadrao(r.id, gramas)}
+                            style={{ marginTop: spacing.sm }}
+                          />
+                        )}
+                      </View>
+                    )}
                   </View>
-                  <Pressable onPress={() => removerReceita(r.id)} style={styles.removerBotao}>
-                    <X size={16} color={colors.textSecondary} strokeWidth={2} />
-                  </Pressable>
-                </View>
-              ))}
+                );
+              })}
             </View>
           </ThemedView>
         )}
       </ThemedView>
-    </ScrollView>
+    </TelaRolavel>
   );
 }
 
@@ -324,5 +429,15 @@ const styles = estilosTema(() => ({
     borderBottomColor: colors.border,
   },
   removerBotao: { padding: spacing.sm },
+  receitaSalva: { borderBottomWidth: 1, borderBottomColor: colors.border, paddingVertical: spacing.sm },
+  itemLinha: { flexDirection: 'row', alignItems: 'center' },
+  registrarBox: {
+    marginTop: spacing.sm,
+    padding: spacing.md,
+    borderRadius: radius.lg,
+    backgroundColor: colors.primarySoft,
+  },
+  porcaoRow: { flexDirection: 'row', alignItems: 'center', marginTop: spacing.xs },
+  porcaoInput: { width: 110, marginBottom: spacing.xs },
   totalBox: { marginTop: spacing.md },
 }));

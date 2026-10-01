@@ -245,6 +245,16 @@ const traducoes: Traducoes = {
   "ap.diaDose0": "Dag van de dosis",
   "ap.diaDoseN": "Dag {n} na de dosis",
   "g.apetiteDesc": "Houd je honger bij en zie het verband met je doses",
+  "d.quantidade": "Hoeveelheid (g)",
+  "d.porcaoInfo": "{kcal} kcal · {prot} g eiwit in {g} g",
+  "d.minhasReceitas": "Jouw recepten",
+  "r.porcaoPadrao": "Standaardportie (g)",
+  "r.porcaoDica": "Voorgestelde hoeveelheid als je dit recept registreert. Per maaltijd aan te passen.",
+  "r.registrarHoje": "Registreren in het Dagboek van vandaag",
+  "r.usarPadrao": "Gebruiken als standaardportie",
+  "r.registrada": "Toegevoegd aan het Dagboek van vandaag ✅",
+  "r.porcaoAtual": "Standaardportie: {g} g",
+  "r.toque": "Tik op een recept om het opnieuw te registreren en de hoeveelheid te kiezen.",
 };
 
 export default traducoes;

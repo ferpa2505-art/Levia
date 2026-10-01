@@ -245,6 +245,16 @@ const traducoes: Traducoes = {
   "ap.diaDose0": "खुराक का दिन",
   "ap.diaDoseN": "खुराक के बाद {n}वाँ दिन",
   "g.apetiteDesc": "रोज़ की भूख दर्ज करें और खुराक से उसका संबंध देखें",
+  "d.quantidade": "मात्रा (g)",
+  "d.porcaoInfo": "{g} g में {kcal} kcal · {prot} g प्रोटीन",
+  "d.minhasReceitas": "आपकी रेसिपी",
+  "r.porcaoPadrao": "डिफ़ॉल्ट मात्रा (g)",
+  "r.porcaoDica": "यह रेसिपी दर्ज करते समय सुझाई गई मात्रा। हर भोजन में बदली जा सकती है।",
+  "r.registrarHoje": "आज की डायरी में दर्ज करें",
+  "r.usarPadrao": "डिफ़ॉल्ट मात्रा बनाएँ",
+  "r.registrada": "आज की डायरी में जोड़ा गया ✅",
+  "r.porcaoAtual": "डिफ़ॉल्ट मात्रा: {g} g",
+  "r.toque": "रेसिपी पर टैप करके मात्रा चुनें और फिर से दर्ज करें।",
 };
 
 export default traducoes;

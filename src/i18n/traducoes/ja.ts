@@ -245,6 +245,16 @@ const traducoes: Traducoes = {
   "ap.diaDose0": "投与日",
   "ap.diaDoseN": "投与後 {n} 日目",
   "g.apetiteDesc": "毎日の空腹感を記録し、投与との関係を確認",
+  "d.quantidade": "量（g）",
+  "d.porcaoInfo": "{g} g あたり {kcal} kcal・たんぱく質 {prot} g",
+  "d.minhasReceitas": "あなたのレシピ",
+  "r.porcaoPadrao": "標準の量（g）",
+  "r.porcaoDica": "このレシピを記録するときに提案される量です。食事ごとに変更できます。",
+  "r.registrarHoje": "今日の日記に記録",
+  "r.usarPadrao": "標準の量にする",
+  "r.registrada": "今日の日記に追加しました ✅",
+  "r.porcaoAtual": "標準の量：{g} g",
+  "r.toque": "レシピをタップすると、量を選んでもう一度記録できます。",
 };
 
 export default traducoes;

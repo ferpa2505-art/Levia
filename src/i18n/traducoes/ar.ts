@@ -245,6 +245,16 @@ const traducoes: Traducoes = {
   "ap.diaDose0": "يوم الجرعة",
   "ap.diaDoseN": "اليوم {n} بعد الجرعة",
   "g.apetiteDesc": "سجّل جوعك اليومي واطّلع على علاقته بالجرعات",
+  "d.quantidade": "الكمية (غ)",
+  "d.porcaoInfo": "{kcal} سعرة · {prot} غ بروتين في {g} غ",
+  "d.minhasReceitas": "وصفاتك",
+  "r.porcaoPadrao": "الحصة الافتراضية (غ)",
+  "r.porcaoDica": "الكمية المقترحة عند تسجيل هذه الوصفة. يمكنك تغييرها في كل وجبة.",
+  "r.registrarHoje": "سجّل في يوميات اليوم",
+  "r.usarPadrao": "استخدمها كحصة افتراضية",
+  "r.registrada": "أُضيفت إلى يوميات اليوم ✅",
+  "r.porcaoAtual": "الحصة الافتراضية: {g} غ",
+  "r.toque": "اضغط على وصفة لتسجيلها مرة أخرى واختيار الكمية.",
 };
 
 export default traducoes;

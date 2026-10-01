@@ -245,6 +245,16 @@ const traducoes: Traducoes = {
   "ap.diaDose0": "วันรับยา",
   "ap.diaDoseN": "วันที่ {n} หลังรับยา",
   "g.apetiteDesc": "บันทึกความหิวในแต่ละวันและดูความสัมพันธ์กับการรับยา",
+  "d.quantidade": "ปริมาณ (ก.)",
+  "d.porcaoInfo": "{kcal} kcal · โปรตีน {prot} ก. ใน {g} ก.",
+  "d.minhasReceitas": "สูตรของคุณ",
+  "r.porcaoPadrao": "ปริมาณเริ่มต้น (ก.)",
+  "r.porcaoDica": "ปริมาณที่แนะนำเมื่อบันทึกสูตรนี้ เปลี่ยนได้ทุกมื้อ",
+  "r.registrarHoje": "บันทึกลงบันทึกวันนี้",
+  "r.usarPadrao": "ใช้เป็นปริมาณเริ่มต้น",
+  "r.registrada": "เพิ่มลงบันทึกวันนี้แล้ว ✅",
+  "r.porcaoAtual": "ปริมาณเริ่มต้น: {g} ก.",
+  "r.toque": "แตะสูตรเพื่อบันทึกอีกครั้งและเลือกปริมาณ",
 };
 
 export default traducoes;

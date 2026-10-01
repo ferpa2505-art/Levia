@@ -245,6 +245,16 @@ const traducoes: Traducoes = {
   "ap.diaDose0": "用药日",
   "ap.diaDoseN": "用药后第 {n} 天",
   "g.apetiteDesc": "记录每天的饥饿感，查看与用药的关系",
+  "d.quantidade": "数量（g）",
+  "d.porcaoInfo": "{g} g 含 {kcal} kcal · 蛋白质 {prot} g",
+  "d.minhasReceitas": "你的食谱",
+  "r.porcaoPadrao": "默认份量（g）",
+  "r.porcaoDica": "记录这个食谱时建议的份量，每餐都可以修改。",
+  "r.registrarHoje": "记录到今天的日记",
+  "r.usarPadrao": "设为默认份量",
+  "r.registrada": "已添加到今天的日记 ✅",
+  "r.porcaoAtual": "默认份量：{g} g",
+  "r.toque": "点击食谱即可再次记录并选择份量。",
 };
 
 export default traducoes;

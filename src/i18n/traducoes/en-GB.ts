@@ -245,6 +245,16 @@ const traducoes: Traducoes = {
   "ap.diaDose0": "Dose day",
   "ap.diaDoseN": "Day {n} after dose",
   "g.apetiteDesc": "Log how hungry you are and see how it relates to your doses",
+  "d.quantidade": "Amount (g)",
+  "d.porcaoInfo": "{kcal} kcal · {prot} g protein in {g} g",
+  "d.minhasReceitas": "Your recipes",
+  "r.porcaoPadrao": "Default portion (g)",
+  "r.porcaoDica": "Suggested amount when you log this recipe. You can change it at each meal.",
+  "r.registrarHoje": "Log in today's Journal",
+  "r.usarPadrao": "Use as default portion",
+  "r.registrada": "Added to today's Journal ✅",
+  "r.porcaoAtual": "Default portion: {g} g",
+  "r.toque": "Tap a recipe to log it again and choose the amount.",
 };
 
 export default traducoes;
