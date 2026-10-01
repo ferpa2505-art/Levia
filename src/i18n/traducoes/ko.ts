@@ -255,6 +255,7 @@ const traducoes: Traducoes = {
   "r.registrada": "오늘 일기에 추가했어요 ✅",
   "r.porcaoAtual": "기본 분량: {g} g",
   "r.toque": "레시피를 눌러 양을 정하고 다시 기록하세요.",
+  "menu.privacidade": "개인정보 처리방침",
 };
 
 export default traducoes;

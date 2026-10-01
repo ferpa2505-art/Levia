@@ -255,6 +255,7 @@ const traducoes: Traducoes = {
   "r.registrada": "Aggiunta al Diario di oggi ✅",
   "r.porcaoAtual": "Porzione predefinita: {g} g",
   "r.toque": "Tocca una ricetta per registrarla di nuovo e scegliere la quantità.",
+  "menu.privacidade": "Informativa sulla privacy",
 };
 
 export default traducoes;

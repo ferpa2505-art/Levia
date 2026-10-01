@@ -255,6 +255,7 @@ const traducoes: Traducoes = {
   "r.registrada": "เพิ่มลงบันทึกวันนี้แล้ว ✅",
   "r.porcaoAtual": "ปริมาณเริ่มต้น: {g} ก.",
   "r.toque": "แตะสูตรเพื่อบันทึกอีกครั้งและเลือกปริมาณ",
+  "menu.privacidade": "นโยบายความเป็นส่วนตัว",
 };
 
 export default traducoes;

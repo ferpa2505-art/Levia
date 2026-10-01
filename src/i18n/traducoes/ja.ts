@@ -255,6 +255,7 @@ const traducoes: Traducoes = {
   "r.registrada": "今日の日記に追加しました ✅",
   "r.porcaoAtual": "標準の量：{g} g",
   "r.toque": "レシピをタップすると、量を選んでもう一度記録できます。",
+  "menu.privacidade": "プライバシーポリシー",
 };
 
 export default traducoes;

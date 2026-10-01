@@ -255,6 +255,7 @@ const traducoes: Traducoes = {
   "r.registrada": "आज की डायरी में जोड़ा गया ✅",
   "r.porcaoAtual": "डिफ़ॉल्ट मात्रा: {g} g",
   "r.toque": "रेसिपी पर टैप करके मात्रा चुनें और फिर से दर्ज करें।",
+  "menu.privacidade": "गोपनीयता नीति",
 };
 
 export default traducoes;

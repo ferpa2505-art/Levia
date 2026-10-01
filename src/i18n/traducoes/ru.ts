@@ -255,6 +255,7 @@ const traducoes: Traducoes = {
   "r.registrada": "Добавлено в Дневник за сегодня ✅",
   "r.porcaoAtual": "Порция по умолчанию: {g} г",
   "r.toque": "Нажмите на рецепт, чтобы записать его снова и выбрать количество.",
+  "menu.privacidade": "Политика конфиденциальности",
 };
 
 export default traducoes;

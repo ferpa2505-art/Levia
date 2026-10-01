@@ -254,6 +254,7 @@ const ptBR = {
   "r.registrada": "Adicionada ao Diário de hoje ✅",
   "r.porcaoAtual": "Porção padrão: {g} g",
   "r.toque": "Toque em uma receita para registrar de novo e escolher a quantidade.",
+  "menu.privacidade": "Política de privacidade",
 };
 
 export type ChaveTraducao = keyof typeof ptBR;

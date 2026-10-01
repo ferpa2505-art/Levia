@@ -255,6 +255,7 @@ const traducoes: Traducoes = {
   "r.registrada": "Đã thêm vào Nhật ký hôm nay ✅",
   "r.porcaoAtual": "Khẩu phần mặc định: {g} g",
   "r.toque": "Chạm vào một công thức để ghi lại và chọn khối lượng.",
+  "menu.privacidade": "Chính sách quyền riêng tư",
 };
 
 export default traducoes;

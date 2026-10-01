@@ -255,6 +255,7 @@ const traducoes: Traducoes = {
   "r.registrada": "أُضيفت إلى يوميات اليوم ✅",
   "r.porcaoAtual": "الحصة الافتراضية: {g} غ",
   "r.toque": "اضغط على وصفة لتسجيلها مرة أخرى واختيار الكمية.",
+  "menu.privacidade": "سياسة الخصوصية",
 };
 
 export default traducoes;

@@ -255,6 +255,7 @@ const traducoes: Traducoes = {
   "r.registrada": "已添加到今天的日记 ✅",
   "r.porcaoAtual": "默认份量：{g} g",
   "r.toque": "点击食谱即可再次记录并选择份量。",
+  "menu.privacidade": "隐私政策",
 };
 
 export default traducoes;

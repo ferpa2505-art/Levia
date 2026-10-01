@@ -255,6 +255,7 @@ const traducoes: Traducoes = {
   "r.registrada": "Ditambahkan ke Jurnal hari ini ✅",
   "r.porcaoAtual": "Porsi bawaan: {g} g",
   "r.toque": "Ketuk resep untuk mencatatnya lagi dan memilih jumlahnya.",
+  "menu.privacidade": "Kebijakan privasi",
 };
 
 export default traducoes;

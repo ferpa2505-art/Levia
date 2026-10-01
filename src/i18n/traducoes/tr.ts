@@ -255,6 +255,7 @@ const traducoes: Traducoes = {
   "r.registrada": "Bugünkü Günlüğe eklendi ✅",
   "r.porcaoAtual": "Varsayılan porsiyon: {g} g",
   "r.toque": "Tekrar kaydetmek ve miktarı seçmek için bir tarife dokun.",
+  "menu.privacidade": "Gizlilik politikası",
 };
 
 export default traducoes;
