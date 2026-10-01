@@ -4,19 +4,39 @@
     "slug": "levia-app",
     "version": "0.1.0",
     "orientation": "portrait",
-    "assetBundlePatterns": ["**/*"],
+    "icon": "./assets/icon.png",
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
-      "bundleIdentifier": "com.levia.app"
+      "bundleIdentifier": "com.ferpa2505art.levia"
     },
     "android": {
-      "package": "com.levia.app"
+      "package": "com.ferpa2505art.levia",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#6FA58E"
+      }
     },
-    "plugins": ["expo-router", "expo-notifications"],
+    "plugins": [
+      "expo-router",
+      "expo-notifications",
+      "expo-font",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash-icon.png",
+          "imageWidth": 160,
+          "backgroundColor": "#6FA58E"
+        }
+      ]
+    ],
     "scheme": "levia",
     "extra": {
       "eas": {
-        "projectId": "levia-dev-project"
+        "projectId": "c19a5f1e-5fbd-4100-ad78-43b05b47a977"
       }
-    }
+    },
+    "owner": "ferpa2505-art"
   }
 }
