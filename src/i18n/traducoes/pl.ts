@@ -1,4 +1,4 @@
-﻿import type { Traducoes } from './pt-BR';
+import type { Traducoes } from './pt-BR';
 
 const traducoes: Traducoes = {
   "comum.continuar": "Dalej",
@@ -214,6 +214,37 @@ const traducoes: Traducoes = {
   "resultado.erro": "Failed to add to diary",
   "resultado.alerta": "Monitor this food - high glycemic index",
   "resultado.total": "Total: {kcal} kcal",
+  "titulos.peso": "Zmiana wagi",
+  "titulos.apetite": "Apetyt",
+  "home.verEvolucao": "Zobacz postępy",
+  "p.inicial": "Początkowa",
+  "p.atual": "Obecna",
+  "p.variacao": "Zmiana",
+  "p.faltaMeta": "Brakuje {n} kg do celu {meta} kg",
+  "p.naMeta": "Cel osiągnięty! 🎉",
+  "p.grafico": "Ostatnie ważenia",
+  "p.graficoVazio": "Zapisz co najmniej 2 ważenia, aby zobaczyć wykres.",
+  "p.historico": "Historia",
+  "p.vazio": "Brak zapisanych ważeń.",
+  "p.registrar": "Zapisz dzisiejszą wagę",
+  "p.umaPorDia": "Ponowne ważenie dziś zastępuje dzisiejszy wynik.",
+  "ap.sub": "Jak duży masz dziś apetyt? Zapisywanie apetytu pokazuje, jak zmienia się w dniach po dawce.",
+  "ap.nivel1": "Brak głodu",
+  "ap.nivel2": "Trochę głodu",
+  "ap.nivel3": "Normalnie",
+  "ap.nivel4": "Dość głodny",
+  "ap.nivel5": "Bardzo głodny",
+  "ap.obsPh": "Notatki (opcjonalnie) — np. mdłości po obiedzie",
+  "ap.salvar": "Zapisz dzisiejszy apetyt",
+  "ap.atualizar": "Zaktualizuj dzisiejszy apetyt",
+  "ap.hojeSalvo": "Dzisiejszy apetyt zapisany ✅",
+  "ap.proteinaHoje": "Białko dziś: {g} g (posiłki z Dziennika)",
+  "ap.proteinaDica": "Przy słabym apetycie warto wybierać produkty bogate w białko. Porozmawiaj z lekarzem lub dietetykiem.",
+  "ap.historico": "Ostatnie dni",
+  "ap.vazio": "Brak wpisów o apetycie.",
+  "ap.diaDose0": "Dzień dawki",
+  "ap.diaDoseN": "{n}. dzień po dawce",
+  "g.apetiteDesc": "Zapisuj głód i zobacz związek z dawkami",
 };
 
 export default traducoes;

@@ -1,4 +1,4 @@
-﻿import type { Traducoes } from './pt-BR';
+import type { Traducoes } from './pt-BR';
 
 const traducoes: Traducoes = {
   "comum.continuar": "ê³„ì†",
@@ -214,6 +214,37 @@ const traducoes: Traducoes = {
   "resultado.erro": "Failed to add to diary",
   "resultado.alerta": "Monitor this food - high glycemic index",
   "resultado.total": "Total: {kcal} kcal",
+  "titulos.peso": "체중 변화",
+  "titulos.apetite": "식욕",
+  "home.verEvolucao": "변화 보기",
+  "p.inicial": "시작",
+  "p.atual": "현재",
+  "p.variacao": "변화량",
+  "p.faltaMeta": "목표 {meta} kg까지 {n} kg 남았어요",
+  "p.naMeta": "목표 달성! 🎉",
+  "p.grafico": "최근 측정",
+  "p.graficoVazio": "그래프를 보려면 2번 이상 기록하세요.",
+  "p.historico": "기록",
+  "p.vazio": "아직 체중 기록이 없어요.",
+  "p.registrar": "오늘 체중 기록",
+  "p.umaPorDia": "오늘 다시 재면 오늘 값이 바뀌어요.",
+  "ap.sub": "오늘 배고픔은 어떤가요? 식욕을 기록하면 투여 후 며칠 동안 어떻게 변하는지 알 수 있어요.",
+  "ap.nivel1": "배고프지 않음",
+  "ap.nivel2": "조금 배고픔",
+  "ap.nivel3": "보통",
+  "ap.nivel4": "꽤 배고픔",
+  "ap.nivel5": "매우 배고픔",
+  "ap.obsPh": "메모(선택) — 예: 점심 후 메스꺼움",
+  "ap.salvar": "오늘 식욕 저장",
+  "ap.atualizar": "오늘 식욕 수정",
+  "ap.hojeSalvo": "오늘 식욕을 저장했어요 ✅",
+  "ap.proteinaHoje": "오늘 단백질: {g} g (일기 식사)",
+  "ap.proteinaDica": "식욕이 없을 때는 단백질이 풍부한 음식을 우선하세요. 의사나 영양사와 상담하세요.",
+  "ap.historico": "최근 며칠",
+  "ap.vazio": "아직 식욕 기록이 없어요.",
+  "ap.diaDose0": "투여일",
+  "ap.diaDoseN": "투여 후 {n}일째",
+  "g.apetiteDesc": "하루 배고픔을 기록하고 투여와의 관계를 확인하세요",
 };
 
 export default traducoes;

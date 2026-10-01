@@ -1,4 +1,4 @@
-﻿import type { Traducoes } from './pt-BR';
+import type { Traducoes } from './pt-BR';
 
 const traducoes: Traducoes = {
   "comum.continuar": "ç»§ç»­",
@@ -214,6 +214,37 @@ const traducoes: Traducoes = {
   "resultado.erro": "Failed to add to diary",
   "resultado.alerta": "Monitor this food - high glycemic index",
   "resultado.total": "Total: {kcal} kcal",
+  "titulos.peso": "体重变化",
+  "titulos.apetite": "食欲",
+  "home.verEvolucao": "查看变化",
+  "p.inicial": "初始",
+  "p.atual": "当前",
+  "p.variacao": "变化",
+  "p.faltaMeta": "距离目标 {meta} kg 还差 {n} kg",
+  "p.naMeta": "已达成目标！🎉",
+  "p.grafico": "最近称重",
+  "p.graficoVazio": "至少记录 2 次称重才能查看图表。",
+  "p.historico": "历史",
+  "p.vazio": "还没有称重记录。",
+  "p.registrar": "记录今天的体重",
+  "p.umaPorDia": "今天再次称重会替换今天的数值。",
+  "ap.sub": "今天的饥饿感如何？记录食欲可以看到用药后几天里的变化。",
+  "ap.nivel1": "不饿",
+  "ap.nivel2": "有点饿",
+  "ap.nivel3": "正常",
+  "ap.nivel4": "比较饿",
+  "ap.nivel5": "非常饿",
+  "ap.obsPh": "备注（可选）— 例如：午饭后恶心",
+  "ap.salvar": "保存今天的食欲",
+  "ap.atualizar": "更新今天的食欲",
+  "ap.hojeSalvo": "已记录今天的食欲 ✅",
+  "ap.proteinaHoje": "今日蛋白质：{g} g（日记中的餐食）",
+  "ap.proteinaDica": "食欲不佳时，优先选择富含蛋白质的食物。请咨询医生或营养师。",
+  "ap.historico": "最近几天",
+  "ap.vazio": "还没有食欲记录。",
+  "ap.diaDose0": "用药日",
+  "ap.diaDoseN": "用药后第 {n} 天",
+  "g.apetiteDesc": "记录每天的饥饿感，查看与用药的关系",
 };
 
 export default traducoes;

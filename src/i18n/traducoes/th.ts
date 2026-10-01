@@ -1,4 +1,4 @@
-﻿import type { Traducoes } from './pt-BR';
+import type { Traducoes } from './pt-BR';
 
 const traducoes: Traducoes = {
   "comum.continuar": "à¸•à¹ˆà¸­à¹„à¸›",
@@ -214,6 +214,37 @@ const traducoes: Traducoes = {
   "resultado.erro": "Failed to add to diary",
   "resultado.alerta": "Monitor this food - high glycemic index",
   "resultado.total": "Total: {kcal} kcal",
+  "titulos.peso": "ความเปลี่ยนแปลงของน้ำหนัก",
+  "titulos.apetite": "ความอยากอาหาร",
+  "home.verEvolucao": "ดูความเปลี่ยนแปลง",
+  "p.inicial": "เริ่มต้น",
+  "p.atual": "ปัจจุบัน",
+  "p.variacao": "เปลี่ยนแปลง",
+  "p.faltaMeta": "อีก {n} กก. ถึงเป้าหมาย {meta} กก.",
+  "p.naMeta": "ถึงเป้าหมายแล้ว! 🎉",
+  "p.grafico": "การชั่งล่าสุด",
+  "p.graficoVazio": "บันทึกอย่างน้อย 2 ครั้งเพื่อดูกราฟ",
+  "p.historico": "ประวัติ",
+  "p.vazio": "ยังไม่มีการบันทึกน้ำหนัก",
+  "p.registrar": "บันทึกน้ำหนักวันนี้",
+  "p.umaPorDia": "ถ้าชั่งอีกครั้งวันนี้ ค่าของวันจะถูกแทนที่",
+  "ap.sub": "วันนี้หิวแค่ไหน? การบันทึกความอยากอาหารช่วยให้เห็นว่ามันเปลี่ยนไปอย่างไรหลังรับยา",
+  "ap.nivel1": "ไม่หิว",
+  "ap.nivel2": "หิวเล็กน้อย",
+  "ap.nivel3": "ปกติ",
+  "ap.nivel4": "ค่อนข้างหิว",
+  "ap.nivel5": "หิวมาก",
+  "ap.obsPh": "หมายเหตุ (ไม่บังคับ) — เช่น คลื่นไส้หลังมื้อกลางวัน",
+  "ap.salvar": "บันทึกความอยากอาหารวันนี้",
+  "ap.atualizar": "อัปเดตความอยากอาหารวันนี้",
+  "ap.hojeSalvo": "บันทึกความอยากอาหารวันนี้แล้ว ✅",
+  "ap.proteinaHoje": "โปรตีนวันนี้: {g} ก. (มื้ออาหารในบันทึก)",
+  "ap.proteinaDica": "เมื่อไม่ค่อยอยากอาหาร ควรเลือกอาหารที่มีโปรตีนสูงก่อน ปรึกษาแพทย์หรือนักโภชนาการ",
+  "ap.historico": "วันล่าสุด",
+  "ap.vazio": "ยังไม่มีบันทึกความอยากอาหาร",
+  "ap.diaDose0": "วันรับยา",
+  "ap.diaDoseN": "วันที่ {n} หลังรับยา",
+  "g.apetiteDesc": "บันทึกความหิวในแต่ละวันและดูความสัมพันธ์กับการรับยา",
 };
 
 export default traducoes;

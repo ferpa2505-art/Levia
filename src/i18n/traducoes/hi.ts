@@ -1,4 +1,4 @@
-﻿import type { Traducoes } from './pt-BR';
+import type { Traducoes } from './pt-BR';
 
 const traducoes: Traducoes = {
   "comum.continuar": "à¤œà¤¾à¤°à¥€ à¤°à¤–à¥‡à¤‚",
@@ -214,6 +214,37 @@ const traducoes: Traducoes = {
   "resultado.erro": "Failed to add to diary",
   "resultado.alerta": "Monitor this food - high glycemic index",
   "resultado.total": "Total: {kcal} kcal",
+  "titulos.peso": "वज़न में बदलाव",
+  "titulos.apetite": "भूख",
+  "home.verEvolucao": "बदलाव देखें",
+  "p.inicial": "शुरुआती",
+  "p.atual": "मौजूदा",
+  "p.variacao": "बदलाव",
+  "p.faltaMeta": "{meta} kg के लक्ष्य तक {n} kg बाकी",
+  "p.naMeta": "आपने लक्ष्य पा लिया! 🎉",
+  "p.grafico": "हाल के वज़न",
+  "p.graficoVazio": "ग्राफ़ देखने के लिए कम से कम 2 बार वज़न दर्ज करें।",
+  "p.historico": "इतिहास",
+  "p.vazio": "अभी तक कोई वज़न दर्ज नहीं है।",
+  "p.registrar": "आज का वज़न दर्ज करें",
+  "p.umaPorDia": "आज दोबारा वज़न लेने पर आज का मान बदल जाएगा।",
+  "ap.sub": "आज आपको कितनी भूख है? भूख दर्ज करने से पता चलता है कि खुराक के बाद के दिनों में यह कैसे बदलती है।",
+  "ap.nivel1": "भूख नहीं",
+  "ap.nivel2": "थोड़ी भूख",
+  "ap.nivel3": "सामान्य",
+  "ap.nivel4": "काफ़ी भूख",
+  "ap.nivel5": "बहुत भूख",
+  "ap.obsPh": "नोट (वैकल्पिक) — जैसे: दोपहर के खाने के बाद मतली",
+  "ap.salvar": "आज की भूख सहेजें",
+  "ap.atualizar": "आज की भूख अपडेट करें",
+  "ap.hojeSalvo": "आज की भूख सहेजी गई ✅",
+  "ap.proteinaHoje": "आज प्रोटीन: {g} g (डायरी के भोजन)",
+  "ap.proteinaDica": "भूख कम हो तो प्रोटीन से भरपूर खाने को प्राथमिकता दें। अपने डॉक्टर या पोषण विशेषज्ञ से बात करें।",
+  "ap.historico": "पिछले दिन",
+  "ap.vazio": "अभी तक भूख का कोई रिकॉर्ड नहीं है।",
+  "ap.diaDose0": "खुराक का दिन",
+  "ap.diaDoseN": "खुराक के बाद {n}वाँ दिन",
+  "g.apetiteDesc": "रोज़ की भूख दर्ज करें और खुराक से उसका संबंध देखें",
 };
 
 export default traducoes;

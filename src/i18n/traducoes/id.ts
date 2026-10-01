@@ -1,4 +1,4 @@
-﻿import type { Traducoes } from './pt-BR';
+import type { Traducoes } from './pt-BR';
 
 const traducoes: Traducoes = {
   "comum.continuar": "Lanjut",
@@ -214,6 +214,37 @@ const traducoes: Traducoes = {
   "resultado.erro": "Failed to add to diary",
   "resultado.alerta": "Monitor this food - high glycemic index",
   "resultado.total": "Total: {kcal} kcal",
+  "titulos.peso": "Perkembangan berat",
+  "titulos.apetite": "Nafsu makan",
+  "home.verEvolucao": "Lihat perkembangan",
+  "p.inicial": "Awal",
+  "p.atual": "Saat ini",
+  "p.variacao": "Perubahan",
+  "p.faltaMeta": "Kurang {n} kg menuju target {meta} kg",
+  "p.naMeta": "Target tercapai! 🎉",
+  "p.grafico": "Penimbangan terakhir",
+  "p.graficoVazio": "Catat minimal 2 penimbangan untuk melihat grafik.",
+  "p.historico": "Riwayat",
+  "p.vazio": "Belum ada penimbangan.",
+  "p.registrar": "Catat berat hari ini",
+  "p.umaPorDia": "Menimbang lagi hari ini akan mengganti nilai hari ini.",
+  "ap.sub": "Seberapa lapar kamu hari ini? Mencatat nafsu makan membantu melihat perubahannya setelah dosis.",
+  "ap.nivel1": "Tidak lapar",
+  "ap.nivel2": "Sedikit lapar",
+  "ap.nivel3": "Normal",
+  "ap.nivel4": "Cukup lapar",
+  "ap.nivel5": "Sangat lapar",
+  "ap.obsPh": "Catatan (opsional) — mis.: mual setelah makan siang",
+  "ap.salvar": "Simpan nafsu makan hari ini",
+  "ap.atualizar": "Perbarui nafsu makan hari ini",
+  "ap.hojeSalvo": "Nafsu makan hari ini tersimpan ✅",
+  "ap.proteinaHoje": "Protein hari ini: {g} g (makanan di Jurnal)",
+  "ap.proteinaDica": "Saat nafsu makan rendah, utamakan makanan kaya protein. Konsultasikan dengan dokter atau ahli gizi.",
+  "ap.historico": "Hari terakhir",
+  "ap.vazio": "Belum ada catatan nafsu makan.",
+  "ap.diaDose0": "Hari dosis",
+  "ap.diaDoseN": "Hari ke-{n} setelah dosis",
+  "g.apetiteDesc": "Catat rasa lapar harian dan lihat hubungannya dengan dosis",
 };
 
 export default traducoes;

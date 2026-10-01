@@ -1,4 +1,4 @@
-﻿import type { Traducoes } from './pt-BR';
+import type { Traducoes } from './pt-BR';
 
 const traducoes: Traducoes = {
   "comum.continuar": "Ù…ØªØ§Ø¨Ø¹Ø©",
@@ -214,6 +214,37 @@ const traducoes: Traducoes = {
   "resultado.erro": "Failed to add to diary",
   "resultado.alerta": "Monitor this food - high glycemic index",
   "resultado.total": "Total: {kcal} kcal",
+  "titulos.peso": "تطور الوزن",
+  "titulos.apetite": "الشهية",
+  "home.verEvolucao": "عرض التطور",
+  "p.inicial": "البداية",
+  "p.atual": "الحالي",
+  "p.variacao": "التغيّر",
+  "p.faltaMeta": "متبقٍ {n} كغ للوصول إلى هدف {meta} كغ",
+  "p.naMeta": "وصلت إلى هدفك! 🎉",
+  "p.grafico": "آخر القياسات",
+  "p.graficoVazio": "سجّل قياسين على الأقل لرؤية الرسم البياني.",
+  "p.historico": "السجل",
+  "p.vazio": "لا توجد قياسات مسجلة بعد.",
+  "p.registrar": "سجّل وزن اليوم",
+  "p.umaPorDia": "إذا وزنت نفسك مجددًا اليوم فسيتم استبدال قيمة اليوم.",
+  "ap.sub": "كيف جوعك اليوم؟ تسجيل الشهية يساعد على رؤية تغيّرها في الأيام التي تلي الجرعة.",
+  "ap.nivel1": "لا جوع",
+  "ap.nivel2": "جوع قليل",
+  "ap.nivel3": "طبيعي",
+  "ap.nivel4": "جوع كبير",
+  "ap.nivel5": "جوع شديد",
+  "ap.obsPh": "ملاحظات (اختياري) — مثل: غثيان بعد الغداء",
+  "ap.salvar": "احفظ شهية اليوم",
+  "ap.atualizar": "حدّث شهية اليوم",
+  "ap.hojeSalvo": "تم حفظ شهية اليوم ✅",
+  "ap.proteinaHoje": "البروتين اليوم: {g} غ (وجبات اليوميات)",
+  "ap.proteinaDica": "عند ضعف الشهية، يُفضَّل اختيار الأطعمة الغنية بالبروتين. استشر طبيبك أو أخصائي التغذية.",
+  "ap.historico": "الأيام الأخيرة",
+  "ap.vazio": "لا توجد سجلات شهية بعد.",
+  "ap.diaDose0": "يوم الجرعة",
+  "ap.diaDoseN": "اليوم {n} بعد الجرعة",
+  "g.apetiteDesc": "سجّل جوعك اليومي واطّلع على علاقته بالجرعات",
 };
 
 export default traducoes;

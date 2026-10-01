@@ -1,4 +1,4 @@
-﻿import type { Traducoes } from './pt-BR';
+import type { Traducoes } from './pt-BR';
 
 const traducoes: Traducoes = {
   "comum.continuar": "Doorgaan",
@@ -214,6 +214,37 @@ const traducoes: Traducoes = {
   "resultado.erro": "Failed to add to diary",
   "resultado.alerta": "Monitor this food - high glycemic index",
   "resultado.total": "Total: {kcal} kcal",
+  "titulos.peso": "Gewichtsverloop",
+  "titulos.apetite": "Eetlust",
+  "home.verEvolucao": "Verloop bekijken",
+  "p.inicial": "Start",
+  "p.atual": "Huidig",
+  "p.variacao": "Verschil",
+  "p.faltaMeta": "Nog {n} kg tot je doel van {meta} kg",
+  "p.naMeta": "Je hebt je doel bereikt! 🎉",
+  "p.grafico": "Laatste wegingen",
+  "p.graficoVazio": "Registreer minstens 2 wegingen om de grafiek te zien.",
+  "p.historico": "Geschiedenis",
+  "p.vazio": "Nog geen wegingen geregistreerd.",
+  "p.registrar": "Gewicht van vandaag registreren",
+  "p.umaPorDia": "Opnieuw wegen vandaag vervangt de waarde van vandaag.",
+  "ap.sub": "Hoeveel honger heb je vandaag? Eetlust bijhouden laat zien hoe die verandert in de dagen na je dosis.",
+  "ap.nivel1": "Geen honger",
+  "ap.nivel2": "Weinig honger",
+  "ap.nivel3": "Normaal",
+  "ap.nivel4": "Behoorlijk honger",
+  "ap.nivel5": "Veel honger",
+  "ap.obsPh": "Notities (optioneel) — bv. misselijk na de lunch",
+  "ap.salvar": "Eetlust van vandaag opslaan",
+  "ap.atualizar": "Eetlust van vandaag bijwerken",
+  "ap.hojeSalvo": "Eetlust van vandaag opgeslagen ✅",
+  "ap.proteinaHoje": "Eiwit vandaag: {g} g (maaltijden uit het Dagboek)",
+  "ap.proteinaDica": "Bij weinig eetlust helpt het om eiwitrijk eten voorrang te geven. Overleg met je arts of diëtist.",
+  "ap.historico": "Laatste dagen",
+  "ap.vazio": "Nog geen eetlust-registraties.",
+  "ap.diaDose0": "Dag van de dosis",
+  "ap.diaDoseN": "Dag {n} na de dosis",
+  "g.apetiteDesc": "Houd je honger bij en zie het verband met je doses",
 };
 
 export default traducoes;

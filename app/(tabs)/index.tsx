@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { View, ScrollView, Pressable } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Flame, Beef, Droplet, Zap, Feather, Target, Syringe, ChevronRight } from 'lucide-react-native';
+import { Flame, Beef, Droplet, Zap, Feather, Target, Syringe, ChevronRight, TrendingDown } from 'lucide-react-native';
 import { ThemedView } from '@components/ThemedView';
 import { ThemedText } from '@components/ThemedText';
 import { Button } from '@components/Button';
@@ -138,6 +138,13 @@ export default function HomeScreen() {
               ) : (
                 <ThemedText variant="small" color="textSecondary">{t('home.ultimaPesagem')}</ThemedText>
               )}
+              <Pressable onPress={() => router.push('/peso')} style={styles.verEvolucao} hitSlop={8}>
+                <TrendingDown size={14} color={colors.primary} strokeWidth={2} />
+                <ThemedText variant="small" color="primary" style={{ marginLeft: spacing.xs }}>
+                  {t('home.verEvolucao')}
+                </ThemedText>
+                <ChevronRight size={14} color={colors.primary} strokeWidth={2} />
+              </Pressable>
             </>
           )}
         </ThemedView>
@@ -181,6 +188,7 @@ export default function HomeScreen() {
 }
 
 const styles = estilosTema(() => ({
+  verEvolucao: { flexDirection: 'row', alignItems: 'center', marginTop: spacing.md },
   container: { flex: 1 },
   greeting: { marginBottom: spacing['2xl'] },
   greetingRow: { flexDirection: 'row', alignItems: 'center' },

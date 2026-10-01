@@ -1,4 +1,4 @@
-﻿import type { Traducoes } from './pt-BR';
+import type { Traducoes } from './pt-BR';
 
 const traducoes: Traducoes = {
   "comum.continuar": "ÐŸÑ€Ð¾Ð´Ð¾Ð»Ð¶Ð¸Ñ‚ÑŒ",
@@ -214,6 +214,37 @@ const traducoes: Traducoes = {
   "resultado.erro": "Failed to add to diary",
   "resultado.alerta": "Monitor this food - high glycemic index",
   "resultado.total": "Total: {kcal} kcal",
+  "titulos.peso": "Динамика веса",
+  "titulos.apetite": "Аппетит",
+  "home.verEvolucao": "Смотреть динамику",
+  "p.inicial": "Начальный",
+  "p.atual": "Текущий",
+  "p.variacao": "Изменение",
+  "p.faltaMeta": "До цели {meta} кг осталось {n} кг",
+  "p.naMeta": "Цель достигнута! 🎉",
+  "p.grafico": "Последние взвешивания",
+  "p.graficoVazio": "Добавьте хотя бы 2 взвешивания, чтобы увидеть график.",
+  "p.historico": "История",
+  "p.vazio": "Взвешиваний пока нет.",
+  "p.registrar": "Записать вес за сегодня",
+  "p.umaPorDia": "Повторное взвешивание сегодня заменит значение за день.",
+  "ap.sub": "Какой у вас сегодня аппетит? Записи показывают, как он меняется в дни после дозы.",
+  "ap.nivel1": "Нет голода",
+  "ap.nivel2": "Немного голоден",
+  "ap.nivel3": "Обычный",
+  "ap.nivel4": "Довольно голоден",
+  "ap.nivel5": "Очень голоден",
+  "ap.obsPh": "Заметки (необязательно) — напр.: тошнота после обеда",
+  "ap.salvar": "Сохранить аппетит за сегодня",
+  "ap.atualizar": "Обновить аппетит за сегодня",
+  "ap.hojeSalvo": "Аппетит за сегодня сохранён ✅",
+  "ap.proteinaHoje": "Белок сегодня: {g} г (приёмы пищи из Дневника)",
+  "ap.proteinaDica": "При слабом аппетите стоит отдавать предпочтение продуктам, богатым белком. Посоветуйтесь с врачом или диетологом.",
+  "ap.historico": "Последние дни",
+  "ap.vazio": "Записей об аппетите пока нет.",
+  "ap.diaDose0": "День дозы",
+  "ap.diaDoseN": "{n}-й день после дозы",
+  "g.apetiteDesc": "Записывайте аппетит и смотрите связь с дозами",
 };
 
 export default traducoes;

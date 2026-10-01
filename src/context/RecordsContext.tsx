@@ -16,6 +16,8 @@ interface RecordsContextValue {
   kcalHoje: number;
   proteinaHojeG: number;
   pesoAtualKg: number | null;
+  /** Pesagens em ordem cronológica (mais antiga primeiro) */
+  pesos: RegistroPeso[];
   exerciciosHoje: RegistroExercicio[];
   kcalGastaHoje: number;
   adicionarRefeicao: (nome: string, kcal: number, proteinaG: number) => Promise<void>;
@@ -23,6 +25,7 @@ interface RecordsContextValue {
   adicionarAgua: (ml: number) => Promise<void>;
   removerAgua: (id: string) => Promise<void>;
   adicionarPeso: (pesoKg: number) => Promise<void>;
+  removerPeso: (id: string) => Promise<void>;
   adicionarExercicio: (
     nome: string,
     duracaoMin: number,
@@ -85,9 +88,14 @@ export function RecordsProvider({ children }: { children: ReactNode }) {
     await persistir({ ...dados, aguas: dados.aguas.filter((a) => a.id !== id) });
   }
 
+  // Uma pesagem por dia: pesar de novo no mesmo dia substitui o valor
   async function adicionarPeso(pesoKg: number) {
     const novo: RegistroPeso = { id: gerarId(), data: hoje, pesoKg };
-    await persistir({ ...dados, pesos: [...dados.pesos, novo] });
+    await persistir({ ...dados, pesos: [...dados.pesos.filter((p) => p.data !== hoje), novo] });
+  }
+
+  async function removerPeso(id: string) {
+    await persistir({ ...dados, pesos: dados.pesos.filter((p) => p.id !== id) });
   }
 
   async function adicionarExercicio(
@@ -124,6 +132,7 @@ export function RecordsProvider({ children }: { children: ReactNode }) {
         kcalHoje,
         proteinaHojeG,
         pesoAtualKg,
+        pesos: [...pesosOrdenados].reverse(),
         exerciciosHoje,
         kcalGastaHoje,
         adicionarRefeicao,
@@ -131,6 +140,7 @@ export function RecordsProvider({ children }: { children: ReactNode }) {
         adicionarAgua,
         removerAgua,
         adicionarPeso,
+        removerPeso,
         adicionarExercicio,
         removerExercicio,
       }}

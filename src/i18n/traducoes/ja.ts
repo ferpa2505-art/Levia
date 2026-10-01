@@ -1,4 +1,4 @@
-﻿import type { Traducoes } from './pt-BR';
+import type { Traducoes } from './pt-BR';
 
 const traducoes: Traducoes = {
   "comum.continuar": "ç¶šã‘ã‚‹",
@@ -214,6 +214,37 @@ const traducoes: Traducoes = {
   "resultado.erro": "Failed to add to diary",
   "resultado.alerta": "Monitor this food - high glycemic index",
   "resultado.total": "Total: {kcal} kcal",
+  "titulos.peso": "体重の推移",
+  "titulos.apetite": "食欲",
+  "home.verEvolucao": "推移を見る",
+  "p.inicial": "開始時",
+  "p.atual": "現在",
+  "p.variacao": "変化",
+  "p.faltaMeta": "目標 {meta} kg まであと {n} kg",
+  "p.naMeta": "目標達成！🎉",
+  "p.grafico": "最近の計測",
+  "p.graficoVazio": "グラフを見るには2回以上記録してください。",
+  "p.historico": "履歴",
+  "p.vazio": "まだ体重の記録がありません。",
+  "p.registrar": "今日の体重を記録",
+  "p.umaPorDia": "今日もう一度計ると、その日の値が置き換わります。",
+  "ap.sub": "今日の空腹感はどうですか？食欲を記録すると、投与後の数日でどう変わるかがわかります。",
+  "ap.nivel1": "空腹なし",
+  "ap.nivel2": "少し空腹",
+  "ap.nivel3": "普通",
+  "ap.nivel4": "かなり空腹",
+  "ap.nivel5": "とても空腹",
+  "ap.obsPh": "メモ（任意）— 例：昼食後に吐き気",
+  "ap.salvar": "今日の食欲を保存",
+  "ap.atualizar": "今日の食欲を更新",
+  "ap.hojeSalvo": "今日の食欲を記録しました ✅",
+  "ap.proteinaHoje": "今日のたんぱく質：{g} g（日記の食事）",
+  "ap.proteinaDica": "食欲がないときは、たんぱく質の多い食品を優先しましょう。医師や栄養士に相談してください。",
+  "ap.historico": "最近の日",
+  "ap.vazio": "食欲の記録はまだありません。",
+  "ap.diaDose0": "投与日",
+  "ap.diaDoseN": "投与後 {n} 日目",
+  "g.apetiteDesc": "毎日の空腹感を記録し、投与との関係を確認",
 };
 
 export default traducoes;

@@ -1,4 +1,4 @@
-﻿import type { Traducoes } from './pt-BR';
+import type { Traducoes } from './pt-BR';
 
 const traducoes: Traducoes = {
   "comum.continuar": "Devam",
@@ -214,6 +214,37 @@ const traducoes: Traducoes = {
   "resultado.erro": "Failed to add to diary",
   "resultado.alerta": "Monitor this food - high glycemic index",
   "resultado.total": "Total: {kcal} kcal",
+  "titulos.peso": "Kilo değişimi",
+  "titulos.apetite": "İştah",
+  "home.verEvolucao": "Değişimi gör",
+  "p.inicial": "Başlangıç",
+  "p.atual": "Güncel",
+  "p.variacao": "Değişim",
+  "p.faltaMeta": "{meta} kg hedefine {n} kg kaldı",
+  "p.naMeta": "Hedefine ulaştın! 🎉",
+  "p.grafico": "Son tartılar",
+  "p.graficoVazio": "Grafiği görmek için en az 2 tartı kaydet.",
+  "p.historico": "Geçmiş",
+  "p.vazio": "Henüz tartı kaydı yok.",
+  "p.registrar": "Bugünkü kiloyu kaydet",
+  "p.umaPorDia": "Bugün tekrar tartılırsan günün değeri değiştirilir.",
+  "ap.sub": "Bugün açlığın nasıl? İştahı kaydetmek, dozdan sonraki günlerde nasıl değiştiğini gösterir.",
+  "ap.nivel1": "Aç değil",
+  "ap.nivel2": "Biraz aç",
+  "ap.nivel3": "Normal",
+  "ap.nivel4": "Oldukça aç",
+  "ap.nivel5": "Çok aç",
+  "ap.obsPh": "Notlar (isteğe bağlı) — ör. öğle yemeğinden sonra bulantı",
+  "ap.salvar": "Bugünkü iştahı kaydet",
+  "ap.atualizar": "Bugünkü iştahı güncelle",
+  "ap.hojeSalvo": "Bugünkü iştah kaydedildi ✅",
+  "ap.proteinaHoje": "Bugün protein: {g} g (Günlük öğünleri)",
+  "ap.proteinaDica": "İştah düşükken proteinden zengin yiyeceklere öncelik vermek faydalıdır. Doktorunla veya diyetisyeninle konuş.",
+  "ap.historico": "Son günler",
+  "ap.vazio": "Henüz iştah kaydı yok.",
+  "ap.diaDose0": "Doz günü",
+  "ap.diaDoseN": "Dozdan sonraki {n}. gün",
+  "g.apetiteDesc": "Günlük açlığını kaydet ve dozlarla ilişkisini gör",
 };
 
 export default traducoes;

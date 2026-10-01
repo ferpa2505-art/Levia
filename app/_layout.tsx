@@ -50,6 +50,8 @@ function RootNavigation() {
       <Stack.Screen name="recipe-builder" options={{ headerShown: true, title: t('titulos.receitas') }} />
       <Stack.Screen name="glp1" options={{ headerShown: true, title: t('titulos.glp1') }} />
       <Stack.Screen name="diabetes" options={{ headerShown: true, title: t('titulos.diabetes') }} />
+      <Stack.Screen name="peso" options={{ headerShown: true, title: t('titulos.peso') }} />
+      <Stack.Screen name="apetite" options={{ headerShown: true, title: t('titulos.apetite') }} />
     </Stack>
   );
 }

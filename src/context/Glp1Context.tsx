@@ -5,6 +5,8 @@ import {
   RegistroDoseGLP1,
   RegistroSintomaGLP1,
   NivelIntensidadeSintoma,
+  NivelApetite,
+  RegistroApetite,
 } from '@models/glp1';
 import { carregarGlp1, salvarGlp1 } from '@utils/glp1Storage';
 import { dataDeHoje, horarioAgora, gerarId } from '@utils/recordsStorage';
@@ -62,6 +64,11 @@ interface Glp1ContextValue {
     observacoes?: string
   ) => Promise<void>;
   removerSintoma: (id: string) => Promise<void>;
+  /** Mais recente primeiro */
+  apetites: RegistroApetite[];
+  apetiteHoje: RegistroApetite | null;
+  registrarApetite: (nivel: NivelApetite, observacoes?: string) => Promise<void>;
+  removerApetite: (id: string) => Promise<void>;
   atualizarConfigCaneta: (mgTotalCaneta: number | null, cliquesTotaisCaneta: number | null) => Promise<void>;
   atualizarConfigLembrete: (ativo: boolean, frequenciaDias: number) => Promise<void>;
 }
@@ -169,6 +176,23 @@ export function Glp1Provider({ children }: { children: ReactNode }) {
     await persistir({ ...dados, sintomas: dados.sintomas.filter((s) => s.id !== id) });
   }
 
+  // Um registro por dia: salvar de novo no mesmo dia substitui o anterior
+  async function registrarApetite(nivel: NivelApetite, observacoes?: string) {
+    const hoje = dataDeHoje();
+    const novo: RegistroApetite = {
+      id: gerarId(),
+      data: hoje,
+      horario: horarioAgora(),
+      nivel,
+      observacoes: observacoes?.trim() || undefined,
+    };
+    await persistir({ ...dados, apetites: [...dados.apetites.filter((a) => a.data !== hoje), novo] });
+  }
+
+  async function removerApetite(id: string) {
+    await persistir({ ...dados, apetites: dados.apetites.filter((a) => a.id !== id) });
+  }
+
   async function atualizarConfigCaneta(mgTotalCaneta: number | null, cliquesTotaisCaneta: number | null) {
     await persistir({ ...dados, configCaneta: { mgTotalCaneta, cliquesTotaisCaneta } });
   }
@@ -198,6 +222,10 @@ export function Glp1Provider({ children }: { children: ReactNode }) {
         removerDose,
         adicionarSintoma,
         removerSintoma,
+        apetites: ordenarPorDataHorarioDesc(dados.apetites),
+        apetiteHoje: dados.apetites.find((a) => a.data === dataDeHoje()) ?? null,
+        registrarApetite,
+        removerApetite,
         atualizarConfigCaneta,
         atualizarConfigLembrete,
       }}

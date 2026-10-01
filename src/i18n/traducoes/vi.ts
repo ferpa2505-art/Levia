@@ -1,4 +1,4 @@
-﻿import type { Traducoes } from './pt-BR';
+import type { Traducoes } from './pt-BR';
 
 const traducoes: Traducoes = {
   "comum.continuar": "Tiáº¿p tá»¥c",
@@ -214,6 +214,37 @@ const traducoes: Traducoes = {
   "resultado.erro": "Failed to add to diary",
   "resultado.alerta": "Monitor this food - high glycemic index",
   "resultado.total": "Total: {kcal} kcal",
+  "titulos.peso": "Diễn biến cân nặng",
+  "titulos.apetite": "Cảm giác thèm ăn",
+  "home.verEvolucao": "Xem diễn biến",
+  "p.inicial": "Ban đầu",
+  "p.atual": "Hiện tại",
+  "p.variacao": "Thay đổi",
+  "p.faltaMeta": "Còn {n} kg để đạt mục tiêu {meta} kg",
+  "p.naMeta": "Bạn đã đạt mục tiêu! 🎉",
+  "p.grafico": "Lần cân gần đây",
+  "p.graficoVazio": "Ghi ít nhất 2 lần cân để xem biểu đồ.",
+  "p.historico": "Lịch sử",
+  "p.vazio": "Chưa có lần cân nào.",
+  "p.registrar": "Ghi cân nặng hôm nay",
+  "p.umaPorDia": "Cân lại hôm nay sẽ thay giá trị của hôm nay.",
+  "ap.sub": "Hôm nay bạn đói thế nào? Ghi lại cảm giác thèm ăn giúp thấy nó thay đổi ra sao sau liều thuốc.",
+  "ap.nivel1": "Không đói",
+  "ap.nivel2": "Hơi đói",
+  "ap.nivel3": "Bình thường",
+  "ap.nivel4": "Khá đói",
+  "ap.nivel5": "Rất đói",
+  "ap.obsPh": "Ghi chú (không bắt buộc) — vd: buồn nôn sau bữa trưa",
+  "ap.salvar": "Lưu cảm giác thèm ăn hôm nay",
+  "ap.atualizar": "Cập nhật cảm giác thèm ăn hôm nay",
+  "ap.hojeSalvo": "Đã lưu cảm giác thèm ăn hôm nay ✅",
+  "ap.proteinaHoje": "Protein hôm nay: {g} g (bữa ăn trong Nhật ký)",
+  "ap.proteinaDica": "Khi ăn ít, nên ưu tiên thực phẩm giàu protein. Hãy hỏi ý kiến bác sĩ hoặc chuyên gia dinh dưỡng.",
+  "ap.historico": "Những ngày gần đây",
+  "ap.vazio": "Chưa có ghi nhận nào.",
+  "ap.diaDose0": "Ngày dùng thuốc",
+  "ap.diaDoseN": "Ngày thứ {n} sau liều",
+  "g.apetiteDesc": "Ghi lại mức đói mỗi ngày và xem liên hệ với các liều",
 };
 
 export default traducoes;

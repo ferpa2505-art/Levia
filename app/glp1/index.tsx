@@ -9,7 +9,10 @@ import {
   RotateCw,
   Info,
   X,
+  Utensils,
+  ChevronRight,
 } from 'lucide-react-native';
+import { useRouter } from 'expo-router';
 import { ThemedView } from '@components/ThemedView';
 import { ThemedText } from '@components/ThemedText';
 import { Button } from '@components/Button';
@@ -62,6 +65,7 @@ function formatarDataRegistro(dataIso: string, idioma: string): string {
 
 export default function Glp1Screen() {
   const { t, tc, idioma } = usePreferences();
+  const router = useRouter();
   // separador decimal do exemplo: vírgula ou ponto, conforme o idioma
   const exemploDecimal = (0.5).toLocaleString(idioma);
   const {
@@ -165,6 +169,17 @@ export default function Glp1Screen() {
             {t('g.sub')}
           </ThemedText>
         </View>
+
+        <Pressable onPress={() => router.push('/apetite')}>
+          <ThemedView variant="surface" style={[styles.card, styles.cardShadow, styles.atalhoRow]}>
+            <Utensils size={18} color={colors.primary} strokeWidth={2} />
+            <View style={{ flex: 1, marginLeft: spacing.sm }}>
+              <ThemedText variant="subheading" color="text">{t('titulos.apetite')}</ThemedText>
+              <ThemedText variant="small" color="textSecondary">{t('g.apetiteDesc')}</ThemedText>
+            </View>
+            <ChevronRight size={20} color={colors.textSecondary} strokeWidth={2} />
+          </ThemedView>
+        </Pressable>
 
         {/* Próxima dose */}
         <ThemedView variant="surface" style={[styles.card, styles.cardShadow]}>
@@ -552,6 +567,7 @@ const styles = estilosTema(() => ({
     elevation: 2,
   },
   cardTituloRow: { flexDirection: 'row', alignItems: 'center' },
+  atalhoRow: { flexDirection: 'row', alignItems: 'center' },
   cardHeaderComBotao: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   lembreteRow: {
     flexDirection: 'row',
