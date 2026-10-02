@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import { createContext, useContext, useEffect, useState, ReactNode, useRef } from 'react';
 import {
   RecordsData,
   registrosVazios,
@@ -57,6 +57,8 @@ const RecordsContext = createContext<RecordsContextValue | undefined>(undefined)
 
 export function RecordsProvider({ children }: { children: ReactNode }) {
   const [dados, setDados] = useState<RecordsData>(registrosVazios);
+  // sempre a versão mais nova dos dados (evita perder registros em toques rápidos)
+  const dadosRef = useRef(dados);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -91,12 +93,14 @@ export function RecordsProvider({ children }: { children: ReactNode }) {
         d = { ...d, refeicoes: [...d.refeicoes, ...migradas], migradoRefeicoesDiabetes: true };
         await salvarRegistros(d);
       }
+      dadosRef.current = d;
       setDados(d);
       setLoading(false);
     })();
   }, []);
 
   async function persistir(novosDados: RecordsData) {
+    dadosRef.current = novosDados;
     setDados(novosDados);
     await salvarRegistros(novosDados);
   }
@@ -122,22 +126,22 @@ export function RecordsProvider({ children }: { children: ReactNode }) {
   async function adicionarRefeicao(nome: string, kcal: number, proteinaG: number) {
     const horario = horarioAgora();
     const nova: Refeicao = { id: gerarId(), data: hoje, horario, nome, kcal, proteinaG, tipo: tipoPeloHorario(horario) };
-    await persistir({ ...dados, refeicoes: [...dados.refeicoes, nova] });
+    await persistir({ ...dadosRef.current, refeicoes: [...dadosRef.current.refeicoes, nova] });
   }
 
   async function salvarRefeicao(
     entrada: Omit<Refeicao, 'id'> & { id?: string },
     lembreteHoras?: number | null
   ): Promise<{ lembreteAgendado: boolean }> {
-    const anterior = entrada.id ? dados.refeicoes.find((r) => r.id === entrada.id) : undefined;
+    const anterior = entrada.id ? dadosRef.current.refeicoes.find((r) => r.id === entrada.id) : undefined;
     if (anterior?.fotoUri && anterior.fotoUri !== entrada.fotoUri) await apagarFoto(anterior.fotoUri);
     const final: Refeicao = { ...entrada, id: anterior?.id ?? gerarId() };
     const refeicoes = anterior
-      ? dados.refeicoes.map((r) => (r.id === final.id ? final : r))
-      : [...dados.refeicoes, final];
+      ? dadosRef.current.refeicoes.map((r) => (r.id === final.id ? final : r))
+      : [...dadosRef.current.refeicoes, final];
 
     // lembrete da próxima refeição: substitui o pendente
-    let lembreteRefeicaoId = dados.lembreteRefeicaoId ?? null;
+    let lembreteRefeicaoId = dadosRef.current.lembreteRefeicaoId ?? null;
     let lembreteAgendado = false;
     if (lembreteHoras && lembreteHoras > 0) {
       await cancelarLembreteRefeicao(lembreteRefeicaoId);
@@ -152,32 +156,32 @@ export function RecordsProvider({ children }: { children: ReactNode }) {
       );
       lembreteAgendado = !!lembreteRefeicaoId;
     }
-    await persistir({ ...dados, refeicoes, lembreteRefeicaoId });
+    await persistir({ ...dadosRef.current, refeicoes, lembreteRefeicaoId });
     return { lembreteAgendado };
   }
 
   async function removerRefeicao(id: string) {
-    await apagarFoto(dados.refeicoes.find((r) => r.id === id)?.fotoUri);
-    await persistir({ ...dados, refeicoes: dados.refeicoes.filter((r) => r.id !== id) });
+    await apagarFoto(dadosRef.current.refeicoes.find((r) => r.id === id)?.fotoUri);
+    await persistir({ ...dadosRef.current, refeicoes: dadosRef.current.refeicoes.filter((r) => r.id !== id) });
   }
 
   async function adicionarAgua(ml: number) {
     const novo: RegistroAgua = { id: gerarId(), data: hoje, horario: horarioAgora(), ml };
-    await persistir({ ...dados, aguas: [...dados.aguas, novo] });
+    await persistir({ ...dadosRef.current, aguas: [...dadosRef.current.aguas, novo] });
   }
 
   async function removerAgua(id: string) {
-    await persistir({ ...dados, aguas: dados.aguas.filter((a) => a.id !== id) });
+    await persistir({ ...dadosRef.current, aguas: dadosRef.current.aguas.filter((a) => a.id !== id) });
   }
 
   // Uma pesagem por dia: pesar de novo no mesmo dia substitui o valor
   async function adicionarPeso(pesoKg: number) {
     const novo: RegistroPeso = { id: gerarId(), data: hoje, pesoKg };
-    await persistir({ ...dados, pesos: [...dados.pesos.filter((p) => p.data !== hoje), novo] });
+    await persistir({ ...dadosRef.current, pesos: [...dadosRef.current.pesos.filter((p) => p.data !== hoje), novo] });
   }
 
   async function removerPeso(id: string) {
-    await persistir({ ...dados, pesos: dados.pesos.filter((p) => p.id !== id) });
+    await persistir({ ...dadosRef.current, pesos: dadosRef.current.pesos.filter((p) => p.id !== id) });
   }
 
   async function adicionarExercicio(
@@ -197,11 +201,11 @@ export function RecordsProvider({ children }: { children: ReactNode }) {
       local: detalhes?.local,
       grupoMuscular: detalhes?.grupoMuscular,
     };
-    await persistir({ ...dados, exercicios: [...dados.exercicios, novo] });
+    await persistir({ ...dadosRef.current, exercicios: [...dadosRef.current.exercicios, novo] });
   }
 
   async function removerExercicio(id: string) {
-    await persistir({ ...dados, exercicios: dados.exercicios.filter((e) => e.id !== id) });
+    await persistir({ ...dadosRef.current, exercicios: dadosRef.current.exercicios.filter((e) => e.id !== id) });
   }
 
   return (

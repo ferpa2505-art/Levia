@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import { createContext, useContext, useEffect, useState, ReactNode, useRef } from 'react';
 import type {
   DiabetesData,
   RegistroGlicemia,
@@ -51,6 +51,11 @@ const DiabetesContext = createContext<DiabetesContextValue | undefined>(undefine
 
 export function DiabetesProvider({ children }: { children: ReactNode }) {
   const [dados, setDados] = useState<DiabetesData>(diabetesDadosVazios);
+  // sempre a versão mais nova dos dados (evita perder registros em toques rápidos)
+  const dadosRef = useRef(dados);
+  useEffect(() => {
+    dadosRef.current = dados;
+  }, [dados]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -93,7 +98,7 @@ export function DiabetesProvider({ children }: { children: ReactNode }) {
   }
 
   async function atualizarConfig(mudancas: Partial<ConfigDiabetes>) {
-    const novaConfig = await reagendarLembreteMedicao({ ...dados.config, ...mudancas }, dados.glicemias);
+    const novaConfig = await reagendarLembreteMedicao({ ...dadosRef.current.config, ...mudancas }, dadosRef.current.glicemias);
     setDados((prev) => ({ ...prev, config: novaConfig }));
   }
 
@@ -106,8 +111,8 @@ export function DiabetesProvider({ children }: { children: ReactNode }) {
       unidade: unidade as 'mg/dL' | 'mmol/L',
       notas,
     };
-    const glicemias = [...dados.glicemias, novoRegistro];
-    const config = await reagendarLembreteMedicao(dados.config, glicemias);
+    const glicemias = [...dadosRef.current.glicemias, novoRegistro];
+    const config = await reagendarLembreteMedicao(dadosRef.current.config, glicemias);
     setDados((prev) => ({ ...prev, config, glicemias: [...prev.glicemias, novoRegistro] }));
   }
 
@@ -134,7 +139,7 @@ export function DiabetesProvider({ children }: { children: ReactNode }) {
   }
 
   async function removerMedicacao(id: string) {
-    await cancelarAlarmesMedicacao(dados.medicacoes.find((m) => m.id === id)?.alarme?.notificationIds);
+    await cancelarAlarmesMedicacao(dadosRef.current.medicacoes.find((m) => m.id === id)?.alarme?.notificationIds);
     setDados((prev) => ({
       ...prev,
       medicacoes: prev.medicacoes.filter((m) => m.id !== id),
@@ -191,7 +196,7 @@ export function DiabetesProvider({ children }: { children: ReactNode }) {
   }
 
   async function atualizarAlarmeMedicacao(medicacaoId: string, alarme: ConfiguracaoAlarme): Promise<number> {
-    const medicacao = dados.medicacoes.find((m) => m.id === medicacaoId);
+    const medicacao = dadosRef.current.medicacoes.find((m) => m.id === medicacaoId);
     if (medicacao) {
       const anteriores = medicacao.alarme?.notificationIds;
       const notificationIds = await agendarAlarmesMedicacao({

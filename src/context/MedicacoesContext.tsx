@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import { createContext, useContext, useEffect, useState, ReactNode, useRef } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { Medicacao, MedicacoesData, UsoMedicacao } from '@models/medicacoes';
 import { medicacoesVazias, UNIDADES_DOSE } from '@models/medicacoes';
@@ -75,9 +75,12 @@ function migrarDoDiabetes(antigas: RegistroMedicacao[]): { novas: Medicacao[]; i
 export function MedicacoesProvider({ children }: { children: ReactNode }) {
   const { t, idioma } = usePreferences();
   const [dados, setDados] = useState<MedicacoesData>(medicacoesVazias);
+  // sempre a versão mais nova dos dados (evita perder registros em toques rápidos)
+  const dadosRef = useRef(dados);
   const [loading, setLoading] = useState(true);
 
   async function persistir(novo: MedicacoesData) {
+    dadosRef.current = novo;
     setDados(novo);
     await AsyncStorage.setItem(CHAVE, JSON.stringify(novo)).catch(() => {});
   }
@@ -102,6 +105,7 @@ export function MedicacoesProvider({ children }: { children: ReactNode }) {
         salvo = { medicacoes: [...salvo.medicacoes, ...agendadas], migradoDoDiabetes: true };
         await AsyncStorage.setItem(CHAVE, JSON.stringify(salvo)).catch(() => {});
       }
+      dadosRef.current = salvo;
       setDados(salvo);
       setLoading(false);
     })();
@@ -109,7 +113,7 @@ export function MedicacoesProvider({ children }: { children: ReactNode }) {
   }, []);
 
   async function salvarMedicacao(entrada: DadosMedicacao): Promise<ResultadoSalvar> {
-    const anterior = entrada.id ? dados.medicacoes.find((m) => m.id === entrada.id) : undefined;
+    const anterior = entrada.id ? dadosRef.current.medicacoes.find((m) => m.id === entrada.id) : undefined;
     if (anterior) {
       await cancelarNotificacoes(anterior.notificationIds);
       await removerEventos(anterior.calendarEventIds);
@@ -125,9 +129,9 @@ export function MedicacoesProvider({ children }: { children: ReactNode }) {
     const eventos = await criarEventos(base, t('med.notifTitulo'), idioma);
     const final: Medicacao = { ...base, notificationIds, calendarEventIds: eventos.ids };
     const lista = anterior
-      ? dados.medicacoes.map((m) => (m.id === final.id ? final : m))
-      : [...dados.medicacoes, final];
-    await persistir({ ...dados, medicacoes: lista });
+      ? dadosRef.current.medicacoes.map((m) => (m.id === final.id ? final : m))
+      : [...dadosRef.current.medicacoes, final];
+    await persistir({ ...dadosRef.current, medicacoes: lista });
     return {
       lembretesAgendados: notificationIds.length,
       calendarioNegado: !eventos.permitido,
@@ -136,12 +140,12 @@ export function MedicacoesProvider({ children }: { children: ReactNode }) {
   }
 
   async function removerMedicacao(id: string) {
-    const m = dados.medicacoes.find((x) => x.id === id);
+    const m = dadosRef.current.medicacoes.find((x) => x.id === id);
     if (m) {
       await cancelarNotificacoes(m.notificationIds);
       await removerEventos(m.calendarEventIds);
     }
-    await persistir({ ...dados, medicacoes: dados.medicacoes.filter((x) => x.id !== id) });
+    await persistir({ ...dadosRef.current, medicacoes: dadosRef.current.medicacoes.filter((x) => x.id !== id) });
   }
 
   return (

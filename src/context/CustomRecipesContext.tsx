@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import { createContext, useContext, useEffect, useState, ReactNode, useRef } from 'react';
 import { ReceitaPersonalizada, IngredienteUsado, PORCAO_PADRAO_G } from '@models/ingredients';
 import {
   carregarReceitasPersonalizadas,
@@ -20,16 +20,20 @@ const CustomRecipesContext = createContext<CustomRecipesContextValue | undefined
 
 export function CustomRecipesProvider({ children }: { children: ReactNode }) {
   const [receitas, setReceitas] = useState<ReceitaPersonalizada[]>([]);
+  // sempre a versão mais nova dos dados (evita perder registros em toques rápidos)
+  const receitasRef = useRef(receitas);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     carregarReceitasPersonalizadas().then((r) => {
+      receitasRef.current = r;
       setReceitas(r);
       setLoading(false);
     });
   }, []);
 
   async function persistir(novasReceitas: ReceitaPersonalizada[]) {
+    receitasRef.current = novasReceitas;
     setReceitas(novasReceitas);
     await salvarReceitasPersonalizadas(novasReceitas);
   }
@@ -61,17 +65,17 @@ export function CustomRecipesProvider({ children }: { children: ReactNode }) {
       criadaEm: new Date().toISOString(),
     };
 
-    await persistir([...receitas, nova]);
+    await persistir([...receitasRef.current, nova]);
     return nova;
   }
 
   async function atualizarPorcaoPadrao(id: string, gramas: number) {
     if (!(gramas > 0)) return;
-    await persistir(receitas.map((r) => (r.id === id ? { ...r, porcaoPadraoG: gramas } : r)));
+    await persistir(receitasRef.current.map((r) => (r.id === id ? { ...r, porcaoPadraoG: gramas } : r)));
   }
 
   async function removerReceita(id: string) {
-    await persistir(receitas.filter((r) => r.id !== id));
+    await persistir(receitasRef.current.filter((r) => r.id !== id));
   }
 
   function buscarReceitasPersonalizadas(termo: string): ReceitaPersonalizada[] {
