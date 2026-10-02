@@ -17,6 +17,8 @@ import { AlimentoPor100g, PORCAO_PADRAO_G } from '@models/ingredients';
 import { dataDeHoje, horarioAgora } from '@utils/recordsStorage';
 import { fotografarPrato, escolherFotoDaGaleria } from '@utils/fotosRefeicao';
 import { colors, spacing, radius } from '@constants/colors';
+import { SeletorHorario } from '@components/forms/SeletorHorario';
+import { MensagemErro } from '@components/forms/MensagemErro';
 import { estilosTema } from '@theme/estilos';
 
 type Opcao =
@@ -141,15 +143,15 @@ export default function RefeicaoScreen() {
     prot: arred(itens.reduce((s, i) => s + i.proteinaG, 0), 1),
     carb: arred(itens.reduce((s, i) => s + (i.carboidratoG ?? 0), 0), 1),
   };
-  const horarioOk = /^([01]?\d|2[0-3]):[0-5]\d$/.test(horario.trim());
+  const numero = (txt: string) => parseFloat(txt.replace(',', '.'));
+  const erroGramas = gramas.trim() && !(numero(gramas) > 0 && numero(gramas) <= 5000) ? t('form.erroGramas') : null;
+  const erroManualKcal = mKcal.trim() && !(numero(mKcal) >= 0 && numero(mKcal) <= 5000) ? t('form.erroNumero') : null;
+  const erroManualProt = mProt.trim() && !(numero(mProt) >= 0 && numero(mProt) <= 500) ? t('form.erroNumero') : null;
+  const erroManualCarb = mCarb.trim() && !(numero(mCarb) >= 0 && numero(mCarb) <= 1000) ? t('form.erroNumero') : null;
 
   async function handleSalvar() {
     if (itens.length === 0 && !foto) {
       Alert.alert(t('ref.precisaItem'));
-      return;
-    }
-    if (!horarioOk) {
-      Alert.alert(t('ref.horarioInvalido'));
       return;
     }
     const [h, m] = horario.trim().split(':');
@@ -211,13 +213,7 @@ export default function RefeicaoScreen() {
           <Input value={tipoLivre} onChangeText={setTipoLivre} placeholder={t('ref.tipoLivrePh')} style={[styles.input, { marginTop: spacing.sm }]} />
         )}
         <Rotulo texto={t('ref.horario')} />
-        <Input
-          value={horario}
-          onChangeText={setHorario}
-          keyboardType="numbers-and-punctuation"
-          maxLength={5}
-          style={[styles.input, { width: 110 }, !horarioOk && styles.inputErro]}
-        />
+        <SeletorHorario valor={horario} onChange={setHorario} />
       </ThemedView>
 
       {/* Foto do prato */}
@@ -282,24 +278,32 @@ export default function RefeicaoScreen() {
           <View style={styles.caixaGramas}>
             <ThemedText variant="body" color="text">{escolhido.alimento.nome}</ThemedText>
             <View style={[styles.linha, { marginTop: spacing.sm }]}>
-              <Input value={gramas} onChangeText={setGramas} keyboardType="decimal-pad" autoFocus style={[styles.input, { width: 100 }]} />
+              <Input
+                value={gramas}
+                onChangeText={setGramas}
+                keyboardType="decimal-pad"
+                autoFocus
+                style={[styles.input, { width: 100 }, erroGramas && styles.inputErro]}
+              />
               <ThemedText variant="body" color="textSecondary" style={{ marginHorizontal: spacing.sm }}>g</ThemedText>
-              <Button label={t('ref.incluir')} size="sm" onPress={confirmarEscolhido} />
+              <Button label={t('ref.incluir')} size="sm" onPress={confirmarEscolhido} disabled={!gramas.trim() || !!erroGramas} />
               <Pressable onPress={() => setEscolhido(null)} style={{ marginLeft: spacing.md }} hitSlop={8}>
                 <X size={18} color={colors.textSecondary} strokeWidth={2} />
               </Pressable>
             </View>
+            <MensagemErro texto={erroGramas} />
           </View>
         ) : manual ? (
           <View style={styles.caixaGramas}>
             <Input value={mNome} onChangeText={setMNome} placeholder={t('ref.manualNome')} style={styles.input} />
             <View style={[styles.linha, { gap: spacing.xs, marginTop: spacing.xs }]}>
-              <Input value={mKcal} onChangeText={setMKcal} placeholder="kcal" keyboardType="decimal-pad" style={[styles.input, { flex: 1 }]} />
-              <Input value={mProt} onChangeText={setMProt} placeholder={t('ref.protG')} keyboardType="decimal-pad" style={[styles.input, { flex: 1 }]} />
-              <Input value={mCarb} onChangeText={setMCarb} placeholder={t('ref.carbG')} keyboardType="decimal-pad" style={[styles.input, { flex: 1 }]} />
+              <Input value={mKcal} onChangeText={setMKcal} placeholder="kcal" keyboardType="decimal-pad" style={[styles.input, { flex: 1 }, erroManualKcal && styles.inputErro]} />
+              <Input value={mProt} onChangeText={setMProt} placeholder={t('ref.protG')} keyboardType="decimal-pad" style={[styles.input, { flex: 1 }, erroManualProt && styles.inputErro]} />
+              <Input value={mCarb} onChangeText={setMCarb} placeholder={t('ref.carbG')} keyboardType="decimal-pad" style={[styles.input, { flex: 1 }, erroManualCarb && styles.inputErro]} />
             </View>
+            <MensagemErro texto={erroManualKcal ?? erroManualProt ?? erroManualCarb} />
             <View style={[styles.linha, { marginTop: spacing.sm }]}>
-              <Button label={t('ref.incluir')} size="sm" onPress={adicionarManual} disabled={!mNome.trim() || !mKcal} />
+              <Button label={t('ref.incluir')} size="sm" onPress={adicionarManual} disabled={!mNome.trim() || !mKcal || !!(erroManualKcal || erroManualProt || erroManualCarb)} />
               <Pressable onPress={() => setManual(false)} style={{ marginLeft: spacing.md }}>
                 <ThemedText variant="small" color="textSecondary">{t('comum.cancelar')}</ThemedText>
               </Pressable>

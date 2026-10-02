@@ -11,6 +11,7 @@ import { useProfile } from '@context/ProfileContext';
 import { useRecords } from '@context/RecordsContext';
 import { colors, spacing, radius } from '@constants/colors';
 import { useT } from '@context/PreferencesContext';
+import { MensagemErro } from '@components/forms/MensagemErro';
 import { estilosTema } from '@theme/estilos';
 import { ListaMedicacoes } from '@components/ListaMedicacoes';
 
@@ -24,6 +25,8 @@ export default function ProfileScreen() {
   const [metaTexto, setMetaTexto] = useState(
     profile.metaPesoKg != null ? String(profile.metaPesoKg) : ''
   );
+
+  const erroMeta = metaTexto.trim() && !(parseFloat(metaTexto.replace(',', '.')) >= 20 && parseFloat(metaTexto.replace(',', '.')) <= 400) ? t('form.erroPeso') : null;
 
   async function handleSalvarMeta() {
     const novaMeta = parseFloat(metaTexto.replace(',', '.'));
@@ -87,16 +90,19 @@ export default function ProfileScreen() {
                 keyboardType="decimal-pad"
                 placeholder="0"
                 autoFocus
-                style={styles.metaInput}
+                style={[styles.metaInput, erroMeta && { borderColor: colors.error }]}
               />
               <ThemedText variant="body" color="textSecondary" style={{ marginLeft: spacing.sm }}>
                 kg
               </ThemedText>
               <View style={styles.editButtons}>
                 <Button label={t('comum.cancelar')} variant="outline" size="sm" onPress={() => setEditandoMeta(false)} style={{ marginRight: spacing.sm }} />
-                <Button label={t('comum.salvar')} variant="primary" size="sm" onPress={handleSalvarMeta} />
+                <Button label={t('comum.salvar')} variant="primary" size="sm" onPress={handleSalvarMeta} disabled={!!erroMeta} />
               </View>
             </View>
+          ) : null}
+          {editandoMeta ? (
+            <MensagemErro texto={erroMeta} />
           ) : (
             <ThemedText variant="title" color="primary" style={{ marginTop: spacing.sm }}>
               {profile.metaPesoKg != null ? `${profile.metaPesoKg} kg` : t('perfil.definaMeta')}

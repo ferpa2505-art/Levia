@@ -16,6 +16,8 @@ import {
   NivelIntensidade,
 } from '@constants/exerciseTypes';
 import { colors, spacing, radius } from '@constants/colors';
+import { SeletorHorario } from '@components/forms/SeletorHorario';
+import { MensagemErro } from '@components/forms/MensagemErro';
 import { estilosTema } from '@theme/estilos';
 import { usePreferences } from '@context/PreferencesContext';
 
@@ -29,10 +31,13 @@ export default function ExercisesScreen() {
   const [local, setLocal] = useState<string | null>(null);
   const [grupoMuscular, setGrupoMuscular] = useState<string | null>(null);
   const [kcalTexto, setKcalTexto] = useState('');
+  // duração escolhida nos botões (HH:MM); tempoTexto guarda os minutos
+  const [duracao, setDuracao] = useState('00:00');
 
   function abrirTipo(tipo: TipoExercicio) {
     setTipoSelecionado(tipo);
     setTempoTexto('');
+    setDuracao('00:00');
     setIntensidade('Média');
     setLocal(tipo.opcoesLocal ? tipo.opcoesLocal[0] : null);
     setGrupoMuscular(tipo.opcoesGrupoMuscular ? tipo.opcoesGrupoMuscular[0] : null);
@@ -42,6 +47,7 @@ export default function ExercisesScreen() {
   function fecharForm() {
     setTipoSelecionado(null);
     setTempoTexto('');
+    setDuracao('00:00');
     setKcalTexto('');
   }
 
@@ -61,6 +67,13 @@ export default function ExercisesScreen() {
     recalcularKcal(texto, intensidade);
   }
 
+  function handleDuracaoChange(valor: string) {
+    setDuracao(valor);
+    const [h, m] = valor.split(':').map(Number);
+    const minutos = h * 60 + m;
+    handleTempoChange(minutos > 0 ? String(minutos) : '');
+  }
+
   function handleIntensidadeChange(nivel: NivelIntensidade) {
     setIntensidade(nivel);
     recalcularKcal(tempoTexto, nivel);
@@ -68,7 +81,8 @@ export default function ExercisesScreen() {
 
   const duracaoNum = parseFloat(tempoTexto.replace(',', '.'));
   const kcalNum = parseInt(kcalTexto, 10);
-  const formValido = !isNaN(duracaoNum) && duracaoNum > 0 && !isNaN(kcalNum) && kcalNum >= 0;
+  const erroKcal = kcalTexto.trim() && !(kcalNum >= 0 && kcalNum <= 5000 && /^\d+$/.test(kcalTexto.trim())) ? t('form.erroNumero') : null;
+  const formValido = !isNaN(duracaoNum) && duracaoNum > 0 && !isNaN(kcalNum) && kcalNum >= 0 && !erroKcal;
 
   async function handleSalvar() {
     if (!tipoSelecionado || !formValido) return;
@@ -122,14 +136,7 @@ export default function ExercisesScreen() {
             <ThemedText variant="small" color="textSecondary" style={{ marginTop: spacing.lg, marginBottom: spacing.xs }}>
               {t('e.tempo')}
             </ThemedText>
-            <Input
-              value={tempoTexto}
-              onChangeText={handleTempoChange}
-              placeholder={t('e.minutos')}
-              keyboardType="number-pad"
-              style={styles.formInput}
-              autoFocus
-            />
+            <SeletorHorario valor={duracao} onChange={handleDuracaoChange} modo="duracao" />
 
             <ThemedText variant="small" color="textSecondary" style={{ marginTop: spacing.md, marginBottom: spacing.xs }}>
               {t('e.intensidade')}
@@ -207,8 +214,9 @@ export default function ExercisesScreen() {
               onChangeText={setKcalTexto}
               placeholder={t('home.kcal')}
               keyboardType="number-pad"
-              style={styles.formInput}
+              style={[styles.formInput, erroKcal && { borderColor: colors.error }]}
             />
+            <MensagemErro texto={erroKcal} />
 
             <View style={styles.formButtons}>
               <Button label={t('comum.cancelar')} variant="outline" size="sm" onPress={fecharForm} style={{ marginRight: spacing.sm }} />

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { View, Pressable, Switch, Alert, ScrollView } from 'react-native';
+import { View, Pressable, Switch, Alert } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Pill, Trash2 } from 'lucide-react-native';
 import { TelaRolavel } from '@components/TelaRolavel';
@@ -11,7 +11,12 @@ import { useMedicacoes } from '@context/MedicacoesContext';
 import { usePreferences } from '@context/PreferencesContext';
 import { UNIDADES_DOSE, rotuloUnidade, UsoMedicacao, FrequenciaContinua } from '@models/medicacoes';
 import { buscarMedicamentos } from '@utils/buscaMedicamentos';
-import { horariosDoDia, lerHorario, lerData, dosesDoTratamento } from '@utils/agendaMedicacao';
+import { horariosDoDia, dosesDoTratamento } from '@utils/agendaMedicacao';
+import { SeletorHorario, agoraHHMM } from '@components/forms/SeletorHorario';
+import { SeletorData } from '@components/forms/SeletorData';
+import { Seletor } from '@components/forms/Seletor';
+import { MensagemErro } from '@components/forms/MensagemErro';
+import { useCampoTocado } from '@hooks/useCampoTocado';
 import { colors, spacing, radius } from '@constants/colors';
 import { estilosTema } from '@theme/estilos';
 
@@ -20,14 +25,6 @@ const VEZES_POR_DIA = [1, 2, 3, 4, 6];
 
 function pad(n: number) {
   return String(n).padStart(2, '0');
-}
-function hojeTexto() {
-  const d = new Date();
-  return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()}`;
-}
-function proximaHoraCheia() {
-  const d = new Date();
-  return `${pad((d.getHours() + 1) % 24)}:00`;
 }
 
 export default function MedicacaoScreen() {
@@ -48,18 +45,16 @@ export default function MedicacaoScreen() {
   );
   const [frequencia, setFrequencia] = useState<FrequenciaContinua>(existente?.frequencia ?? 'horas');
   const [intervalo, setIntervalo] = useState(existente?.intervaloHoras ?? 24);
-  const [primeiraDose, setPrimeiraDose] = useState(existente?.primeiraDose ?? '08:00');
+  const [primeiraDose, setPrimeiraDose] = useState(existente?.primeiraDose ?? agoraHHMM());
   const [dias, setDias] = useState(String(existente?.dias ?? 7));
   const [vezes, setVezes] = useState(existente?.vezesPorDia ?? 1);
   const inicioExistente = existente?.inicio ? new Date(existente.inicio) : null;
-  const [dataInicio, setDataInicio] = useState(
-    inicioExistente
-      ? `${pad(inicioExistente.getDate())}/${pad(inicioExistente.getMonth() + 1)}/${inicioExistente.getFullYear()}`
-      : hojeTexto()
-  );
+  const [dataInicio, setDataInicio] = useState<Date>(inicioExistente ?? new Date());
   const [horaInicio, setHoraInicio] = useState(
-    inicioExistente ? `${pad(inicioExistente.getHours())}:${pad(inicioExistente.getMinutes())}` : proximaHoraCheia()
+    inicioExistente ? `${pad(inicioExistente.getHours())}:${pad(inicioExistente.getMinutes())}` : agoraHHMM()
   );
+  const campoNome = useCampoTocado();
+  const campoDias = useCampoTocado();
   const [lembretes, setLembretes] = useState(existente?.lembretes ?? true);
   const [calendario, setCalendario] = useState(existente?.calendario ?? false);
   const [obs, setObs] = useState(existente?.observacoes ?? '');
@@ -68,19 +63,17 @@ export default function MedicacaoScreen() {
   const uso: UsoMedicacao = continuo ? 'continuo' : naoContinuo;
   const sugestoes = escolheuSugestao ? [] : buscarMedicamentos(nome, idioma);
 
-  // --- validação e prévia ---
-  const horarioOk = lerHorario(primeiraDose) != null;
-  const data = lerData(dataInicio);
-  const hora = lerHorario(horaInicio);
+  // --- validação (mostrada enquanto preenche) e prévia ---
+  const [hh, mm] = horaInicio.split(':').map(Number);
   const diasNum = parseInt(dias, 10);
-  const inicio = data && hora ? new Date(data.getFullYear(), data.getMonth(), data.getDate(), hora[0], hora[1]) : null;
-  const doses = inicio && diasNum > 0 ? dosesDoTratamento(inicio, diasNum, vezes) : [];
+  const inicio = new Date(dataInicio.getFullYear(), dataInicio.getMonth(), dataInicio.getDate(), hh, mm);
+  const doses = diasNum > 0 ? dosesDoTratamento(inicio, diasNum, vezes) : [];
   const fim = doses[doses.length - 1];
 
-  const erros: string[] = [];
-  if (!nome.trim()) erros.push(t('med.erroNome'));
-  if (uso === 'continuo' && !horarioOk) erros.push(t('med.erroPrimeiraDose'));
-  if (uso === 'tratamento' && (!inicio || !(diasNum > 0))) erros.push(t('med.erroTratamento'));
+  const erroNome = !nome.trim() ? t('med.erroNome') : null;
+  const erroDose = dose.trim() && !/^\d+([.,]\d+)?(\/\d+)?$/.test(dose.trim()) ? t('form.erroNumero') : null;
+  const erroDias = uso === 'tratamento' && !(diasNum >= 1 && diasNum <= 365) ? t('form.erroDias') : null;
+  const erros = [erroNome, erroDose, erroDias].filter(Boolean) as string[];
 
   const formatarDataHora = (d: Date) => {
     try {
@@ -92,13 +85,12 @@ export default function MedicacaoScreen() {
 
   async function handleSalvar() {
     if (erros.length) {
-      Alert.alert(t('med.revise'), erros.join('\n'));
+      campoNome.tocar();
+      campoDias.tocar();
       return;
     }
     setSalvando(true);
-    const iso = inicio
-      ? `${inicio.getFullYear()}-${pad(inicio.getMonth() + 1)}-${pad(inicio.getDate())}T${pad(inicio.getHours())}:${pad(inicio.getMinutes())}`
-      : undefined;
+    const iso = `${inicio.getFullYear()}-${pad(inicio.getMonth() + 1)}-${pad(inicio.getDate())}T${pad(inicio.getHours())}:${pad(inicio.getMinutes())}`;
     const r = await salvarMedicacao({
       id: existente?.id,
       nome: nome.trim(),
@@ -157,8 +149,10 @@ export default function MedicacaoScreen() {
               setEscolheuSugestao(false);
             }}
             placeholder={t('med.nomePh')}
-            style={styles.input}
+            onBlur={campoNome.tocar}
+            style={[styles.input, campoNome.mostrar(nome, erroNome) && styles.inputErro]}
           />
+          <MensagemErro texto={campoNome.mostrar(nome, erroNome)} />
           {sugestoes.length > 0 && (
             <View style={styles.sugestoes}>
               {sugestoes.map((s) => (
@@ -187,18 +181,24 @@ export default function MedicacaoScreen() {
           ) : null}
 
           <Rotulo texto={t('med.dose')} />
-          <Input
-            value={dose}
-            onChangeText={setDose}
-            placeholder="500"
-            keyboardType="decimal-pad"
-            style={[styles.input, { width: 140 }]}
-          />
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginTop: spacing.sm }}>
-            {UNIDADES_DOSE.map((u) => (
-              <Chip key={u.codigo} ativo={unidade === u.codigo} texto={rotuloUnidade(u.codigo, idioma)} onPress={() => setUnidade(u.codigo)} />
-            ))}
-          </ScrollView>
+          <View style={styles.linha}>
+            <Input
+              value={dose}
+              onChangeText={setDose}
+              placeholder="500"
+              keyboardType="decimal-pad"
+              style={[styles.input, { width: 110, marginRight: spacing.sm }, erroDose && styles.inputErro]}
+            />
+            <View style={{ flex: 1 }}>
+              <Seletor
+                valor={unidade}
+                titulo={t('form.unidade')}
+                opcoes={UNIDADES_DOSE.map((u) => ({ valor: u.codigo, rotulo: rotuloUnidade(u.codigo, idioma) }))}
+                onChange={setUnidade}
+              />
+            </View>
+          </View>
+          <MensagemErro texto={erroDose} />
         </ThemedView>
 
         {/* Tipo de uso */}
@@ -229,21 +229,12 @@ export default function MedicacaoScreen() {
                 <Chip ativo={frequencia === 'semanal'} texto={t('med.1xSemana')} onPress={() => setFrequencia('semanal')} />
               </View>
               <Rotulo texto={t('med.primeiraDose')} />
-              <Input
-                value={primeiraDose}
-                onChangeText={setPrimeiraDose}
-                placeholder="08:00"
-                keyboardType="numbers-and-punctuation"
-                maxLength={5}
-                style={[styles.input, { width: 120 }, !horarioOk && styles.inputErro]}
-              />
-              {horarioOk && (
-                <ThemedText variant="small" color="primary" style={{ marginTop: spacing.xs }}>
-                  {frequencia === 'semanal'
-                    ? t('med.previaSemanal', { h: primeiraDose })
-                    : t('med.previaHorarios', { h: horariosDoDia(primeiraDose, intervalo).join(', ') })}
-                </ThemedText>
-              )}
+              <SeletorHorario valor={primeiraDose} onChange={setPrimeiraDose} />
+              <ThemedText variant="small" color="primary" style={{ marginTop: spacing.sm }}>
+                {frequencia === 'semanal'
+                  ? t('med.previaSemanal', { h: primeiraDose })
+                  : t('med.previaHorarios', { h: horariosDoDia(primeiraDose, intervalo).join(', ') })}
+              </ThemedText>
             </>
           ) : (
             <>
@@ -256,7 +247,15 @@ export default function MedicacaoScreen() {
                   <View style={styles.linha}>
                     <View style={{ flex: 1 }}>
                       <Rotulo texto={t('med.dias')} />
-                      <Input value={dias} onChangeText={setDias} keyboardType="number-pad" maxLength={3} style={styles.input} />
+                      <Input
+                        value={dias}
+                        onChangeText={setDias}
+                        onBlur={campoDias.tocar}
+                        keyboardType="number-pad"
+                        maxLength={3}
+                        style={[styles.input, { width: 110 }, campoDias.mostrar(dias, erroDias) && styles.inputErro]}
+                      />
+                      <MensagemErro texto={campoDias.mostrar(dias, erroDias)} />
                     </View>
                   </View>
                   <Rotulo texto={t('med.vezesDia')} />
@@ -265,30 +264,10 @@ export default function MedicacaoScreen() {
                       <Chip key={v} ativo={vezes === v} texto={t('med.xVezes', { n: v })} onPress={() => setVezes(v)} />
                     ))}
                   </View>
-                  <View style={styles.linha}>
-                    <View style={{ flex: 1.4, marginRight: spacing.sm }}>
-                      <Rotulo texto={t('med.inicioData')} />
-                      <Input
-                        value={dataInicio}
-                        onChangeText={setDataInicio}
-                        placeholder="DD/MM/AAAA"
-                        keyboardType="numbers-and-punctuation"
-                        maxLength={10}
-                        style={[styles.input, !data && styles.inputErro]}
-                      />
-                    </View>
-                    <View style={{ flex: 1 }}>
-                      <Rotulo texto={t('med.inicioHora')} />
-                      <Input
-                        value={horaInicio}
-                        onChangeText={setHoraInicio}
-                        placeholder="00:00"
-                        keyboardType="numbers-and-punctuation"
-                        maxLength={5}
-                        style={[styles.input, !hora && styles.inputErro]}
-                      />
-                    </View>
-                  </View>
+                  <Rotulo texto={t('med.inicioData')} />
+                  <SeletorData valor={dataInicio} onChange={setDataInicio} />
+                  <Rotulo texto={t('med.inicioHora')} />
+                  <SeletorHorario valor={horaInicio} onChange={setHoraInicio} />
                   {fim && (
                     <ThemedText variant="small" color="primary" style={{ marginTop: spacing.sm }}>
                       {t('med.previaTratamento', { n: doses.length, fim: formatarDataHora(fim) })}

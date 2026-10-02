@@ -1,345 +1,180 @@
-import { useState, useCallback } from 'react';
-import { View, ScrollView, Pressable, Modal, Alert, KeyboardAvoidingView } from 'react-native';
+import { useState } from 'react';
+import { View, Pressable } from 'react-native';
+import { Droplet, FileText, Plus, Trash2 } from 'lucide-react-native';
 import { TelaRolavel } from '@components/TelaRolavel';
-import {
-  Droplet,
-  Pill,
-  UtensilsCrossed,
-  FileText,
-  Plus,
-  Trash2,
-  Clock,
-} from 'lucide-react-native';
 import { ThemedView } from '@components/ThemedView';
 import { ThemedText } from '@components/ThemedText';
 import { Button } from '@components/Button';
 import { Input } from '@components/Input';
-import { ConfiguradorAlarmesMedicacao, StatusAlarmeIndicador } from '@components/diabetes';
-import { useDiabetes } from '@context/DiabetesContext';
-import { dataDeHoje } from '@utils/recordsStorage';
 import { CartaoGlicemia } from '@components/diabetes/CartaoGlicemia';
 import { ConfigGlicemia } from '@components/diabetes/ConfigGlicemia';
-import { MEDICAMENTOS_DIABETES, TIPOS_REFEICAO } from '@constants/diabetes';
+import { SeletorHorario, agoraHHMM } from '@components/forms/SeletorHorario';
+import { MensagemErro } from '@components/forms/MensagemErro';
+import { useDiabetes } from '@context/DiabetesContext';
+import { usePreferences } from '@context/PreferencesContext';
+import { dataDeHoje } from '@utils/recordsStorage';
+import { valorMgDl } from '@utils/glicemia';
 import { colors, spacing, radius } from '@constants/colors';
 import { estilosTema } from '@theme/estilos';
-import { useT } from '@context/PreferencesContext';
+
+type Unidade = 'mg/dL' | 'mmol/L';
+/** Faixa aceita para não registrar valor digitado errado */
+const LIMITES: Record<Unidade, [number, number]> = { 'mg/dL': [20, 600], 'mmol/L': [1.1, 33.3] };
 
 export default function DiabetesScreen() {
-  const t = useT();
-  const {
-    glicemiaHoje,
-    ultimaGlicemia,
-    mediaGlicemiaHoje,
-    medicacoes,
-    refeicoes,
-    notas,
-    adicionarGlicemia,
-    removerGlicemia,
-    adicionarMedicacao,
-    removerMedicacao,
-    atualizarAlarmeMedicacao,
-    adicionarRefeicao,
-    removerRefeicao,
-    adicionarNota,
-    removerNota,
-  } = useDiabetes();
-
-  // Filtrar medicações e refeições do dia
+  const { t } = usePreferences();
+  const { glicemias, config, adicionarGlicemia, removerGlicemia, notas, adicionarNota, removerNota } = useDiabetes();
   const hoje = dataDeHoje();
-  const medicacoesHoje = medicacoes.filter((m) => m.data === hoje);
-  const refeicoesHoje = refeicoes.filter((r) => r.data === hoje);
+  const glicemiasHoje = glicemias.filter((g) => g.data === hoje).sort((a, b) => b.horario.localeCompare(a.horario));
   const notasHoje = notas.filter((n) => n.data === hoje);
 
-  // Estados para adicionar registros
-  const [mostrarFormGlicemia, setMostrarFormGlicemia] = useState(false);
-  const [glicemiaTexto, setGlicemiaTexto] = useState('');
-  const [unidadeGlicemia, setUnidadeGlicemia] = useState('mg/dL');
-  const [notasGlicemia, setNotasGlicemia] = useState('');
+  // registro de glicemia
+  const [aberto, setAberto] = useState(false);
+  const [valor, setValor] = useState('');
+  const [unidade, setUnidade] = useState<Unidade>('mg/dL');
+  const [horario, setHorario] = useState(agoraHHMM());
+  const [obs, setObs] = useState('');
 
-  const [mostrarFormMedicacao, setMostrarFormMedicacao] = useState(false);
-  const [medicamentoSelecionado, setMedicamentoSelecionado] = useState(MEDICAMENTOS_DIABETES[0]);
-  const [dosagemMedicacao, setDosagemMedicacao] = useState('');
-  const [observacoesMedicacao, setObservacoesMedicacao] = useState('');
+  // nota do dia
+  const [notaAberta, setNotaAberta] = useState(false);
+  const [nota, setNota] = useState('');
 
-  // Estados para configuração de alarmes
-  const [mostrarConfiguradorAlarmes, setMostrarConfiguradorAlarmes] = useState(false);
-  const [medicacaoSelecionadaAlarme, setMedicacaoSelecionadaAlarme] = useState<any>(null);
+  const numero = parseFloat(valor.replace(',', '.'));
+  const [min, max] = LIMITES[unidade];
+  const erroValor = valor.trim() && !(numero >= min && numero <= max) ? t('dia.erroValor', { min, max, u: unidade }) : null;
 
-  const [mostrarFormRefeicao, setMostrarFormRefeicao] = useState(false);
-  const [tipoRefeicaoSelecionado, setTipoRefeicaoSelecionado] = useState(TIPOS_REFEICAO[0]);
-  const [carboidratosTexto, setCarboidratosTexto] = useState('');
-  const [alimentosRefeicao, setAlimentosRefeicao] = useState('');
-  const [observacoesRefeicao, setObservacoesRefeicao] = useState('');
+  function abrirRegistro() {
+    setHorario(agoraHHMM());
+    setAberto(true);
+  }
 
-  const [mostrarFormNota, setMostrarFormNota] = useState(false);
-  const [conteudoNota, setConteudoNota] = useState('');
-
-  // Funções para alarmes
-  const abrirConfigurador = useCallback((medicacao: any) => {
-    setMedicacaoSelecionadaAlarme(medicacao);
-    setMostrarConfiguradorAlarmes(true);
-  }, []);
-
-  const fecharConfigurador = useCallback(() => {
-    setMostrarConfiguradorAlarmes(false);
-    setMedicacaoSelecionadaAlarme(null);
-  }, []);
-
-  // Funções para salvar registros
   async function salvarGlicemia() {
-    const valor = parseFloat(glicemiaTexto.replace(',', '.'));
-    if (!isNaN(valor) && valor > 0) {
-      await adicionarGlicemia(valor, unidadeGlicemia, notasGlicemia || undefined);
-      setGlicemiaTexto('');
-      setNotasGlicemia('');
-      setMostrarFormGlicemia(false);
-    }
-  }
-
-  async function salvarMedicacao() {
-    if (dosagemMedicacao.trim()) {
-      await adicionarMedicacao(medicamentoSelecionado, dosagemMedicacao, observacoesMedicacao || undefined);
-      setDosagemMedicacao('');
-      setObservacoesMedicacao('');
-      setMostrarFormMedicacao(false);
-    }
-  }
-
-  async function salvarRefeicao() {
-    const carbos = parseFloat(carboidratosTexto.replace(',', '.'));
-    if (!isNaN(carbos) && carbos > 0) {
-      await adicionarRefeicao(
-        tipoRefeicaoSelecionado,
-        carbos,
-        alimentosRefeicao || undefined,
-        observacoesRefeicao || undefined
-      );
-      setCarboidratosTexto('');
-      setAlimentosRefeicao('');
-      setObservacoesRefeicao('');
-      setMostrarFormRefeicao(false);
-    }
+    if (!valor.trim() || erroValor) return;
+    await adicionarGlicemia(numero, unidade, obs.trim() || undefined, horario);
+    setValor('');
+    setObs('');
+    setAberto(false);
   }
 
   async function salvarNota() {
-    if (conteudoNota.trim()) {
-      await adicionarNota(conteudoNota);
-      setConteudoNota('');
-      setMostrarFormNota(false);
-    }
+    if (!nota.trim()) return;
+    await adicionarNota(nota.trim());
+    setNota('');
+    setNotaAberta(false);
   }
+
+  const corDoValor = (mg: number) => (mg < config.alvoMinMgDl ? 'error' : mg > config.alvoMaxMgDl ? 'warning' : 'primary');
 
   return (
     <TelaRolavel>
-      <ThemedView style={styles.container}>
-        <CartaoGlicemia />
-        <ConfigGlicemia />
+      <CartaoGlicemia />
 
-        {/* Resumo da Glicemia */}
-        <ThemedView variant="surface" style={[styles.card, styles.cardShadow]}>
-          <View style={styles.header}>
-            <View style={styles.headerTitulo}>
-              <Droplet size={20} color={colors.primary} strokeWidth={2} />
-              <ThemedText variant="subheading" color="text" style={{ marginLeft: spacing.xs }}>
-                Glicemia
-              </ThemedText>
-            </View>
-            <Button label="+" variant="primary" size="sm" onPress={() => setMostrarFormGlicemia(true)} />
-          </View>
+      {/* Registrar glicemia */}
+      <ThemedView variant="surface" style={[styles.card, styles.cardShadow]}>
+        <View style={styles.cabecalho}>
+          <Droplet size={20} color={colors.primary} strokeWidth={2} />
+          <ThemedText variant="subheading" color="text" style={styles.titulo}>{t('dia.medicoesHoje')}</ThemedText>
+          {!aberto && (
+            <Pressable onPress={abrirRegistro} style={styles.adicionar} hitSlop={8}>
+              <Plus size={16} color={colors.primary} strokeWidth={2.5} />
+              <ThemedText variant="small" color="primary" style={{ marginLeft: 2 }}>{t('dia.registrar')}</ThemedText>
+            </Pressable>
+          )}
+        </View>
 
-          {mostrarFormGlicemia && (
-            <View style={styles.formulario}>
+        {aberto && (
+          <View style={styles.formulario}>
+            <View style={styles.linha}>
               <Input
-                value={glicemiaTexto}
-                onChangeText={setGlicemiaTexto}
+                value={valor}
+                onChangeText={setValor}
                 keyboardType="decimal-pad"
-                placeholder="Valor"
+                placeholder={unidade === 'mg/dL' ? '110' : '6,1'}
                 autoFocus
+                style={[styles.input, { flex: 1 }, erroValor && { borderColor: colors.error }]}
               />
-              <View style={styles.inputRow}>
-                <View style={{ flex: 1 }}>
-                  <ThemedText
-                    variant="small"
-                    color="textSecondary"
-                    style={{ marginBottom: spacing.xs }}
-                  >
-                    Unidade
-                  </ThemedText>
-                  <Pressable
-                    style={[styles.selectButton, { backgroundColor: colors.primarySoft }]}
-                    onPress={() =>
-                      setUnidadeGlicemia(unidadeGlicemia === 'mg/dL' ? 'mmol/L' : 'mg/dL')
-                    }
-                  >
-                    <ThemedText variant="body" color="primary">
-                      {unidadeGlicemia}
-                    </ThemedText>
-                  </Pressable>
-                </View>
-              </View>
-              <Input
-                value={notasGlicemia}
-                onChangeText={setNotasGlicemia}
-                placeholder="Notas (opcional)"
-                multiline
-                numberOfLines={2}
-              />
-              <View style={styles.formButtons}>
-                <Button
-                  label="Cancelar"
-                  variant="outline"
-                  size="sm"
-                  onPress={() => {
-                    setMostrarFormGlicemia(false);
-                    setGlicemiaTexto('');
-                    setNotasGlicemia('');
-                  }}
-                  style={{ marginRight: spacing.md }}
-                />
-                <Button label="Salvar" variant="primary" size="sm" onPress={salvarGlicemia} />
-              </View>
-            </View>
-          )}
-
-          {ultimaGlicemia && (
-            <View style={styles.resumoGlicemia}>
-              <View style={styles.resumoItem}>
-                <ThemedText variant="small" color="textSecondary">
-                  Última
-                </ThemedText>
-                <ThemedText variant="heading" color="primary">
-                  {ultimaGlicemia.valor}
-                </ThemedText>
-                <ThemedText variant="small" color="textSecondary">
-                  {ultimaGlicemia.unidade}
-                </ThemedText>
-              </View>
-              <View style={styles.resumoItem}>
-                <ThemedText variant="small" color="textSecondary">
-                  Média
-                </ThemedText>
-                <ThemedText variant="heading" color="secondary">
-                  {mediaGlicemiaHoje}
-                </ThemedText>
-                <ThemedText variant="small" color="textSecondary">
-                  mg/dL
-                </ThemedText>
-              </View>
-              <View style={styles.resumoItem}>
-                <ThemedText variant="small" color="textSecondary">
-                  Registros
-                </ThemedText>
-                <ThemedText variant="heading" color="accent">
-                  {glicemiaHoje.length}
-                </ThemedText>
-              </View>
-            </View>
-          )}
-
-          {/* Histórico de Glicemias */}
-          {glicemiaHoje.length > 0 && (
-            <View style={{ marginTop: spacing.lg }}>
-              <ThemedText variant="subheading" color="text" style={{ marginBottom: spacing.md }}>
-                Histórico
-              </ThemedText>
-              {glicemiaHoje.map((g) => (
-                <View key={g.id} style={styles.registroItem}>
-                  <View style={styles.registroConteudo}>
-                    <ThemedText variant="body" color="text">
-                      {g.horario} - {g.valor} {g.unidade}
-                    </ThemedText>
-                    {g.notas && (
-                      <ThemedText
-                        variant="small"
-                        color="textSecondary"
-                        style={{ marginTop: spacing.xs }}
-                      >
-                        {g.notas}
-                      </ThemedText>
-                    )}
-                  </View>
-                  <Pressable onPress={() => removerGlicemia(g.id)}>
-                    <Trash2 size={18} color={colors.error} strokeWidth={2} />
-                  </Pressable>
-                </View>
+              {(['mg/dL', 'mmol/L'] as Unidade[]).map((u) => (
+                <Pressable key={u} onPress={() => setUnidade(u)} style={[styles.chip, unidade === u && styles.chipAtivo]}>
+                  <ThemedText variant="small" color={unidade === u ? 'primary' : 'textSecondary'}>{u}</ThemedText>
+                </Pressable>
               ))}
             </View>
-          )}
-        </ThemedView>
+            <MensagemErro texto={erroValor} />
 
-        {/* Notas */}
-        <ThemedView variant="surface" style={[styles.card, styles.cardShadow]}>
-          <View style={styles.header}>
-            <View style={styles.headerTitulo}>
-              <FileText size={20} color={colors.textSecondary} strokeWidth={2} />
-              <ThemedText variant="subheading" color="text" style={{ marginLeft: spacing.xs }}>
-                Notas
-              </ThemedText>
+            <ThemedText variant="small" color="text" style={styles.rotulo}>{t('dia.horario')}</ThemedText>
+            <SeletorHorario valor={horario} onChange={setHorario} />
+
+            <Input value={obs} onChangeText={setObs} placeholder={t('dia.obsPh')} style={[styles.input, { marginTop: spacing.md }]} />
+
+            <View style={styles.botoes}>
+              <Button label={t('comum.cancelar')} variant="outline" size="sm" onPress={() => setAberto(false)} style={{ marginRight: spacing.sm }} />
+              <Button label={t('comum.salvar')} size="sm" onPress={salvarGlicemia} disabled={!valor.trim() || !!erroValor} />
             </View>
-            <Button label="+" variant="outline" size="sm" onPress={() => setMostrarFormNota(true)} />
           </View>
+        )}
 
-          {mostrarFormNota && (
-            <View style={styles.formulario}>
-              <Input
-                value={conteudoNota}
-                onChangeText={setConteudoNota}
-                placeholder="Adicione uma nota..."
-                multiline
-                numberOfLines={4}
-              />
-              <View style={styles.formButtons}>
-                <Button
-                  label="Cancelar"
-                  variant="outline"
-                  size="sm"
-                  onPress={() => {
-                    setMostrarFormNota(false);
-                    setConteudoNota('');
-                  }}
-                  style={{ marginRight: spacing.md }}
-                />
-                <Button label="Salvar" variant="outline" size="sm" onPress={salvarNota} />
+        {glicemiasHoje.length === 0 && !aberto ? (
+          <ThemedText variant="small" color="textSecondary" style={{ marginTop: spacing.sm }}>{t('dia.semMedicoes')}</ThemedText>
+        ) : (
+          glicemiasHoje.map((g) => (
+            <View key={g.id} style={styles.item}>
+              <ThemedText variant="small" color="textSecondary" style={styles.hora}>{g.horario}</ThemedText>
+              <View style={{ flex: 1 }}>
+                <ThemedText variant="subheading" color={corDoValor(valorMgDl(g))}>
+                  {g.valor} <ThemedText variant="caption" color="textSecondary">{g.unidade}</ThemedText>
+                </ThemedText>
+                {g.notas ? <ThemedText variant="caption" color="textSecondary">{g.notas}</ThemedText> : null}
               </View>
+              <Pressable onPress={() => removerGlicemia(g.id)} hitSlop={8}>
+                <Trash2 size={16} color={colors.textSecondary} strokeWidth={2} />
+              </Pressable>
             </View>
-          )}
-
-          {notasHoje.length > 0 && (
-            <View>
-              {notasHoje.map((nota) => (
-                <View key={nota.id} style={styles.notaItem}>
-                  <View style={styles.registroConteudo}>
-                    <ThemedText variant="small" color="textSecondary">
-                      {nota.timestamp}
-                    </ThemedText>
-                    <ThemedText variant="body" color="text" style={{ marginTop: spacing.xs }}>
-                      {nota.conteudo}
-                    </ThemedText>
-                  </View>
-                  <Pressable onPress={() => removerNota(nota.id)}>
-                    <Trash2 size={18} color={colors.error} strokeWidth={2} />
-                  </Pressable>
-                </View>
-              ))}
-            </View>
-          )}
-
-          {notasHoje.length === 0 && !mostrarFormNota && (
-            <ThemedText variant="small" color="textSecondary" style={{ marginTop: spacing.md }}>
-              Nenhuma nota registrada hoje
-            </ThemedText>
-          )}
-        </ThemedView>
-
-        <View style={styles.spacer} />
+          ))
+        )}
       </ThemedView>
 
+      <ConfigGlicemia />
+
+      {/* Notas do dia */}
+      <ThemedView variant="surface" style={[styles.card, styles.cardShadow]}>
+        <View style={styles.cabecalho}>
+          <FileText size={20} color={colors.primary} strokeWidth={2} />
+          <ThemedText variant="subheading" color="text" style={styles.titulo}>{t('dia.notas')}</ThemedText>
+          {!notaAberta && (
+            <Pressable onPress={() => setNotaAberta(true)} style={styles.adicionar} hitSlop={8}>
+              <Plus size={16} color={colors.primary} strokeWidth={2.5} />
+              <ThemedText variant="small" color="primary" style={{ marginLeft: 2 }}>{t('med.adicionar')}</ThemedText>
+            </Pressable>
+          )}
+        </View>
+        {notaAberta && (
+          <View style={styles.formulario}>
+            <Input value={nota} onChangeText={setNota} placeholder={t('dia.notaPh')} multiline autoFocus style={[styles.input, { minHeight: 80 }]} />
+            <View style={styles.botoes}>
+              <Button label={t('comum.cancelar')} variant="outline" size="sm" onPress={() => setNotaAberta(false)} style={{ marginRight: spacing.sm }} />
+              <Button label={t('comum.salvar')} size="sm" onPress={salvarNota} disabled={!nota.trim()} />
+            </View>
+          </View>
+        )}
+        {notasHoje.length === 0 && !notaAberta ? (
+          <ThemedText variant="small" color="textSecondary" style={{ marginTop: spacing.sm }}>{t('dia.semNotas')}</ThemedText>
+        ) : (
+          notasHoje.map((n) => (
+            <View key={n.id} style={styles.item}>
+              <ThemedText variant="small" color="textSecondary" style={styles.hora}>{n.timestamp}</ThemedText>
+              <ThemedText variant="body" color="text" style={{ flex: 1 }}>{n.conteudo}</ThemedText>
+              <Pressable onPress={() => removerNota(n.id)} hitSlop={8}>
+                <Trash2 size={16} color={colors.textSecondary} strokeWidth={2} />
+              </Pressable>
+            </View>
+          ))
+        )}
+      </ThemedView>
     </TelaRolavel>
   );
 }
 
 const styles = estilosTema(() => ({
-  container: { flex: 1 },
   card: { padding: spacing.lg, marginBottom: spacing.lg, borderRadius: radius.xl },
   cardShadow: {
     shadowColor: colors.text,
@@ -348,52 +183,42 @@ const styles = estilosTema(() => ({
     shadowRadius: 12,
     elevation: 2,
   },
-  header: {
+  cabecalho: { flexDirection: 'row', alignItems: 'center' },
+  titulo: { flex: 1, marginLeft: spacing.xs },
+  adicionar: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: spacing.md,
+    paddingVertical: 4,
+    paddingHorizontal: spacing.sm,
+    borderRadius: radius.full,
+    backgroundColor: colors.primarySoft,
   },
-  headerTitulo: { flexDirection: 'row', alignItems: 'center' },
   formulario: {
-    backgroundColor: colors.background,
+    marginTop: spacing.md,
     padding: spacing.md,
     borderRadius: radius.lg,
-    marginBottom: spacing.md,
+    backgroundColor: colors.primarySoft,
   },
-  inputRow: { flexDirection: 'row', alignItems: 'flex-end', marginVertical: spacing.sm },
-  selectButtons: { flexDirection: 'row', gap: spacing.sm, paddingVertical: spacing.sm },
-  selectButton: {
-    paddingVertical: spacing.sm,
+  linha: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs },
+  input: { textAlign: 'left' },
+  rotulo: { marginTop: spacing.md, marginBottom: spacing.xs },
+  chip: {
+    paddingVertical: 6,
     paddingHorizontal: spacing.md,
-    borderRadius: radius.lg,
-    marginRight: spacing.sm,
+    borderRadius: radius.full,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.surface,
   },
-  formButtons: { flexDirection: 'row', marginTop: spacing.md, justifyContent: 'flex-end' },
-  resumoGlicemia: {
+  chipAtivo: { borderColor: colors.primary },
+  botoes: { flexDirection: 'row', justifyContent: 'flex-end', marginTop: spacing.md },
+  item: {
     flexDirection: 'row',
-    justifyContent: 'space-around',
-    marginTop: spacing.lg,
-    paddingTop: spacing.lg,
-    borderTopColor: colors.border,
-    borderTopWidth: 1,
-  },
-  resumoItem: { alignItems: 'center' },
-  registroItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: spacing.md,
-    borderBottomColor: colors.border,
-    borderBottomWidth: 1,
+    paddingVertical: spacing.sm,
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
+    gap: spacing.md,
   },
-  registroConteudo: { flex: 1 },
-  notaItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingVertical: spacing.md,
-    borderBottomColor: colors.border,
-    borderBottomWidth: 1,
-  },
-  spacer: { height: spacing.lg },
+  hora: { width: 44 },
 }));

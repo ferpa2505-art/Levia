@@ -30,7 +30,7 @@ interface DiabetesContextValue {
   ultimaGlicemia: RegistroGlicemia | null;
   mediaGlicemiaHoje: number;
   glicemiaHoje: RegistroGlicemia[];
-  adicionarGlicemia: (valor: number, unidade: string, notas?: string) => Promise<void>;
+  adicionarGlicemia: (valor: number, unidade: string, notas?: string, horario?: string) => Promise<void>;
   removerGlicemia: (id: string) => Promise<void>;
   adicionarMedicacao: (medicamento: string, dosagem: string, observacoes?: string) => Promise<void>;
   removerMedicacao: (id: string) => Promise<void>;
@@ -97,11 +97,11 @@ export function DiabetesProvider({ children }: { children: ReactNode }) {
     setDados((prev) => ({ ...prev, config: novaConfig }));
   }
 
-  async function adicionarGlicemia(valor: number, unidade: string, notas?: string) {
+  async function adicionarGlicemia(valor: number, unidade: string, notas?: string, horario?: string) {
     const novoRegistro: RegistroGlicemia = {
       id: gerarId(),
       data: dataDeHoje(),
-      horario: horarioAgora(),
+      horario: horario ?? horarioAgora(),
       valor,
       unidade: unidade as 'mg/dL' | 'mmol/L',
       notas,

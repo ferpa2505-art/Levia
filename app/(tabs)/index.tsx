@@ -14,6 +14,7 @@ import { useRecords } from '@context/RecordsContext';
 import { useDiabetes } from '@context/DiabetesContext';
 import { colors, spacing, radius } from '@constants/colors';
 import { useT } from '@context/PreferencesContext';
+import { MensagemErro } from '@components/forms/MensagemErro';
 import { estilosTema } from '@theme/estilos';
 
 export default function HomeScreen() {
@@ -33,6 +34,8 @@ export default function HomeScreen() {
     ? Math.round(Math.abs(pesoAtual! - profile.metaPesoKg!) * 10) / 10
     : null;
   const jaNaMeta = diferenca !== null && diferenca === 0;
+
+  const erroPeso = pesoTexto.trim() && !(parseFloat(pesoTexto.replace(',', '.')) >= 20 && parseFloat(pesoTexto.replace(',', '.')) <= 400) ? t('form.erroPeso') : null;
 
   async function handleSalvarPeso() {
     const novoPeso = parseFloat(pesoTexto.replace(',', '.'));
@@ -113,14 +116,17 @@ export default function HomeScreen() {
                 keyboardType="decimal-pad"
                 placeholder="0"
                 autoFocus
-                style={styles.pesoInput}
+                style={[styles.pesoInput, erroPeso && { borderColor: colors.error }]}
               />
               <ThemedText variant="body" color="textSecondary" style={{ marginLeft: spacing.sm }}>kg</ThemedText>
               <View style={styles.editButtons}>
                 <Button label={t('comum.cancelar')} variant="outline" size="sm" onPress={() => setEditandoPeso(false)} style={{ marginRight: spacing.sm }} />
-                <Button label={t('comum.salvar')} variant="primary" size="sm" onPress={handleSalvarPeso} />
+                <Button label={t('comum.salvar')} variant="primary" size="sm" onPress={handleSalvarPeso} disabled={!!erroPeso} />
               </View>
             </View>
+          ) : null}
+          {editandoPeso ? (
+            <MensagemErro texto={erroPeso} />
           ) : (
             <>
               <ThemedText variant="title" color="primary" style={{ marginVertical: spacing.md }}>

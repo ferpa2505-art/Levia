@@ -5,6 +5,7 @@ import { ThemedView } from '@components/ThemedView';
 import { ThemedText } from '@components/ThemedText';
 import { Input } from '@components/Input';
 import { Button } from '@components/Button';
+import { MensagemErro } from '@components/forms/MensagemErro';
 import { useDiabetes } from '@context/DiabetesContext';
 import { usePreferences } from '@context/PreferencesContext';
 import { colors, spacing, radius } from '@constants/colors';
@@ -78,6 +79,7 @@ export function ConfigGlicemia() {
           />
         )}
       </View>
+      <MensagemErro texto={faixaMudou && !faixaValida ? t('gl.faixaErro') : null} />
       <ThemedText variant="caption" color="textSecondary" style={{ marginTop: spacing.xs }}>
         {t('gl.faixaDica')}
       </ThemedText>

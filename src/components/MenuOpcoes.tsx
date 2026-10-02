@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Linking, Modal, Pressable, ScrollView, View, useWindowDimensions } from 'react-native';
-import { MoreVertical, Palette, Globe, ChevronRight, ChevronLeft, Check, ShieldCheck, ExternalLink } from 'lucide-react-native';
+import { MoreVertical, Palette, Globe, ChevronRight, ChevronLeft, Check, ShieldCheck, ExternalLink, RefreshCw } from 'lucide-react-native';
+import { PainelAtualizacoes } from '@components/PainelAtualizacoes';
 import { ThemedText } from '@components/ThemedText';
 import { ListaIdiomas } from '@components/ListaIdiomas';
 import { usePreferences } from '@context/PreferencesContext';
@@ -10,7 +11,7 @@ import { estilosTema } from '@theme/estilos';
 
 const URL_PRIVACIDADE = 'https://ferpa2505-art.github.io/levia-policies/privacidade.html';
 
-type Tela = 'principal' | 'tema' | 'idioma';
+type Tela = 'principal' | 'tema' | 'idioma' | 'atualizacoes';
 
 // Cores de amostra de cada tema (bolinha ao lado do nome)
 const AMOSTRAS: Record<NomeTema, string> = {
@@ -91,6 +92,14 @@ export function MenuOpcoes() {
                   <ChevronRight size={20} color={colors.textSecondary} strokeWidth={2} />
                 </Pressable>
 
+                <Pressable style={styles.item} onPress={() => setTela('atualizacoes')}>
+                  <RefreshCw size={20} color={colors.primary} strokeWidth={2} />
+                  <View style={styles.itemTextos}>
+                    <ThemedText variant="body" color="text">{t('atu.titulo')}</ThemedText>
+                  </View>
+                  <ChevronRight size={20} color={colors.textSecondary} strokeWidth={2} />
+                </Pressable>
+
                 <Pressable style={styles.item} onPress={() => Linking.openURL(URL_PRIVACIDADE)}>
                   <ShieldCheck size={20} color={colors.primary} strokeWidth={2} />
                   <View style={styles.itemTextos}>
@@ -98,6 +107,16 @@ export function MenuOpcoes() {
                   </View>
                   <ExternalLink size={18} color={colors.textSecondary} strokeWidth={2} />
                 </Pressable>
+              </>
+            )}
+
+            {tela === 'atualizacoes' && (
+              <>
+                <Pressable style={styles.voltar} onPress={() => setTela('principal')}>
+                  <ChevronLeft size={20} color={colors.text} strokeWidth={2} />
+                  <ThemedText variant="subheading" color="text">{t('atu.titulo')}</ThemedText>
+                </Pressable>
+                <PainelAtualizacoes />
               </>
             )}
 

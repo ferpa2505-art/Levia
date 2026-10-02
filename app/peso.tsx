@@ -12,6 +12,7 @@ import { useRecords } from '@context/RecordsContext';
 import { usePreferences } from '@context/PreferencesContext';
 import { RegistroPeso } from '@models/records';
 import { colors, spacing, radius } from '@constants/colors';
+import { MensagemErro } from '@components/forms/MensagemErro';
 import { estilosTema } from '@theme/estilos';
 
 const ALTURA_GRAFICO = 160;
@@ -95,6 +96,8 @@ export default function PesoScreen() {
   const meta = profile.metaPesoKg;
   const faltaMeta = meta != null && pesoAtual != null ? arredondar(Math.abs(pesoAtual - meta)) : null;
 
+  const erroPeso = pesoTexto.trim() && !(parseFloat(pesoTexto.replace(',', '.')) >= 20 && parseFloat(pesoTexto.replace(',', '.')) <= 400) ? t('form.erroPeso') : null;
+
   async function handleSalvar() {
     const kg = parseFloat(pesoTexto.replace(',', '.'));
     if (isNaN(kg) || kg <= 0) return;
@@ -163,11 +166,12 @@ export default function PesoScreen() {
               onChangeText={setPesoTexto}
               keyboardType="decimal-pad"
               placeholder={pesoAtual != null ? String(pesoAtual) : '0'}
-              style={styles.input}
+              style={[styles.input, erroPeso && { borderColor: colors.error }]}
             />
             <ThemedText variant="body" color="textSecondary" style={{ marginHorizontal: spacing.sm }}>kg</ThemedText>
-            <Button label={t('comum.salvar')} variant="primary" size="sm" onPress={handleSalvar} />
+            <Button label={t('comum.salvar')} variant="primary" size="sm" onPress={handleSalvar} disabled={!pesoTexto.trim() || !!erroPeso} />
           </View>
+          <MensagemErro texto={erroPeso} />
           <ThemedText variant="caption" color="textSecondary" style={{ marginTop: spacing.xs }}>
             {t('p.umaPorDia')}
           </ThemedText>

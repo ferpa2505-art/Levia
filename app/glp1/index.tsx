@@ -29,6 +29,7 @@ import {
 } from '@constants/glp1';
 import { NivelIntensidadeSintoma } from '@models/glp1';
 import { colors, spacing, radius } from '@constants/colors';
+import { MensagemErro } from '@components/forms/MensagemErro';
 import { estilosTema } from '@theme/estilos';
 import { usePreferences } from '@context/PreferencesContext';
 
@@ -138,6 +139,10 @@ export default function Glp1Screen() {
   const [doseDesejadaTexto, setDoseDesejadaTexto] = useState('');
 
   const mgCanetaNum = parseFloat(mgCanetaTexto.replace(',', '.'));
+  const erroDosagem = dosagemTexto.trim() && !(parseFloat(dosagemTexto.replace(',', '.')) > 0 && parseFloat(dosagemTexto.replace(',', '.')) <= 50) ? t('form.erroNumero') : null;
+  const erroMgCaneta = mgCanetaTexto.trim() && !(parseFloat(mgCanetaTexto.replace(',', '.')) > 0 && parseFloat(mgCanetaTexto.replace(',', '.')) <= 100) ? t('form.erroNumero') : null;
+  const erroCliques = cliquesCanetaTexto.trim() && !(parseInt(cliquesCanetaTexto, 10) > 0 && parseInt(cliquesCanetaTexto, 10) <= 1000 && /^\d+$/.test(cliquesCanetaTexto.trim())) ? t('form.erroNumero') : null;
+  const erroDoseDesejada = doseDesejadaTexto.trim() && !(parseFloat(doseDesejadaTexto.replace(',', '.')) > 0 && parseFloat(doseDesejadaTexto.replace(',', '.')) <= 50) ? t('form.erroNumero') : null;
   const cliquesCanetaNum = parseInt(cliquesCanetaTexto, 10);
   const doseDesejadaNum = parseFloat(doseDesejadaTexto.replace(',', '.'));
 
@@ -294,8 +299,9 @@ export default function Glp1Screen() {
                 onChangeText={setDosagemTexto}
                 placeholder={t('g.exemplo', { v: exemploDecimal })}
                 keyboardType="decimal-pad"
-                style={styles.formInput}
+                style={[styles.formInput, erroDosagem && { borderColor: colors.error }]}
               />
+              <MensagemErro texto={erroDosagem} />
 
               <ThemedText variant="small" color="textSecondary" style={styles.rotulo}>
                 {t('g.local')}
@@ -395,8 +401,9 @@ export default function Glp1Screen() {
                 onChangeText={setMgCanetaTexto}
                 placeholder={t('g.exemplo', { v: 5 })}
                 keyboardType="decimal-pad"
-                style={styles.formInput}
+                style={[styles.formInput, erroMgCaneta && { borderColor: colors.error }]}
               />
+              <MensagemErro texto={erroMgCaneta} />
             </View>
             <View style={styles.formCol}>
               <ThemedText variant="small" color="textSecondary" style={styles.rotulo}>
@@ -407,8 +414,9 @@ export default function Glp1Screen() {
                 onChangeText={setCliquesCanetaTexto}
                 placeholder={t('g.exemplo', { v: 60 })}
                 keyboardType="number-pad"
-                style={styles.formInput}
+                style={[styles.formInput, erroCliques && { borderColor: colors.error }]}
               />
+              <MensagemErro texto={erroCliques} />
             </View>
           </View>
 
@@ -429,9 +437,10 @@ export default function Glp1Screen() {
             onChangeText={setDoseDesejadaTexto}
             placeholder={t('g.exemplo', { v: exemploDecimal })}
             keyboardType="decimal-pad"
-            style={styles.formInput}
+            style={[styles.formInput, erroDoseDesejada && { borderColor: colors.error }]}
             editable={configCanetaValida}
           />
+          <MensagemErro texto={erroDoseDesejada} />
 
           {cliquesCalculados !== null && (
             <ThemedText variant="title" color="primary" style={{ marginTop: spacing.md }}>
