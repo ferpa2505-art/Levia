@@ -24,7 +24,9 @@ for idioma in IDIOMAS:
     s = io.open(caminho, encoding='utf-8-sig').read()
     novos = []
     for chave, por_idioma in textos.items():
-        valor = por_idioma.get(idioma) or por_idioma.get(RESERVA.get(idioma, 'en-US')) or por_idioma['pt-BR']
+        valor = por_idioma.get(idioma) or por_idioma.get(RESERVA.get(idioma, 'en-US')) or por_idioma.get('pt-BR')
+        if valor is None:
+            continue  # nada para este idioma: mantém o texto atual
         literal = json.dumps(valor, ensure_ascii=False)
         padrao = re.compile(r'(\n\s*' + re.escape(json.dumps(chave)) + r'\s*:\s*)"(?:[^"\\]|\\.)*"')
         if padrao.search(s):
