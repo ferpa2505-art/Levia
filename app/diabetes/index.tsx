@@ -16,6 +16,9 @@ import { Button } from '@components/Button';
 import { Input } from '@components/Input';
 import { ConfiguradorAlarmesMedicacao, StatusAlarmeIndicador } from '@components/diabetes';
 import { useDiabetes } from '@context/DiabetesContext';
+import { dataDeHoje } from '@utils/recordsStorage';
+import { CartaoGlicemia } from '@components/diabetes/CartaoGlicemia';
+import { ConfigGlicemia } from '@components/diabetes/ConfigGlicemia';
 import { MEDICAMENTOS_DIABETES, TIPOS_REFEICAO } from '@constants/diabetes';
 import { colors, spacing, radius } from '@constants/colors';
 import { estilosTema } from '@theme/estilos';
@@ -42,7 +45,7 @@ export default function DiabetesScreen() {
   } = useDiabetes();
 
   // Filtrar medicações e refeições do dia
-  const hoje = new Date().toISOString().split('T')[0];
+  const hoje = dataDeHoje();
   const medicacoesHoje = medicacoes.filter((m) => m.data === hoje);
   const refeicoesHoje = refeicoes.filter((r) => r.data === hoje);
   const notasHoje = notas.filter((n) => n.data === hoje);
@@ -129,6 +132,9 @@ export default function DiabetesScreen() {
   return (
     <TelaRolavel>
       <ThemedView style={styles.container}>
+        <CartaoGlicemia />
+        <ConfigGlicemia />
+
         {/* Resumo da Glicemia */}
         <ThemedView variant="surface" style={[styles.card, styles.cardShadow]}>
           <View style={styles.header}>
@@ -258,132 +264,6 @@ export default function DiabetesScreen() {
                 </View>
               ))}
             </View>
-          )}
-        </ThemedView>
-
-        {/* Medicações */}
-        <ThemedView variant="surface" style={[styles.card, styles.cardShadow]}>
-          <View style={styles.header}>
-            <View style={styles.headerTitulo}>
-              <Pill size={20} color={colors.secondary} strokeWidth={2} />
-              <ThemedText variant="subheading" color="text" style={{ marginLeft: spacing.xs }}>
-                Medicações
-              </ThemedText>
-            </View>
-            <Button
-              label="+"
-              variant="secondary"
-              size="sm"
-              onPress={() => setMostrarFormMedicacao(true)}
-            />
-          </View>
-
-          {mostrarFormMedicacao && (
-            <View style={styles.formulario}>
-              <View>
-                <ThemedText
-                  variant="small"
-                  color="textSecondary"
-                  style={{ marginBottom: spacing.xs }}
-                >
-                  Medicamento
-                </ThemedText>
-                <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                  <View style={styles.selectButtons}>
-                    {MEDICAMENTOS_DIABETES.map((med) => (
-                      <Pressable
-                        key={med}
-                        style={[
-                          styles.selectButton,
-                          {
-                            backgroundColor:
-                              medicamentoSelecionado === med
-                                ? colors.secondary
-                                : colors.secondarySoft,
-                          },
-                        ]}
-                        onPress={() => setMedicamentoSelecionado(med)}
-                      >
-                        <ThemedText
-                          variant="small"
-                          color={medicamentoSelecionado === med ? 'primary' : 'text'}
-                        >
-                          {med}
-                        </ThemedText>
-                      </Pressable>
-                    ))}
-                  </View>
-                </ScrollView>
-              </View>
-              <Input
-                value={dosagemMedicacao}
-                onChangeText={setDosagemMedicacao}
-                placeholder="Dosagem (ex: 500mg)"
-              />
-              <Input
-                value={observacoesMedicacao}
-                onChangeText={setObservacoesMedicacao}
-                placeholder="Observações (opcional)"
-              />
-              <View style={styles.formButtons}>
-                <Button
-                  label="Cancelar"
-                  variant="outline"
-                  size="sm"
-                  onPress={() => {
-                    setMostrarFormMedicacao(false);
-                    setDosagemMedicacao('');
-                    setObservacoesMedicacao('');
-                  }}
-                  style={{ marginRight: spacing.md }}
-                />
-                <Button
-                  label="Salvar"
-                  variant="secondary"
-                  size="sm"
-                  onPress={salvarMedicacao}
-                />
-              </View>
-            </View>
-          )}
-
-          {medicacoesHoje.length > 0 && (
-            <View>
-              {medicacoesHoje.map((med) => (
-                <View key={med.id}>
-                  <View style={styles.registroItem}>
-                    <View style={styles.registroConteudo}>
-                      <ThemedText variant="body" color="text">
-                        {med.horario} - {med.medicamento}
-                      </ThemedText>
-                      <ThemedText variant="small" color="textSecondary">
-                        {med.dosagem}
-                      </ThemedText>
-                      {med.observacoes && (
-                        <ThemedText variant="small" color="textSecondary">
-                          {med.observacoes}
-                        </ThemedText>
-                      )}
-                    </View>
-                    <View style={{ flexDirection: 'row', gap: spacing.sm, alignItems: 'center' }}>
-                      <Pressable onPress={() => abrirConfigurador(med)}>
-                        <Clock size={18} color={colors.primary} strokeWidth={2} />
-                      </Pressable>
-                      <Pressable onPress={() => removerMedicacao(med.id)}>
-                        <Trash2 size={18} color={colors.error} strokeWidth={2} />
-                      </Pressable>
-                    </View>
-                  </View>
-                  <StatusAlarmeIndicador medicacao={med} />
-                </View>
-              ))}
-            </View>
-          )}
-
-          {medicacoesHoje.length === 0 && !mostrarFormMedicacao && (
-            <ThemedText variant="small" color="textSecondary" style={{ marginTop: spacing.md }}>
-              Nenhuma medicação registrada hoje
-            </ThemedText>
           )}
         </ThemedView>
 
@@ -580,37 +460,6 @@ export default function DiabetesScreen() {
         <View style={styles.spacer} />
       </ThemedView>
 
-      {/* Modal Configurador de Alarmes */}
-      <Modal
-        visible={mostrarConfiguradorAlarmes}
-        transparent
-        animationType="slide"
-        onRequestClose={fecharConfigurador}
-      >
-        <KeyboardAvoidingView
-          behavior="padding"
-          style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' }}
-        >
-          {medicacaoSelecionadaAlarme && (
-            <ConfiguradorAlarmesMedicacao
-              medicacao={medicacaoSelecionadaAlarme}
-              onConfirm={async (alarme) => {
-                const agendados = await atualizarAlarmeMedicacao(medicacaoSelecionadaAlarme.id, alarme);
-                fecharConfigurador();
-                if (alarme.ativado && alarme.notificacaoAtivada) {
-                  Alert.alert(
-                    agendados > 0 ? 'Lembretes agendados ✅' : 'Lembretes não agendados',
-                    agendados > 0
-                      ? `Próximos horários: ${alarme.horarios.join(', ')}. Eles tocam mesmo com o app fechado.`
-                      : 'Permita as notificações do Leviã em Configurações do Android > Apps > Leviã > Notificações e salve o alarme de novo.'
-                  );
-                }
-              }}
-              onCancel={fecharConfigurador}
-            />
-          )}
-        </KeyboardAvoidingView>
-      </Modal>
     </TelaRolavel>
   );
 }

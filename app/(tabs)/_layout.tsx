@@ -1,6 +1,6 @@
 import { Tabs } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Home, BookOpen, Dumbbell, Newspaper, User, Droplet } from 'lucide-react-native';
+import { Home, BookOpen, Dumbbell, Newspaper, HeartPulse, Droplet } from 'lucide-react-native';
 import { colors } from '@constants/colors';
 import { MenuOpcoes } from '@components/MenuOpcoes';
 import { useT } from '@context/PreferencesContext';
@@ -93,10 +93,10 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="profile"
         options={{
-          title: t('abas.perfil'),
-          tabBarLabel: t('abas.perfil'),
+          title: t('abas.saude'),
+          tabBarLabel: t('abas.saude'),
           tabBarIcon: ({ color, focused, size }) => (
-            <User size={size} color={color} strokeWidth={focused ? 2.5 : 2} />
+            <HeartPulse size={size} color={color} strokeWidth={focused ? 2.5 : 2} />
           ),
         }}
       />

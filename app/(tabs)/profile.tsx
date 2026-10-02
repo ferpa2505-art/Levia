@@ -12,6 +12,7 @@ import { useRecords } from '@context/RecordsContext';
 import { colors, spacing, radius } from '@constants/colors';
 import { useT } from '@context/PreferencesContext';
 import { estilosTema } from '@theme/estilos';
+import { ListaMedicacoes } from '@components/ListaMedicacoes';
 
 export default function ProfileScreen() {
   const router = useRouter();
@@ -44,6 +45,8 @@ export default function ProfileScreen() {
             {t('perfil.subtitulo')}
           </ThemedText>
         </View>
+
+        <ListaMedicacoes />
 
         <ThemedView variant="surface" style={[styles.card, styles.cardShadow]}>
           <ThemedText variant="subheading" color="text" style={{ marginBottom: spacing.md }}>

@@ -9,6 +9,7 @@ import { CustomRecipesProvider } from '@context/CustomRecipesContext';
 import { NewsProvider } from '@context/NewsContext';
 import { Glp1Provider } from '@context/Glp1Context';
 import { DiabetesProvider } from '@context/DiabetesContext';
+import { MedicacoesProvider } from '@context/MedicacoesContext';
 import { PreferencesProvider, usePreferences } from '@context/PreferencesContext';
 import { OmniRouteProvider } from '@context/OmniRouteContext';
 
@@ -52,6 +53,7 @@ function RootNavigation() {
       <Stack.Screen name="glp1" options={{ headerShown: true, title: t('titulos.glp1') }} />
       <Stack.Screen name="diabetes" options={{ headerShown: true, title: t('titulos.diabetes') }} />
       <Stack.Screen name="peso" options={{ headerShown: true, title: t('titulos.peso') }} />
+      <Stack.Screen name="medicacao" options={{ headerShown: true, title: t('med.tituloTela') }} />
       <Stack.Screen name="apetite" options={{ headerShown: true, title: t('titulos.apetite') }} />
     </Stack>
   );
@@ -81,7 +83,9 @@ export default function RootLayout() {
               <NewsProvider>
                 <Glp1Provider>
                   <DiabetesProvider>
-                    <NavegacaoComTema />
+                    <MedicacoesProvider>
+                      <NavegacaoComTema />
+                    </MedicacoesProvider>
                   </DiabetesProvider>
                 </Glp1Provider>
               </NewsProvider>

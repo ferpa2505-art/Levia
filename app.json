@@ -2,7 +2,7 @@
   "expo": {
     "name": "Leviã",
     "slug": "levia-app",
-    "version": "0.2.0",
+    "version": "0.3.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "assetBundlePatterns": [
@@ -32,6 +32,19 @@
           "imageWidth": 160,
           "backgroundColor": "#6FA58E"
         }
+      ],
+      [
+        "expo-calendar",
+        {
+          "calendarPermission": "O Leviã usa o calendário para criar lembretes dos seus medicamentos, se você ativar essa opção."
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "cameraPermission": "O Leviã usa a câmera para você fotografar seus pratos. As fotos ficam só no seu celular.",
+          "photosPermission": "O Leviã acessa suas fotos para você escolher a foto de um prato. As fotos ficam só no seu celular."
+        }
       ]
     ],
     "scheme": "levia",
@@ -42,7 +55,9 @@
     },
     "owner": "ferpa2505-art",
     "updates": {
-      "url": "https://u.expo.dev/c19a5f1e-5fbd-4100-ad78-43b05b47a977"
+      "url": "https://u.expo.dev/c19a5f1e-5fbd-4100-ad78-43b05b47a977",
+      "checkAutomatically": "ON_LOAD",
+      "fallbackToCacheTimeout": 5000
     }
   }
 }
