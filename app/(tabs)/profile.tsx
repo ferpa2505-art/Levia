@@ -14,6 +14,7 @@ import { useT } from '@context/PreferencesContext';
 import { MensagemErro } from '@components/forms/MensagemErro';
 import { estilosTema } from '@theme/estilos';
 import { ListaMedicacoes } from '@components/ListaMedicacoes';
+import { CartaoMeusDados } from '@components/CartaoMeusDados';
 
 export default function ProfileScreen() {
   const router = useRouter();
@@ -111,6 +112,7 @@ export default function ProfileScreen() {
         </ThemedView>
 
 
+        <CartaoMeusDados />
       </ThemedView>
     </TelaRolavel>
   );

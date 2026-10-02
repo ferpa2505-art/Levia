@@ -2,7 +2,7 @@
   "expo": {
     "name": "Leviã",
     "slug": "levia-app",
-    "version": "0.3.0",
+    "version": "0.3.1",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "assetBundlePatterns": [
@@ -45,7 +45,8 @@
           "cameraPermission": "O Leviã usa a câmera para você fotografar seus pratos. As fotos ficam só no seu celular.",
           "photosPermission": "O Leviã acessa suas fotos para você escolher a foto de um prato. As fotos ficam só no seu celular."
         }
-      ]
+      ],
+      "expo-sharing"
     ],
     "scheme": "levia",
     "extra": {

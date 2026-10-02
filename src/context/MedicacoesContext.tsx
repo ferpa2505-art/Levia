@@ -12,6 +12,7 @@ import {
   removerEventos,
 } from '@utils/agendaMedicacao';
 import { usePreferences } from '@context/PreferencesContext';
+import { CHAVE_REAGENDAR } from '@utils/backup';
 
 const CHAVE = 'levia:medicacoes';
 
@@ -104,6 +105,16 @@ export function MedicacoesProvider({ children }: { children: ReactNode }) {
         }
         salvo = { medicacoes: [...salvo.medicacoes, ...agendadas], migradoDoDiabetes: true };
         await AsyncStorage.setItem(CHAVE, JSON.stringify(salvo)).catch(() => {});
+      }
+      // depois de restaurar um backup: agenda de novo os lembretes neste aparelho
+      if ((await AsyncStorage.getItem(CHAVE_REAGENDAR)) === '1') {
+        const reagendadas: Medicacao[] = [];
+        for (const m of salvo.medicacoes) {
+          reagendadas.push({ ...m, notificationIds: await agendarNotificacoes(m, t('med.notifTitulo'), idioma), calendarEventIds: [] });
+        }
+        salvo = { ...salvo, medicacoes: reagendadas };
+        await AsyncStorage.setItem(CHAVE, JSON.stringify(salvo)).catch(() => {});
+        await AsyncStorage.removeItem(CHAVE_REAGENDAR).catch(() => {});
       }
       dadosRef.current = salvo;
       setDados(salvo);
