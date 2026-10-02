@@ -259,6 +259,20 @@ const traducoes: Traducoes = {
   "onb.tipodiabetes.nenhum_nome": "Saya tidak menderita diabetes",
   "onb.tipodiabetes.nenhum_desc": "Kamu tetap bisa memakai modul Diabetes kapan saja.",
   "tema.grafite": "Grafit",
+  "gl.titulo": "Gula darah",
+  "gl.media": "Rata-rata {v} mg/dL",
+  "gl.dias": "{n} hari",
+  "gl.semDados": "Catat minimal 2 pengukuran untuk melihat grafik.",
+  "gl.noAlvo": "{p}% dalam rentang target",
+  "gl.lembrete": "Pengingat pengukuran",
+  "gl.lembreteDesc": "Ingatkan {h} jam setelah pengukuran terakhir",
+  "gl.notifTitulo": "🩸 Waktunya cek gula darah",
+  "gl.notifCorpo": "Sudah {h} jam sejak pengukuran terakhir.",
+  "gl.faixa": "Rentang target (mg/dL)",
+  "gl.faixaDica": "Sepakati nilainya dengan dokter. Bawaan: 70–180.",
+  "gl.min": "Min",
+  "gl.max": "Maks",
+  "gl.homeVazio": "Ketuk untuk mencatat pengukuran pertama",
 };
 
 export default traducoes;

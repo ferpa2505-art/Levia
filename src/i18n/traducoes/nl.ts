@@ -259,6 +259,20 @@ const traducoes: Traducoes = {
   "onb.tipodiabetes.nenhum_nome": "Ik heb geen diabetes",
   "onb.tipodiabetes.nenhum_desc": "Je kunt de Diabetes-module toch altijd gebruiken.",
   "tema.grafite": "Grafiet",
+  "gl.titulo": "Bloedglucose",
+  "gl.media": "Gemiddelde {v} mg/dL",
+  "gl.dias": "{n} dagen",
+  "gl.semDados": "Registreer minstens 2 metingen om de grafiek te zien.",
+  "gl.noAlvo": "{p}% binnen het doelbereik",
+  "gl.lembrete": "Meetherinnering",
+  "gl.lembreteDesc": "Herinner {h} u na de laatste meting",
+  "gl.notifTitulo": "🩸 Tijd om je bloedglucose te meten",
+  "gl.notifCorpo": "Het is {h} u geleden sinds je laatste meting.",
+  "gl.faixa": "Doelbereik (mg/dL)",
+  "gl.faixaDica": "Spreek de waarden af met je arts. Standaard: 70 tot 180.",
+  "gl.min": "Min",
+  "gl.max": "Max",
+  "gl.homeVazio": "Tik om je eerste meting te registreren",
 };
 
 export default traducoes;

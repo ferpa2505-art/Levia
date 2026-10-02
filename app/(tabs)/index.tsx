@@ -8,8 +8,10 @@ import { ThemedText } from '@components/ThemedText';
 import { Button } from '@components/Button';
 import { Input } from '@components/Input';
 import { LeviaPena } from '@components/LeviaPena';
+import { CartaoGlicemia } from '@components/diabetes/CartaoGlicemia';
 import { useProfile } from '@context/ProfileContext';
 import { useRecords } from '@context/RecordsContext';
+import { useDiabetes } from '@context/DiabetesContext';
 import { colors, spacing, radius } from '@constants/colors';
 import { useT } from '@context/PreferencesContext';
 import { estilosTema } from '@theme/estilos';
@@ -20,6 +22,7 @@ export default function HomeScreen() {
   const { profile } = useProfile();
   const { kcalHoje, proteinaHojeG, aguaHojeMl, pesoAtualKg, adicionarPeso, kcalGastaHoje } = useRecords();
   const nome = profile.comoChamar || profile.nome || '';
+  const temGlicemias = useDiabetes().glicemias.length > 0;
 
   const [editandoPeso, setEditandoPeso] = useState(false);
   const [pesoTexto, setPesoTexto] = useState('');
@@ -165,20 +168,9 @@ export default function HomeScreen() {
           </ThemedView>
         </Pressable>
 
-        <Pressable onPress={() => router.push('/diabetes')}>
-          <ThemedView variant="surface" style={[styles.card, styles.cardShadow, styles.glp1Card]}>
-            <View style={[styles.glp1IconCircle, { backgroundColor: colors.primarySoft }]}>
-              <Droplet size={20} color={colors.primary} strokeWidth={2} />
-            </View>
-            <View style={{ flex: 1, marginLeft: spacing.md }}>
-              <ThemedText variant="subheading" color="text">{t('titulos.diabetes', { defaultValue: 'Diabetes' })}</ThemedText>
-              <ThemedText variant="small" color="textSecondary">
-                {t('home.diabetesDesc', { defaultValue: 'Rastreie glicemia e medicações' })}
-              </ThemedText>
-            </View>
-            <ChevronRight size={20} color={colors.textSecondary} strokeWidth={2} />
-          </ThemedView>
-        </Pressable>
+        {(profile.tipoDiabetes !== 'nenhum' || temGlicemias) && (
+          <CartaoGlicemia onAbrir={() => router.push('/diabetes')} />
+        )}
 
         <View style={styles.status}>
           <ThemedText variant="caption" color="textSecondary">v0.2.0 • {t('home.versao')}</ThemedText>

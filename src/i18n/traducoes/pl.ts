@@ -259,6 +259,20 @@ const traducoes: Traducoes = {
   "onb.tipodiabetes.nenhum_nome": "Nie mam cukrzycy",
   "onb.tipodiabetes.nenhum_desc": "Nadal możesz korzystać z modułu Cukrzyca, kiedy chcesz.",
   "tema.grafite": "Grafit",
+  "gl.titulo": "Glukoza",
+  "gl.media": "Średnia {v} mg/dL",
+  "gl.dias": "{n} dni",
+  "gl.semDados": "Zapisz co najmniej 2 pomiary, aby zobaczyć wykres.",
+  "gl.noAlvo": "{p}% w zakresie docelowym",
+  "gl.lembrete": "Przypomnienie o pomiarze",
+  "gl.lembreteDesc": "Przypomnij {h} godz. po ostatnim pomiarze",
+  "gl.notifTitulo": "🩸 Czas zmierzyć glukozę",
+  "gl.notifCorpo": "Minęło {h} godz. od ostatniego pomiaru.",
+  "gl.faixa": "Zakres docelowy (mg/dL)",
+  "gl.faixaDica": "Ustal wartości z lekarzem. Domyślnie: 70–180.",
+  "gl.min": "Min",
+  "gl.max": "Maks",
+  "gl.homeVazio": "Dotknij, aby zapisać pierwszy pomiar",
 };
 
 export default traducoes;

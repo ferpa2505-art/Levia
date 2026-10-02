@@ -259,6 +259,20 @@ const traducoes: Traducoes = {
   "onb.tipodiabetes.nenhum_nome": "糖尿病はありません",
   "onb.tipodiabetes.nenhum_desc": "糖尿病モジュールはいつでも使えます。",
   "tema.grafite": "グラファイト",
+  "gl.titulo": "血糖値",
+  "gl.media": "平均 {v} mg/dL",
+  "gl.dias": "{n}日",
+  "gl.semDados": "グラフを見るには2回以上記録してください。",
+  "gl.noAlvo": "目標範囲内 {p}%",
+  "gl.lembrete": "測定リマインダー",
+  "gl.lembreteDesc": "最後の測定から {h} 時間後に通知",
+  "gl.notifTitulo": "🩸 血糖値を測る時間です",
+  "gl.notifCorpo": "最後の測定から {h} 時間たちました。",
+  "gl.faixa": "目標範囲 (mg/dL)",
+  "gl.faixaDica": "値は医師と相談して決めましょう。標準：70〜180。",
+  "gl.min": "最小",
+  "gl.max": "最大",
+  "gl.homeVazio": "タップして最初の測定を記録",
 };
 
 export default traducoes;

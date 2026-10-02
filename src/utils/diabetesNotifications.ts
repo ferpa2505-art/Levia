@@ -46,6 +46,40 @@ export async function enviarLembreteTeste(medicacao: RegistroMedicacao): Promise
   }
 }
 
+/**
+ * Lembrete "hora de medir a glicemia" em `horas` horas a partir de `aPartirDe`.
+ * Devolve o id da notificação (ou null se não deu para agendar).
+ */
+export async function agendarLembreteGlicemia(
+  horas: number,
+  aPartirDe: Date,
+  titulo: string,
+  corpo: string
+): Promise<string | null> {
+  const Notifications = getNotifications();
+  if (!Notifications) return null;
+  const quando = new Date(aPartirDe.getTime() + horas * 3600_000);
+  if (quando.getTime() <= Date.now() + 30_000) return null;
+  if (!(await solicitarPermissaoNotificacao())) return null;
+  await garantirCanal();
+  try {
+    return await Notifications.scheduleNotificationAsync({
+      content: {
+        title: titulo,
+        body: corpo,
+        ...(Platform.OS === 'android' ? { channelId: CANAL } : null),
+      },
+      trigger: {
+        type: Notifications.SchedulableTriggerInputTypes.DATE,
+        date: quando,
+        ...(Platform.OS === 'android' ? { channelId: CANAL } : null),
+      } as never,
+    });
+  } catch {
+    return null;
+  }
+}
+
 export async function cancelarAlarmesMedicacao(ids?: string[]): Promise<void> {
   const Notifications = getNotifications();
   if (!Notifications || !ids?.length) return;

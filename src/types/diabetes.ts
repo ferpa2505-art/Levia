@@ -51,7 +51,27 @@ export interface NotaDiaria {
   timestamp: string; // HH:mm
 }
 
+/** Preferências do módulo de glicemia */
+export interface ConfigDiabetes {
+  /** Faixa-alvo em mg/dL (padrão 70–180) */
+  alvoMinMgDl: number;
+  alvoMaxMgDl: number;
+  /** Lembrete "hora de medir" X horas depois da última medição */
+  lembreteAtivo: boolean;
+  lembreteHoras: number;
+  lembreteNotificationId?: string | null;
+}
+
+export const configDiabetesPadrao: ConfigDiabetes = {
+  alvoMinMgDl: 70,
+  alvoMaxMgDl: 180,
+  lembreteAtivo: false,
+  lembreteHoras: 4,
+  lembreteNotificationId: null,
+};
+
 export interface DiabetesData {
+  config: ConfigDiabetes;
   glicemias: RegistroGlicemia[];
   medicacoes: RegistroMedicacao[];
   refeicoes: RegistroRefeicao[];
@@ -59,6 +79,7 @@ export interface DiabetesData {
 }
 
 export const diabetesDadosVazios: DiabetesData = {
+  config: configDiabetesPadrao,
   glicemias: [],
   medicacoes: [],
   refeicoes: [],

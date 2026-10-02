@@ -259,6 +259,20 @@ const traducoes: Traducoes = {
   "onb.tipodiabetes.nenhum_nome": "Diyabetim yok",
   "onb.tipodiabetes.nenhum_desc": "Diyabet modülünü yine de istediğin zaman kullanabilirsin.",
   "tema.grafite": "Grafit",
+  "gl.titulo": "Kan şekeri",
+  "gl.media": "Ortalama {v} mg/dL",
+  "gl.dias": "{n} gün",
+  "gl.semDados": "Grafiği görmek için en az 2 ölçüm kaydet.",
+  "gl.noAlvo": "%{p} hedef aralıkta",
+  "gl.lembrete": "Ölçüm hatırlatıcısı",
+  "gl.lembreteDesc": "Son ölçümden {h} saat sonra hatırlat",
+  "gl.notifTitulo": "🩸 Kan şekerini ölçme zamanı",
+  "gl.notifCorpo": "Son ölçümünden bu yana {h} saat geçti.",
+  "gl.faixa": "Hedef aralık (mg/dL)",
+  "gl.faixaDica": "Değerleri doktorunla belirle. Varsayılan: 70–180.",
+  "gl.min": "Min",
+  "gl.max": "Maks",
+  "gl.homeVazio": "İlk ölçümünü kaydetmek için dokun",
 };
 
 export default traducoes;

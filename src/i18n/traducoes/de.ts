@@ -259,6 +259,20 @@ const traducoes: Traducoes = {
   "onb.tipodiabetes.nenhum_nome": "Ich habe keinen Diabetes",
   "onb.tipodiabetes.nenhum_desc": "Du kannst das Diabetes-Modul trotzdem jederzeit nutzen.",
   "tema.grafite": "Graphit",
+  "gl.titulo": "Blutzucker",
+  "gl.media": "Mittelwert {v} mg/dL",
+  "gl.dias": "{n} Tage",
+  "gl.semDados": "Erfasse mindestens 2 Messungen, um das Diagramm zu sehen.",
+  "gl.noAlvo": "{p}% im Zielbereich",
+  "gl.lembrete": "Mess-Erinnerung",
+  "gl.lembreteDesc": "{h} Std. nach der letzten Messung erinnern",
+  "gl.notifTitulo": "🩸 Zeit, den Blutzucker zu messen",
+  "gl.notifCorpo": "Seit deiner letzten Messung sind {h} Std. vergangen.",
+  "gl.faixa": "Zielbereich (mg/dL)",
+  "gl.faixaDica": "Stimme die Werte mit deiner Ärztin/deinem Arzt ab. Standard: 70 bis 180.",
+  "gl.min": "Min",
+  "gl.max": "Max",
+  "gl.homeVazio": "Tippe, um deine erste Messung zu erfassen",
 };
 
 export default traducoes;

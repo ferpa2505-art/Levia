@@ -259,6 +259,20 @@ const traducoes: Traducoes = {
   "onb.tipodiabetes.nenhum_nome": "ليس لدي سكري",
   "onb.tipodiabetes.nenhum_desc": "يمكنك استخدام وحدة السكري متى شئت.",
   "tema.grafite": "جرافيت",
+  "gl.titulo": "سكر الدم",
+  "gl.media": "المتوسط {v} ملغ/دل",
+  "gl.dias": "{n} أيام",
+  "gl.semDados": "سجّل قياسين على الأقل لرؤية الرسم البياني.",
+  "gl.noAlvo": "{p}% ضمن النطاق المستهدف",
+  "gl.lembrete": "تذكير القياس",
+  "gl.lembreteDesc": "ذكّرني بعد {h} ساعة من آخر قياس",
+  "gl.notifTitulo": "🩸 حان وقت قياس السكر",
+  "gl.notifCorpo": "مرّت {h} ساعة منذ آخر قياس.",
+  "gl.faixa": "النطاق المستهدف (ملغ/دل)",
+  "gl.faixaDica": "اتفق على القيم مع طبيبك. الافتراضي: 70 إلى 180.",
+  "gl.min": "الأدنى",
+  "gl.max": "الأقصى",
+  "gl.homeVazio": "اضغط لتسجيل أول قياس",
 };
 
 export default traducoes;

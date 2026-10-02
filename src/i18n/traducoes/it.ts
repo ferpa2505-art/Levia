@@ -259,6 +259,20 @@ const traducoes: Traducoes = {
   "onb.tipodiabetes.nenhum_nome": "Non ho il diabete",
   "onb.tipodiabetes.nenhum_desc": "Puoi comunque usare il modulo Diabete quando vuoi.",
   "tema.grafite": "Grafite",
+  "gl.titulo": "Glicemia",
+  "gl.media": "Media {v} mg/dL",
+  "gl.dias": "{n} giorni",
+  "gl.semDados": "Registra almeno 2 misurazioni per vedere il grafico.",
+  "gl.noAlvo": "{p}% nell'intervallo obiettivo",
+  "gl.lembrete": "Promemoria misurazione",
+  "gl.lembreteDesc": "Avvisa {h} h dopo l'ultima misurazione",
+  "gl.notifTitulo": "🩸 È ora di misurare la glicemia",
+  "gl.notifCorpo": "Sono passate {h} h dall'ultima misurazione.",
+  "gl.faixa": "Intervallo obiettivo (mg/dL)",
+  "gl.faixaDica": "Concorda i valori con il medico. Predefinito: 70–180.",
+  "gl.min": "Minimo",
+  "gl.max": "Massimo",
+  "gl.homeVazio": "Tocca per registrare la prima misurazione",
 };
 
 export default traducoes;

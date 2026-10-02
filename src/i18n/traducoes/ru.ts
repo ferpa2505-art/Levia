@@ -259,6 +259,20 @@ const traducoes: Traducoes = {
   "onb.tipodiabetes.nenhum_nome": "У меня нет диабета",
   "onb.tipodiabetes.nenhum_desc": "Вы всё равно можете пользоваться модулем «Диабет» в любое время.",
   "tema.grafite": "Графит",
+  "gl.titulo": "Глюкоза",
+  "gl.media": "Среднее {v} мг/дл",
+  "gl.dias": "{n} дн.",
+  "gl.semDados": "Добавьте хотя бы 2 измерения, чтобы увидеть график.",
+  "gl.noAlvo": "{p}% в целевом диапазоне",
+  "gl.lembrete": "Напоминание об измерении",
+  "gl.lembreteDesc": "Напомнить через {h} ч после последнего измерения",
+  "gl.notifTitulo": "🩸 Пора измерить глюкозу",
+  "gl.notifCorpo": "С последнего измерения прошло {h} ч.",
+  "gl.faixa": "Целевой диапазон (мг/дл)",
+  "gl.faixaDica": "Согласуйте значения с врачом. По умолчанию: 70–180.",
+  "gl.min": "Мин.",
+  "gl.max": "Макс.",
+  "gl.homeVazio": "Нажмите, чтобы записать первое измерение",
 };
 
 export default traducoes;

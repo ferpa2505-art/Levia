@@ -8,7 +8,11 @@ export async function carregarDiabetes(): Promise<DiabetesData> {
     const raw = await AsyncStorage.getItem(STORAGE_KEY);
     if (!raw) return diabetesDadosVazios;
     const dados = JSON.parse(raw);
-    return { ...diabetesDadosVazios, ...dados } as DiabetesData;
+    return {
+      ...diabetesDadosVazios,
+      ...dados,
+      config: { ...diabetesDadosVazios.config, ...(dados.config ?? {}) },
+    } as DiabetesData;
   } catch {
     return diabetesDadosVazios;
   }

@@ -259,6 +259,20 @@ const traducoes: Traducoes = {
   "onb.tipodiabetes.nenhum_nome": "I don't have diabetes",
   "onb.tipodiabetes.nenhum_desc": "You can still use the Diabetes module whenever you like.",
   "tema.grafite": "Graphite",
+  "gl.titulo": "Blood glucose",
+  "gl.media": "Average {v} mg/dL",
+  "gl.dias": "{n} days",
+  "gl.semDados": "Log at least 2 readings to see the chart.",
+  "gl.noAlvo": "{p}% in target range",
+  "gl.lembrete": "Reading reminder",
+  "gl.lembreteDesc": "Remind me {h} h after the last reading",
+  "gl.notifTitulo": "🩸 Time to check your blood glucose",
+  "gl.notifCorpo": "It's been {h} h since your last reading.",
+  "gl.faixa": "Target range (mg/dL)",
+  "gl.faixaDica": "Agree on these values with your doctor. Default: 70 to 180.",
+  "gl.min": "Min",
+  "gl.max": "Max",
+  "gl.homeVazio": "Tap to log your first reading",
 };
 
 export default traducoes;

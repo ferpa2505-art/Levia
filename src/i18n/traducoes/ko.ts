@@ -259,6 +259,20 @@ const traducoes: Traducoes = {
   "onb.tipodiabetes.nenhum_nome": "당뇨병이 없어요",
   "onb.tipodiabetes.nenhum_desc": "원할 때 언제든 당뇨 모듈을 사용할 수 있어요.",
   "tema.grafite": "그래파이트",
+  "gl.titulo": "혈당",
+  "gl.media": "평균 {v} mg/dL",
+  "gl.dias": "{n}일",
+  "gl.semDados": "그래프를 보려면 2번 이상 측정을 기록하세요.",
+  "gl.noAlvo": "목표 범위 내 {p}%",
+  "gl.lembrete": "측정 알림",
+  "gl.lembreteDesc": "마지막 측정 {h}시간 후 알림",
+  "gl.notifTitulo": "🩸 혈당을 잴 시간이에요",
+  "gl.notifCorpo": "마지막 측정 후 {h}시간이 지났어요.",
+  "gl.faixa": "목표 범위 (mg/dL)",
+  "gl.faixaDica": "값은 의사와 상의하세요. 기본값: 70~180.",
+  "gl.min": "최소",
+  "gl.max": "최대",
+  "gl.homeVazio": "눌러서 첫 측정을 기록하세요",
 };
 
 export default traducoes;

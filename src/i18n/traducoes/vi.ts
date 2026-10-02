@@ -259,6 +259,20 @@ const traducoes: Traducoes = {
   "onb.tipodiabetes.nenhum_nome": "Tôi không bị tiểu đường",
   "onb.tipodiabetes.nenhum_desc": "Bạn vẫn có thể dùng mục Tiểu đường bất cứ lúc nào.",
   "tema.grafite": "Than chì",
+  "gl.titulo": "Đường huyết",
+  "gl.media": "Trung bình {v} mg/dL",
+  "gl.dias": "{n} ngày",
+  "gl.semDados": "Ghi ít nhất 2 lần đo để xem biểu đồ.",
+  "gl.noAlvo": "{p}% trong khoảng mục tiêu",
+  "gl.lembrete": "Nhắc đo đường huyết",
+  "gl.lembreteDesc": "Nhắc {h} giờ sau lần đo gần nhất",
+  "gl.notifTitulo": "🩸 Đến giờ đo đường huyết",
+  "gl.notifCorpo": "Đã {h} giờ kể từ lần đo gần nhất.",
+  "gl.faixa": "Khoảng mục tiêu (mg/dL)",
+  "gl.faixaDica": "Hãy thống nhất với bác sĩ. Mặc định: 70–180.",
+  "gl.min": "Tối thiểu",
+  "gl.max": "Tối đa",
+  "gl.homeVazio": "Chạm để ghi lần đo đầu tiên",
 };
 
 export default traducoes;

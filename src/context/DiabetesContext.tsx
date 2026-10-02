@@ -6,14 +6,23 @@ import type {
   RegistroRefeicao,
   NotaDiaria,
   ConfiguracaoAlarme,
+  ConfigDiabetes,
 } from '@/types/diabetes';
 import { diabetesDadosVazios } from '@/types/diabetes';
 import { dataDeHoje, horarioAgora, gerarId } from '@utils/recordsStorage';
 import { carregarDiabetes, salvarDiabetes } from '@utils/diabetesStorage';
-import { agendarAlarmesMedicacao, cancelarAlarmesMedicacao } from '@utils/diabetesNotifications';
+import {
+  agendarAlarmesMedicacao,
+  cancelarAlarmesMedicacao,
+  agendarLembreteGlicemia,
+} from '@utils/diabetesNotifications';
+import { valorMgDl, media, momentoGlicemia } from '@utils/glicemia';
+import { traduzirAtual } from '@/i18n';
 
 interface DiabetesContextValue {
   loading: boolean;
+  config: ConfigDiabetes;
+  atualizarConfig: (mudancas: Partial<ConfigDiabetes>) => Promise<void>;
   glicemias: RegistroGlicemia[];
   medicacoes: RegistroMedicacao[];
   refeicoes: RegistroRefeicao[];
@@ -60,12 +69,33 @@ export function DiabetesProvider({ children }: { children: ReactNode }) {
   const hoje = dataDeHoje();
   const glicemiaHoje = dados.glicemias.filter((g) => g.data === hoje);
   const ultimaGlicemia = glicemiaHoje.length > 0 ? glicemiaHoje[glicemiaHoje.length - 1] : null;
-  const mediaGlicemiaHoje =
-    glicemiaHoje.length > 0
-      ? Math.round(
-          glicemiaHoje.reduce((sum, g) => sum + g.valor, 0) / glicemiaHoje.length * 10
-        ) / 10
-      : 0;
+  // média sempre em mg/dL (medições em mmol/L são convertidas)
+  const mediaGlicemiaHoje = media(glicemiaHoje.map(valorMgDl));
+
+  /**
+   * Cancela o lembrete de medição atual e, se estiver ativo, agenda o próximo
+   * `lembreteHoras` depois da última medição (ou de agora, se não houver).
+   */
+  async function reagendarLembreteMedicao(config: ConfigDiabetes, glicemias: RegistroGlicemia[]) {
+    await cancelarAlarmesMedicacao(config.lembreteNotificationId ? [config.lembreteNotificationId] : []);
+    if (!config.lembreteAtivo) return { ...config, lembreteNotificationId: null };
+    const ultima = [...glicemias].sort((a, b) => momentoGlicemia(b).getTime() - momentoGlicemia(a).getTime())[0];
+    let base = ultima ? momentoGlicemia(ultima) : new Date();
+    // se o horário já passou (ex.: última medição antiga), conta a partir de agora
+    if (base.getTime() + config.lembreteHoras * 3600_000 <= Date.now()) base = new Date();
+    const id = await agendarLembreteGlicemia(
+      config.lembreteHoras,
+      base,
+      traduzirAtual('gl.notifTitulo'),
+      traduzirAtual('gl.notifCorpo', { h: config.lembreteHoras })
+    );
+    return { ...config, lembreteNotificationId: id };
+  }
+
+  async function atualizarConfig(mudancas: Partial<ConfigDiabetes>) {
+    const novaConfig = await reagendarLembreteMedicao({ ...dados.config, ...mudancas }, dados.glicemias);
+    setDados((prev) => ({ ...prev, config: novaConfig }));
+  }
 
   async function adicionarGlicemia(valor: number, unidade: string, notas?: string) {
     const novoRegistro: RegistroGlicemia = {
@@ -76,10 +106,9 @@ export function DiabetesProvider({ children }: { children: ReactNode }) {
       unidade: unidade as 'mg/dL' | 'mmol/L',
       notas,
     };
-    setDados((prev) => ({
-      ...prev,
-      glicemias: [...prev.glicemias, novoRegistro],
-    }));
+    const glicemias = [...dados.glicemias, novoRegistro];
+    const config = await reagendarLembreteMedicao(dados.config, glicemias);
+    setDados((prev) => ({ ...prev, config, glicemias: [...prev.glicemias, novoRegistro] }));
   }
 
   async function removerGlicemia(id: string) {
@@ -184,6 +213,8 @@ export function DiabetesProvider({ children }: { children: ReactNode }) {
     <DiabetesContext.Provider
       value={{
         loading,
+        config: dados.config,
+        atualizarConfig,
         glicemias: dados.glicemias,
         medicacoes: dados.medicacoes,
         refeicoes: dados.refeicoes,

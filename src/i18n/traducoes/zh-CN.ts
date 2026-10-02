@@ -259,6 +259,20 @@ const traducoes: Traducoes = {
   "onb.tipodiabetes.nenhum_nome": "我没有糖尿病",
   "onb.tipodiabetes.nenhum_desc": "你仍可随时使用糖尿病模块。",
   "tema.grafite": "石墨",
+  "gl.titulo": "血糖",
+  "gl.media": "平均 {v} mg/dL",
+  "gl.dias": "{n}天",
+  "gl.semDados": "至少记录 2 次测量才能查看图表。",
+  "gl.noAlvo": "{p}% 在目标范围内",
+  "gl.lembrete": "测量提醒",
+  "gl.lembreteDesc": "上次测量 {h} 小时后提醒",
+  "gl.notifTitulo": "🩸 该测血糖了",
+  "gl.notifCorpo": "距离上次测量已过 {h} 小时。",
+  "gl.faixa": "目标范围 (mg/dL)",
+  "gl.faixaDica": "请与医生商定数值。默认：70 至 180。",
+  "gl.min": "最低",
+  "gl.max": "最高",
+  "gl.homeVazio": "点击记录第一次测量",
 };
 
 export default traducoes;

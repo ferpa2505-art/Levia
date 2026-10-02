@@ -259,6 +259,20 @@ const traducoes: Traducoes = {
   "onb.tipodiabetes.nenhum_nome": "ฉันไม่เป็นเบาหวาน",
   "onb.tipodiabetes.nenhum_desc": "คุณยังใช้โมดูลเบาหวานได้ทุกเมื่อ",
   "tema.grafite": "กราไฟต์",
+  "gl.titulo": "น้ำตาลในเลือด",
+  "gl.media": "เฉลี่ย {v} mg/dL",
+  "gl.dias": "{n} วัน",
+  "gl.semDados": "บันทึกอย่างน้อย 2 ครั้งเพื่อดูกราฟ",
+  "gl.noAlvo": "{p}% อยู่ในช่วงเป้าหมาย",
+  "gl.lembrete": "เตือนการวัด",
+  "gl.lembreteDesc": "เตือน {h} ชม. หลังการวัดครั้งล่าสุด",
+  "gl.notifTitulo": "🩸 ได้เวลาวัดน้ำตาลในเลือด",
+  "gl.notifCorpo": "ผ่านไป {h} ชม. แล้วตั้งแต่การวัดครั้งล่าสุด",
+  "gl.faixa": "ช่วงเป้าหมาย (mg/dL)",
+  "gl.faixaDica": "ตกลงค่ากับแพทย์ ค่าเริ่มต้น: 70–180",
+  "gl.min": "ต่ำสุด",
+  "gl.max": "สูงสุด",
+  "gl.homeVazio": "แตะเพื่อบันทึกการวัดครั้งแรก",
 };
 
 export default traducoes;

@@ -259,6 +259,20 @@ const traducoes: Traducoes = {
   "onb.tipodiabetes.nenhum_nome": "मुझे डायबिटीज़ नहीं है",
   "onb.tipodiabetes.nenhum_desc": "आप जब चाहें डायबिटीज़ मॉड्यूल इस्तेमाल कर सकते हैं।",
   "tema.grafite": "ग्रेफ़ाइट",
+  "gl.titulo": "ब्लड शुगर",
+  "gl.media": "औसत {v} mg/dL",
+  "gl.dias": "{n} दिन",
+  "gl.semDados": "ग्राफ़ देखने के लिए कम से कम 2 माप दर्ज करें।",
+  "gl.noAlvo": "{p}% लक्ष्य सीमा में",
+  "gl.lembrete": "माप रिमाइंडर",
+  "gl.lembreteDesc": "आखिरी माप के {h} घंटे बाद याद दिलाएँ",
+  "gl.notifTitulo": "🩸 ब्लड शुगर जाँचने का समय",
+  "gl.notifCorpo": "आपके आखिरी माप को {h} घंटे हो गए हैं।",
+  "gl.faixa": "लक्ष्य सीमा (mg/dL)",
+  "gl.faixaDica": "ये मान अपने डॉक्टर से तय करें। डिफ़ॉल्ट: 70 से 180।",
+  "gl.min": "न्यूनतम",
+  "gl.max": "अधिकतम",
+  "gl.homeVazio": "पहला माप दर्ज करने के लिए टैप करें",
 };
 
 export default traducoes;

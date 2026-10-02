@@ -258,6 +258,20 @@ const ptBR = {
   "onb.tipodiabetes.nenhum_nome": "Não tenho diabetes",
   "onb.tipodiabetes.nenhum_desc": "Você ainda pode usar o módulo Diabetes quando quiser.",
   "tema.grafite": "Grafite",
+  "gl.titulo": "Glicemia",
+  "gl.media": "Média {v} mg/dL",
+  "gl.dias": "{n} dias",
+  "gl.semDados": "Registre pelo menos 2 medições para ver o gráfico.",
+  "gl.noAlvo": "{p}% na faixa-alvo",
+  "gl.lembrete": "Lembrete de medição",
+  "gl.lembreteDesc": "Avisar {h} h depois da última medição",
+  "gl.notifTitulo": "🩸 Hora de medir a glicemia",
+  "gl.notifCorpo": "Já se passaram {h} h desde a sua última medição.",
+  "gl.faixa": "Faixa-alvo (mg/dL)",
+  "gl.faixaDica": "Combine os valores com seu médico. Padrão: 70 a 180.",
+  "gl.min": "Mínimo",
+  "gl.max": "Máximo",
+  "gl.homeVazio": "Toque para registrar sua primeira medição",
 };
 
 export type ChaveTraducao = keyof typeof ptBR;
