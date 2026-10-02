@@ -258,6 +258,7 @@ const traducoes: Traducoes = {
   "menu.privacidade": "Chính sách quyền riêng tư",
   "onb.tipodiabetes.nenhum_nome": "Tôi không bị tiểu đường",
   "onb.tipodiabetes.nenhum_desc": "Bạn vẫn có thể dùng mục Tiểu đường bất cứ lúc nào.",
+  "tema.grafite": "Than chì",
 };
 
 export default traducoes;

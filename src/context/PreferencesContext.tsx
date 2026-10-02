@@ -55,7 +55,7 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
         const salvo = JSON.parse(texto) as Partial<PreferenciasSalvas>;
         setPrefs((atual) => {
           const novo: PreferenciasSalvas = {
-            tema: salvo.tema === 'petroleo' ? 'petroleo' : 'salvia',
+            tema: salvo.tema === 'petroleo' || salvo.tema === 'grafite' ? salvo.tema : 'salvia',
             idioma: idiomaValido(salvo.idioma) ? salvo.idioma : atual.idioma,
             idiomaConfirmado: !!salvo.idiomaConfirmado,
           };

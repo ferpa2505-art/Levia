@@ -258,6 +258,7 @@ const traducoes: Traducoes = {
   "menu.privacidade": "Kebijakan privasi",
   "onb.tipodiabetes.nenhum_nome": "Saya tidak menderita diabetes",
   "onb.tipodiabetes.nenhum_desc": "Kamu tetap bisa memakai modul Diabetes kapan saja.",
+  "tema.grafite": "Grafit",
 };
 
 export default traducoes;

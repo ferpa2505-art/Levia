@@ -258,6 +258,7 @@ const traducoes: Traducoes = {
   "menu.privacidade": "سياسة الخصوصية",
   "onb.tipodiabetes.nenhum_nome": "ليس لدي سكري",
   "onb.tipodiabetes.nenhum_desc": "يمكنك استخدام وحدة السكري متى شئت.",
+  "tema.grafite": "جرافيت",
 };
 
 export default traducoes;

@@ -1,7 +1,8 @@
 import { Stack, useRouter, useSegments } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
-import { colors } from '@constants/colors';
+import { StatusBar } from 'expo-status-bar';
+import { colors, TEMAS_ESCUROS } from '@constants/colors';
 import { ProfileProvider, useProfile } from '@context/ProfileContext';
 import { RecordsProvider } from '@context/RecordsContext';
 import { CustomRecipesProvider } from '@context/CustomRecipesContext';
@@ -62,7 +63,12 @@ function RootNavigation() {
  */
 function NavegacaoComTema() {
   const { tema } = usePreferences();
-  return <RootNavigation key={tema} />;
+  return (
+    <>
+      <StatusBar style={TEMAS_ESCUROS.includes(tema) ? 'light' : 'dark'} />
+      <RootNavigation key={tema} />
+    </>
+  );
 }
 
 export default function RootLayout() {

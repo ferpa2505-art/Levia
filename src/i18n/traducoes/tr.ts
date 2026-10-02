@@ -258,6 +258,7 @@ const traducoes: Traducoes = {
   "menu.privacidade": "Gizlilik politikası",
   "onb.tipodiabetes.nenhum_nome": "Diyabetim yok",
   "onb.tipodiabetes.nenhum_desc": "Diyabet modülünü yine de istediğin zaman kullanabilirsin.",
+  "tema.grafite": "Grafit",
 };
 
 export default traducoes;

@@ -258,6 +258,7 @@ const traducoes: Traducoes = {
   "menu.privacidade": "개인정보 처리방침",
   "onb.tipodiabetes.nenhum_nome": "당뇨병이 없어요",
   "onb.tipodiabetes.nenhum_desc": "원할 때 언제든 당뇨 모듈을 사용할 수 있어요.",
+  "tema.grafite": "그래파이트",
 };
 
 export default traducoes;

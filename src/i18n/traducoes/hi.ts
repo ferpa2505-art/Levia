@@ -258,6 +258,7 @@ const traducoes: Traducoes = {
   "menu.privacidade": "गोपनीयता नीति",
   "onb.tipodiabetes.nenhum_nome": "मुझे डायबिटीज़ नहीं है",
   "onb.tipodiabetes.nenhum_desc": "आप जब चाहें डायबिटीज़ मॉड्यूल इस्तेमाल कर सकते हैं।",
+  "tema.grafite": "ग्रेफ़ाइट",
 };
 
 export default traducoes;

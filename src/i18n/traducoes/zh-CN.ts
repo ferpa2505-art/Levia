@@ -258,6 +258,7 @@ const traducoes: Traducoes = {
   "menu.privacidade": "隐私政策",
   "onb.tipodiabetes.nenhum_nome": "我没有糖尿病",
   "onb.tipodiabetes.nenhum_desc": "你仍可随时使用糖尿病模块。",
+  "tema.grafite": "石墨",
 };
 
 export default traducoes;

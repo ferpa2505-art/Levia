@@ -16,7 +16,14 @@ type Tela = 'principal' | 'tema' | 'idioma';
 const AMOSTRAS: Record<NomeTema, string> = {
   salvia: '#6FA58E',
   petroleo: '#0A6E80',
+  grafite: '#D97757',
 };
+
+const CHAVE_NOME_TEMA = {
+  salvia: 'tema.salvia',
+  petroleo: 'tema.petroleo',
+  grafite: 'tema.grafite',
+} as const;
 
 /** Botão ⋮ do cabeçalho, com as opções de Tema e Idioma. */
 export function MenuOpcoes() {
@@ -69,7 +76,7 @@ export function MenuOpcoes() {
                   <View style={styles.itemTextos}>
                     <ThemedText variant="body" color="text">{t('menu.tema')}</ThemedText>
                     <ThemedText variant="small" color="textSecondary">
-                      {t(tema === 'salvia' ? 'tema.salvia' : 'tema.petroleo')}
+                      {t(CHAVE_NOME_TEMA[tema])}
                     </ThemedText>
                   </View>
                   <ChevronRight size={20} color={colors.textSecondary} strokeWidth={2} />
@@ -101,7 +108,7 @@ export function MenuOpcoes() {
                   <ThemedText variant="subheading" color="text">{t('menu.tema')}</ThemedText>
                 </Pressable>
 
-                {(['salvia', 'petroleo'] as NomeTema[]).map((opcao) => (
+                {(['salvia', 'petroleo', 'grafite'] as NomeTema[]).map((opcao) => (
                   <Pressable
                     key={opcao}
                     style={[styles.item, opcao === tema && styles.itemAtivo]}
@@ -110,7 +117,7 @@ export function MenuOpcoes() {
                     <View style={[styles.amostra, { backgroundColor: AMOSTRAS[opcao] }]} />
                     <View style={styles.itemTextos}>
                       <ThemedText variant="body" color="text">
-                        {t(opcao === 'salvia' ? 'tema.salvia' : 'tema.petroleo')}
+                        {t(CHAVE_NOME_TEMA[opcao])}
                       </ThemedText>
                     </View>
                     {opcao === tema ? (

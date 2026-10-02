@@ -258,6 +258,7 @@ const traducoes: Traducoes = {
   "menu.privacidade": "Политика конфиденциальности",
   "onb.tipodiabetes.nenhum_nome": "У меня нет диабета",
   "onb.tipodiabetes.nenhum_desc": "Вы всё равно можете пользоваться модулем «Диабет» в любое время.",
+  "tema.grafite": "Графит",
 };
 
 export default traducoes;

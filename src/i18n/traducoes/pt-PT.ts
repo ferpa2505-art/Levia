@@ -258,6 +258,7 @@ const traducoes: Traducoes = {
   "menu.privacidade": "Política de privacidade",
   "onb.tipodiabetes.nenhum_nome": "Não tenho diabetes",
   "onb.tipodiabetes.nenhum_desc": "Pode usar o módulo Diabetes sempre que quiser.",
+  "tema.grafite": "Grafite",
 };
 
 export default traducoes;

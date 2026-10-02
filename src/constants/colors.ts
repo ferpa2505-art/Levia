@@ -6,7 +6,10 @@
  * então todas as telas passam a usar as cores novas.
  */
 
-export type NomeTema = 'salvia' | 'petroleo';
+export type NomeTema = 'salvia' | 'petroleo' | 'grafite';
+
+/** Temas com fundo escuro (barra de status com ícones claros) */
+export const TEMAS_ESCUROS: NomeTema[] = ['grafite'];
 
 const temas = {
   // Tema original — Sálvia (verde suave, acolhedor)
@@ -37,6 +40,21 @@ const temas = {
     primarySoft: 'rgba(10,110,128,0.12)',
     accentSoft: 'rgba(111,163,199,0.18)',
     secondarySoft: 'rgba(242,158,109,0.18)',
+  },
+
+  // Tema Grafite — escuro, cinza quente com destaques em laranja
+  grafite: {
+    primary: '#D97757',      // Laranja-terracota (destaques, botões, ícones ativos)
+    accent: '#E0A458',       // Âmbar
+    secondary: '#E8956F',    // Laranja claro
+    background: '#262624',   // Grafite
+    surface: '#30302E',      // Cartões
+    text: '#F5F4EF',
+    textSecondary: '#A8A69E',
+    border: '#3E3D39',
+    primarySoft: 'rgba(217,119,87,0.16)',
+    accentSoft: 'rgba(224,164,88,0.18)',
+    secondarySoft: 'rgba(232,149,111,0.18)',
   },
 };
 

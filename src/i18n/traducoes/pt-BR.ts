@@ -257,6 +257,7 @@ const ptBR = {
   "menu.privacidade": "Política de privacidade",
   "onb.tipodiabetes.nenhum_nome": "Não tenho diabetes",
   "onb.tipodiabetes.nenhum_desc": "Você ainda pode usar o módulo Diabetes quando quiser.",
+  "tema.grafite": "Grafite",
 };
 
 export type ChaveTraducao = keyof typeof ptBR;

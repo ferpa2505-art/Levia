@@ -1,4 +1,5 @@
 import { Tabs } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Home, BookOpen, Dumbbell, Newspaper, User, Droplet } from 'lucide-react-native';
 import { colors } from '@constants/colors';
 import { MenuOpcoes } from '@components/MenuOpcoes';
@@ -6,6 +7,7 @@ import { useT } from '@context/PreferencesContext';
 
 export default function TabsLayout() {
   const t = useT();
+  const insets = useSafeAreaInsets();
 
   return (
     <Tabs
@@ -16,12 +18,14 @@ export default function TabsLayout() {
         tabBarStyle: {
           backgroundColor: colors.surface,
           borderTopColor: colors.border,
-          height: 62,
-          paddingBottom: 8,
-          paddingTop: 8,
+          // 76 dp de barra (antes 62) + espaço da barra de navegação do Android
+          height: 76 + insets.bottom,
+          paddingBottom: 12 + insets.bottom,
+          paddingTop: 10,
         },
+        tabBarIconStyle: { marginBottom: 2 },
         tabBarLabelStyle: {
-          fontSize: 12,
+          fontSize: 12.5,
           fontWeight: '600',
         },
         headerStyle: {

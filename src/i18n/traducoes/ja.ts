@@ -258,6 +258,7 @@ const traducoes: Traducoes = {
   "menu.privacidade": "プライバシーポリシー",
   "onb.tipodiabetes.nenhum_nome": "糖尿病はありません",
   "onb.tipodiabetes.nenhum_desc": "糖尿病モジュールはいつでも使えます。",
+  "tema.grafite": "グラファイト",
 };
 
 export default traducoes;

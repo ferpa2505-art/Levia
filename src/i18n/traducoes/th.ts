@@ -258,6 +258,7 @@ const traducoes: Traducoes = {
   "menu.privacidade": "นโยบายความเป็นส่วนตัว",
   "onb.tipodiabetes.nenhum_nome": "ฉันไม่เป็นเบาหวาน",
   "onb.tipodiabetes.nenhum_desc": "คุณยังใช้โมดูลเบาหวานได้ทุกเมื่อ",
+  "tema.grafite": "กราไฟต์",
 };
 
 export default traducoes;
