@@ -1,5 +1,18 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { RecordsData, registrosVazios, Refeicao, RegistroAgua, RegistroPeso, RegistroExercicio } from '@models/records';
+import {
+  RecordsData,
+  registrosVazios,
+  Refeicao,
+  RegistroAgua,
+  RegistroPeso,
+  RegistroExercicio,
+  TipoRefeicao,
+  tipoPeloHorario,
+} from '@models/records';
+import { carregarDiabetes } from '@utils/diabetesStorage';
+import { apagarFoto } from '@utils/fotosRefeicao';
+import { agendarLembreteRefeicao, cancelarLembreteRefeicao } from '@utils/lembreteRefeicao';
+import { traduzirAtual } from '@/i18n';
 import {
   carregarRegistros,
   salvarRegistros,
@@ -20,7 +33,12 @@ interface RecordsContextValue {
   pesos: RegistroPeso[];
   exerciciosHoje: RegistroExercicio[];
   kcalGastaHoje: number;
+  carboidratoHojeG: number;
+  /** Todas as refeições (para navegar por outros dias) */
+  refeicoes: Refeicao[];
   adicionarRefeicao: (nome: string, kcal: number, proteinaG: number) => Promise<void>;
+  /** Cria (sem id) ou atualiza (com id) uma refeição completa */
+  salvarRefeicao: (refeicao: Omit<Refeicao, 'id'> & { id?: string }, lembreteHoras?: number | null) => Promise<{ lembreteAgendado: boolean }>;
   removerRefeicao: (id: string) => Promise<void>;
   adicionarAgua: (ml: number) => Promise<void>;
   removerAgua: (id: string) => Promise<void>;
@@ -42,10 +60,40 @@ export function RecordsProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    carregarRegistros().then((d) => {
+    (async () => {
+      let d = await carregarRegistros();
+      if (!d.migradoRefeicoesDiabetes) {
+        // traz as refeições do antigo módulo Diabetes (tinham carboidratos) para cá
+        const diabetes = await carregarDiabetes();
+        const porRotulo: Record<string, TipoRefeicao> = {
+          'café da manhã': 'cafe',
+          'lanche da manhã': 'lanche_manha',
+          almoço: 'almoco',
+          'lanche da tarde': 'lanche_tarde',
+          jantar: 'jantar',
+          'lanche noturno': 'ceia',
+        };
+        const migradas: Refeicao[] = (diabetes.refeicoes ?? []).map((r) => {
+          const tipo = porRotulo[(r.tipo ?? '').toLowerCase()] ?? 'outro';
+          return {
+            id: gerarId(),
+            data: r.data,
+            horario: r.horario,
+            nome: r.alimentos?.trim() || r.tipo || traduzirAtual('ref.titulo'),
+            kcal: 0,
+            proteinaG: 0,
+            carboidratoG: r.carboidratos,
+            tipo,
+            tipoPersonalizado: tipo === 'outro' ? r.tipo : undefined,
+            observacoes: r.observacoes,
+          };
+        });
+        d = { ...d, refeicoes: [...d.refeicoes, ...migradas], migradoRefeicoesDiabetes: true };
+        await salvarRegistros(d);
+      }
       setDados(d);
       setLoading(false);
-    });
+    })();
   }, []);
 
   async function persistir(novosDados: RecordsData) {
@@ -59,8 +107,9 @@ export function RecordsProvider({ children }: { children: ReactNode }) {
     .filter((a) => a.data === hoje)
     .sort((a, b) => (a.horario < b.horario ? 1 : -1));
   const aguaHojeMl = aguasHoje.reduce((soma, a) => soma + a.ml, 0);
-  const kcalHoje = refeicoesHoje.reduce((soma, r) => soma + r.kcal, 0);
-  const proteinaHojeG = refeicoesHoje.reduce((soma, r) => soma + r.proteinaG, 0);
+  const kcalHoje = Math.round(refeicoesHoje.reduce((soma, r) => soma + r.kcal, 0));
+  const proteinaHojeG = Math.round(refeicoesHoje.reduce((soma, r) => soma + r.proteinaG, 0) * 10) / 10;
+  const carboidratoHojeG = Math.round(refeicoesHoje.reduce((soma, r) => soma + (r.carboidratoG ?? 0), 0));
 
   const exerciciosHoje = dados.exercicios
     .filter((e) => e.data === hoje)
@@ -71,11 +120,44 @@ export function RecordsProvider({ children }: { children: ReactNode }) {
   const pesoAtualKg = pesosOrdenados.length > 0 ? pesosOrdenados[0].pesoKg : null;
 
   async function adicionarRefeicao(nome: string, kcal: number, proteinaG: number) {
-    const nova: Refeicao = { id: gerarId(), data: hoje, horario: horarioAgora(), nome, kcal, proteinaG };
+    const horario = horarioAgora();
+    const nova: Refeicao = { id: gerarId(), data: hoje, horario, nome, kcal, proteinaG, tipo: tipoPeloHorario(horario) };
     await persistir({ ...dados, refeicoes: [...dados.refeicoes, nova] });
   }
 
+  async function salvarRefeicao(
+    entrada: Omit<Refeicao, 'id'> & { id?: string },
+    lembreteHoras?: number | null
+  ): Promise<{ lembreteAgendado: boolean }> {
+    const anterior = entrada.id ? dados.refeicoes.find((r) => r.id === entrada.id) : undefined;
+    if (anterior?.fotoUri && anterior.fotoUri !== entrada.fotoUri) await apagarFoto(anterior.fotoUri);
+    const final: Refeicao = { ...entrada, id: anterior?.id ?? gerarId() };
+    const refeicoes = anterior
+      ? dados.refeicoes.map((r) => (r.id === final.id ? final : r))
+      : [...dados.refeicoes, final];
+
+    // lembrete da próxima refeição: substitui o pendente
+    let lembreteRefeicaoId = dados.lembreteRefeicaoId ?? null;
+    let lembreteAgendado = false;
+    if (lembreteHoras && lembreteHoras > 0) {
+      await cancelarLembreteRefeicao(lembreteRefeicaoId);
+      const [a, m, d] = final.data.split('-').map(Number);
+      const [h, min] = final.horario.split(':').map(Number);
+      const quando = new Date(a, m - 1, d, h, min);
+      quando.setHours(quando.getHours() + lembreteHoras);
+      lembreteRefeicaoId = await agendarLembreteRefeicao(
+        quando,
+        traduzirAtual('ref.notifTitulo'),
+        traduzirAtual('ref.notifCorpo', { h: lembreteHoras })
+      );
+      lembreteAgendado = !!lembreteRefeicaoId;
+    }
+    await persistir({ ...dados, refeicoes, lembreteRefeicaoId });
+    return { lembreteAgendado };
+  }
+
   async function removerRefeicao(id: string) {
+    await apagarFoto(dados.refeicoes.find((r) => r.id === id)?.fotoUri);
     await persistir({ ...dados, refeicoes: dados.refeicoes.filter((r) => r.id !== id) });
   }
 
@@ -136,6 +218,9 @@ export function RecordsProvider({ children }: { children: ReactNode }) {
         exerciciosHoje,
         kcalGastaHoje,
         adicionarRefeicao,
+        salvarRefeicao,
+        refeicoes: dados.refeicoes,
+        carboidratoHojeG,
         removerRefeicao,
         adicionarAgua,
         removerAgua,
