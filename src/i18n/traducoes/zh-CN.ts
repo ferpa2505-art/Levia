@@ -397,6 +397,10 @@ const traducoes: Traducoes = {
   "atu.reiniciar": "Apply and restart the app",
   "atu.erro": "Couldn't check right now. Check your connection and try again.",
   "gl.faixaErro": "Minimum must be lower than maximum (between 40 and 400 mg/dL).",
+  "dia.hipoTitulo": "⚠️ 血糖偏低 ({v} mg/dL)",
+  "dia.hipoMsg": "如有症状（发抖、冷汗、头晕、意识模糊），请按照与医生商定的方案处理。常见做法是摄入 15 克速效碳水化合物（如半杯果汁），15 分钟后再次测量。\n\n如出现晕厥、抽搐或严重意识模糊，请拨打急救电话。",
+  "dia.altaTitulo": "血糖偏高 ({v} mg/dL)",
+  "dia.altaMsg": "请多喝水并遵医嘱。如果持续偏高，或伴有恶心、呕吐、腹痛或极度口渴，请就医。",
 };
 
 export default traducoes;

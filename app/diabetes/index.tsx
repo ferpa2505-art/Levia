@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { View, Pressable } from 'react-native';
-import { Droplet, FileText, Plus, Trash2 } from 'lucide-react-native';
+import { View, Pressable, Alert } from 'react-native';
+import { Droplet, FileText, Plus, Trash2, AlertTriangle } from 'lucide-react-native';
 import { TelaRolavel } from '@components/TelaRolavel';
 import { ThemedView } from '@components/ThemedView';
 import { ThemedText } from '@components/ThemedText';
@@ -20,6 +20,9 @@ import { estilosTema } from '@theme/estilos';
 type Unidade = 'mg/dL' | 'mmol/L';
 /** Faixa aceita para não registrar valor digitado errado */
 const LIMITES: Record<Unidade, [number, number]> = { 'mg/dL': [20, 600], 'mmol/L': [1.1, 33.3] };
+/** Abaixo disso: hipoglicemia (alerta). Acima de ALTA: alerta de glicemia alta. Em mg/dL. */
+const HIPO = 70;
+const ALTA = 250;
 
 export default function DiabetesScreen() {
   const { t } = usePreferences();
@@ -54,6 +57,9 @@ export default function DiabetesScreen() {
     setValor('');
     setObs('');
     setAberto(false);
+    const mg = unidade === 'mmol/L' ? Math.round(numero * 18) : numero;
+    if (mg < HIPO) Alert.alert(t('dia.hipoTitulo', { v: mg }), t('dia.hipoMsg'));
+    else if (mg > ALTA) Alert.alert(t('dia.altaTitulo', { v: mg }), t('dia.altaMsg'));
   }
 
   async function salvarNota() {
@@ -120,9 +126,14 @@ export default function DiabetesScreen() {
             <View key={g.id} style={styles.item}>
               <ThemedText variant="small" color="textSecondary" style={styles.hora}>{g.horario}</ThemedText>
               <View style={{ flex: 1 }}>
-                <ThemedText variant="subheading" color={corDoValor(valorMgDl(g))}>
-                  {g.valor} <ThemedText variant="caption" color="textSecondary">{g.unidade}</ThemedText>
-                </ThemedText>
+                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                  {(valorMgDl(g) < HIPO || valorMgDl(g) > ALTA) && (
+                    <AlertTriangle size={14} color={valorMgDl(g) < HIPO ? colors.error : colors.warning} strokeWidth={2.5} style={{ marginRight: 4 }} />
+                  )}
+                  <ThemedText variant="subheading" color={corDoValor(valorMgDl(g))}>
+                    {g.valor} <ThemedText variant="caption" color="textSecondary">{g.unidade}</ThemedText>
+                  </ThemedText>
+                </View>
                 {g.notas ? <ThemedText variant="caption" color="textSecondary">{g.notas}</ThemedText> : null}
               </View>
               <Pressable onPress={() => removerGlicemia(g.id)} hitSlop={8}>

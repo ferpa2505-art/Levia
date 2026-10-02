@@ -397,6 +397,10 @@ const traducoes: Traducoes = {
   "atu.reiniciar": "Apply and restart the app",
   "atu.erro": "Couldn't check right now. Check your connection and try again.",
   "gl.faixaErro": "Minimum must be lower than maximum (between 40 and 400 mg/dL).",
+  "dia.hipoTitulo": "⚠️ น้ำตาลในเลือดต่ำ ({v} mg/dL)",
+  "dia.hipoMsg": "หากมีอาการ (มือสั่น เหงื่อออก เวียนศีรษะ สับสน) ให้ทำตามแผนที่ตกลงกับแพทย์ คำแนะนำทั่วไปคือรับประทานคาร์โบไฮเดรตที่ดูดซึมเร็ว 15 กรัม (เช่น น้ำผลไม้ครึ่งแก้ว) แล้ววัดอีกครั้งใน 15 นาที\n\nหากหมดสติ ชัก หรือสับสนมาก ให้โทรเรียกรถพยาบาลฉุกเฉิน",
+  "dia.altaTitulo": "น้ำตาลในเลือดสูง ({v} mg/dL)",
+  "dia.altaMsg": "ดื่มน้ำและทำตามคำแนะนำของแพทย์ หากยังสูงอยู่หรือมีคลื่นไส้ อาเจียน ปวดท้อง หรือกระหายน้ำมาก ให้ไปพบแพทย์",
 };
 
 export default traducoes;

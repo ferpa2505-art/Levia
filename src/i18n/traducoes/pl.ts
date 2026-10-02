@@ -397,6 +397,10 @@ const traducoes: Traducoes = {
   "atu.reiniciar": "Apply and restart the app",
   "atu.erro": "Couldn't check right now. Check your connection and try again.",
   "gl.faixaErro": "Minimum must be lower than maximum (between 40 and 400 mg/dL).",
+  "dia.hipoTitulo": "⚠️ Niski poziom glukozy ({v} mg/dL)",
+  "dia.hipoMsg": "Jeśli masz objawy (drżenie, zimny pot, zawroty głowy, splątanie), postępuj zgodnie z planem ustalonym z lekarzem. Często zaleca się 15 g szybko działających węglowodanów (np. pół szklanki soku) i ponowny pomiar po 15 minutach.\n\nW razie omdlenia, drgawek lub silnego splątania wezwij pomoc.",
+  "dia.altaTitulo": "Wysoki poziom glukozy ({v} mg/dL)",
+  "dia.altaMsg": "Pij wodę i postępuj zgodnie z zaleceniami lekarza. Jeśli wynik pozostaje wysoki lub pojawiają się nudności, wymioty, ból brzucha lub silne pragnienie, zgłoś się do lekarza.",
 };
 
 export default traducoes;

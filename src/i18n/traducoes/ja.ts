@@ -397,6 +397,10 @@ const traducoes: Traducoes = {
   "atu.reiniciar": "Apply and restart the app",
   "atu.erro": "Couldn't check right now. Check your connection and try again.",
   "gl.faixaErro": "Minimum must be lower than maximum (between 40 and 400 mg/dL).",
+  "dia.hipoTitulo": "⚠️ 低血糖 ({v} mg/dL)",
+  "dia.hipoMsg": "症状（ふるえ、冷や汗、めまい、混乱）がある場合は、医師と決めた対処法に従ってください。一般的には、吸収の早い糖質15g（例：ジュース半分）をとり、15分後に再測定します。\n\n意識を失う、けいれん、強い混乱がある場合は救急車を呼んでください。",
+  "dia.altaTitulo": "高血糖 ({v} mg/dL)",
+  "dia.altaMsg": "水分をとり、医師の指示に従ってください。高い状態が続く、または吐き気・嘔吐・腹痛・強いのどの渇きがある場合は受診してください。",
 };
 
 export default traducoes;

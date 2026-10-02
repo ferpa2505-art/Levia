@@ -397,6 +397,10 @@ const traducoes: Traducoes = {
   "atu.reiniciar": "Apply and restart the app",
   "atu.erro": "Couldn't check right now. Check your connection and try again.",
   "gl.faixaErro": "Minimum must be lower than maximum (between 40 and 400 mg/dL).",
+  "dia.hipoTitulo": "⚠️ Düşük kan şekeri ({v} mg/dL)",
+  "dia.hipoMsg": "Belirtilerin varsa (titreme, soğuk ter, baş dönmesi, bilinç bulanıklığı) doktorunla belirlediğin plana uy. Yaygın öneri 15 g hızlı etkili karbonhidrat (ör. yarım bardak meyve suyu) alıp 15 dakika sonra tekrar ölçmektir.\n\nBayılma, nöbet veya ciddi bilinç bulanıklığında acil servisi ara.",
+  "dia.altaTitulo": "Yüksek kan şekeri ({v} mg/dL)",
+  "dia.altaMsg": "Su iç ve doktorunun önerisine uy. Değer yüksek kalırsa veya bulantı, kusma, karın ağrısı ya da aşırı susuzluk varsa tıbbi yardım al.",
 };
 
 export default traducoes;

@@ -397,6 +397,10 @@ const traducoes: Traducoes = {
   "atu.reiniciar": "Apply and restart the app",
   "atu.erro": "Couldn't check right now. Check your connection and try again.",
   "gl.faixaErro": "Minimum must be lower than maximum (between 40 and 400 mg/dL).",
+  "dia.hipoTitulo": "⚠️ Niedriger Blutzucker ({v} mg/dL)",
+  "dia.hipoMsg": "Bei Symptomen (Zittern, kalter Schweiß, Schwindel, Verwirrtheit) folge dem mit deiner Ärztin/deinem Arzt vereinbarten Plan. Üblich ist, 15 g schnell wirkende Kohlenhydrate (z. B. ein halbes Glas Saft) zu nehmen und nach 15 Minuten erneut zu messen.\n\nBei Bewusstlosigkeit, Krampfanfall oder starker Verwirrtheit den Notruf wählen.",
+  "dia.altaTitulo": "Hoher Blutzucker ({v} mg/dL)",
+  "dia.altaMsg": "Trink Wasser und folge der Empfehlung deiner Ärztin/deines Arztes. Bleibt der Wert hoch oder kommen Übelkeit, Erbrechen, Bauchschmerzen oder starker Durst hinzu, such ärztliche Hilfe.",
 };
 
 export default traducoes;

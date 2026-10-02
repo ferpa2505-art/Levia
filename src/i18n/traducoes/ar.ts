@@ -397,6 +397,10 @@ const traducoes: Traducoes = {
   "atu.reiniciar": "Apply and restart the app",
   "atu.erro": "Couldn't check right now. Check your connection and try again.",
   "gl.faixaErro": "Minimum must be lower than maximum (between 40 and 400 mg/dL).",
+  "dia.hipoTitulo": "⚠️ انخفاض السكر ({v} ملغ/دل)",
+  "dia.hipoMsg": "إذا ظهرت أعراض (رجفة، تعرق بارد، دوخة، ارتباك) فاتبع الخطة المتفق عليها مع طبيبك. من الإرشادات الشائعة تناول 15 غ من الكربوهيدرات سريعة الامتصاص (مثل نصف كوب عصير) ثم القياس مجددًا بعد 15 دقيقة.\n\nفي حال الإغماء أو التشنج أو الارتباك الشديد، اتصل بالطوارئ.",
+  "dia.altaTitulo": "ارتفاع السكر ({v} ملغ/دل)",
+  "dia.altaMsg": "اشرب الماء واتبع إرشادات طبيبك. إذا بقي مرتفعًا أو صاحبه غثيان أو قيء أو ألم في البطن أو عطش شديد، فاطلب الرعاية الطبية.",
 };
 
 export default traducoes;

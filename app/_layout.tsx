@@ -11,7 +11,6 @@ import { Glp1Provider } from '@context/Glp1Context';
 import { DiabetesProvider } from '@context/DiabetesContext';
 import { MedicacoesProvider } from '@context/MedicacoesContext';
 import { PreferencesProvider, usePreferences } from '@context/PreferencesContext';
-import { OmniRouteProvider } from '@context/OmniRouteContext';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -78,21 +77,19 @@ export default function RootLayout() {
   return (
     <PreferencesProvider>
       <ProfileProvider>
-        <OmniRouteProvider>
-          <RecordsProvider>
-            <CustomRecipesProvider>
-              <NewsProvider>
-                <Glp1Provider>
-                  <DiabetesProvider>
-                    <MedicacoesProvider>
-                      <NavegacaoComTema />
-                    </MedicacoesProvider>
-                  </DiabetesProvider>
-                </Glp1Provider>
-              </NewsProvider>
-            </CustomRecipesProvider>
-          </RecordsProvider>
-        </OmniRouteProvider>
+        <RecordsProvider>
+          <CustomRecipesProvider>
+            <NewsProvider>
+              <Glp1Provider>
+                <DiabetesProvider>
+                  <MedicacoesProvider>
+                    <NavegacaoComTema />
+                  </MedicacoesProvider>
+                </DiabetesProvider>
+              </Glp1Provider>
+            </NewsProvider>
+          </CustomRecipesProvider>
+        </RecordsProvider>
       </ProfileProvider>
     </PreferencesProvider>
   );

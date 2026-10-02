@@ -397,6 +397,10 @@ const traducoes: Traducoes = {
   "atu.reiniciar": "Apply and restart the app",
   "atu.erro": "Couldn't check right now. Check your connection and try again.",
   "gl.faixaErro": "Minimum must be lower than maximum (between 40 and 400 mg/dL).",
+  "dia.hipoTitulo": "⚠️ Lage bloedglucose ({v} mg/dL)",
+  "dia.hipoMsg": "Bij klachten (trillen, koud zweet, duizeligheid, verwardheid) volg je het plan dat je met je arts hebt afgesproken. Gebruikelijk is 15 g snelwerkende koolhydraten (bv. een half glas sap) en na 15 minuten opnieuw meten.\n\nBel bij flauwvallen, een aanval of ernstige verwardheid het alarmnummer.",
+  "dia.altaTitulo": "Hoge bloedglucose ({v} mg/dL)",
+  "dia.altaMsg": "Drink water en volg het advies van je arts. Blijft de waarde hoog of heb je misselijkheid, braken, buikpijn of veel dorst, zoek dan medische hulp.",
 };
 
 export default traducoes;

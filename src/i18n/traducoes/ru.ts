@@ -397,6 +397,10 @@ const traducoes: Traducoes = {
   "atu.reiniciar": "Apply and restart the app",
   "atu.erro": "Couldn't check right now. Check your connection and try again.",
   "gl.faixaErro": "Minimum must be lower than maximum (between 40 and 400 mg/dL).",
+  "dia.hipoTitulo": "⚠️ Низкая глюкоза ({v} мг/дл)",
+  "dia.hipoMsg": "При симптомах (дрожь, холодный пот, головокружение, спутанность) действуйте по плану, согласованному с врачом. Обычно рекомендуют принять 15 г быстрых углеводов (например, полстакана сока) и повторить измерение через 15 минут.\n\nПри потере сознания, судорогах или сильной спутанности вызовите скорую помощь.",
+  "dia.altaTitulo": "Высокая глюкоза ({v} мг/дл)",
+  "dia.altaMsg": "Пейте воду и следуйте рекомендациям врача. Если уровень остаётся высоким или есть тошнота, рвота, боль в животе или сильная жажда, обратитесь за медицинской помощью.",
 };
 
 export default traducoes;

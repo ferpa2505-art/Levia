@@ -397,6 +397,10 @@ const traducoes: Traducoes = {
   "atu.reiniciar": "Aplicar e reiniciar o app",
   "atu.erro": "Não foi possível verificar agora. Confira sua internet e tente de novo.",
   "gl.faixaErro": "O mínimo deve ser menor que o máximo (entre 40 e 400 mg/dL).",
+  "dia.hipoTitulo": "⚠️ Glicemia baixa ({v} mg/dL)",
+  "dia.hipoMsg": "Se tiver sintomas (tremores, suores frios, tonturas, confusão), siga o plano combinado com o seu médico. Uma orientação comum é ingerir 15 g de hidratos de carbono de ação rápida (ex.: meio copo de sumo) e medir de novo após 15 minutos.\n\nEm caso de desmaio, convulsão ou confusão intensa, ligue 112.",
+  "dia.altaTitulo": "Glicemia alta ({v} mg/dL)",
+  "dia.altaMsg": "Beba água e siga a orientação do seu médico. Se o valor continuar alto ou surgir com náuseas, vómitos, dor abdominal ou muita sede, procure atendimento médico.",
 };
 
 export default traducoes;

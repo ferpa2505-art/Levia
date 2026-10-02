@@ -397,6 +397,10 @@ const traducoes: Traducoes = {
   "atu.reiniciar": "Apply and restart the app",
   "atu.erro": "Couldn't check right now. Check your connection and try again.",
   "gl.faixaErro": "Minimum must be lower than maximum (between 40 and 400 mg/dL).",
+  "dia.hipoTitulo": "⚠️ Gula darah rendah ({v} mg/dL)",
+  "dia.hipoMsg": "Jika ada gejala (gemetar, keringat dingin, pusing, bingung), ikuti rencana yang disepakati dengan dokter. Anjuran umum adalah mengonsumsi 15 g karbohidrat cepat serap (mis. setengah gelas jus) lalu ukur lagi setelah 15 menit.\n\nJika pingsan, kejang, atau sangat bingung, hubungi layanan darurat.",
+  "dia.altaTitulo": "Gula darah tinggi ({v} mg/dL)",
+  "dia.altaMsg": "Minum air dan ikuti anjuran dokter. Jika tetap tinggi atau disertai mual, muntah, sakit perut, atau sangat haus, segera cari pertolongan medis.",
 };
 
 export default traducoes;

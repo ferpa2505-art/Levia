@@ -397,6 +397,10 @@ const traducoes: Traducoes = {
   "atu.reiniciar": "Apply and restart the app",
   "atu.erro": "Couldn't check right now. Check your connection and try again.",
   "gl.faixaErro": "Minimum must be lower than maximum (between 40 and 400 mg/dL).",
+  "dia.hipoTitulo": "⚠️ Glicemia bassa ({v} mg/dL)",
+  "dia.hipoMsg": "Se hai sintomi (tremore, sudore freddo, vertigini, confusione), segui il piano concordato con il medico. Un'indicazione comune è assumere 15 g di carboidrati ad azione rapida (es.: mezzo bicchiere di succo) e rimisurare dopo 15 minuti.\n\nIn caso di svenimento, convulsioni o forte confusione, chiama i soccorsi.",
+  "dia.altaTitulo": "Glicemia alta ({v} mg/dL)",
+  "dia.altaMsg": "Bevi acqua e segui le indicazioni del medico. Se il valore resta alto o compare con nausea, vomito, dolore addominale o molta sete, rivolgiti a un medico.",
 };
 
 export default traducoes;

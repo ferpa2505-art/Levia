@@ -397,6 +397,10 @@ const traducoes: Traducoes = {
   "atu.reiniciar": "Apply and restart the app",
   "atu.erro": "Couldn't check right now. Check your connection and try again.",
   "gl.faixaErro": "Minimum must be lower than maximum (between 40 and 400 mg/dL).",
+  "dia.hipoTitulo": "⚠️ 저혈당 ({v} mg/dL)",
+  "dia.hipoMsg": "증상(떨림, 식은땀, 어지러움, 혼란)이 있으면 의사와 정한 계획을 따르세요. 흔히 빠르게 흡수되는 탄수화물 15g(예: 주스 반 컵)을 섭취하고 15분 후 다시 측정합니다.\n\n의식 소실, 경련, 심한 혼란이 있으면 응급 서비스에 연락하세요.",
+  "dia.altaTitulo": "고혈당 ({v} mg/dL)",
+  "dia.altaMsg": "물을 마시고 의사의 지시를 따르세요. 계속 높거나 메스꺼움, 구토, 복통, 심한 갈증이 있으면 진료를 받으세요.",
 };
 
 export default traducoes;

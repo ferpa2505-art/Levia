@@ -397,6 +397,10 @@ const traducoes: Traducoes = {
   "atu.reiniciar": "Apply and restart the app",
   "atu.erro": "Couldn't check right now. Check your connection and try again.",
   "gl.faixaErro": "Minimum must be lower than maximum (between 40 and 400 mg/dL).",
+  "dia.hipoTitulo": "⚠️ Đường huyết thấp ({v} mg/dL)",
+  "dia.hipoMsg": "Nếu có triệu chứng (run, vã mồ hôi lạnh, chóng mặt, lú lẫn), hãy làm theo kế hoạch đã thống nhất với bác sĩ. Cách thường dùng là ăn 15 g carbohydrate hấp thu nhanh (vd: nửa ly nước trái cây) và đo lại sau 15 phút.\n\nNếu ngất, co giật hoặc lú lẫn nặng, hãy gọi cấp cứu.",
+  "dia.altaTitulo": "Đường huyết cao ({v} mg/dL)",
+  "dia.altaMsg": "Hãy uống nước và làm theo chỉ dẫn của bác sĩ. Nếu vẫn cao hoặc kèm buồn nôn, nôn, đau bụng hay rất khát, hãy đi khám.",
 };
 
 export default traducoes;

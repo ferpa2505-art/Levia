@@ -397,6 +397,10 @@ const traducoes: Traducoes = {
   "atu.reiniciar": "Apply and restart the app",
   "atu.erro": "Couldn't check right now. Check your connection and try again.",
   "gl.faixaErro": "Minimum must be lower than maximum (between 40 and 400 mg/dL).",
+  "dia.hipoTitulo": "⚠️ Glycémie basse ({v} mg/dL)",
+  "dia.hipoMsg": "En cas de symptômes (tremblements, sueurs froides, vertiges, confusion), suivez le plan convenu avec votre médecin. Une consigne courante est de prendre 15 g de glucides rapides (ex. : un demi-verre de jus) et de mesurer à nouveau après 15 minutes.\n\nEn cas d'évanouissement, de convulsions ou de confusion importante, appelez les urgences.",
+  "dia.altaTitulo": "Glycémie élevée ({v} mg/dL)",
+  "dia.altaMsg": "Buvez de l'eau et suivez l'avis de votre médecin. Si la valeur reste élevée ou s'accompagne de nausées, vomissements, douleurs abdominales ou soif intense, consultez.",
 };
 
 export default traducoes;

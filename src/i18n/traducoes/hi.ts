@@ -397,6 +397,10 @@ const traducoes: Traducoes = {
   "atu.reiniciar": "Apply and restart the app",
   "atu.erro": "Couldn't check right now. Check your connection and try again.",
   "gl.faixaErro": "Minimum must be lower than maximum (between 40 and 400 mg/dL).",
+  "dia.hipoTitulo": "⚠️ ब्लड शुगर कम ({v} mg/dL)",
+  "dia.hipoMsg": "लक्षण हों (कंपकंपी, ठंडा पसीना, चक्कर, भ्रम) तो डॉक्टर के साथ तय योजना का पालन करें। आम सलाह है 15 g जल्दी असर करने वाला कार्बोहाइड्रेट (जैसे आधा गिलास जूस) लेना और 15 मिनट बाद फिर से जाँचना।\n\nबेहोशी, दौरा या गंभीर भ्रम हो तो आपातकालीन सेवा को कॉल करें।",
+  "dia.altaTitulo": "ब्लड शुगर अधिक ({v} mg/dL)",
+  "dia.altaMsg": "पानी पिएँ और डॉक्टर की सलाह मानें। अगर स्तर ऊँचा बना रहे या मतली, उल्टी, पेट दर्द या बहुत प्यास हो, तो चिकित्सा सहायता लें।",
 };
 
 export default traducoes;

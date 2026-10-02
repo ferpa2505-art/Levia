@@ -397,6 +397,10 @@ const traducoes: Traducoes = {
   "atu.reiniciar": "Aplicar y reiniciar la app",
   "atu.erro": "No se pudo comprobar ahora. Revisa tu conexión e inténtalo de nuevo.",
   "gl.faixaErro": "El mínimo debe ser menor que el máximo (entre 40 y 400 mg/dL).",
+  "dia.hipoTitulo": "⚠️ Glucemia baja ({v} mg/dL)",
+  "dia.hipoMsg": "Si tienes síntomas (temblor, sudor frío, mareo, confusión), sigue el plan acordado con tu médico. Una indicación común es tomar 15 g de carbohidratos de acción rápida (ej.: medio vaso de jugo) y volver a medir a los 15 minutos.\n\nSi hay desmayo, convulsión o confusión intensa, llama a emergencias.",
+  "dia.altaTitulo": "Glucemia alta ({v} mg/dL)",
+  "dia.altaMsg": "Bebe agua y sigue la indicación de tu médico. Si el valor sigue alto o aparece con náuseas, vómitos, dolor abdominal o mucha sed, busca atención médica.",
 };
 
 export default traducoes;

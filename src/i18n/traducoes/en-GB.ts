@@ -397,6 +397,10 @@ const traducoes: Traducoes = {
   "atu.reiniciar": "Apply and restart the app",
   "atu.erro": "Couldn't check right now. Check your connection and try again.",
   "gl.faixaErro": "Minimum must be lower than maximum (between 40 and 400 mg/dL).",
+  "dia.hipoTitulo": "⚠️ Low blood glucose ({v} mg/dL)",
+  "dia.hipoMsg": "If you have symptoms (shaking, cold sweat, dizziness, confusion), follow the plan agreed with your doctor. A common approach is to take 15 g of fast-acting carbs (e.g. half a glass of juice) and check again after 15 minutes.\n\nIf there is fainting, seizure or severe confusion, call emergency services.",
+  "dia.altaTitulo": "High blood glucose ({v} mg/dL)",
+  "dia.altaMsg": "Drink water and follow your doctor's guidance. If it stays high or comes with nausea, vomiting, stomach pain or intense thirst, seek medical care.",
 };
 
 export default traducoes;

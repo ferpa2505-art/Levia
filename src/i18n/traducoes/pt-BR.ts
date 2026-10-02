@@ -396,6 +396,10 @@ const ptBR = {
   "atu.reiniciar": "Aplicar e reiniciar o app",
   "atu.erro": "Não foi possível verificar agora. Confira sua internet e tente de novo.",
   "gl.faixaErro": "O mínimo deve ser menor que o máximo (entre 40 e 400 mg/dL).",
+  "dia.hipoTitulo": "⚠️ Glicemia baixa ({v} mg/dL)",
+  "dia.hipoMsg": "Se tiver sintomas (tremor, suor frio, tontura, confusão), siga o plano combinado com seu médico. Uma orientação comum é consumir 15 g de carboidrato de ação rápida (ex.: meio copo de suco ou 1 colher de sopa de açúcar) e medir de novo após 15 minutos.\n\nEm caso de desmaio, convulsão ou confusão intensa, ligue para o SAMU (192).",
+  "dia.altaTitulo": "Glicemia alta ({v} mg/dL)",
+  "dia.altaMsg": "Beba água e siga a orientação do seu médico. Se o valor continuar alto ou vier com náusea, vômito, dor abdominal ou muita sede, procure atendimento médico.",
 };
 
 export type ChaveTraducao = keyof typeof ptBR;
