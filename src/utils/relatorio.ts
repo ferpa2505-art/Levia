@@ -8,6 +8,7 @@ import { carregarDiabetes } from '@utils/diabetesStorage';
 import { carregarGlp1 } from '@utils/glp1Storage';
 import { valorMgDl, momentoGlicemia, media } from '@utils/glicemia';
 import { rotuloUnidade, Medicacao, MedicacoesData } from '@models/medicacoes';
+import { suspenderBloqueio } from '@utils/bloqueioSuspenso';
 
 /**
  * Relatório em PDF para levar à consulta: peso, glicemia, medicações,
@@ -181,6 +182,7 @@ export async function compartilharRelatorio(dias: number): Promise<boolean> {
   const html = await montarHtmlRelatorio(dias);
   const { uri } = await Print.printToFileAsync({ html });
   if (!(await Sharing.isAvailableAsync())) return false;
+  suspenderBloqueio();
   await Sharing.shareAsync(uri, { mimeType: 'application/pdf', UTI: 'com.adobe.pdf', dialogTitle: t('rel.titulo') });
   return true;
 }

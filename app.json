@@ -2,7 +2,7 @@
   "expo": {
     "name": "Leviã",
     "slug": "levia-app",
-    "version": "0.3.1",
+    "version": "0.3.2",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "assetBundlePatterns": [
@@ -19,7 +19,10 @@
       },
       "runtimeVersion": {
         "policy": "appVersion"
-      }
+      },
+      "blockedPermissions": [
+        "com.google.android.gms.permission.AD_ID"
+      ]
     },
     "plugins": [
       "expo-router",
@@ -46,7 +49,15 @@
           "photosPermission": "O Leviã acessa suas fotos para você escolher a foto de um prato. As fotos ficam só no seu celular."
         }
       ],
-      "expo-sharing"
+      "expo-sharing",
+      "expo-secure-store",
+      "expo-mail-composer",
+      [
+        "expo-local-authentication",
+        {
+          "faceIDPermission": "O Leviã usa o reconhecimento facial para desbloquear o app com segurança."
+        }
+      ]
     ],
     "scheme": "levia",
     "extra": {

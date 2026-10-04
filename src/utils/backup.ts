@@ -4,6 +4,7 @@ import * as Sharing from 'expo-sharing';
 import * as DocumentPicker from 'expo-document-picker';
 import Constants from 'expo-constants';
 import { getNotifications } from '@utils/glp1Notifications';
+import { suspenderBloqueio } from '@utils/bloqueioSuspenso';
 
 /**
  * Backup completo dos dados do Leviã num arquivo .json que a pessoa guarda
@@ -42,6 +43,7 @@ export async function exportarBackup(tituloCompartilhar: string): Promise<boolea
   const uri = `${FileSystem.cacheDirectory}levia-backup-${hoje}.json`;
   await FileSystem.writeAsStringAsync(uri, JSON.stringify(arquivo));
   if (!(await Sharing.isAvailableAsync())) return false;
+  suspenderBloqueio();
   await Sharing.shareAsync(uri, { mimeType: 'application/json', dialogTitle: tituloCompartilhar });
   return true;
 }
@@ -52,6 +54,7 @@ export type BackupLido =
 
 /** Abre o seletor de arquivos e valida o backup escolhido (ainda não aplica) */
 export async function escolherBackup(): Promise<BackupLido> {
+  suspenderBloqueio();
   const r = await DocumentPicker.getDocumentAsync({ type: ['application/json', 'text/plain', '*/*'], copyToCacheDirectory: true });
   if (r.canceled || !r.assets?.[0]) return { ok: false, motivo: 'cancelado' };
   try {

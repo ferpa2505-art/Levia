@@ -8,6 +8,7 @@ import { usePreferences } from '@context/PreferencesContext';
 import { IDIOMAS } from '@/i18n';
 import { colors, spacing, radius, NomeTema } from '@constants/colors';
 import { estilosTema } from '@theme/estilos';
+import { suspenderBloqueio } from '@utils/bloqueioSuspenso';
 
 const URL_PRIVACIDADE = 'https://ferpa2505-art.github.io/levia-policies/privacidade.html';
 
@@ -100,7 +101,10 @@ export function MenuOpcoes() {
                   <ChevronRight size={20} color={colors.textSecondary} strokeWidth={2} />
                 </Pressable>
 
-                <Pressable style={styles.item} onPress={() => Linking.openURL(URL_PRIVACIDADE)}>
+                <Pressable style={styles.item} onPress={() => {
+                    suspenderBloqueio();
+                    Linking.openURL(URL_PRIVACIDADE);
+                  }}>
                   <ShieldCheck size={20} color={colors.primary} strokeWidth={2} />
                   <View style={styles.itemTextos}>
                     <ThemedText variant="body" color="text">{t('menu.privacidade')}</ThemedText>

@@ -15,6 +15,7 @@ import { MensagemErro } from '@components/forms/MensagemErro';
 import { estilosTema } from '@theme/estilos';
 import { ListaMedicacoes } from '@components/ListaMedicacoes';
 import { CartaoMeusDados } from '@components/CartaoMeusDados';
+import { CartaoSeguranca } from '@components/seguranca/CartaoSeguranca';
 
 export default function ProfileScreen() {
   const router = useRouter();
@@ -112,6 +113,7 @@ export default function ProfileScreen() {
         </ThemedView>
 
 
+        <CartaoSeguranca />
         <CartaoMeusDados />
       </ThemedView>
     </TelaRolavel>

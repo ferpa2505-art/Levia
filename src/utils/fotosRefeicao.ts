@@ -1,5 +1,6 @@
 import * as ImagePicker from 'expo-image-picker';
 import * as FileSystem from 'expo-file-system/legacy';
+import { suspenderBloqueio } from '@utils/bloqueioSuspenso';
 
 /**
  * Fotos dos pratos: tiradas pela câmera ou escolhidas na galeria e copiadas
@@ -20,6 +21,7 @@ async function guardar(uriTemporaria: string): Promise<string> {
 export async function fotografarPrato(): Promise<ResultadoFoto> {
   const perm = await ImagePicker.requestCameraPermissionsAsync();
   if (!perm.granted) return { negado: true };
+  suspenderBloqueio();
   const r = await ImagePicker.launchCameraAsync({ mediaTypes: ['images'], quality: 0.6, allowsEditing: false });
   if (r.canceled || !r.assets?.[0]) return null;
   return { uri: await guardar(r.assets[0].uri) };
@@ -28,6 +30,7 @@ export async function fotografarPrato(): Promise<ResultadoFoto> {
 export async function escolherFotoDaGaleria(): Promise<ResultadoFoto> {
   const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
   if (!perm.granted) return { negado: true };
+  suspenderBloqueio();
   const r = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], quality: 0.6 });
   if (r.canceled || !r.assets?.[0]) return null;
   return { uri: await guardar(r.assets[0].uri) };

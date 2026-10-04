@@ -13,6 +13,8 @@ export interface UserProfile {
   sexoBiologico: SexoBiologico | null;
   metaPesoKg: number | null;
   tipoDiabetes: TipoDiabetes;
+  /** E-mail para receber os relatórios (fica só no aparelho) */
+  email: string;
   onboardingConcluido: boolean;
 }
 
@@ -26,5 +28,6 @@ export const perfilVazio: UserProfile = {
   sexoBiologico: null,
   metaPesoKg: null,
   tipoDiabetes: null,
+  email: '',
   onboardingConcluido: false,
 };
