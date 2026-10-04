@@ -440,6 +440,10 @@ const traducoes: Traducoes = {
   "dados.confirmarMsg": "Los datos actuales de este móvil se reemplazarán por los de la copia del {d}. Las fotos de los platos no se incluyen.",
   "dados.restaurarAgora": "Restaurar",
   "dados.reabra": "Datos restaurados. Cierra y abre Leviã.",
+  "atu.perguntaTitulo": "Nueva versión de Leviã",
+  "atu.perguntaMsg": "Descargamos mejoras y correcciones. ¿Quieres actualizar ahora? La app se reiniciará en unos segundos. Si prefieres, se aplicará sola la próxima vez que abras Leviã.",
+  "atu.agora": "Actualizar ahora",
+  "atu.depois": "Más tarde",
 };
 
 export default traducoes;

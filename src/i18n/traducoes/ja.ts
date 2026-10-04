@@ -440,6 +440,10 @@ const traducoes: Traducoes = {
   "dados.confirmarMsg": "現在のデータは {d} のバックアップに置き換わります。料理の写真は含まれません。",
   "dados.restaurarAgora": "復元",
   "dados.reabra": "復元しました。Leviãを閉じて開き直してください。",
+  "atu.perguntaTitulo": "Leviãの新しいバージョン",
+  "atu.perguntaMsg": "改善と修正をダウンロードしました。今すぐ更新しますか？アプリは数秒で再起動します。後にする場合は、次回Leviãを開いたときに自動で適用されます。",
+  "atu.agora": "今すぐ更新",
+  "atu.depois": "後で",
 };
 
 export default traducoes;

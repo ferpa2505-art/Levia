@@ -440,6 +440,10 @@ const traducoes: Traducoes = {
   "dados.confirmarMsg": "Bu telefondaki mevcut veriler {d} tarihli yedekle değiştirilecek. Tabak fotoğrafları dahil değildir.",
   "dados.restaurarAgora": "Geri yükle",
   "dados.reabra": "Veriler geri yüklendi. Leviã'yı kapatıp yeniden aç.",
+  "atu.perguntaTitulo": "Yeni Leviã sürümü",
+  "atu.perguntaMsg": "İyileştirmeler ve düzeltmeler indirildi. Şimdi güncellensin mi? Uygulama birkaç saniye içinde yeniden başlar. İstersen bir sonraki açılışta kendiliğinden uygulanır.",
+  "atu.agora": "Şimdi güncelle",
+  "atu.depois": "Daha sonra",
 };
 
 export default traducoes;

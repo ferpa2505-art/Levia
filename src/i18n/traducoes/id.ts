@@ -440,6 +440,10 @@ const traducoes: Traducoes = {
   "dados.confirmarMsg": "Data saat ini akan diganti dengan cadangan {d}. Foto piring tidak termasuk.",
   "dados.restaurarAgora": "Pulihkan",
   "dados.reabra": "Data dipulihkan. Tutup lalu buka lagi Leviã.",
+  "atu.perguntaTitulo": "Versi baru Leviã",
+  "atu.perguntaMsg": "Kami mengunduh peningkatan dan perbaikan. Perbarui sekarang? Aplikasi akan dimulai ulang dalam beberapa detik. Jika tidak, pembaruan otomatis berlaku saat Leviã dibuka lagi.",
+  "atu.agora": "Perbarui sekarang",
+  "atu.depois": "Nanti",
 };
 
 export default traducoes;

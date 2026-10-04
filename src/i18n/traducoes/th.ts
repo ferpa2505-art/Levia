@@ -440,6 +440,10 @@ const traducoes: Traducoes = {
   "dados.confirmarMsg": "ข้อมูลปัจจุบันจะถูกแทนที่ด้วยข้อมูลสำรองวันที่ {d} ไม่รวมรูปจานอาหาร",
   "dados.restaurarAgora": "กู้คืน",
   "dados.reabra": "กู้คืนแล้ว ปิดแล้วเปิด Leviã ใหม่",
+  "atu.perguntaTitulo": "Leviã เวอร์ชันใหม่",
+  "atu.perguntaMsg": "ดาวน์โหลดการปรับปรุงและแก้ไขแล้ว อัปเดตตอนนี้ไหม? แอปจะรีสตาร์ทในไม่กี่วินาที หรือจะให้ใช้เองเมื่อเปิด Leviã ครั้งถัดไปก็ได้",
+  "atu.agora": "อัปเดตตอนนี้",
+  "atu.depois": "ภายหลัง",
 };
 
 export default traducoes;

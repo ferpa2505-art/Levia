@@ -440,6 +440,10 @@ const traducoes: Traducoes = {
   "dados.confirmarMsg": "Dữ liệu hiện tại sẽ được thay bằng bản sao lưu ngày {d}. Không bao gồm ảnh món ăn.",
   "dados.restaurarAgora": "Khôi phục",
   "dados.reabra": "Đã khôi phục. Hãy đóng và mở lại Leviã.",
+  "atu.perguntaTitulo": "Phiên bản Leviã mới",
+  "atu.perguntaMsg": "Đã tải các cải tiến và bản sửa lỗi. Cập nhật ngay? Ứng dụng sẽ khởi động lại sau vài giây. Nếu không, bản cập nhật sẽ tự áp dụng lần mở Leviã tiếp theo.",
+  "atu.agora": "Cập nhật ngay",
+  "atu.depois": "Để sau",
 };
 
 export default traducoes;

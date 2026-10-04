@@ -440,6 +440,10 @@ const traducoes: Traducoes = {
   "dados.confirmarMsg": "Die aktuellen Daten werden durch das Backup vom {d} ersetzt. Fotos der Mahlzeiten sind nicht enthalten.",
   "dados.restaurarAgora": "Wiederherstellen",
   "dados.reabra": "Daten wiederhergestellt. Schließe Leviã und öffne die App erneut.",
+  "atu.perguntaTitulo": "Neue Leviã-Version",
+  "atu.perguntaMsg": "Wir haben Verbesserungen und Korrekturen geladen. Jetzt aktualisieren? Die App startet in wenigen Sekunden neu. Sonst wird das Update beim nächsten Öffnen von Leviã übernommen.",
+  "atu.agora": "Jetzt aktualisieren",
+  "atu.depois": "Später",
 };
 
 export default traducoes;

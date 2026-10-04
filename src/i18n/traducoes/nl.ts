@@ -440,6 +440,10 @@ const traducoes: Traducoes = {
   "dados.confirmarMsg": "De huidige gegevens worden vervangen door de back-up van {d}. Foto's van maaltijden zitten er niet in.",
   "dados.restaurarAgora": "Terugzetten",
   "dados.reabra": "Gegevens teruggezet. Sluit Leviã en open de app opnieuw.",
+  "atu.perguntaTitulo": "Nieuwe versie van Leviã",
+  "atu.perguntaMsg": "We hebben verbeteringen en oplossingen gedownload. Nu bijwerken? De app herstart binnen enkele seconden. Anders wordt het toegepast de volgende keer dat je Leviã opent.",
+  "atu.agora": "Nu bijwerken",
+  "atu.depois": "Later",
 };
 
 export default traducoes;

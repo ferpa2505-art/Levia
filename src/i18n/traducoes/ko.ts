@@ -440,6 +440,10 @@ const traducoes: Traducoes = {
   "dados.confirmarMsg": "현재 데이터가 {d} 백업으로 바뀝니다. 음식 사진은 포함되지 않아요.",
   "dados.restaurarAgora": "복원",
   "dados.reabra": "복원했어요. Leviã를 닫았다가 다시 여세요.",
+  "atu.perguntaTitulo": "Leviã 새 버전",
+  "atu.perguntaMsg": "개선 사항과 수정 사항을 받았어요. 지금 업데이트할까요? 앱이 몇 초 후 다시 시작돼요. 나중에 하면 다음에 Leviã를 열 때 자동으로 적용돼요.",
+  "atu.agora": "지금 업데이트",
+  "atu.depois": "나중에",
 };
 
 export default traducoes;

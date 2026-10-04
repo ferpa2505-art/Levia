@@ -440,6 +440,10 @@ const traducoes: Traducoes = {
   "dados.confirmarMsg": "当前数据将被 {d} 的备份替换。餐盘照片不包含在内。",
   "dados.restaurarAgora": "恢复",
   "dados.reabra": "数据已恢复。请关闭并重新打开 Leviã。",
+  "atu.perguntaTitulo": "Leviã 新版本",
+  "atu.perguntaMsg": "已下载改进和修复。现在更新吗？应用会在几秒内重启。也可以稍后，下次打开 Leviã 时自动生效。",
+  "atu.agora": "立即更新",
+  "atu.depois": "稍后",
 };
 
 export default traducoes;

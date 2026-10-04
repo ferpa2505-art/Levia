@@ -10,12 +10,14 @@ import { NewsProvider } from '@context/NewsContext';
 import { Glp1Provider } from '@context/Glp1Context';
 import { DiabetesProvider } from '@context/DiabetesContext';
 import { MedicacoesProvider } from '@context/MedicacoesContext';
+import { useVerificarAtualizacao } from '@hooks/useVerificarAtualizacao';
 import { PreferencesProvider, usePreferences } from '@context/PreferencesContext';
 
 SplashScreen.preventAutoHideAsync();
 
 function RootNavigation() {
   const { profile, loading } = useProfile();
+  useVerificarAtualizacao(!loading);
   const { t } = usePreferences();
   const segments = useSegments();
   const router = useRouter();

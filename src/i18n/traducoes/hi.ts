@@ -440,6 +440,10 @@ const traducoes: Traducoes = {
   "dados.confirmarMsg": "मौजूदा डेटा {d} के बैकअप से बदल जाएगा। थाली की फ़ोटो शामिल नहीं हैं।",
   "dados.restaurarAgora": "वापस लाएँ",
   "dados.reabra": "डेटा वापस आ गया। Leviã बंद करके फिर खोलें।",
+  "atu.perguntaTitulo": "Leviã का नया वर्ज़न",
+  "atu.perguntaMsg": "हमने सुधार और फ़िक्स डाउनलोड कर लिए हैं। अभी अपडेट करें? ऐप कुछ सेकंड में फिर से शुरू होगा। नहीं तो अगली बार Leviã खोलने पर अपने आप लागू होगा।",
+  "atu.agora": "अभी अपडेट करें",
+  "atu.depois": "बाद में",
 };
 
 export default traducoes;

@@ -440,6 +440,10 @@ const traducoes: Traducoes = {
   "dados.confirmarMsg": "سيتم استبدال البيانات الحالية بنسخة {d}. صور الأطباق غير مشمولة.",
   "dados.restaurarAgora": "استعادة",
   "dados.reabra": "تمت الاستعادة. أغلق Leviã ثم افتحه من جديد.",
+  "atu.perguntaTitulo": "إصدار جديد من Leviã",
+  "atu.perguntaMsg": "نزّلنا تحسينات وإصلاحات. هل تريد التحديث الآن؟ سيُعاد تشغيل التطبيق خلال ثوانٍ. وإلا سيُطبّق تلقائيًا في المرة القادمة التي تفتح فيها Leviã.",
+  "atu.agora": "حدّث الآن",
+  "atu.depois": "لاحقًا",
 };
 
 export default traducoes;

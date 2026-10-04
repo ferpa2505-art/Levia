@@ -440,6 +440,10 @@ const traducoes: Traducoes = {
   "dados.confirmarMsg": "I dati attuali verranno sostituiti con quelli del backup del {d}. Le foto dei piatti non sono incluse.",
   "dados.restaurarAgora": "Ripristina",
   "dados.reabra": "Dati ripristinati. Chiudi e riapri Leviã.",
+  "atu.perguntaTitulo": "Nuova versione di Leviã",
+  "atu.perguntaMsg": "Abbiamo scaricato miglioramenti e correzioni. Aggiornare ora? L'app si riavvierà in pochi secondi. Altrimenti verrà applicato alla prossima apertura di Leviã.",
+  "atu.agora": "Aggiorna ora",
+  "atu.depois": "Più tardi",
 };
 
 export default traducoes;

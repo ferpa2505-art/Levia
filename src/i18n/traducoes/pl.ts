@@ -440,6 +440,10 @@ const traducoes: Traducoes = {
   "dados.confirmarMsg": "Obecne dane zostaną zastąpione kopią z {d}. Zdjęcia posiłków nie są uwzględnione.",
   "dados.restaurarAgora": "Przywróć",
   "dados.reabra": "Dane przywrócone. Zamknij i otwórz Leviã ponownie.",
+  "atu.perguntaTitulo": "Nowa wersja Leviã",
+  "atu.perguntaMsg": "Pobraliśmy ulepszenia i poprawki. Zaktualizować teraz? Aplikacja uruchomi się ponownie za kilka sekund. W przeciwnym razie zmiany wejdą przy następnym otwarciu Leviã.",
+  "atu.agora": "Aktualizuj teraz",
+  "atu.depois": "Później",
 };
 
 export default traducoes;

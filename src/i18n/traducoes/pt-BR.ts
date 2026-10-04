@@ -439,6 +439,10 @@ const ptBR = {
   "dados.confirmarMsg": "Os dados atuais deste celular serão substituídos pelos do backup de {d}. As fotos dos pratos não fazem parte do backup.",
   "dados.restaurarAgora": "Restaurar",
   "dados.reabra": "Dados restaurados. Feche e abra o Leviã.",
+  "atu.perguntaTitulo": "Nova versão do Leviã",
+  "atu.perguntaMsg": "Baixamos melhorias e correções. Quer atualizar agora? O app vai reiniciar em poucos segundos. Se preferir, ela entra sozinha da próxima vez que você abrir o Leviã.",
+  "atu.agora": "Atualizar agora",
+  "atu.depois": "Mais tarde",
 };
 
 export type ChaveTraducao = keyof typeof ptBR;
