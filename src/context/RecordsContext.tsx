@@ -9,6 +9,7 @@ import {
   TipoRefeicao,
   tipoPeloHorario,
 } from '@models/records';
+import { Nutrientes, somarNutrientes } from '@models/ingredients';
 import { carregarDiabetes } from '@utils/diabetesStorage';
 import { apagarFoto } from '@utils/fotosRefeicao';
 import { agendarLembreteRefeicao, cancelarLembreteRefeicao } from '@utils/lembreteRefeicao';
@@ -34,9 +35,13 @@ interface RecordsContextValue {
   exerciciosHoje: RegistroExercicio[];
   kcalGastaHoje: number;
   carboidratoHojeG: number;
+  gorduraHojeG: number;
+  fibraHojeG: number;
+  /** Soma dos 5 nutrientes de um dia (AAAA-MM-DD) */
+  nutrientesDoDia: (data: string) => ReturnType<typeof somarNutrientes> & { refeicoes: number };
   /** Todas as refeições (para navegar por outros dias) */
   refeicoes: Refeicao[];
-  adicionarRefeicao: (nome: string, kcal: number, proteinaG: number) => Promise<void>;
+  adicionarRefeicao: (nome: string, nutrientes: Nutrientes) => Promise<void>;
   /** Cria (sem id) ou atualiza (com id) uma refeição completa */
   salvarRefeicao: (refeicao: Omit<Refeicao, 'id'> & { id?: string }, lembreteHoras?: number | null) => Promise<{ lembreteAgendado: boolean }>;
   removerRefeicao: (id: string) => Promise<void>;
@@ -114,6 +119,13 @@ export function RecordsProvider({ children }: { children: ReactNode }) {
   const kcalHoje = Math.round(refeicoesHoje.reduce((soma, r) => soma + r.kcal, 0));
   const proteinaHojeG = Math.round(refeicoesHoje.reduce((soma, r) => soma + r.proteinaG, 0) * 10) / 10;
   const carboidratoHojeG = Math.round(refeicoesHoje.reduce((soma, r) => soma + (r.carboidratoG ?? 0), 0));
+  const gorduraHojeG = Math.round(refeicoesHoje.reduce((soma, r) => soma + (r.gorduraG ?? 0), 0));
+  const fibraHojeG = Math.round(refeicoesHoje.reduce((soma, r) => soma + (r.fibraG ?? 0), 0));
+
+  function nutrientesDoDia(data: string) {
+    const doDia = dados.refeicoes.filter((r) => r.data === data);
+    return { ...somarNutrientes(doDia), refeicoes: doDia.length };
+  }
 
   const exerciciosHoje = dados.exercicios
     .filter((e) => e.data === hoje)
@@ -123,9 +135,20 @@ export function RecordsProvider({ children }: { children: ReactNode }) {
   const pesosOrdenados = [...dados.pesos].sort((a, b) => (a.data < b.data ? 1 : -1));
   const pesoAtualKg = pesosOrdenados.length > 0 ? pesosOrdenados[0].pesoKg : null;
 
-  async function adicionarRefeicao(nome: string, kcal: number, proteinaG: number) {
+  async function adicionarRefeicao(nome: string, n: Nutrientes) {
     const horario = horarioAgora();
-    const nova: Refeicao = { id: gerarId(), data: hoje, horario, nome, kcal, proteinaG, tipo: tipoPeloHorario(horario) };
+    const nova: Refeicao = {
+      id: gerarId(),
+      data: hoje,
+      horario,
+      nome,
+      kcal: n.kcal,
+      proteinaG: n.proteinaG,
+      carboidratoG: n.carboidratoG,
+      gorduraG: n.gorduraG,
+      fibraG: n.fibraG,
+      tipo: tipoPeloHorario(horario),
+    };
     await persistir({ ...dadosRef.current, refeicoes: [...dadosRef.current.refeicoes, nova] });
   }
 
@@ -225,6 +248,9 @@ export function RecordsProvider({ children }: { children: ReactNode }) {
         salvarRefeicao,
         refeicoes: dados.refeicoes,
         carboidratoHojeG,
+        gorduraHojeG,
+        fibraHojeG,
+        nutrientesDoDia,
         removerRefeicao,
         adicionarAgua,
         removerAgua,

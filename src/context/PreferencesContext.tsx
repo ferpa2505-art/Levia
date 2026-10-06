@@ -22,6 +22,10 @@ interface PreferenciasSalvas {
   tema: NomeTema;
   idioma: CodigoIdioma;
   idiomaConfirmado: boolean;
+  /** Dicas de uso pelas telas — ligadas no primeiro uso */
+  dicas: boolean;
+  /** Dicas que a pessoa já fechou (somem até religar as Dicas) */
+  dicasOcultas: string[];
 }
 
 interface PreferencesContextValue {
@@ -32,6 +36,11 @@ interface PreferencesContextValue {
   mudarTema: (tema: NomeTema) => void;
   mudarIdioma: (idioma: CodigoIdioma) => void;
   confirmarIdioma: (idioma: CodigoIdioma) => void;
+  dicas: boolean;
+  /** Liga/desliga as dicas; ligar de novo mostra todas outra vez */
+  mudarDicas: (ligadas: boolean) => void;
+  dicaVisivel: (id: string) => boolean;
+  ocultarDica: (id: string) => void;
   /** Tradução: t('home.seuPeso') ou t('home.ola', { nome: 'Fer' }) */
   t: (chave: ChaveTraducao, params?: Record<string, string | number>) => string;
   /** Tradução de itens de catálogo salvos em português: tc('Caminhada') */
@@ -46,6 +55,8 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
     tema: 'salvia',
     idioma: detectarIdiomaDoCelular(),
     idiomaConfirmado: false,
+    dicas: true,
+    dicasOcultas: [],
   });
 
   useEffect(() => {
@@ -58,6 +69,8 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
             tema: salvo.tema === 'petroleo' || salvo.tema === 'grafite' ? salvo.tema : 'salvia',
             idioma: idiomaValido(salvo.idioma) ? salvo.idioma : atual.idioma,
             idiomaConfirmado: !!salvo.idiomaConfirmado,
+            dicas: salvo.dicas !== false,
+            dicasOcultas: Array.isArray(salvo.dicasOcultas) ? salvo.dicasOcultas.filter((d) => typeof d === 'string') : [],
           };
           aplicarTema(novo.tema);
           return novo;
@@ -105,6 +118,34 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
     [salvar]
   );
 
+  const mudarDicas = useCallback(
+    (ligadas: boolean) => {
+      setPrefs((atual) => {
+        const novo = { ...atual, dicas: ligadas, dicasOcultas: ligadas ? [] : atual.dicasOcultas };
+        salvar(novo);
+        return novo;
+      });
+    },
+    [salvar]
+  );
+
+  const ocultarDica = useCallback(
+    (id: string) => {
+      setPrefs((atual) => {
+        if (atual.dicasOcultas.includes(id)) return atual;
+        const novo = { ...atual, dicasOcultas: [...atual.dicasOcultas, id] };
+        salvar(novo);
+        return novo;
+      });
+    },
+    [salvar]
+  );
+
+  const dicaVisivel = useCallback(
+    (id: string) => prefs.dicas && !prefs.dicasOcultas.includes(id),
+    [prefs.dicas, prefs.dicasOcultas]
+  );
+
   const t = useCallback(
     (chave: ChaveTraducao, params?: Record<string, string | number>) =>
       traduzir(prefs.idioma, chave, params),
@@ -128,6 +169,10 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
         mudarTema,
         mudarIdioma,
         confirmarIdioma,
+        dicas: prefs.dicas,
+        mudarDicas,
+        dicaVisivel,
+        ocultarDica,
         t,
         tc,
       }}

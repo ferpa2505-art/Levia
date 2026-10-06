@@ -9,6 +9,8 @@ export interface ItemRefeicao {
   kcal: number;
   proteinaG: number;
   carboidratoG?: number;
+  gorduraG?: number;
+  fibraG?: number;
 }
 
 export interface Refeicao {
@@ -20,6 +22,8 @@ export interface Refeicao {
   kcal: number;
   proteinaG: number;
   carboidratoG?: number;
+  gorduraG?: number;
+  fibraG?: number;
   tipo?: TipoRefeicao;
   /** Nome livre quando tipo = 'outro' */
   tipoPersonalizado?: string;

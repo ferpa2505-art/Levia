@@ -1,6 +1,6 @@
 # Banco global de alimentos do Levia
 
-Gera `src/data/alimentosGlobais.json`: **4.459 itens** (3.527 alimentos e pratos prontos + 932 pratos montados), com nomes em **PT-BR, EN, ES, FR e IT**. Valores por 100 g: kcal, proteína, carboidrato, gordura e fibra, mais a porção sugerida em gramas.
+Gera `src/data/alimentosGlobais.json`: **4.458 itens** (3.526 alimentos e pratos prontos + 932 pratos montados), com nomes em **PT-BR, EN, ES, FR e IT**. Valores por 100 g: kcal, proteína, carboidrato, gordura e fibra, mais a porção sugerida em gramas.
 
 ## Fontes e licenças
 

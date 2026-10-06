@@ -11,9 +11,11 @@ import { useRecords } from '@context/RecordsContext';
 import { useCustomRecipes } from '@context/CustomRecipesContext';
 import { usePreferences } from '@context/PreferencesContext';
 import { buscarIngredientes } from '@constants/ingredients';
-import { buscarReceitas } from '@constants/recipes';
 import { ItemRefeicao, TipoRefeicao, TIPOS_REFEICAO, tipoPeloHorario } from '@models/records';
-import { AlimentoPor100g, PORCAO_PADRAO_G } from '@models/ingredients';
+import { AlimentoPor100g, PORCAO_PADRAO_G, valoresDaPorcao, somarNutrientes } from '@models/ingredients';
+import { textoNutrientes, textoNutrientes100 } from '@utils/textoNutrientes';
+import { AnaliseIAPrato } from '@components/AnaliseIAPrato';
+import { Dica } from '@components/Dica';
 import { dataDeHoje, horarioAgora } from '@utils/recordsStorage';
 import { fotografarPrato, escolherFotoDaGaleria } from '@utils/fotosRefeicao';
 import { colors, spacing, radius } from '@constants/colors';
@@ -21,9 +23,7 @@ import { SeletorHorario } from '@components/forms/SeletorHorario';
 import { MensagemErro } from '@components/forms/MensagemErro';
 import { estilosTema } from '@theme/estilos';
 
-type Opcao =
-  | { tipo: 'por100'; alimento: AlimentoPor100g & { carboidratoGPor100g?: number }; rotulo: string }
-  | { tipo: 'porcao'; item: ItemRefeicao; rotulo: string };
+type Opcao = { tipo: 'por100'; alimento: AlimentoPor100g; rotulo: string };
 
 const arred = (n: number, casas = 0) => Math.round(n * 10 ** casas) / 10 ** casas;
 
@@ -42,7 +42,14 @@ export default function RefeicaoScreen() {
   const [itens, setItens] = useState<ItemRefeicao[]>(
     existente?.itens ??
       (existente
-        ? [{ nome: existente.nome, kcal: existente.kcal, proteinaG: existente.proteinaG, carboidratoG: existente.carboidratoG }]
+        ? [{
+            nome: existente.nome,
+            kcal: existente.kcal,
+            proteinaG: existente.proteinaG,
+            carboidratoG: existente.carboidratoG,
+            gorduraG: existente.gorduraG,
+            fibraG: existente.fibraG,
+          }]
         : [])
   );
   const [foto, setFoto] = useState<string | undefined>(existente?.fotoUri);
@@ -60,16 +67,13 @@ export default function RefeicaoScreen() {
   const [mKcal, setMKcal] = useState('');
   const [mProt, setMProt] = useState('');
   const [mCarb, setMCarb] = useState('');
+  const [mGord, setMGord] = useState('');
+  const [mFibra, setMFibra] = useState('');
 
   const opcoes: Opcao[] = !busca.trim() || escolhido
     ? []
     : [
         ...buscarReceitasPersonalizadas(busca).map((r) => ({ tipo: 'por100' as const, alimento: r, rotulo: t('d.suaReceita', { nome: r.nome }) })),
-        ...buscarReceitas(busca).map((r) => ({
-          tipo: 'porcao' as const,
-          item: { nome: r.nome, kcal: r.kcal, proteinaG: r.proteinaG },
-          rotulo: r.nome,
-        })),
         ...buscarIngredientes(busca, 6).map((i) => ({
           tipo: 'por100' as const,
           alimento: { ...i, porcaoPadraoG: i.gramaPadrao },
@@ -80,30 +84,16 @@ export default function RefeicaoScreen() {
   const atalhos = !busca.trim() && !escolhido ? receitasPersonalizadas.slice(-4).reverse() : [];
 
   function escolher(o: Opcao) {
-    if (o.tipo === 'porcao') {
-      setItens((l) => [...l, o.item]);
-      setBusca('');
-      return;
-    }
     setEscolhido(o);
     setGramas(String(o.alimento.porcaoPadraoG ?? PORCAO_PADRAO_G));
   }
 
   function confirmarEscolhido() {
-    if (!escolhido || escolhido.tipo !== 'por100') return;
+    if (!escolhido) return;
     const g = parseFloat(gramas.replace(',', '.'));
     if (!(g > 0)) return;
     const a = escolhido.alimento;
-    setItens((l) => [
-      ...l,
-      {
-        nome: a.nome,
-        gramas: g,
-        kcal: arred((a.kcalPor100g * g) / 100),
-        proteinaG: arred((a.proteinaGPor100g * g) / 100, 1),
-        carboidratoG: a.carboidratoGPor100g != null ? arred((a.carboidratoGPor100g * g) / 100, 1) : undefined,
-      },
-    ]);
+    setItens((l) => [...l, { nome: a.nome, gramas: g, ...valoresDaPorcao(a, g) }]);
     setEscolhido(null);
     setBusca('');
   }
@@ -111,19 +101,24 @@ export default function RefeicaoScreen() {
   function adicionarManual() {
     const kcal = parseFloat(mKcal.replace(',', '.'));
     if (!mNome.trim() || !(kcal >= 0)) return;
+    const opcional = (txt: string) => (txt.trim() ? arred(parseFloat(txt.replace(',', '.')) || 0, 1) : undefined);
     setItens((l) => [
       ...l,
       {
         nome: mNome.trim(),
         kcal: arred(kcal),
         proteinaG: arred(parseFloat(mProt.replace(',', '.')) || 0, 1),
-        carboidratoG: mCarb ? arred(parseFloat(mCarb.replace(',', '.')) || 0, 1) : undefined,
+        carboidratoG: opcional(mCarb),
+        gorduraG: opcional(mGord),
+        fibraG: opcional(mFibra),
       },
     ]);
     setMNome('');
     setMKcal('');
     setMProt('');
     setMCarb('');
+    setMGord('');
+    setMFibra('');
     setManual(false);
   }
 
@@ -135,19 +130,17 @@ export default function RefeicaoScreen() {
       return;
     }
     setFoto(r.uri);
-    Alert.alert(t('ref.fotoSalvaTitulo'), t('ref.fotoSalvaMsg'));
   }
 
-  const total = {
-    kcal: arred(itens.reduce((s, i) => s + i.kcal, 0)),
-    prot: arred(itens.reduce((s, i) => s + i.proteinaG, 0), 1),
-    carb: arred(itens.reduce((s, i) => s + (i.carboidratoG ?? 0), 0), 1),
-  };
+  const total = somarNutrientes(itens);
   const numero = (txt: string) => parseFloat(txt.replace(',', '.'));
   const erroGramas = gramas.trim() && !(numero(gramas) > 0 && numero(gramas) <= 5000) ? t('form.erroGramas') : null;
   const erroManualKcal = mKcal.trim() && !(numero(mKcal) >= 0 && numero(mKcal) <= 5000) ? t('form.erroNumero') : null;
   const erroManualProt = mProt.trim() && !(numero(mProt) >= 0 && numero(mProt) <= 500) ? t('form.erroNumero') : null;
   const erroManualCarb = mCarb.trim() && !(numero(mCarb) >= 0 && numero(mCarb) <= 1000) ? t('form.erroNumero') : null;
+  const erroManualGord = mGord.trim() && !(numero(mGord) >= 0 && numero(mGord) <= 500) ? t('form.erroNumero') : null;
+  const erroManualFibra = mFibra.trim() && !(numero(mFibra) >= 0 && numero(mFibra) <= 200) ? t('form.erroNumero') : null;
+  const erroManual = erroManualKcal || erroManualProt || erroManualCarb || erroManualGord || erroManualFibra;
 
   async function handleSalvar() {
     if (itens.length === 0 && !foto) {
@@ -163,8 +156,10 @@ export default function RefeicaoScreen() {
         horario: `${h.padStart(2, '0')}:${m}`,
         nome: itens.length ? itens.map((i) => i.nome).join(', ') : nomeTipo,
         kcal: total.kcal,
-        proteinaG: total.prot,
-        carboidratoG: itens.some((i) => i.carboidratoG != null) ? total.carb : undefined,
+        proteinaG: total.proteinaG,
+        carboidratoG: total.carboidratoG,
+        gorduraG: total.gorduraG,
+        fibraG: total.fibraG,
         tipo,
         tipoPersonalizado: tipo === 'outro' ? tipoLivre.trim() || undefined : undefined,
         itens,
@@ -216,6 +211,8 @@ export default function RefeicaoScreen() {
         <SeletorHorario valor={horario} onChange={setHorario} />
       </ThemedView>
 
+      <Dica id="ref.foto" texto="dica.foto" />
+
       {/* Foto do prato */}
       <ThemedView variant="surface" style={[styles.card, styles.cardShadow]}>
         <View style={styles.linha}>
@@ -230,9 +227,7 @@ export default function RefeicaoScreen() {
             <Pressable onPress={() => setFoto(undefined)} style={styles.fotoRemover} hitSlop={8}>
               <X size={16} color="#FFFFFF" strokeWidth={2.5} />
             </Pressable>
-            <ThemedText variant="small" color="textSecondary" style={{ marginTop: spacing.sm }}>
-              {t('ref.iaEmBreve')}
-            </ThemedText>
+            <AnaliseIAPrato fotoUri={foto} onAdicionar={(novos) => setItens((l) => [...l, ...novos])} />
           </View>
         ) : (
           <>
@@ -265,7 +260,7 @@ export default function RefeicaoScreen() {
                 {i.gramas ? <ThemedText variant="small" color="textSecondary">{`  ${i.gramas} g`}</ThemedText> : null}
               </ThemedText>
               <ThemedText variant="caption" color="textSecondary">
-                {t('ref.macros', { kcal: i.kcal, prot: i.proteinaG, carb: i.carboidratoG ?? '–' })}
+                {textoNutrientes(t, i)}
               </ThemedText>
             </View>
             <Pressable onPress={() => setItens((l) => l.filter((_, k) => k !== idx))} hitSlop={8}>
@@ -274,7 +269,7 @@ export default function RefeicaoScreen() {
           </View>
         ))}
 
-        {escolhido && escolhido.tipo === 'por100' ? (
+        {escolhido ? (
           <View style={styles.caixaGramas}>
             <ThemedText variant="body" color="text">{escolhido.alimento.nome}</ThemedText>
             <View style={[styles.linha, { marginTop: spacing.sm }]}>
@@ -291,6 +286,11 @@ export default function RefeicaoScreen() {
                 <X size={18} color={colors.textSecondary} strokeWidth={2} />
               </Pressable>
             </View>
+            {!erroGramas && numero(gramas) > 0 && (
+              <ThemedText variant="caption" color="textSecondary" style={{ marginTop: spacing.xs }}>
+                {textoNutrientes(t, valoresDaPorcao(escolhido.alimento, numero(gramas)))}
+              </ThemedText>
+            )}
             <MensagemErro texto={erroGramas} />
           </View>
         ) : manual ? (
@@ -301,9 +301,14 @@ export default function RefeicaoScreen() {
               <Input value={mProt} onChangeText={setMProt} placeholder={t('ref.protG')} keyboardType="decimal-pad" style={[styles.input, { flex: 1 }, erroManualProt && styles.inputErro]} />
               <Input value={mCarb} onChangeText={setMCarb} placeholder={t('ref.carbG')} keyboardType="decimal-pad" style={[styles.input, { flex: 1 }, erroManualCarb && styles.inputErro]} />
             </View>
-            <MensagemErro texto={erroManualKcal ?? erroManualProt ?? erroManualCarb} />
+            <View style={[styles.linha, { gap: spacing.xs, marginTop: spacing.xs }]}>
+              <Input value={mGord} onChangeText={setMGord} placeholder={t('ref.gordG')} keyboardType="decimal-pad" style={[styles.input, { flex: 1 }, erroManualGord && styles.inputErro]} />
+              <Input value={mFibra} onChangeText={setMFibra} placeholder={t('ref.fibraG')} keyboardType="decimal-pad" style={[styles.input, { flex: 1 }, erroManualFibra && styles.inputErro]} />
+              <View style={{ flex: 1 }} />
+            </View>
+            <MensagemErro texto={erroManual || null} />
             <View style={[styles.linha, { marginTop: spacing.sm }]}>
-              <Button label={t('ref.incluir')} size="sm" onPress={adicionarManual} disabled={!mNome.trim() || !mKcal || !!(erroManualKcal || erroManualProt || erroManualCarb)} />
+              <Button label={t('ref.incluir')} size="sm" onPress={adicionarManual} disabled={!mNome.trim() || !mKcal || !!erroManual} />
               <Pressable onPress={() => setManual(false)} style={{ marginLeft: spacing.md }}>
                 <ThemedText variant="small" color="textSecondary">{t('comum.cancelar')}</ThemedText>
               </Pressable>
@@ -325,11 +330,7 @@ export default function RefeicaoScreen() {
                 {opcoes.map((o, k) => (
                   <Pressable key={`op-${k}-${o.rotulo}`} style={styles.sugestao} onPress={() => escolher(o)}>
                     <ThemedText variant="small" color="text">{o.rotulo}</ThemedText>
-                    <ThemedText variant="caption" color="textSecondary">
-                      {o.tipo === 'porcao'
-                        ? t('d.valores', { kcal: o.item.kcal, prot: o.item.proteinaG })
-                        : t('d.valores100', { kcal: o.alimento.kcalPor100g, prot: o.alimento.proteinaGPor100g })}
-                    </ThemedText>
+                    <ThemedText variant="caption" color="textSecondary">{textoNutrientes100(t, o.alimento)}</ThemedText>
                   </Pressable>
                 ))}
               </View>
@@ -344,20 +345,31 @@ export default function RefeicaoScreen() {
         {itens.length > 0 && (
           <View style={styles.total}>
             <ThemedText variant="subheading" color="primary">
-              {t('ref.total', { kcal: total.kcal, prot: total.prot, carb: total.carb })}
+              {t('ref.totalNut', { valores: textoNutrientes(t, total) })}
             </ThemedText>
           </View>
         )}
       </ThemedView>
 
-      {/* Lembrete e observações */}
+      {/* Observações */}
       <ThemedView variant="surface" style={[styles.card, styles.cardShadow]}>
+        <Rotulo texto={t('med.obs')} primeiro />
+        <Input value={obs} onChangeText={setObs} placeholder={t('ref.obsPh')} multiline style={[styles.input, { minHeight: 56 }]} />
+      </ThemedView>
+
+      {/* Lembrete da próxima refeição: discreto, só o interruptor até ser ligado */}
+      <View style={styles.lembrete}>
         <View style={styles.linha}>
-          <ThemedText variant="body" color="text" style={{ flex: 1 }}>{t('ref.lembrete')}</ThemedText>
-          <Switch value={lembrete} onValueChange={setLembrete} trackColor={{ true: colors.primary, false: colors.border }} />
+          <ThemedText variant="small" color="textSecondary" style={{ flex: 1 }}>{t('ref.lembrete')}</ThemedText>
+          <Switch
+            value={lembrete}
+            onValueChange={setLembrete}
+            trackColor={{ true: colors.primary, false: colors.border }}
+            style={{ transform: [{ scaleX: 0.85 }, { scaleY: 0.85 }] }}
+          />
         </View>
         {lembrete && (
-          <View style={[styles.linha, { marginTop: spacing.sm }]}>
+          <View style={[styles.linha, { marginTop: spacing.xs }]}>
             <ThemedText variant="small" color="textSecondary" style={{ flex: 1 }}>{t('ref.lembreteEm', { h: horasLembrete })}</ThemedText>
             <Pressable onPress={() => setHorasLembrete((h) => Math.max(1, h - 1))} style={styles.passo} hitSlop={6}>
               <Minus size={16} color={colors.primary} strokeWidth={2.5} />
@@ -368,9 +380,7 @@ export default function RefeicaoScreen() {
             </Pressable>
           </View>
         )}
-        <Rotulo texto={t('med.obs')} />
-        <Input value={obs} onChangeText={setObs} placeholder={t('ref.obsPh')} multiline style={[styles.input, { minHeight: 56 }]} />
-      </ThemedView>
+      </View>
 
       <Button label={t('comum.salvar')} size="lg" onPress={handleSalvar} />
       {existente && (
@@ -410,6 +420,7 @@ const styles = estilosTema(() => ({
     elevation: 2,
   },
   linha: { flexDirection: 'row', alignItems: 'center' },
+  lembrete: { paddingHorizontal: spacing.sm, marginBottom: spacing.lg },
   input: { textAlign: 'left' },
   inputErro: { borderColor: colors.error },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs },

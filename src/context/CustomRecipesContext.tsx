@@ -51,6 +51,11 @@ export function CustomRecipesProvider({ children }: { children: ReactNode }) {
     const proteinaGTotal = itens.reduce((soma, i) => soma + i.proteinaG, 0);
 
     if (pesoTotalG <= 0) return null;
+    // carboidrato/gordura/fibra por 100 g — só quando todos os itens têm o valor
+    const por100 = (f: (i: IngredienteUsado) => number | undefined) =>
+      itens.every((i) => f(i) != null)
+        ? Math.round((itens.reduce((s, i) => s + (f(i) ?? 0), 0) / pesoTotalG) * 100 * 10) / 10
+        : undefined;
 
     const nova: ReceitaPersonalizada = {
       id: gerarId(),
@@ -61,6 +66,9 @@ export function CustomRecipesProvider({ children }: { children: ReactNode }) {
       proteinaGTotal: Math.round(proteinaGTotal * 10) / 10,
       kcalPor100g: Math.round((kcalTotal / pesoTotalG) * 100),
       proteinaGPor100g: Math.round(((proteinaGTotal / pesoTotalG) * 100) * 10) / 10,
+      carboidratoGPor100g: por100((i) => i.carboidratoG),
+      gorduraGPor100g: por100((i) => i.gorduraG),
+      fibraGPor100g: por100((i) => i.fibraG),
       porcaoPadraoG,
       criadaEm: new Date().toISOString(),
     };

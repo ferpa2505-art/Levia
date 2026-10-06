@@ -47,8 +47,7 @@ export default function RecipeBuilderScreen() {
   async function registrarReceita(r: ReceitaPersonalizada) {
     const gramas = lerGramas(porcaoTexto);
     if (!gramas) return;
-    const { kcal, proteinaG } = valoresDaPorcao(r, gramas);
-    await adicionarRefeicao(`${r.nome} (${gramas} g)`, kcal, proteinaG);
+    await adicionarRefeicao(`${r.nome} (${gramas} g)`, valoresDaPorcao(r, gramas));
     setRegistradaId(r.id);
   }
 
@@ -87,15 +86,18 @@ export default function RecipeBuilderScreen() {
     if (isNaN(gramas) || gramas <= 0) return;
 
     const forma = formasDePreparo.find((f) => f.nome === formaSelecionadaNome);
-    const kcalBase = (gramas * ingredienteSelecionado.kcalPor100g) / 100;
-    const proteinaBase = (gramas * ingredienteSelecionado.proteinaGPor100g) / 100;
+    const base = valoresDaPorcao(ingredienteSelecionado, gramas);
+    const mais = (valor: number | undefined, extra = 0) => (valor == null ? undefined : Math.round((valor + extra) * 10) / 10);
 
     const novoItem: IngredienteUsado = {
       ingredienteNome: ingredienteSelecionado.nome,
       gramas,
       formaPreparoNome: forma?.nome,
-      kcal: Math.round(kcalBase + (forma?.kcalAdicional ?? 0)),
-      proteinaG: Math.round((proteinaBase + (forma?.proteinaGAdicional ?? 0)) * 10) / 10,
+      kcal: Math.round(base.kcal + (forma?.kcalAdicional ?? 0)),
+      proteinaG: Math.round((base.proteinaG + (forma?.proteinaGAdicional ?? 0)) * 10) / 10,
+      carboidratoG: mais(base.carboidratoG, forma?.carboidratoGAdicional),
+      gorduraG: mais(base.gorduraG, forma?.gorduraGAdicional),
+      fibraG: mais(base.fibraG),
     };
 
     setItens((prev) => [...prev, novoItem]);

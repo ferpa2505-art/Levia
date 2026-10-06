@@ -183,6 +183,8 @@ def porcao(cat, en, kcal):
     if cat == 'alcoolicas' and kw(en, 'vodka', 'whisk', 'rum', 'gin', 'cognac', 'brandy', 'liqueur', 'pastis', 'cachaça', 'spirit', 'eau-de-vie', 'tequila'): return 40
     if cat == 'doces' and kw(en, 'ice cream', 'sorbet', 'frozen yogurt', 'sherbet'): return 100
     if cat == 'doces' and kw(en, 'ice pop', 'juice bars', 'italian ice'): return 70
+    # adoçante de mesa: 1 sachê ≈ 1 g (antes caía na regra do açúcar, 15 g)
+    if cat == 'doces' and kw(en, 'sweetener') and not kw(en, 'yogurt'): return 1
     if cat == 'doces' and kw(en, 'sugar', 'honey', 'syrup', 'jam', 'jelly', 'marmalade', 'sweetener', 'sprinkles', 'molasses'): return 15
     if cat == 'doces' and kw(en, 'candy', 'gum', 'chocolate', 'caramel', 'toffee', 'marshmallow', 'fudge', 'truffle'): return 25
     if cat == 'doces' and kw(en, 'pudding', 'mousse', 'custard', 'flan', 'panna cotta', 'tiramisu', 'crème'): return 120
@@ -439,6 +441,10 @@ print('descartados', dict(descartados))
 print('por categoria', collections.Counter(x['cat'] for x in todos).most_common())
 print('por fonte', collections.Counter(x['fonte'] for x in todos))
 print('suspeitos Atwater', len(suspeitos), suspeitos[:40])
+
+# Correções da revisão de 2026-10-06
+REMOVER = {'U17280'}  # patê de frango (USDA): kcal da fonte (158) não bate com os macros (~247)
+todos = [x for x in todos if x['id'] not in REMOVER]
 
 ORDEM_FONTE = {'TACO': 0, 'Levia (calculado)': 1, 'CIQUAL': 2, 'TempoLife': 3, 'USDA': 4}
 todos.sort(key=lambda x: ORDEM_FONTE[x['fonte']])
