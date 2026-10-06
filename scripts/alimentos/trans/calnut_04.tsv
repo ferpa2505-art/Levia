@@ -1,0 +1,242 @@
+C23802|Gâteau basque de creme|Gâteau basque (custard)|Pastel vasco de crema|Gâteau basque à la crème|Torta basca alla crema
+C23925|Bolo mármore|Marble cake|Bizcocho mármol|Gâteau marbré|Torta marmorizzata
+C23586|Bolo fofinho de chocolate (industrializado)|Soft chocolate cake (packaged)|Bizcocho de chocolate envasado|Gâteau moelleux au chocolat|Tortina morbida al cioccolato
+C23937|Bolinho fofinho de frutas|Soft fruit cake (packaged)|Bizcocho de frutas envasado|Gâteau moelleux aux fruits|Tortina morbida alla frutta
+C23939|Bolinho recheado de chocolate (tipo Ana Maria)|Chocolate-filled snack cake|Bizcochito relleno de chocolate|Gâteau moelleux fourré au chocolat|Merendina ripiena al cioccolato
+C23941|Mini rocambole recheado de frutas|Mini jam roll cake|Mini brazo de gitano de fruta|Mini-roulé aux fruits|Mini rotolo alla frutta
+C23007|Bolo mousse de frutas (bavarois)|Fruit mousse cake (bavarois)|Tarta mousse de frutas|Bavarois aux fruits|Torta bavarese alla frutta
+C23940|Bolinho recheado e coberto de chocolate|Chocolate-coated filled snack cake|Bizcocho relleno cubierto de chocolate|Génoise fourrée nappée chocolat|Merendina ricoperta di cioccolato
+C23122|Kouign-amann|Kouign-amann (Breton butter cake)|Kouign-amann|Kouign-amann|Kouign-amann
+C24632|Madeleine|Madeleine|Magdalena (madeleine)|Madeleine|Madeleine
+C24631|Madeleine de chocolate|Chocolate madeleine|Magdalena de chocolate|Madeleine au chocolat|Madeleine al cioccolato
+C24666|Mil-folhas|Mille-feuille (Napoleon)|Milhojas|Mille-feuille|Millefoglie
+C23950|Muffin (mirtilo ou chocolate)|Muffin (blueberry or chocolate)|Muffin (arándanos o chocolate)|Muffin (myrtille ou chocolat)|Muffin (mirtilli o cioccolato)
+C23200|Pão de mel (pain d'épices)|Gingerbread loaf (pain d'épices)|Pan de especias|Pain d'épices|Pan di zenzero
+C23081|Bolo quatro quartos (pound cake)|Pound cake|Bizcocho cuatro cuartos|Quatre-quarts|Torta quattro quarti
+C23033|Coquinho (doce de coco)|Coconut macaroon|Coquito (dulce de coco)|Rocher coco|Dolcetto al cocco
+C23496|Torta tatin de maçã|Apple tarte Tatin|Tarta tatin de manzana|Tarte Tatin|Tarte Tatin di mele
+C23497|Torta de chocolate|Chocolate tart|Tarta de chocolate|Tarte au chocolat|Crostata al cioccolato
+C23485|Torta de limão|Lemon tart|Tarta de limón|Tarte au citron|Crostata al limone
+C23494|Torta de damasco|Apricot tart|Tarta de albaricoque|Tarte aux abricots|Crostata di albicocche
+C23491|Torta de morango|Strawberry tart|Tarta de fresas|Tarte aux fraises|Crostata di fragole
+C23482|Torta de frutas com creme de confeiteiro|Fruit tart with pastry cream|Tarta de frutas con crema pastelera|Tarte aux fruits crème pâtissière|Crostata di frutta con crema pasticcera
+C23495|Torta de frutas vermelhas|Berry tart|Tarta de frutos rojos|Tarte aux fruits rouges|Crostata ai frutti rossi
+C24663|Torta de pera com amêndoas|Pear and almond tart|Tarta de pera y almendra|Tarte amandine aux poires|Crostata di pere e mandorle
+C23490|Torta de maçã|Apple tart / apple pie|Tarta de manzana|Tarte aux pommes|Torta di mele
+C23477|Bomba de chocolate (éclair)|Éclair|Pepito / éclair|Éclair|Éclair
+C31046|Calda de caramelo|Caramel sauce / syrup|Caramelo líquido|Caramel liquide|Caramello liquido
+C31077|Frutose|Fructose|Fructosa|Fructose|Fruttosio
+C31008|Mel|Honey|Miel|Miel|Miele
+C31067|Melaço de cana|Blackstrap molasses|Melaza de caña|Mélasse de canne|Melassa di canna
+C31089|Xarope de agave|Agave syrup|Sirope de agave|Sirop d'agave|Sciroppo d'agave
+C31034|Xarope de bordo (maple)|Maple syrup|Sirope de arce|Sirop d'érable|Sciroppo d'acero
+C31016|Açúcar branco|White sugar|Azúcar blanco|Sucre blanc|Zucchero bianco
+C31017|Açúcar demerara|Raw cane sugar (demerara)|Azúcar moreno|Sucre roux|Zucchero di canna
+C31044|Açúcar baunilhado|Vanilla sugar|Azúcar avainillado|Sucre vanillé|Zucchero vanigliato
+C11510|Confeitos coloridos (granulado)|Sprinkles|Fideos de colores|Vermicelles multicolores|Codette colorate
+C31087|Adoçante de estévia|Stevia sweetener|Edulcorante de estevia|Édulcorant à la stévia|Dolcificante alla stevia
+C11509|Adoçante de aspartame em pó|Aspartame sweetener (powder)|Edulcorante de aspartamo en polvo|Édulcorant à l'aspartame en poudre|Dolcificante all'aspartame in polvere
+C7735|Brioche com gotas de chocolate|Chocolate chip brioche|Brioche con pepitas de chocolate|Brioche aux pépites de chocolat|Brioche con gocce di cioccolato
+C7737|Brioche recheado de chocolate|Chocolate-filled brioche|Brioche relleno de chocolate|Brioche fourrée au chocolat|Brioche ripiena al cioccolato
+C7739|Brioche recheado de creme|Custard-filled brioche|Brioche relleno de crema|Brioche fourrée crème pâtissière|Brioche ripiena di crema
+C7741|Brioche|Brioche|Brioche|Brioche|Brioche
+C23480|Folhado de maçã (chausson)|Apple turnover|Hojaldre de manzana|Chausson aux pommes|Sfogliatella di mele
+C23467|Bomba de massa choux com açúcar (chouquette)|Chouquette (sugar puff)|Chouquette (lionesa con azúcar)|Chouquette|Bignè allo zucchero
+C7620|Croissant de manteiga|Butter croissant|Cruasán de mantequilla|Croissant au beurre|Croissant al burro
+C7650|Croissant de amêndoas|Almond croissant|Cruasán de almendras|Croissant aux amandes|Croissant alle mandorle
+C7602|Croissant|Croissant|Cruasán|Croissant|Cornetto
+C7730|Pain au chocolat (folhado de chocolate)|Pain au chocolat (chocolate croissant)|Napolitana de chocolate|Pain au chocolat|Saccottino al cioccolato
+C7710|Pão de leite (bisnaguinha)|Milk bread roll|Bollo de leche|Pain au lait|Panino al latte
+C7712|Pão de leite com gotas de chocolate|Milk roll with chocolate chips|Bollo de leche con pepitas de chocolate|Pain au lait aux pépites de chocolat|Panino al latte con gocce di cioccolato
+C7720|Caracol com passas (pain aux raisins)|Raisin swirl pastry|Caracola con pasas|Pain aux raisins|Girella all'uvetta
+C7225|Pão doce tipo brioche|Viennese sweet bread|Pan de Viena|Pain viennois|Pane dolce viennese
+C25163|Almôndegas de carne cozidas|Beef meatballs, cooked|Albóndigas de ternera cocinadas|Boulettes de bœuf cuites|Polpette di manzo cotte
+C25194|Kafta (bovina e cordeiro)|Kofta (beef and lamb)|Kofta (ternera y cordero)|Boulettes kefta|Kofta (manzo e agnello)
+C25186|Almôndegas suecas (porco e boi)|Swedish meatballs (pork and beef)|Albóndigas suecas|Boulettes à la suédoise|Polpette svedesi
+C25541|Espetinho de cordeiro|Lamb skewer|Brocheta de cordero|Brochette d'agneau|Spiedino di agnello
+C25505|Espetinho de carne bovina|Beef skewer|Brocheta de ternera|Brochette de bœuf|Spiedino di manzo
+C25504|Espetinho de frango|Chicken skewer|Brocheta de pollo|Brochette de volaille|Spiedino di pollo
+C25506|Espetinho misto de carnes|Mixed meat skewer|Brocheta mixta|Brochette mixte|Spiedino misto di carne
+C25089|Cordon bleu de frango|Chicken cordon bleu|Cordon bleu de pollo|Cordon bleu de volaille|Cordon bleu di pollo
+C36318|Escalope de peru empanado|Breaded turkey cutlet|Escalope de pavo empanado|Escalope de dinde panée|Cotoletta di tacchino impanata
+C6260|Carne moída bovina (15% gordura) crua|Ground beef (15% fat), raw|Carne picada de ternera (15%) cruda|Haché de bœuf 15 % MG cru|Macinato di manzo (15%) crudo
+C36027|Nuggets de frango|Chicken nuggets|Nuggets de pollo|Nuggets de poulet|Nuggets di pollo
+C36036|Filé de frango empanado|Breaded chicken cutlet|Escalope de pollo empanado|Escalope de poulet panée|Cotoletta di pollo impanata
+C36035|Coxinha da asa marinada assada|Marinated chicken wings, roasted|Alitas de pollo marinadas al horno|Manchons de poulet marinés rôtis|Alette di pollo marinate al forno
+C25173|Escalope de vitela empanado|Breaded veal cutlet (schnitzel)|Escalope de ternera empanado|Escalope de veau panée|Cotoletta di vitello impanata
+C8500|Andouille (embutido de tripas)|Andouille sausage|Andouille (embutido de tripas)|Andouille|Andouille (salume di trippa)
+C8800|Salsicha branca (boudin blanc) frita|White pudding (boudin blanc), pan-fried|Butifarra blanca frita|Boudin blanc poêlé|Sanguinaccio bianco in padella
+C8704|Morcela frita|Blood sausage, pan-fried|Morcilla frita|Boudin noir poêlé|Sanguinaccio in padella
+C8111|Magret de pato defumado|Smoked duck breast|Magret de pato ahumado|Magret de canard fumé|Petto d'anatra affumicato
+C30005|Linguiça chipolata cozida|Chipolata sausage, cooked|Salchicha chipolata cocinada|Chipolata cuite|Salsiccia chipolata cotta
+C30315|Chouriço (chorizo)|Chorizo|Chorizo|Chorizo|Chorizo
+C8110|Confit de pato|Duck confit|Confit de pato|Confit de canard|Confit d'anatra
+C28850|Copa (coppa)|Coppa (cured pork neck)|Coppa (cabecero curado)|Coppa|Coppa
+C28727|Bacon (lombo canadense)|Back bacon|Bacon de lomo|Filet de bacon|Bacon di lonza
+C8324|Foie gras de pato|Duck foie gras|Foie gras de pato|Foie gras de canard|Foie gras d'anatra
+C8400|Queijo de porco (fromage de tête)|Head cheese (brawn)|Queso de cabeza|Fromage de tête|Soppressata di testa
+C28927|Peito de frango/peru defumado picado|Chopped smoked poultry ham|Picadillo de jamón de ave|Haché de jambon de volaille|Prosciutto di pollame tritato
+C28800|Presunto cru|Cured ham (prosciutto)|Jamón curado|Jambon cru|Prosciutto crudo
+C28801|Presunto cru defumado|Smoked cured ham|Jamón curado ahumado|Jambon cru fumé|Speck (prosciutto affumicato)
+C28919|Presunto cozido magro|Cooked ham, lean|Jamón cocido magro|Jambon cuit dégraissé|Prosciutto cotto magro
+C28900|Presunto cozido superior|Cooked ham, premium|Jamón cocido extra|Jambon cuit supérieur|Prosciutto cotto di alta qualità
+C28907|Presunto cozido com menos sal|Cooked ham, reduced salt|Jamón cocido bajo en sal|Jambon cuit à teneur réduite en sel|Prosciutto cotto a ridotto contenuto di sale
+C28964|Peito de peru fatiado|Sliced turkey breast|Pechuga de pavo en lonchas|Blanc de dinde|Fesa di tacchino a fette
+C28963|Peito de frango fatiado|Sliced chicken breast (deli)|Pechuga de pollo en lonchas|Blanc de poulet en tranches|Petto di pollo a fette
+C28845|Presunto serrano|Serrano ham|Jamón serrano|Jambon Serrano|Prosciutto serrano
+C28844|Presunto de Parma|Parma ham|Jamón de Parma|Jambon de Parme|Prosciutto di Parma
+C28960|Joelho de porco cozido|Ham hock, cooked|Codillo de cerdo cocido|Jambonneau cuit|Stinco di maiale cotto
+C28720|Bacon em cubos cru|Smoked bacon lardons, raw|Taquitos de beicon ahumado crudos|Lardons fumés crus|Cubetti di pancetta affumicata crudi
+C28725|Bacon em cubos frito|Smoked bacon lardons, cooked|Taquitos de beicon ahumado fritos|Lardons fumés cuits|Cubetti di pancetta affumicata cotti
+C30155|Merguez cozida|Merguez sausage, cooked|Salchicha merguez cocinada|Merguez cuite|Salsiccia merguez cotta
+C30789|Mortadela (variante)|Mortadella|Mortadela|Mortadelle|Mortadella
+C28858|Pancetta|Pancetta|Panceta curada|Pancetta|Pancetta
+C28502|Barriga de porco defumada (bacon) crua|Smoked pork belly (bacon), raw|Panceta ahumada cruda|Poitrine de porc fumée crue|Pancetta affumicata cruda
+C8332|Patê (médio)|Pâté (average)|Paté (medio)|Pâté (moyen)|Paté (medio)
+C8316|Patê de fígado de frango|Chicken liver pâté|Paté de hígado de pollo|Pâté de foie de volaille|Paté di fegatini di pollo
+C8305|Patê de fígado de porco|Pork liver pâté|Paté de hígado de cerdo|Pâté de foie de porc|Paté di fegato di maiale
+C8211|Terrine rústica (pâté de campagne)|Country pâté|Paté de campaña|Pâté de campagne|Terrina rustica
+C8391|Patê em crosta (pâté en croûte)|Pâté en croûte|Paté en costra|Pâté en croûte|Pâté in crosta
+C8934|Quenelle de peixe|Fish quenelle|Quenelle de pescado|Quenelle de poisson|Quenelle di pesce
+C8912|Quenelle de frango ao molho|Chicken quenelle in sauce|Quenelle de pollo en salsa|Quenelle de volaille en sauce|Quenelle di pollo in salsa
+C8026|Rillettes de pato|Duck rillettes|Rillettes de pato|Rillettes de canard|Rillettes d'anatra
+C8001|Rillettes de porco|Pork rillettes|Rillettes de cerdo|Rillettes pur porc|Rillettes di maiale
+C30304|Salame tipo rosette|Rosette salami|Salchichón rosette|Rosette de Lyon|Salame rosette
+C30350|Salame (variante)|Salami|Salami|Salami|Salame
+C30134|Salsicha de Frankfurt (hot dog)|Frankfurter (hot dog sausage)|Salchicha de Fráncfort|Saucisse de Francfort|Würstel
+C30742|Salsicha tipo Viena (knack)|Vienna sausage (knackwurst)|Salchicha de Estrasburgo|Saucisse de Strasbourg (knack)|Würstel di Strasburgo
+C30011|Linguiça toscana cozida (de Toulouse)|Toulouse sausage, cooked|Salchicha de Toulouse cocinada|Saucisse de Toulouse cuite|Salsiccia di Tolosa cotta
+C30131|Salsicha de frango|Chicken frankfurter|Salchicha de pollo|Saucisse de volaille (knack)|Würstel di pollo
+C30102|Linguiça defumada|Smoked sausage|Salchicha ahumada|Saucisse fumée|Salsiccia affumicata
+C30301|Salame seco de porco|Dry pork salami|Salchichón seco de cerdo|Saucisson sec pur porc|Salame stagionato di maiale
+C30700|Salsichão com alho|Garlic sausage|Embutido al ajo|Saucisson à l'ail|Salame all'aglio
+C1031|Patê vegetal|Vegetable pâté (vegan spread)|Paté vegetal|Pâté végétal|Paté vegetale
+C28860|Carne-seca suíça (Bündnerfleisch)|Air-dried beef (Bündnerfleisch)|Cecina suiza|Viande des Grisons|Bresaola dei Grigioni
+C10001|Lula crua|Squid, raw|Calamar crudo|Calmar cru|Calamaro crudo
+C10017|Vôngole cru|Clams, raw|Almejas crudas|Palourdes crues|Vongole crude
+C10003|Vieira crua|Scallops, raw|Vieiras crudas|Coquilles Saint-Jacques crues|Capesante crude
+C10021|Camarão cru|Shrimp, raw|Gambas crudas|Crevettes crues|Gamberi crudi
+C34500|Rã (coxa) crua|Frog legs, raw|Ancas de rana crudas|Cuisses de grenouille crues|Cosce di rana crude
+C10011|Ostra crua|Oysters, raw|Ostras crudas|Huîtres crues|Ostriche crude
+C10014|Mexilhão cru|Mussels, raw|Mejillones crudos|Moules crues|Cozze crude
+C10018|Polvo cru|Octopus, raw|Pulpo crudo|Poulpe cru|Polpo crudo
+C10016|Sépia (choco) crua|Cuttlefish, raw|Sepia cruda|Seiche crue|Seppia cruda
+C10037|Lula cozida|Squid, boiled|Calamar hervido|Calmar cuit à l'eau|Calamaro lesso
+C10084|Lula frita|Squid, fried|Calamar frito|Calmar frit|Calamaro fritto
+C10027|Vôngole cozido|Clams, cooked|Almejas cocidas|Palourdes cuites|Vongole cotte
+C10004|Vieira cozida|Scallops, cooked|Vieiras cocinadas|Saint-Jacques cuites|Capesante cotte
+C10025|Caranguejo cozido (variante)|Crab, boiled|Buey de mar cocido|Tourteau cuit|Granchio lesso
+C10007|Camarão cozido|Shrimp, cooked|Gambas cocidas|Crevettes cuites|Gamberi cotti
+C10099|Escargot cozido|Snails, cooked|Caracoles cocidos|Escargots cuits|Lumache cotte
+C10043|Frutos do mar (médio)|Seafood (average)|Marisco (medio)|Fruits de mer (moyen)|Frutti di mare (medio)
+C34501|Rã (coxa) grelhada|Frog legs, pan-fried|Ancas de rana a la plancha|Cuisses de grenouille poêlées|Cosce di rana in padella
+C10009|Lagosta cozida|Lobster, boiled|Bogavante cocido|Homard cuit|Astice lesso
+C10022|Lagosta (langouste) cozida|Spiny lobster, boiled|Langosta cocida|Langouste cuite|Aragosta lessa
+C10044|Lagostim cozido|Langoustine, boiled|Cigala cocida|Langoustine cuite|Scampo lesso
+C10013|Mexilhão cozido|Mussels, cooked|Mejillones cocidos|Moules cuites|Cozze cotte
+C10079|Polvo cozido|Octopus, cooked|Pulpo cocido|Poulpe cuit|Polpo cotto
+C10031|Lagostim de água doce cozido|Crayfish, cooked|Cangrejo de río cocido|Écrevisses cuites|Gamberi di fiume cotti
+C26079|Anchova crua|Anchovy, raw|Boquerón crudo|Anchois cru|Acciuga cruda
+C27016|Enguia crua|Eel, raw|Anguila cruda|Anguille crue|Anguilla cruda
+C26072|Robalo cru|Sea bass, raw|Lubina cruda|Bar cru|Spigola cruda
+C26043|Bacalhau fresco cru|Cod, raw|Bacalao fresco crudo|Cabillaud cru|Merluzzo crudo
+C27003|Carpa crua|Carp, raw|Carpa cruda|Carpe crue|Carpa cruda
+C26055|Linguado-solha cru|Plaice, raw|Platija cruda|Plie crue|Platessa cruda
+C26113|Carapau cru|Horse mackerel, raw|Jurel crudo|Chinchard cru|Sugarello crudo
+C26088|Dourada cria (dorada) crua|Gilthead sea bream, raw|Dorada cruda|Daurade royale crue|Orata cruda
+C26082|Peixe-espada (espadarte) cru|Swordfish, raw|Pez espada crudo|Espadon cru|Pesce spada crudo
+C26154|Halibute cru|Halibut, raw|Fletán crudo|Flétan cru|Halibut crudo
+C26011|Arenque cru|Herring, raw|Arenque crudo|Hareng cru|Aringa cruda
+C26129|Abadejo (lieu jaune) cru|Pollack, raw|Abadejo crudo|Lieu jaune cru|Merluzzo giallo crudo
+C26006|Polaca-do-alasca crua|Alaska pollock, raw|Abadejo de Alaska crudo|Colin d'Alaska cru|Merluzzo d'Alaska crudo
+C26018|Tamboril cru|Monkfish, raw|Rape crudo|Lotte crue|Coda di rospo cruda
+C26044|Merluza crua|Hake, raw|Merluza cruda|Merlu cru|Nasello crudo
+C26091|Tainha crua|Mullet, raw|Mújol crudo|Mulet cru|Cefalo crudo
+C27017|Panga (pangasius) cru|Pangasius (basa), raw|Panga cruda|Pangasius cru|Pangasio crudo
+C27010|Perca crua|Perch, raw|Perca cruda|Perche crue|Pesce persico crudo
+C26052|Arraia crua|Skate (ray), raw|Raya cruda|Raie crue|Razza cruda
+C26085|Salmonete cru|Red mullet, raw|Salmonete crudo|Rouget-barbet cru|Triglia cruda
+C27024|Lúcio-perca (sandre) cru|Zander (pikeperch), raw|Lucioperca cruda|Sandre cru|Lucioperca cruda
+C26036|Salmão de cativeiro cru|Farmed salmon, raw|Salmón de piscifactoría crudo|Saumon d'élevage cru|Salmone d'allevamento crudo
+C26058|Linguado cru|Sole, raw|Lenguado crudo|Sole crue|Sogliola cruda
+C26076|Atum-branco cru|Albacore tuna, raw|Atún blanco (bonito del norte) crudo|Thon germon cru|Tonno bianco crudo
+C26069|Atum-rabilho cru|Bluefin tuna, raw|Atún rojo crudo|Thon rouge cru|Tonno rosso crudo
+C27019|Tilápia crua|Tilapia, raw|Tilapia cruda|Tilapia crue|Tilapia cruda
+C27009|Truta arco-íris crua|Rainbow trout, raw|Trucha arcoíris cruda|Truite arc-en-ciel crue|Trota iridea cruda
+C26174|Pregado (turbot) cru|Turbot, raw|Rodaballo crudo|Turbot cru|Rombo crudo
+C26122|Hadoque cru|Haddock, raw|Eglefino crudo|Églefin cru|Eglefino crudo
+C27030|Robalo assado|Sea bass, baked|Lubina al horno|Bar rôti|Spigola al forno
+C26025|Bacalhau fresco no vapor|Cod, steamed|Bacalao al vapor|Cabillaud vapeur|Merluzzo al vapore
+C26023|Bacalhau fresco assado|Cod, baked|Bacalao al horno|Cabillaud au four|Merluzzo al forno
+C27031|Dourada assada|Sea bream, baked|Dorada al horno|Daurade au four|Orata al forno
+C26093|Peixe-espada assado|Swordfish, baked|Pez espada al horno|Espadon rôti|Pesce spada al forno
+C26090|Hadoque defumado|Smoked haddock|Eglefino ahumado|Haddock fumé|Eglefino affumicato
+C26013|Arenque defumado|Smoked herring|Arenque ahumado|Hareng fumé|Aringa affumicata
+C26014|Arenque grelhado|Herring, grilled|Arenque a la plancha|Hareng grillé|Aringa alla griglia
+C26081|Tamboril grelhado|Monkfish, pan-fried|Rape a la plancha|Lotte poêlée|Coda di rospo in padella
+C26020|Cavala frita|Mackerel, fried|Caballa frita|Maquereau frit|Sgombro fritto
+C26087|Cavala defumada|Smoked mackerel|Caballa ahumada|Maquereau fumé|Sgombro affumicato
+C26019|Cavala assada|Mackerel, baked|Caballa al horno|Maquereau au four|Sgombro al forno
+C26021|Pescada-branca (merlan) frita|Whiting, fried|Merlán frito|Merlan frit|Merlano fritto
+C26120|Merluza cozida abafada|Hake, braised|Merluza estofada|Merlu à l'étouffée|Nasello stufato
+C26024|Bacalhau salgado cozido|Salt cod, boiled|Bacalao salado cocido|Morue salée cuite|Baccalà lesso
+C26073|Arraia cozida|Skate, poached|Raya cocida|Raie au court-bouillon|Razza lessa
+C26136|Sardinha grelhada|Sardines, grilled|Sardinas a la plancha|Sardines grillées|Sardine alla griglia
+C26037|Salmão defumado|Smoked salmon|Salmón ahumado|Saumon fumé|Salmone affumicato
+C26038|Salmão no vapor|Salmon, steamed|Salmón al vapor|Saumon vapeur|Salmone al vapore
+C26229|Salmão grelhado (frigideira)|Salmon, pan-fried|Salmón a la plancha|Saumon poêlé|Salmone in padella
+C26230|Salmão assado|Salmon, baked|Salmón al horno|Saumon au four|Salmone al forno
+C26062|Linguado frito|Sole, fried|Lenguado frito|Sole frite|Sogliola fritta
+C26060|Linguado assado|Sole, baked|Lenguado al horno|Sole au four|Sogliola al forno
+C26041|Atum assado|Tuna, baked|Atún al horno|Thon au four|Tonno al forno
+C27014|Truta assada|Trout, baked|Trucha al horno|Truite au four|Trota al forno
+C27029|Truta defumada|Smoked trout|Trucha ahumada|Truite fumée|Trota affumicata
+C26094|Pregado assado|Turbot, baked|Rodaballo al horno|Turbot au four|Rombo al forno
+C26126|Hadoque grelhado|Haddock, pan-fried|Eglefino a la plancha|Églefin poêlé|Eglefino in padella
+C25433|Bolinho de bacalhau (acras)|Salt cod fritters (accras)|Buñuelos de bacalao|Accras de morue|Frittelle di baccalà
+C26000|Anchovas em óleo|Anchovy fillets in oil|Anchoas en aceite|Filets d'anchois à l'huile|Filetti di acciughe sott'olio
+C26187|Anchovas marinadas (boquerones)|Marinated anchovies|Boquerones en vinagre|Anchois marinés|Alici marinate
+C10023|Camarão empanado frito|Fried breaded shrimp|Gambas rebozadas|Beignets de crevettes|Gamberi in pastella fritti
+C10002|Lula à dorê (anéis empanados)|Fried calamari rings|Calamares a la romana|Calmars à la romaine|Calamari fritti
+C26005|Caviar|Caviar|Caviar|Caviar|Caviale
+C10005|Carne de caranguejo em conserva|Canned crab meat|Carne de cangrejo en conserva|Miettes de crabe|Polpa di granchio in scatola
+C26123|Cavala ao natural (lata)|Canned mackerel in water|Caballa al natural (lata)|Maquereau au naturel|Sgombro al naturale
+C26086|Cavala ao molho de tomate (lata)|Canned mackerel in tomato sauce|Caballa en tomate (lata)|Maquereau sauce tomate|Sgombro al pomodoro in scatola
+C26096|Cavala ao molho de mostarda (lata)|Canned mackerel in mustard sauce|Caballa en salsa de mostaza|Maquereau sauce moutarde|Sgombro alla senape in scatola
+C10028|Mexilhão em conserva|Canned mussels|Mejillones en conserva|Moules en conserve|Cozze in scatola
+C10081|Mexilhão em escabeche (lata)|Mussels in escabeche (canned)|Mejillones en escabeche|Moules à l'escabèche|Cozze in escabeche
+C26275|Ovas de salmão|Salmon roe|Huevas de salmón|Œufs de saumon|Uova di salmone
+C26030|Peixe empanado frito|Breaded fish, fried|Pescado empanado frito|Poisson pané frit|Pesce impanato fritto
+C26028|Iscas / nuggets de peixe fritos|Fish fingers / nuggets, fried|Palitos de pescado fritos|Bâtonnets de poisson frits|Bastoncini di pesce fritti
+C8081|Rillettes de salmão|Salmon rillettes|Rillettes de salmón|Rillettes de saumon|Rillettes di salmone
+C8082|Rillettes de atum|Tuna rillettes|Rillettes de atún|Rillettes de thon|Rillettes di tonno
+C26231|Sardinha em azeite sem espinhas|Boneless sardines in olive oil|Sardinas sin espinas en aceite de oliva|Filets de sardine à l'huile d'olive|Filetti di sardine all'olio d'oliva
+C26035|Sardinha ao molho de tomate (lata)|Sardines in tomato sauce|Sardinas en tomate|Sardines à la tomate|Sardine al pomodoro
+C26119|Salmão em conserva|Canned salmon|Salmón en conserva|Saumon en conserve|Salmone in scatola
+C26046|Kani (surimi)|Surimi (crab sticks)|Surimi (palitos de cangrejo)|Surimi|Surimi (bastoncini di granchio)
+C8293|Tarama (pasta de ovas)|Taramasalata|Taramasalata|Tarama|Taramosalata
+C8291|Terrine de peixe|Fish terrine|Terrina de pescado|Terrine de poisson|Terrina di pesce
+C26179|Atum-branco em azeite (lata)|Albacore tuna in olive oil|Bonito del norte en aceite de oliva|Thon germon à l'huile d'olive|Tonno bianco all'olio d'oliva
+C26180|Atum em óleo de girassol (lata)|Tuna in sunflower oil|Atún en aceite de girasol|Thon à l'huile de tournesol|Tonno all'olio di girasole
+C26039|Atum ao natural (lata)|Tuna in water (canned)|Atún al natural|Thon au naturel|Tonno al naturale
+C26243|Atum ao molho de tomate (lata)|Tuna in tomato sauce|Atún con tomate|Thon à la catalane|Tonno al pomodoro
+C25598|Seitan|Seitan|Seitán|Seitan|Seitan
+C20904|Tofu natural|Tofu, plain|Tofu natural|Tofu nature|Tofu al naturale
+C6103|Entrecot cru|Beef rib steak (entrecôte), raw|Entrecot crudo|Entrecôte crue|Entrecôte cruda
+C6252|Hambúrguer bovino 10% gordura cru|Beef burger (10% fat), raw|Hamburguesa de ternera 10% grasa cruda|Steak haché 10 % MG cru|Hamburger di manzo 10% crudo
+C6254|Hambúrguer bovino 15% gordura cru|Beef burger (15% fat), raw|Hamburguesa de ternera 15% grasa cruda|Steak haché 15 % MG cru|Hamburger di manzo 15% crudo
+C6256|Hambúrguer bovino 20% gordura cru|Beef burger (20% fat), raw|Hamburguesa de ternera 20% grasa cruda|Steak haché 20 % MG cru|Hamburger di manzo 20% crudo
+C6250|Hambúrguer bovino 5% gordura cru|Lean beef burger (5% fat), raw|Hamburguesa de ternera 5% grasa cruda|Steak haché 5 % MG cru|Hamburger di manzo 5% crudo
+C6201|Bife bovino cru|Beef steak, raw|Filete de ternera crudo|Steak de bœuf cru|Bistecca di manzo cruda
+C6231|Carne bovina para cozido (crua)|Stewing beef, raw|Carne de ternera para guisar cruda|Bœuf à bourguignon cru|Spezzatino di manzo crudo
+C6900|Carne de cavalo crua|Horse meat, raw|Carne de caballo cruda|Viande de cheval crue|Carne di cavallo cruda
+C36307|Coxa de peru sem pele crua|Turkey thigh, skinless, raw|Muslo de pavo sin piel crudo|Cuisse de dinde sans peau crue|Coscia di tacchino senza pelle cruda
+C36700|Galinha-d'angola crua|Guinea fowl, raw|Pintada cruda|Pintade crue|Faraona cruda
+C28002|Barriga de porco crua|Pork belly, raw|Panceta de cerdo cruda|Poitrine de porc crue|Pancetta di maiale cruda
+C6536|Carne moída de vitela crua|Ground veal, raw|Carne picada de ternera lechal cruda|Haché de veau cru|Macinato di vitello crudo
+C21508|Pescoço de cordeiro cozido|Lamb neck, braised|Cuello de cordero estofado|Collier d'agneau braisé|Collo d'agnello brasato
+C21524|Costeleta de cordeiro grelhada|Lamb chop, grilled|Chuleta de cordero a la plancha|Côtelette d'agneau grillée|Costoletta d'agnello alla griglia
+C21519|Pernil de cordeiro cozido|Leg of lamb, braised|Pierna de cordero estofada|Gigot d'agneau braisé|Cosciotto d'agnello brasato
+C21503|Pernil de cordeiro assado|Roast leg of lamb|Pierna de cordero asada|Gigot d'agneau rôti|Cosciotto d'agnello arrosto
+C21513|Lombo de cordeiro assado|Lamb loin, roasted|Lomo de cordero asado|Selle d'agneau rôtie|Lombata d'agnello arrosto
+C21507|Paleta de cordeiro assada|Lamb shoulder, roasted|Paletilla de cordero asada|Épaule d'agneau rôtie|Spalla d'agnello arrosto
