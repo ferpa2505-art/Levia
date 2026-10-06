@@ -1,6 +1,6 @@
 import { Ingrediente } from '@models/ingredients';
-import { alimentosTaco } from '@constants/taco';
-import { buscarPorNome, normalizarTexto } from '@utils/buscaAlimentos';
+import { alimentosGlobais, buscarAlimentosGlobais, idiomaAtualDosAlimentos } from '@constants/alimentosGlobais';
+import { normalizarTexto } from '@utils/buscaAlimentos';
 
 /**
  * Banco de ingredientes isolados, sempre padronizados para valores
@@ -93,15 +93,22 @@ export const ingredientes: Ingrediente[] = [
 ];
 
 /**
- * Lista curada (com porções caseiras) primeiro, depois os ~590 alimentos da
- * TACO que não repetem um nome da lista curada.
+ * Lista curada (com porções caseiras) primeiro, depois o banco global de
+ * alimentos e pratos prontos (TACO + CIQUAL + USDA + pratos montados, em
+ * 5 idiomas — ver src/constants/alimentosGlobais.ts) sem repetir nomes.
+ * `todosIngredientes` fica em português (usado pelo teste de busca).
  */
 const nomesCurados = new Set(ingredientes.map((i) => normalizarTexto(i.nome)));
 export const todosIngredientes: Ingrediente[] = [
   ...ingredientes,
-  ...alimentosTaco.filter((a) => !nomesCurados.has(normalizarTexto(a.nome))),
+  ...alimentosGlobais('pt').filter((a) => !nomesCurados.has(normalizarTexto(a.nome))),
 ];
 
+/**
+ * Busca no idioma escolhido no app. Em português a lista curada entra junto
+ * (e ganha no empate); nos outros idiomas usa só o banco global traduzido.
+ */
 export function buscarIngredientes(termo: string, limite = 8): Ingrediente[] {
-  return buscarPorNome(todosIngredientes, termo, (i) => i.nome, limite);
+  const idioma = idiomaAtualDosAlimentos();
+  return buscarAlimentosGlobais(termo, limite, idioma, idioma === 'pt' ? ingredientes : []);
 }
