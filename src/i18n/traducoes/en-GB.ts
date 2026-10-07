@@ -2,7 +2,7 @@ import type { Traducoes } from './pt-BR';
 
 const traducoes: Traducoes = {
   "comum.continuar": "Continue",
-  "comum.voltar": "â† Back",
+  "comum.voltar": "← Back",
   "comum.cancelar": "Cancel",
   "comum.salvar": "Save",
   "comum.atualizar": "Update",
