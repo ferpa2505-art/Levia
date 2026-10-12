@@ -19,7 +19,7 @@ import { ThemedText } from '@components/ThemedText';
 import { Button } from '@components/Button';
 import { Input } from '@components/Input';
 import { useGlp1 } from '@context/Glp1Context';
-import { isExpoGo } from '@utils/glp1Notifications';
+import { isExpoGo, lembretesDisponiveis } from '@utils/glp1Notifications';
 import {
   LOCAIS_APLICACAO,
   SINTOMAS_COMUNS,
@@ -213,7 +213,10 @@ export default function Glp1Screen() {
               {formatarDiasRestantes(null, t)}
             </ThemedText>
           )}
-{configLembrete.ativo && isExpoGo && (
+          {/* Lembretes: só no app instalado (na versão web o navegador não dispara) */}
+          {lembretesDisponiveis && (
+            <>
+              {configLembrete.ativo && isExpoGo && (
   <ThemedText variant="caption" color="textSecondary" style={{ marginTop: spacing.sm }}>
     {t('g.expoGo')}
   </ThemedText>
@@ -252,6 +255,8 @@ export default function Glp1Screen() {
                 );
               })}
             </View>
+          )}
+            </>
           )}
         </ThemedView>
 

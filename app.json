@@ -70,6 +70,15 @@
       "url": "https://u.expo.dev/c19a5f1e-5fbd-4100-ad78-43b05b47a977",
       "checkAutomatically": "ON_LOAD",
       "fallbackToCacheTimeout": 5000
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "single",
+      "favicon": "./public/icons/favicon.png",
+      "name": "Leviã",
+      "shortName": "Leviã",
+      "themeColor": "#6FA58E",
+      "backgroundColor": "#FBF8F3"
     }
   }
 }
