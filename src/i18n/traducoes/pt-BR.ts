@@ -108,6 +108,7 @@ const ptBR = {
   "n.carregando": "Carregando notícias...",
   "n.vazio": "Nenhuma notícia disponível no momento. Puxe a tela pra baixo pra tentar de novo.",
   "n.erro": "Não foi possível atualizar as notícias agora. Verifique sua internet.",
+  "n.emBreve": "EM CONSTRUÇÃO — as notícias chegam na próxima versão.",
   "n.avisoPt": "As notícias vêm de sites em português.",
   "r.titulo": "Monte sua receita",
   "r.sub": "Junte os ingredientes que você usou, com a quantidade em gramas, e a gente calcula o total por 100g pra você.",

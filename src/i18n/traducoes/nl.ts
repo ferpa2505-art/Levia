@@ -109,6 +109,7 @@ const traducoes: Traducoes = {
   "n.carregando": "Nieuws laden...",
   "n.vazio": "Op dit moment geen nieuws beschikbaar. Trek omlaag om het opnieuw te proberen.",
   "n.erro": "Het nieuws kon niet worden bijgewerkt. Controleer je internetverbinding.",
+  "n.emBreve": "IN AANBOUW — nieuws komt in de volgende versie.",
   "n.avisoPt": "Het nieuws komt van Portugeestalige sites.",
   "r.titulo": "Stel je recept samen",
   "r.sub": "Voeg de ingrediënten toe die je hebt gebruikt, met de hoeveelheid in grammen, en wij berekenen het totaal per 100 g.",

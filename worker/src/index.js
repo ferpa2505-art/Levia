@@ -15,11 +15,37 @@ const SETE_DIAS_MS = 7 * 24 * 3600 * 1000;
 
 const IDIOMAS = { pt: 'português do Brasil', en: 'English', es: 'español', fr: 'français', it: 'italiano' };
 
+/**
+ * Versão web (PWA): o navegador só deixa a página chamar o worker se ele
+ * responder com estes cabeçalhos (CORS). Só os endereços do Leviã são aceitos.
+ * O app de celular não usa CORS e continua funcionando igual.
+ */
+const ORIGENS_WEB = ['https://levia-app.netlify.app', 'http://localhost:8081'];
+
+function cabecalhosCors(origem) {
+  if (!origem || !ORIGENS_WEB.includes(origem)) return {};
+  return {
+    'Access-Control-Allow-Origin': origem,
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type, x-levia-app',
+    'Access-Control-Max-Age': '86400',
+    Vary: 'Origin',
+  };
+}
+
 function json(corpo, status = 200) {
   return new Response(JSON.stringify(corpo), {
     status,
     headers: { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' },
   });
+}
+
+function comCors(resposta, origem) {
+  const extra = cabecalhosCors(origem);
+  if (!Object.keys(extra).length) return resposta;
+  const h = new Headers(resposta.headers);
+  for (const [k, v] of Object.entries(extra)) h.set(k, v);
+  return new Response(resposta.body, { status: resposta.status, headers: h });
 }
 
 /** Comparação em tempo constante (evita descobrir o token pelo tempo de resposta) */
@@ -198,12 +224,16 @@ async function analisarPrato(request, env) {
 export default {
   async fetch(request, env) {
     const { pathname } = new URL(request.url);
+    const origem = request.headers.get('Origin');
+    if (pathname === '/v1/analisar-prato' && request.method === 'OPTIONS') {
+      return new Response(null, { status: 204, headers: cabecalhosCors(origem) });
+    }
     if (pathname === '/v1/analisar-prato' && request.method === 'POST') {
       try {
-        return await analisarPrato(request, env);
+        return comCors(await analisarPrato(request, env), origem);
       } catch (e) {
         console.error('erro', e?.message);
-        return json({ erro: 'interno' }, 500);
+        return comCors(json({ erro: 'interno' }, 500), origem);
       }
     }
     if (pathname === '/health') return json({ ok: true });

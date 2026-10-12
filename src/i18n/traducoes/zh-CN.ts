@@ -109,6 +109,7 @@ const traducoes: Traducoes = {
   "n.carregando": "正在加载资讯...",
   "n.vazio": "暂时没有资讯。下拉以重试。",
   "n.erro": "无法更新资讯。请检查网络连接。",
+  "n.emBreve": "建设中 — 资讯将在下一版本推出。",
   "n.avisoPt": "资讯来自葡萄牙语网站。",
   "r.titulo": "创建你的食谱",
   "r.sub": "添加你使用的食材及克数，我们会为你计算每 100 克的总量。",

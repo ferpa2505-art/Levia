@@ -109,6 +109,7 @@ const traducoes: Traducoes = {
   "n.carregando": "Memuat berita...",
   "n.vazio": "Belum ada berita saat ini. Tarik ke bawah untuk mencoba lagi.",
   "n.erro": "Tidak bisa memperbarui berita. Periksa koneksi internetmu.",
+  "n.emBreve": "DALAM PENGEMBANGAN — berita hadir di versi berikutnya.",
   "n.avisoPt": "Berita berasal dari situs berbahasa Portugis.",
   "r.titulo": "Buat resepmu",
   "r.sub": "Tambahkan bahan yang kamu pakai beserta beratnya dalam gram, dan kami hitung totalnya per 100 g.",

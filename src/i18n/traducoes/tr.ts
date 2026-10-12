@@ -109,6 +109,7 @@ const traducoes: Traducoes = {
   "n.carregando": "Haberler yükleniyor...",
   "n.vazio": "Şu anda haber yok. Tekrar denemek için aşağı çek.",
   "n.erro": "Haberler şu anda güncellenemedi. İnternet bağlantını kontrol et.",
+  "n.emBreve": "YAPIM AŞAMASINDA — haberler bir sonraki sürümde geliyor.",
   "n.avisoPt": "Haberler Portekizce sitelerden gelir.",
   "r.titulo": "Tarifini oluştur",
   "r.sub": "Kullandığın malzemeleri gram miktarıyla ekle, 100 g başına toplamı senin için hesaplayalım.",

@@ -2,6 +2,20 @@ import * as SecureStore from 'expo-secure-store';
 import * as Crypto from 'expo-crypto';
 import * as LocalAuthentication from 'expo-local-authentication';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Platform } from 'react-native';
+
+/**
+ * No celular a senha fica no cofre do sistema (SecureStore). No navegador (PWA)
+ * esse cofre não existe, então o hash da senha fica no armazenamento do próprio
+ * app — os dados de saúde já ficam lá também; a senha continua guardada só como hash.
+ */
+const cofre = Platform.OS === 'web'
+  ? {
+      getItemAsync: (k: string) => AsyncStorage.getItem(k),
+      setItemAsync: (k: string, v: string) => AsyncStorage.setItem(k, v),
+      deleteItemAsync: (k: string) => AsyncStorage.removeItem(k),
+    }
+  : SecureStore;
 
 /**
  * Senha do app (4 a 10 dígitos) e desbloqueio por biometria.
@@ -47,20 +61,20 @@ async function hash(pin: string, sal: string) {
 }
 
 export async function temSenha(): Promise<boolean> {
-  return !!(await SecureStore.getItemAsync(CHAVE_PIN).catch(() => null));
+  return !!(await cofre.getItemAsync(CHAVE_PIN).catch(() => null));
 }
 
 export async function salvarSenha(pin: string) {
   if (!pinValido(pin)) throw new Error('senha inválida');
   const bytes = Crypto.getRandomBytes(16);
   const sal = Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('');
-  await SecureStore.setItemAsync(CHAVE_PIN, JSON.stringify({ sal, hash: await hash(pin, sal), tam: pin.length }));
+  await cofre.setItemAsync(CHAVE_PIN, JSON.stringify({ sal, hash: await hash(pin, sal), tam: pin.length }));
 }
 
 /** Quantidade de dígitos da senha (para desbloquear sem precisar tocar em OK) */
 export async function tamanhoSenha(): Promise<number | null> {
   try {
-    const salvo = await SecureStore.getItemAsync(CHAVE_PIN);
+    const salvo = await cofre.getItemAsync(CHAVE_PIN);
     return salvo ? (JSON.parse(salvo).tam ?? null) : null;
   } catch {
     return null;
@@ -68,7 +82,7 @@ export async function tamanhoSenha(): Promise<number | null> {
 }
 
 export async function conferirSenha(pin: string): Promise<boolean> {
-  const salvo = await SecureStore.getItemAsync(CHAVE_PIN).catch(() => null);
+  const salvo = await cofre.getItemAsync(CHAVE_PIN).catch(() => null);
   if (!salvo) return false;
   try {
     const { sal, hash: esperado } = JSON.parse(salvo) as { sal: string; hash: string };

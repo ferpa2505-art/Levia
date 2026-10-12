@@ -1,4 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Platform } from 'react-native';
+import { baixarArquivo } from '@utils/web';
 import * as FileSystem from 'expo-file-system/legacy';
 import * as Sharing from 'expo-sharing';
 import * as DocumentPicker from 'expo-document-picker';
@@ -50,6 +52,11 @@ export async function exportarBackup(tituloCompartilhar: string, senha?: string)
     ? { ...base, formato: FORMATO_CIFRADO, cifrado: await cifrar(JSON.stringify(dados), senha, getRandomBytes) }
     : { ...base, formato: FORMATO, dados };
   const hoje = new Date().toISOString().slice(0, 10);
+  if (Platform.OS === 'web') {
+    // navegador: baixa o arquivo direto (a pessoa guarda ou envia por e-mail)
+    baixarArquivo(`levia-backup-${hoje}.json`, JSON.stringify(arquivo), 'application/json');
+    return true;
+  }
   const uri = `${FileSystem.cacheDirectory}levia-backup-${hoje}.json`;
   await FileSystem.writeAsStringAsync(uri, JSON.stringify(arquivo));
   if (!(await Sharing.isAvailableAsync())) return false;
@@ -86,7 +93,9 @@ export async function escolherBackup(): Promise<BackupLido> {
   const r = await DocumentPicker.getDocumentAsync({ type: ['application/json', 'text/plain', '*/*'], copyToCacheDirectory: true });
   if (r.canceled || !r.assets?.[0]) return { ok: false, motivo: 'cancelado' };
   try {
-    const texto = await FileSystem.readAsStringAsync(r.assets[0].uri);
+    const texto = Platform.OS === 'web'
+      ? await (await fetch(r.assets[0].uri)).text()
+      : await FileSystem.readAsStringAsync(r.assets[0].uri);
     const b = JSON.parse(texto) as Partial<ArquivoBackup>;
     if (b.app !== 'levia') return { ok: false, motivo: 'invalido' };
     if (b.formato === FORMATO_CIFRADO && b.cifrado && typeof b.cifrado === 'object') {

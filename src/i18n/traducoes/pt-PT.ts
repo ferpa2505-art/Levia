@@ -109,6 +109,7 @@ const traducoes: Traducoes = {
   "n.carregando": "A carregar notícias...",
   "n.vazio": "Não há notícias disponíveis de momento. Deslize para baixo para tentar novamente.",
   "n.erro": "Não foi possível atualizar as notícias. Verifique a sua ligação à internet.",
+  "n.emBreve": "EM CONSTRUÇÃO — as notícias chegam na próxima versão.",
   "n.avisoPt": "As notícias vêm de sites brasileiros.",
   "r.titulo": "Monte a sua receita",
   "r.sub": "Junte os ingredientes que usou, com a quantidade em gramas, e calculamos o total por 100 g por si.",

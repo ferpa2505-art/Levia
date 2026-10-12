@@ -1,5 +1,5 @@
 import { useCallback } from 'react';
-import { ScrollView, View, StyleSheet, Pressable, RefreshControl, Linking } from 'react-native';
+import { ScrollView, View, StyleSheet, Pressable, RefreshControl, Linking, Platform } from 'react-native';
 import { ThemedView } from '@components/ThemedView';
 import { ThemedText } from '@components/ThemedText';
 import { useNews } from '@context/NewsContext';
@@ -22,6 +22,32 @@ function formatarData(valor: string, idioma: string): string {
 }
 
 export default function NewsScreen() {
+  const { t, idioma } = usePreferences();
+  // Na versão web (PWA) o navegador bloqueia a leitura direta dos sites de notícias.
+  // Até termos o servidor intermediário, mostramos o aviso de "em construção".
+  if (Platform.OS === 'web') return <NoticiasEmBreve titulo={t('abas.noticias')} texto={t('n.emBreve')} />;
+  return <NoticiasConteudo />;
+}
+
+function NoticiasEmBreve({ titulo, texto }: { titulo: string; texto: string }) {
+  return (
+    <ScrollView style={{ flex: 1, backgroundColor: colors.background }} contentContainerStyle={{ padding: spacing.lg }}>
+      <ThemedView style={styles.container}>
+        <View style={styles.header}>
+          <ThemedText variant="heading" color="text">{titulo}</ThemedText>
+        </View>
+        <ThemedView variant="surface" style={[styles.card, styles.cardShadow]}>
+          <ThemedText variant="subheading" color="primary" style={{ textAlign: 'center' }}>🚧</ThemedText>
+          <ThemedText variant="body" color="text" style={{ textAlign: 'center', marginTop: spacing.sm }}>
+            {texto}
+          </ThemedText>
+        </ThemedView>
+      </ThemedView>
+    </ScrollView>
+  );
+}
+
+function NoticiasConteudo() {
   const { t, idioma } = usePreferences();
   const { noticias, loading, atualizando, erro, atualizarNoticias } = useNews();
 

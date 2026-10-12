@@ -1,4 +1,5 @@
 import { Platform } from 'react-native';
+import { baixarArquivo } from '@utils/web';
 import type { Medicacao } from '@models/medicacoes';
 import { rotuloUnidade } from '@models/medicacoes';
 import { getNotifications, solicitarPermissaoNotificacao } from '@utils/glp1Notifications';
@@ -122,6 +123,7 @@ export async function removerEventos(ids: string[]) {
  * Devolve { ids, permitido } — permitido=false se o usuário negou o calendário.
  */
 export async function criarEventos(m: Medicacao, titulo: string, idioma: string): Promise<{ ids: string[]; permitido: boolean }> {
+  if (Platform.OS === 'web') return criarEventosWeb(m, titulo, idioma);
   const C = getCalendar();
   if (!C || !m.calendario || m.uso === 'esporadico') return { ids: [], permitido: true };
   const perm = await C.requestCalendarPermissionsAsync().catch(() => null);
@@ -173,4 +175,77 @@ export async function criarEventos(m: Medicacao, titulo: string, idioma: string)
     }
   }
   return { ids, permitido: true };
+}
+
+/* ------------------------------------------------------------------
+ * Versão web (PWA): não há acesso direto ao calendário. Gera um arquivo
+ * .ics com os horários e alarmes; ao abrir, o celular oferece adicionar
+ * ao calendário (iPhone: Calendário; Android: Google Agenda/Samsung).
+ * ------------------------------------------------------------------ */
+
+function dataIcs(d: Date): string {
+  return d.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
+}
+
+function textoIcs(t: string): string {
+  return t.replace(/\\/g, '\\\\').replace(/;/g, '\\;').replace(/,/g, '\\,').replace(/\r?\n/g, '\\n');
+}
+
+async function criarEventosWeb(m: Medicacao, titulo: string, idioma: string): Promise<{ ids: string[]; permitido: boolean }> {
+  if (!m.calendario || m.uso === 'esporadico') return { ids: [], permitido: true };
+
+  const inicios: Date[] = [];
+  let regra = 'FREQ=DAILY';
+  if (m.uso === 'continuo') {
+    const prox = proximaDose(m);
+    if (!prox) return { ids: [], permitido: true };
+    if (m.frequencia === 'semanal') {
+      inicios.push(prox);
+      regra = 'FREQ=WEEKLY';
+    } else {
+      for (const h of horariosDoDia(m.primeiraDose!, m.intervaloHoras ?? 24)) {
+        const [hora, minuto] = lerHorario(h)!;
+        const d = new Date();
+        d.setHours(hora, minuto, 0, 0);
+        if (d < new Date()) d.setDate(d.getDate() + 1);
+        inicios.push(d);
+      }
+    }
+  } else {
+    const ini = inicioDoTratamento(m);
+    if (!ini) return { ids: [], permitido: true };
+    inicios.push(...dosesDoTratamento(ini, 1, m.vezesPorDia ?? 1));
+    regra = `FREQ=DAILY;COUNT=${m.dias ?? 1}`;
+  }
+  if (inicios.length === 0) return { ids: [], permitido: true };
+
+  const resumo = textoIcs(`${titulo}: ${textoDose(m, idioma)}`);
+  const agora = dataIcs(new Date());
+  const linhas = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Levia//PT', 'CALSCALE:GREGORIAN', 'METHOD:PUBLISH'];
+  inicios.forEach((ini, i) => {
+    linhas.push(
+      'BEGIN:VEVENT',
+      `UID:levia-${m.id ?? 'med'}-${i}-${agora}@levia-app`,
+      `DTSTAMP:${agora}`,
+      `DTSTART:${dataIcs(ini)}`,
+      `DTEND:${dataIcs(new Date(ini.getTime() + 15 * 60_000))}`,
+      `RRULE:${regra}`,
+      `SUMMARY:${resumo}`,
+      ...(m.observacoes ? [`DESCRIPTION:${textoIcs(m.observacoes)}`] : []),
+      'BEGIN:VALARM',
+      'ACTION:DISPLAY',
+      `DESCRIPTION:${resumo}`,
+      'TRIGGER:PT0M',
+      'END:VALARM',
+      'END:VEVENT'
+    );
+  });
+  linhas.push('END:VCALENDAR');
+
+  try {
+    baixarArquivo('levia-lembretes.ics', linhas.join('\r\n'), 'text/calendar;charset=utf-8');
+  } catch {
+    return { ids: [], permitido: false };
+  }
+  return { ids: [], permitido: true };
 }

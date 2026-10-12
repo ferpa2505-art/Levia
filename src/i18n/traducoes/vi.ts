@@ -109,6 +109,7 @@ const traducoes: Traducoes = {
   "n.carregando": "Đang tải tin tức...",
   "n.vazio": "Hiện chưa có tin tức. Kéo xuống để thử lại.",
   "n.erro": "Không thể cập nhật tin tức. Hãy kiểm tra kết nối internet.",
+  "n.emBreve": "ĐANG XÂY DỰNG — tin tức sẽ có trong phiên bản tiếp theo.",
   "n.avisoPt": "Tin tức được lấy từ các trang tiếng Bồ Đào Nha.",
   "r.titulo": "Tạo công thức của bạn",
   "r.sub": "Thêm các nguyên liệu bạn đã dùng kèm khối lượng tính bằng gam, chúng tôi sẽ tính tổng cho mỗi 100 g.",

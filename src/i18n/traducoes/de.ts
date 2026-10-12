@@ -109,6 +109,7 @@ const traducoes: Traducoes = {
   "n.carregando": "Nachrichten werden geladen...",
   "n.vazio": "Gerade keine Nachrichten verfügbar. Zum Aktualisieren nach unten ziehen.",
   "n.erro": "Nachrichten konnten nicht aktualisiert werden. Prüfe deine Internetverbindung.",
+  "n.emBreve": "IM AUFBAU — News kommen mit der nächsten Version.",
   "n.avisoPt": "Die Nachrichten stammen von portugiesischsprachigen Seiten.",
   "r.titulo": "Stell dein Rezept zusammen",
   "r.sub": "Füge die verwendeten Zutaten mit der Menge in Gramm hinzu, und wir berechnen die Werte pro 100 g für dich.",

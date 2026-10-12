@@ -1,4 +1,5 @@
 import { Platform } from 'react-native';
+import { abrirJanela } from '@utils/web';
 import * as Print from 'expo-print';
 import * as MailComposer from 'expo-mail-composer';
 import * as Sharing from 'expo-sharing';
@@ -18,6 +19,14 @@ const CANAL = 'relatorios';
 
 /** Gera o PDF do período e abre o e-mail. Se não houver app de e-mail, abre o compartilhamento. */
 export async function enviarRelatorioPorEmail(dias: number, email: string): Promise<'email' | 'compartilhado' | 'falhou'> {
+  if (Platform.OS === 'web') {
+    // navegador: a janela precisa abrir já no toque, antes de montar o relatório
+    const janela = abrirJanela();
+    if (!janela) return 'falhou';
+    janela.escrever(await montarHtmlRelatorio(dias));
+    setTimeout(janela.imprimir, 400);
+    return 'compartilhado';
+  }
   const html = await montarHtmlRelatorio(dias);
   const { uri } = await Print.printToFileAsync({ html });
   const periodo = dias <= 7 ? t('rel.semanal') : t('rel.mensal');
