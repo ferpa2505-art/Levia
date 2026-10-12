@@ -1,5 +1,7 @@
 import * as ImagePicker from 'expo-image-picker';
 import * as FileSystem from 'expo-file-system/legacy';
+import { Platform } from 'react-native';
+import { ImageManipulator, SaveFormat } from 'expo-image-manipulator';
 import { suspenderBloqueio } from '@utils/bloqueioSuspenso';
 
 /**
@@ -12,6 +14,7 @@ const PASTA = `${FileSystem.documentDirectory}refeicoes/`;
 export type ResultadoFoto = { uri: string } | { negado: true } | null;
 
 async function guardar(uriTemporaria: string): Promise<string> {
+  if (Platform.OS === 'web') return guardarNaWeb(uriTemporaria);
   await FileSystem.makeDirectoryAsync(PASTA, { intermediates: true }).catch(() => {});
   const destino = `${PASTA}${Date.now()}.jpg`;
   await FileSystem.copyAsync({ from: uriTemporaria, to: destino });
@@ -38,4 +41,21 @@ export async function escolherFotoDaGaleria(): Promise<ResultadoFoto> {
 
 export async function apagarFoto(uri?: string) {
   if (uri && uri.startsWith(PASTA)) await FileSystem.deleteAsync(uri, { idempotent: true }).catch(() => {});
+}
+
+/**
+ * Versão web (PWA): não existe pasta de arquivos. A foto é reduzida (máx. 512 px,
+ * ~30–60 KB) e guardada como texto junto com a refeição, no armazenamento do app.
+ * A análise da IA usa essa mesma foto.
+ */
+async function guardarNaWeb(uri: string): Promise<string> {
+  const ctx = ImageManipulator.manipulate(uri);
+  const original = await ctx.renderAsync();
+  const deitada = original.width >= original.height;
+  const lado = deitada ? original.width : original.height;
+  if (lado > 512) ctx.resize(deitada ? { width: 512 } : { height: 512 });
+  const img = lado > 512 ? await ctx.renderAsync() : original;
+  const salva = await img.saveAsync({ format: SaveFormat.JPEG, compress: 0.6, base64: true });
+  if (!salva.base64) return uri;
+  return `data:image/jpeg;base64,${salva.base64}`;
 }
