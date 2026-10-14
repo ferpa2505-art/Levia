@@ -1,5 +1,5 @@
 /* Service worker do Leviã: deixa o app abrir mesmo sem internet. */
-const CACHE = 'levia-v1';
+const CACHE = 'levia-v2';
 
 self.addEventListener('install', (event) => {
   event.waitUntil(caches.open(CACHE).then((c) => c.addAll(['/', '/manifest.webmanifest'])));
@@ -13,6 +13,31 @@ self.addEventListener('activate', (event) => {
     )
   );
   self.clients.claim();
+});
+
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  event.waitUntil(
+    (async () => {
+      const informada = event.notification?.data?.url;
+      let destino;
+      try {
+        destino = new URL(typeof informada === 'string' ? informada : '/', self.location.origin);
+      } catch {
+        destino = new URL('/', self.location.origin);
+      }
+      if (destino.origin !== self.location.origin) destino = new URL('/', self.location.origin);
+
+      const janelas = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+      const janela = janelas.find((c) => c.url.startsWith(self.location.origin));
+      if (janela) {
+        await janela.focus();
+        if ('navigate' in janela && janela.url !== destino.href) await janela.navigate(destino.href);
+      } else {
+        await self.clients.openWindow(destino.href);
+      }
+    })()
+  );
 });
 
 self.addEventListener('fetch', (event) => {
