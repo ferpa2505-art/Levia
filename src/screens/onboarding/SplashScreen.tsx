@@ -106,7 +106,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   background: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     backgroundColor: lightTheme.primary,
   },
   content: {
