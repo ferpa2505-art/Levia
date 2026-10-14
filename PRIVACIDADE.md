@@ -1,184 +1,87 @@
-# Política de Privacidade - Leviã
+# Política de Privacidade — Leviã
 
-**Última atualização:** 29 de setembro de 2026
+**Última atualização:** 7 de outubro de 2026  
+**Versão do app:** 0.4.0
 
-## 1. Introdução
+## 1. Quem somos
 
-Bem-vindo ao Leviã ("nós", "nosso" ou "Leviã"). Somos comprometidos em proteger sua privacidade. Esta Política de Privacidade explica como coletamos, usamos, divulgamos e protegemos suas informações.
+O Leviã é um aplicativo de registro pessoal de peso, alimentação, tratamento com medicamentos GLP-1 e diabetes. Para dúvidas ou pedidos relacionados à privacidade, entre em contato pelo e-mail **contatoapplevia@gmail.com**.
 
-## 2. Dados que Coletamos
+## 2. Quais dados o app guarda
 
-### 2.1 Dados de Saúde
-Leviã coleta os seguintes dados de saúde pessoais que você voluntariamente insere:
-- **Leituras de glicemia** (níveis de açúcar no sangue)
-- **Medicações** (tipo, dosagem, horário)
-- **Refeições** (descrição, carboidratos, horário)
-- **Notas pessoais** (observações e comentários)
+O Leviã guarda no armazenamento interno do seu aparelho somente as informações que você registra ou configura:
 
-### 2.2 Dados Técnicos
-Para melhorar a experiência do usuário, podemos coletar:
-- Tipo de dispositivo
-- Versão do sistema operacional
-- Versão do aplicativo
-- Relatórios de erro/crash (opcional)
+- **Perfil:** nome, como prefere ser chamado(a), pronome, sexo biológico, idade, altura, peso, meta de peso e tipo de diabetes, se informados.
+- **Peso e alimentação:** pesagens, refeições, alimentos, horários, calorias, proteínas, carboidratos, gorduras, fibras, água, receitas e exercícios.
+- **Fotos dos pratos:** se você fotografar ou escolher uma foto, uma cópia reduzida pode ficar guardada junto da refeição no aparelho.
+- **GLP-1:** doses, dosagem, local de aplicação, sintomas, apetite e configuração da caneta.
+- **Diabetes:** glicemias, faixa-alvo, lembretes e notas.
+- **Medicações:** nome, dose, tipo de uso, horários e observações.
+- **Preferências:** idioma, tema e opções do app.
+- **Identificador de instalação:** um código aleatório, sem seu nome e sem dados do aparelho, criado quando você usa a análise de foto por IA. Ele serve para controlar a cota gratuita.
+- **E-mail para relatórios:** se informado, fica salvo no aparelho e apenas preenche o destinatário quando você escolhe gerar e enviar um relatório pelo seu próprio aplicativo de e-mail.
 
-### 2.3 Dados que NÃO Coletamos
-- ❌ Localização GPS
-- ❌ Contatos ou calendários
-- ❌ Fotos ou mídia
-- ❌ Histórico de navegação
-- ❌ Informações bancárias
+Alguns desses dados são dados pessoais sensíveis de saúde, nos termos da LGPD. Eles são tratados para o funcionamento do app, conforme as escolhas feitas por você.
 
-## 3. Como Usamos seus Dados
+## 3. Onde os dados ficam
 
-Usamos os dados que você fornece exclusivamente para:
+Os registros ficam no armazenamento interno do aplicativo, no seu aparelho. O Leviã não tem cadastro, login nem servidor próprio recebendo seus registros de saúde.
 
-1. **Exibir seu histórico de saúde** no aplicativo
-2. **Sincronizar dados** entre seus dispositivos (quando implementado)
-3. **Melhorar a interface** e a experiência do usuário
-4. **Corrigir bugs** e problemas técnicos
-5. **Gerar estatísticas anônimas** para melhorar o app
+Se o backup automático do Android estiver ativado na sua conta Google, o próprio sistema poderá incluir os dados do app no backup da sua conta, conforme a política do Google.
 
-**Nunca usamos seus dados para:**
-- Marketing ou publicidade
-- Compartilhamento com terceiros
-- Vendas ou comercialização
-- Rastreamento de comportamento
+## 4. Quando o app usa a internet
 
-## 4. Armazenamento de Dados
+O Leviã se conecta à internet somente para:
 
-### 4.1 Armazenamento Local
-- **Dispositivo:** Todos os dados são armazenados localmente no seu dispositivo Android
-- **Criptografia:** Dados sensíveis são protegidos pelo sistema de segurança do Android
-- **Acessibilidade:** Apenas você pode acessar seus dados
+- **Notícias:** baixar artigos públicos de sites de saúde, como tuasaude.com. Esses sites recebem uma requisição comum de leitura, incluindo o endereço IP, mas nenhum registro de saúde do app é enviado.
+- **Atualizações:** verificar e baixar correções pelos servidores da Expo, que podem receber informações técnicas como versão do app e sistema operacional, nunca seus registros.
+- **Google Play:** instalação e atualizações, conforme a política do Google.
+- **Análise opcional de foto por IA:** somente quando você toca para analisar e concorda com o envio.
 
-### 4.2 Sincronização em Nuvem (Futuro)
-- Quando implementado, sincronização será **opcional**
-- Você terá controle total sobre quais dados sincronizar
-- Será usada criptografia end-to-end
+### 4.1 Análise opcional da foto do prato por IA
 
-### 4.3 Retenção
-- Você controla completamente quando deletar dados
-- Nenhuma retenção automática ou forçada
-- Dados deletados são permanentemente removidos
+Ao tocar em **Analisar com IA**, o Leviã envia para o servidor do Leviã na Cloudflare:
 
-## 5. Compartilhamento de Dados
+- a foto reduzida do prato, com no máximo 1024 pixels no lado maior;
+- o identificador aleatório da instalação;
+- o idioma do app;
+- dados técnicos da conexão, como o endereço IP.
 
-**Leviã NÃO compartilha seus dados com:**
-- ❌ Servidores de terceiros
-- ❌ Publicidades ou redes de rastreamento
-- ❌ Empresas farmacêuticas
-- ❌ Instituições médicas (sem sua permissão explícita)
-- ❌ Pesquisadores ou analistas
+O Leviã não envia junto seu nome, peso, glicemia, medicações ou outros registros de saúde. A Cloudflare confere as cotas e encaminha a foto ao Google Gemini para identificar alimentos e estimar quantidades. A foto não é guardada pelo worker do Leviã; são mantidos apenas os contadores necessários para controlar o uso, por até 8 dias para a instalação e por até 2 horas para o controle por IP.
 
-**Compartilhamento permitido apenas:**
-- ✅ Com sua permissão explícita
-- ✅ Com médicos que você designar
-- ✅ Para sincronização entre seus próprios dispositivos
+O Google pode processar a foto e a resposta por tempo limitado para prestar o serviço e detectar abuso, conforme os termos da API utilizada. Na modalidade paga usada pelo Leviã, fotos e respostas não são usadas para treinar os modelos do Google.
 
-## 6. Segurança
+A resposta volta para o aparelho e você confere, corrige ou descarta as sugestões antes de salvar a refeição. A análise depende do seu consentimento, pode ser recusada e não é necessária para registrar refeições manualmente.
 
-Implementamos medidas de segurança para proteger seus dados:
-- Armazenamento local seguro
-- Validação de entrada de dados
-- Nenhuma transmissão desnecessária pela internet
-- Atualizações de segurança regulares
+Fotografe apenas o prato. Não inclua rostos, documentos ou outras informações pessoais na imagem.
 
-**Limitações:**
-- Nenhum sistema é 100% seguro
-- Você é responsável pela segurança física do seu dispositivo
-- Senhas e PIN do seu dispositivo protegem também os dados do Leviã
+## 5. Notificações, câmera, fotos e calendário
 
-## 7. Direitos do Usuário
+- Lembretes de dose, medicação, glicemia e refeições são agendados no próprio aparelho.
+- Câmera e galeria são usadas somente quando você aciona esses recursos. As fotos ficam no aparelho e só saem dele se você pedir a análise por IA ou escolher compartilhá-las.
+- O calendário é usado somente se você ativar a opção de adicionar horários de medicação. O Leviã cria eventos, mas não lê seus outros eventos.
+- Ao gerar um backup ou relatório, o arquivo é criado no aparelho e só sai dele para o destino que você escolher no compartilhamento do sistema.
+- Backups podem ser protegidos com senha. A senha não é enviada nem guardada pelo Leviã.
+- Senha e biometria do app são tratadas no dispositivo; o Leviã não recebe sua digital nem seu rosto.
 
-Você tem os seguintes direitos:
+## 6. O que não fazemos
 
-### 7.1 Direito de Acesso
-- Você pode visualizar todos os seus dados a qualquer momento no app
+O Leviã não vende seus dados, não exibe anúncios e não usa ferramentas de rastreamento ou estatísticas de uso. Não acessa localização, contatos ou microfone. Não compartilha seus registros de saúde com terceiros; a única exceção é o envio opcional da foto para a análise descrita na seção 4.1.
 
-### 7.2 Direito de Correção
-- Você pode editar ou corrigir seus dados
+## 7. Retenção e exclusão
 
-### 7.3 Direito de Exclusão
-- Você pode deletar qualquer dado ou todo o aplicativo
-- Dados deletados são permanentemente removidos
+Os dados ficam no aparelho até você apagá-los. Você pode excluir registros dentro do app. Desinstalar o Leviã ou limpar os dados do app remove as informações armazenadas no aparelho. Os contadores técnicos da análise por IA expiram conforme os prazos descritos na seção 4.1.
 
-### 7.4 Direito à Portabilidade
-- Você pode exportar seus dados em formatos padrão (CSV, PDF)
+## 8. Seus direitos
 
-### 7.5 Direito à Revogação
-- Você pode revogar consentimento a qualquer momento
-- Pode desinstalar o app a qualquer momento
+Você pode consultar, corrigir e excluir seus dados dentro do app. Para dúvidas ou solicitações relacionadas à privacidade e à LGPD, escreva para **contatoapplevia@gmail.com**.
 
-## 8. Conformidade com Leis
+## 9. Crianças e aviso de saúde
 
-### LGPD (Lei Geral de Proteção de Dados - Brasil)
-Leviã está em conformidade com a LGPD:
-- ✅ Coleta consentida e transparente
-- ✅ Propósito específico definido
-- ✅ Direitos dos usuários garantidos
-- ✅ Segurança implementada
-- ✅ Opção de deletar dados
+O Leviã não é destinado a menores de 18 anos. Ele é uma ferramenta de registro e organização pessoal: não diagnostica, não prescreve tratamento e não substitui médico, nutricionista ou outro profissional de saúde.
 
-### GDPR (Regulamento Geral de Proteção de Dados - UE)
-Se você é residente da UE:
-- ✅ Consentimento explícito necessário
-- ✅ Direitos de usuário garantidos
-- ✅ Armazenamento seguro
-- ✅ Sem compartilhamento com terceiros
+## 10. Alterações nesta política
 
-### Conformidade Médica
-- ⚠️ Leviã é uma **ferramenta de ASSISTÊNCIA**, não um dispositivo médico
-- ⚠️ Não é certificada como dispositivo médico FDA/CE
-- ⚠️ Não substitui consulta médica profissional
-- ✅ Dados são privados e não compartilhados
+Se uma versão futura passar a enviar outros dados para fora do aparelho ou usar outros serviços, esta política será atualizada antes do lançamento, explicando quais dados são enviados, para quem e por quê.
 
-## 9. Aviso Legal
-
-**IMPORTANTE - LEIA COM ATENÇÃO:**
-
-Leviã é um aplicativo para assistência pessoal no gerenciamento de diabetes. **NÃO É:**
-- Um dispositivo médico certificado
-- Um substituto para consulta médica
-- Uma ferramenta de diagnóstico
-- Um tratamento autorizado
-
-**SEMPRE consulte seu médico para:**
-- Diagnóstico de diabetes
-- Ajustes de medicação
-- Decisões de saúde importantes
-- Emergências médicas
-
-Os dados coletados são para sua assistência pessoal apenas.
-
-## 10. Alterações nesta Política
-
-Podemos atualizar esta Política de Privacidade de tempos em tempos. Notificaremos você sobre mudanças significativas através do aplicativo ou email.
-
-**Versões:**
-- v1.0 - 29/09/2026 - Lançamento inicial
-
-## 11. Contato
-
-Temos questões sobre esta Política de Privacidade?
-
-**Email:** luis.fernandopl@yahoo.com  
-**Desenvolvedor:** FP Tech & Art "ferpa2505-Art"  
-**País:** Brasil  
-
-Responderemos suas questões em até 7 dias.
-
-## 12. Consentimento
-
-Ao usar Leviã, você concorda com:
-- Esta Política de Privacidade
-- Coleta e armazenamento dos dados que você insere
-- Uso dos dados conforme descrito acima
-
-Se você não concorda, não use o aplicativo.
-
----
-
-**Aceitar e Continuar usando Leviã?** ✅ SIM / ❌ NÃO
-
-*Esta política foi atualizada em 29 de setembro de 2026*
+**Versão 0.4.0 — 7 de outubro de 2026**
