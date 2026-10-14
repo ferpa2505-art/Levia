@@ -17,7 +17,25 @@ IDIOMAS = ['pt-BR', 'pt-PT', 'es', 'en-US', 'en-GB', 'it', 'fr', 'de', 'nl', 'pl
            'tr', 'ru', 'ja', 'ko', 'zh-CN', 'id', 'vi', 'th', 'hi', 'ar']
 RESERVA = {'pt-PT': 'pt-BR', 'en-GB': 'en-US'}
 
-textos = json.load(io.open(sys.argv[1], encoding='utf-8'))
+
+def caminho_entrada_seguro(argumento: str) -> str:
+    """Aceita apenas arquivos existentes dentro do repositório, sem traversal."""
+    raiz = os.path.realpath(RAIZ)
+    caminho = os.path.realpath(os.path.abspath(os.path.join(RAIZ, argumento)))
+    try:
+        dentro = os.path.commonpath([raiz, caminho]) == raiz
+    except ValueError:
+        dentro = False
+    if not dentro or not os.path.isfile(caminho):
+        raise SystemExit('Erro: o arquivo de textos deve existir dentro do repositório.')
+    return caminho
+
+
+if len(sys.argv) != 2:
+    raise SystemExit('Uso: python scripts/adicionar_textos.py caminho/textos.json')
+
+entrada = caminho_entrada_seguro(sys.argv[1])
+textos = json.load(io.open(entrada, encoding='utf-8'))
 
 for idioma in IDIOMAS:
     caminho = os.path.join(RAIZ, 'src', 'i18n', 'traducoes', f'{idioma}.ts')
