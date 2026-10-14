@@ -6,8 +6,8 @@ import { suspenderBloqueio } from '@utils/bloqueioSuspenso';
 
 /**
  * Fotos dos pratos: tiradas pela câmera ou escolhidas na galeria e copiadas
- * para a pasta privada do app. Nada sai do aparelho (a análise por IA entra
- * na versão paga e vai pedir consentimento antes de enviar a foto).
+ * para a pasta privada do app. A análise por IA é opcional e pede consentimento
+ * antes de enviar uma cópia reduzida da foto para o serviço de análise.
  */
 const PASTA = `${FileSystem.documentDirectory}refeicoes/`;
 
