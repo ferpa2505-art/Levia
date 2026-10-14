@@ -45,8 +45,8 @@
       [
         "expo-image-picker",
         {
-          "cameraPermission": "O Leviã usa a câmera para você fotografar seus pratos. As fotos ficam só no seu celular.",
-          "photosPermission": "O Leviã acessa suas fotos para você escolher a foto de um prato. As fotos ficam só no seu celular."
+          "cameraPermission": "O Leviã usa a câmera para você fotografar seus pratos. A foto fica no seu aparelho, salvo se você pedir a análise opcional por IA.",
+          "photosPermission": "O Leviã acessa suas fotos para você escolher a foto de um prato. A foto fica no seu aparelho, salvo se você pedir a análise opcional por IA."
         }
       ],
       "expo-sharing",
