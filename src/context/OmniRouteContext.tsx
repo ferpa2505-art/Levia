@@ -7,7 +7,7 @@ import OmniRouteService, {
   SuggestEconomyResponse,
 } from '@services/omnirouteService';
 
-interface OmniRouteContextValue {
+export interface OmniRouteContextValue {
   isOnline: boolean;
   isLoading: boolean;
   error: string | null;
