@@ -1,0 +1,25 @@
+name: verify
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run type-check
+      - run: 'if [ -f public/sw.js ]; then node --check public/sw.js; fi'
+      - run: 'if [ -f worker/src/index.js ]; then node --check worker/src/index.js; fi'
+      - run: 'ARQ=$(find scripts -maxdepth 1 -type f -name "*.py" -print 2>/dev/null); if [ -n "$ARQ" ]; then python -m py_compile $ARQ; fi'
