@@ -1,6 +1,6 @@
 # Cobrança: teste grátis de 7 dias, paywall e assinatura via Hotmart
 
-Data: 15/10/2026 · Revisão 2 · Status: aguardando revisão · Escopo: Fases 1 e 2 (servidor + app)
+Data: 15/10/2026 · Revisão 3 · Status: aguardando revisão · Escopo: Fases 1 e 2 (servidor + app)
 
 ## 1. Objetivo
 
@@ -13,11 +13,12 @@ por 7 dias, sem cartão. Depois disso o app fica em modo restrito até a pessoa 
 | Tema | Decisão |
 |---|---|
 | Onde vende | **Só na PWA (web).** Sem Play Store por enquanto (exige CNPJ) |
-| Teste | 7 dias, ligado a um e-mail **verificado**, com **3 fotos de IA no total** |
+| Teste | 7 dias, com **3 fotos de IA no total**, ligado a um **telefone verificado por SMS** |
+| Telefone repetido | Mesmo telefone com outro e-mail **não ganha** novo teste |
 | Planos | Mensal R$ 12,97 · Anual R$ 124,51 (−20%) |
 | Pagamento | Hotmart (assinatura recorrente, webhook 2.0.0), vendendo como pessoa física |
 | Licença | **Serial próprio do Leviã**, enviado ao comprador; vale em **até 2 aparelhos** |
-| 3º aparelho | Ativar num aparelho novo desliga o aparelho ativado há mais tempo |
+| 3º aparelho | Desliga o aparelho mais antigo. Ele tem **uma última entrada**, que dispara o **backup por e-mail**, e depois trava por completo |
 | IA para assinante | **2 fotos por dia**, incluídas no preço |
 | Fim do teste sem pagar | Vê e exporta tudo; registra **só peso e glicose**; o resto fica bloqueado |
 | Testadores | **15 cortesias** com acesso de assinante por 10 anos, mesmos limites |
@@ -27,28 +28,28 @@ por 7 dias, sem cartão. Depois disso o app fica em modo restrito até a pessoa 
 
 - Página de vendas (Fase 3) e correções dos anúncios.
 - Cobrança no app nativo Android/iOS. O app nativo continua como está.
-- Conta com senha e sincronização de dados entre aparelhos.
+- Conta com senha e sincronização contínua de dados entre aparelhos.
 
 ## 2. Visão geral
 
 ```
-           ┌──────────── App (PWA) ────────────────┐
-           │ AssinaturaContext ── useAcesso()      │
-           │ paywall · modo restrito · ativar serial│
-           └──────┬────────────────┬───────────────┘
-                  │ /v1/codigo      │ /v1/analisar-prato
-                  │ /v1/teste       │
-                  │ /v1/status      │
-                  │ /v1/ativar      │
-           ┌──────▼────────────────▼───────────────┐
- Hotmart ─►│ levia-ia-worker (Cloudflare)          │──► Gemini
- webhook   │ KV LEVIA_COTAS                        │──► Resend (e-mail)
-           └───────────────────────────────────────┘
- GitHub Actions ── "Criar cortesia" ──► KV
+           ┌──────────── App (PWA) ─────────────────┐
+           │ AssinaturaContext ── useAcesso()       │
+           │ paywall · modo restrito · serial       │
+           │ última entrada + backup                │
+           └──┬──────────────┬───────────────┬──────┘
+   SMS ◄──────┤ Firebase     │ /v1/...       │ /v1/analisar-prato
+ (código)     │ Phone Auth   │               │
+              └──────┬───────▼───────────────▼──────┐
+ Hotmart ─────────►  │ levia-ia-worker (Cloudflare)  │──► Gemini
+ webhook             │ KV LEVIA_COTAS                │──► Resend (e-mail)
+                     └───────────────────────────────┘
+ GitHub Actions ── "Criar cortesia" / "Revogar licença" ──► KV
 ```
 
 O worker que já existe passa a ser a fonte da verdade sobre quem está em teste e quem
-assinou. Os dados de saúde continuam só no aparelho.
+assinou. Os dados de saúde continuam só no aparelho. A única exceção é o backup da
+última entrada, que passa pelo servidor **já criptografado** e não fica guardado (3.8).
 
 ## 3. Servidor (worker)
 
@@ -56,99 +57,107 @@ assinou. Os dados de saúde continuam só no aparelho.
 
 - **E-mail**: normalizado. Minúsculas, sem espaços. Para `gmail.com`/`googlemail.com`
   também tira os pontos e o `+apelido`; para os demais domínios tira o `+apelido`.
-  Assim `ana.silva+1@gmail.com` e `anasilva@gmail.com` contam como o mesmo e-mail.
+- **Telefone**: só números do Brasil (+55), no formato E.164. Verificado por SMS
+  pelo **Firebase Authentication**. O worker confere o token do Firebase (JWT
+  RS256, chaves públicas do Google em cache, `aud` = id do projeto) e lê o
+  `phone_number` dele. O app nunca informa o telefone diretamente.
+  O servidor guarda **só um HMAC do telefone** (com o segredo `TELEFONE_PEPPER`):
+  dá para saber se o número se repete, mas não dá para ler o número.
 - **Instalação**: o UUID que o app já gera (`levia:instalacao`).
-- **Serial**: `LEVIA-XXXX-XXXX-XXXX` (alfabeto Crockford base32, sem letras ambíguas;
-  60 bits aleatórios). O servidor guarda **só o hash SHA-256**, nunca o serial em si.
-- Sem senha. Um aparelho é assinante se a instalação dele está na lista de aparelhos
-  de uma licença válida.
+- **Serial**: `LEVIA-XXXX-XXXX-XXXX` (Crockford base32, 60 bits aleatórios).
+  O servidor guarda **só o hash SHA-256**.
 
 ### 3.2 Chaves no KV
 
 | Chave | Valor | Validade |
 |---|---|---|
-| `otp:<email>` | `{ hash do código, expira, tentativas }` | 10 min |
-| `teste:<email>` | `{ inicio, fim, fotos: number[] }` | 30 dias após `fim` |
+| `tel:<hmac>` | `{ email, testeInicio }` | 2 anos |
+| `teste:<email>` | `{ inicio, fim, fotos: number[], telHmac }` | 30 dias após `fim` |
 | `teste-inst:<instalacao>` | `<email>` | 30 dias após o fim do teste |
-| `lic:<email>` | `{ status, plano, validoAte, transacoes: string[], serialHash, aparelhos: {id, desde}[], origem: 'hotmart'\|'cortesia', atualizadoEm }` | 400 dias após `validoAte` (cortesia: sem expiração) |
+| `lic:<email>` | `{ status, plano, validoAte, transacoes, serialHash, aparelhos: {id, desde}[], desligados: {id, em, entradaFinalUsada}[], origem, atualizadoEm }` | 400 dias após `validoAte` (cortesia: sem expiração) |
 | `serial:<hash>` | `<email>` | igual à licença |
-| `evento:<id do evento Hotmart>` | `1` (idempotência) | 30 dias |
+| `evento:<id>` | `1` (idempotência do webhook) | 30 dias |
 | `ia-dia:<email>:<AAAA-MM-DD>` | fotos do assinante no dia (fuso America/Sao_Paulo) | 2 dias |
+| `backup-dia:<email>:<data>` | backups enviados no dia | 2 dias |
 | `dia:<data>` / `ip:<ip>:<hora>` | contadores atuais (mantidos) | atuais |
-| `lim:<rota>:<ip>:<hora>` | limite de tentativas por rota | 2 h |
+| `lim:<rota>:<chave>:<hora>` | limite de tentativas por rota | 2 h |
 
-### 3.3 Barreiras contra teste repetido (pedido do item 5)
+### 3.3 Barreiras contra teste repetido
 
-1. **E-mail verificado**: o teste só começa depois que a pessoa digita um código de
-   6 dígitos enviado ao e-mail (vale 10 min, 5 tentativas). Isso impede e-mails
-   inventados.
-2. **Apelidos do mesmo e-mail** contam como um só (3.1).
-3. **E-mails descartáveis** (mailinator, 10minutemail etc.) são recusados por uma
-   lista embutida no worker.
-4. **Um aparelho, um teste**: `teste-inst` impede abrir outro teste no mesmo navegador.
-5. **Limites por IP**: 5 pedidos de código e 3 testes novos por IP por hora.
+1. **Telefone verificado por SMS** é obrigatório para começar o teste.
+2. **Telefone já usado** em um teste, com qualquer e-mail → sem teste novo. A pessoa
+   vai direto para o paywall, com a mensagem "Este telefone já usou o teste grátis".
+3. **Apelidos do mesmo e-mail** contam como um só (3.1).
+4. **E-mails descartáveis** recusados por uma lista embutida.
+5. **Um navegador, um teste** (`teste-inst`).
+6. **Limites por IP** em todas as rotas.
 
-O que continua possível: alguém com vários e-mails reais **e** limpando o navegador a
-cada vez. Fechar isso de vez exigiria cartão ou celular verificado no início; para um
-app de R$ 12,97 isso não compensa.
+O que continua possível: alguém com **outro chip** de celular. Isso já custa dinheiro
+e tempo para quem tenta, o que basta para um app de R$ 12,97.
+
+Proteção contra **fraude de SMS** (ataque em que robôs pedem SMS em massa para gerar
+cobrança): região do Firebase restrita ao Brasil, reCAPTCHA invisível do Firebase,
+limite por número e por IP, e alerta de orçamento na conta do Google Cloud.
 
 ### 3.4 Endpoints
 
 Todos exigem o cabeçalho `x-levia-app` atual, respondem com CORS para as origens web
-já permitidas e têm limite por IP. Erros de e-mail/serial/código são **genéricos**
-(`404 nao_encontrado` ou `400 codigo_invalido`), para não revelar se um e-mail comprou.
+já permitidas e têm limite por IP. Erros de e-mail, serial e código são **genéricos**,
+para não revelar se um e-mail comprou.
 
-**`POST /v1/codigo`** `{ email }` → envia o código de verificação. Recusa e-mail
-descartável. Sempre responde `200` (mesmo se o e-mail já tiver teste) para não
-revelar nada.
-
-**`POST /v1/teste`** `{ email, codigo, instalacao }`
-- Confere o código. Inválido → `400 codigo_invalido`.
-- Instalação já com teste de **outro** e-mail → `409 aparelho_com_outro_teste`.
-- `teste:<email>` não existe → cria com `fim = agora + 7 dias`. Se já existe,
-  só devolve o status (o teste não recomeça).
+**`POST /v1/teste`** `{ email, tokenFirebase, instalacao }`
+- Confere o token do Firebase e calcula o HMAC do telefone.
+- `tel:<hmac>` já existe → `403 telefone_ja_usou_teste` (vale para qualquer e-mail).
+- Instalação já com teste de outro e-mail → `409 aparelho_com_outro_teste`.
+- `teste:<email>` já existe → só devolve o status (o teste não recomeça).
+- Senão cria `teste:<email>` (`fim = agora + 7 dias`), `tel:<hmac>` e `teste-inst`.
 - Responde como o `/v1/status`.
 
 **`POST /v1/status`** `{ email, instalacao }` → `{ fase, testeFim, validoAte, plano,
-fotosRestantes, fotosTipo, token }`
-- `fase`: `assinante` (licença com `status` em `ativa`/`cancelada_no_fim`,
-  `agora < validoAte` e instalação na lista) · `teste` · `expirado` · `sem_teste`.
-- `token`: o status **assinado** pelo servidor (3.7), com validade de 3 dias.
+fotosRestantes, fotosTipo, entradaFinal, token }`
+- `fase`: `assinante` · `teste` · `expirado` · `sem_teste` · **`desligado`**
+  (instalação em `lic.desligados`).
+- `entradaFinal`: só com `desligado`. `true` enquanto a última entrada não foi usada.
+- `token`: status **assinado** (3.9), válido por 3 dias.
 
 **`POST /v1/ativar`** `{ email, serial, instalacao }` **ou** `{ email, transacao, instalacao }`
 - Com **serial**: `serial:<hash(serial)>` precisa apontar para o e-mail informado.
-- Com **código da transação Hotmart** (caminho de reserva para quem não recebeu o
-  serial): a transação precisa estar em `lic.transacoes`. Nesse caso o servidor
-  **gera um serial novo**, devolve na tela e reenvia por e-mail.
-- Aparelhos: se a instalação já está na lista, ok. Se há menos de 2, adiciona. Se já
-  há 2, **tira o mais antigo** e devolve `desligou: true`. O aparelho desligado perde o
-  acesso na próxima consulta ou, sem internet, em no máximo 3 dias (validade do token).
+- Com **código da transação Hotmart** (reserva para quem não recebeu o serial):
+  a transação precisa estar em `lic.transacoes`. O servidor gera um serial novo,
+  devolve na tela e reenvia por e-mail.
+- Aparelhos: se a instalação já está na lista, ok. Menos de 2, adiciona. Já há 2 →
+  o mais antigo vai para `desligados` com `entradaFinalUsada = false` e a resposta
+  traz `desligou: true`. Se a instalação que está ativando estava em `desligados`,
+  sai de lá.
 - Limite: 10 tentativas por IP por hora.
 
-**`POST /v1/reenviar-serial`** `{ email }` → se houver licença válida, gera um serial
-novo (o antigo deixa de valer para **novas** ativações; aparelhos já ativados seguem)
-e manda por e-mail. Sempre responde `200`.
+**`POST /v1/entrada-final`** `{ email, instalacao }` → marca `entradaFinalUsada = true`
+para essa instalação. O app chama isso **ao abrir** a última entrada, não ao sair:
+fechar o app no meio também conta como entrada usada.
+
+**`POST /v1/backup-email`** `{ email, instalacao, arquivo }` (3.8)
+
+**`POST /v1/reenviar-serial`** `{ email }` → se houver licença válida, gera serial novo
+(o antigo não ativa mais aparelhos; os já ativados seguem) e manda por e-mail.
+Sempre responde `200`.
 
 **`POST /v1/webhook/hotmart`**
-- Valida `X-HOTMART-HOTTOK` contra o segredo `HOTMART_HOTTOK` em tempo constante
-  (a função `iguais` já existe). Inválido → `401`.
-- Idempotência por `evento:<id>`.
-- Ignora produto diferente de `HOTMART_PRODUTO_ID`.
-- Plano: compara o código do plano/oferta com `HOTMART_PLANO_MENSAL` / `HOTMART_PLANO_ANUAL`.
+- Valida `X-HOTMART-HOTTOK` contra o segredo `HOTMART_HOTTOK` em tempo constante.
+- Idempotência por `evento:<id>`. Ignora produto diferente de `HOTMART_PRODUTO_ID`.
+- Plano pelo código do plano/oferta (`HOTMART_PLANO_MENSAL` / `HOTMART_PLANO_ANUAL`).
 
 | Evento | Efeito na licença |
 |---|---|
-| `PURCHASE_APPROVED`, `PURCHASE_COMPLETE` | `status = ativa`; guarda a transação; `validoAte = max(validoAte, agora) + 31 dias (mensal) ou 366 (anual)` + 3 dias de folga. **Na primeira compra**: gera o serial e manda o e-mail de boas-vindas |
+| `PURCHASE_APPROVED`, `PURCHASE_COMPLETE` | `status = ativa`; guarda a transação; `validoAte = max(validoAte, agora) + 31 dias (mensal) ou 366 (anual)` + 3 dias de folga. **Primeira compra**: gera o serial e manda o e-mail de boas-vindas |
 | `SUBSCRIPTION_CANCELLATION` | `status = cancelada_no_fim` (vale até `validoAte`) |
 | `PURCHASE_REFUNDED`, `PURCHASE_CHARGEBACK`, `PURCHASE_PROTEST` | `status = revogada`, `validoAte = agora` |
 | `PURCHASE_DELAYED`, `PURCHASE_EXPIRED`, `PURCHASE_CANCELED` | não muda (a validade vence sozinha) |
 | `SWITCH_PLAN` | atualiza `plano` |
 | outros | `200`, ignora |
 
-> **A conferir no primeiro teste:** os nomes exatos dos campos do payload (e-mail do
-> comprador, código da transação, plano, id do evento). Toda a leitura fica em
-> `hotmart.js`, ajustada a partir de um evento de teste real enviado pelo painel da
-> Hotmart (aba Histórico do Webhook).
+> **A conferir no primeiro teste:** os nomes exatos dos campos do payload. Toda a
+> leitura fica em `hotmart.js`, ajustada a partir de um evento de teste real enviado
+> pelo painel da Hotmart (aba Histórico do Webhook).
 
 ### 3.5 Mudanças em `/v1/analisar-prato`
 
@@ -157,81 +166,106 @@ Corpo passa a ter `email` (obrigatório na web). Ordem:
 2. Limite por IP por hora (como hoje).
 3. Status (mesma regra do `/v1/status`):
    - **assinante** → `ia-dia:<email>:<hoje>` < 2, senão `429 cota_dia` com `liberaEm`.
-     Assinante **não** entra no teto global `MAX_FOTOS_DIA`, para que abuso no teste
-     não derrube quem paga.
+     Assinante **não** entra no teto global `MAX_FOTOS_DIA`.
    - **teste** → menos de 3 fotos no teste e teto global do dia, senão `402 cota_teste`.
-   - **expirado / sem teste** → `402 assinatura_necessaria`.
+   - **expirado / sem teste / desligado** → `402 assinatura_necessaria`.
 4. Conta a foto só se a IA respondeu (como hoje).
 
 A cota antiga por instalação (`inst:<id>`) continua valendo **só** para pedidos sem
 `email`, que vêm do app nativo atual.
 
-### 3.6 E-mail
+### 3.6 Aparelho substituído: última entrada e backup
+
+1. A pessoa ativa o serial num aparelho novo; o mais antigo vai para `desligados`.
+2. Quando o aparelho antigo abre o app, o status vem como `desligado` com
+   `entradaFinal = true`. O app chama `/v1/entrada-final` e mostra uma tela única:
+   "Sua assinatura foi ativada em outro aparelho. Esta é a última vez que o Leviã
+   abre aqui. Vamos mandar seus dados para o seu e-mail."
+3. A pessoa cria uma **senha do backup** (ou usa a que já tem). O app gera o backup
+   com a criptografia que já existe (`cifraBackup.ts`), manda para
+   `/v1/backup-email` e, ao mesmo tempo, oferece o **download** do arquivo.
+4. Depois disso, ou se a pessoa sair, o app trava por completo. Só aparece a tela
+   "Ative com seu serial" (que, se usada, desliga o outro aparelho).
+5. No aparelho novo, a pessoa restaura pelo **Importar backup**, que já existe,
+   usando o arquivo do e-mail e a senha.
+
+**Limites honestos:** o backup só sai se o aparelho antigo **for aberto de novo**.
+Celular perdido, roubado ou quebrado não manda nada. O app não roda em segundo plano
+no navegador. Por isso entram também (4.7) lembretes de backup periódico.
+
+### 3.7 E-mail
 
 Provedor: **Resend** (plano grátis: 3.000 e-mails/mês, 100/dia, segundo fontes de
-terceiros). Exige **um domínio próprio verificado** para enviar a qualquer endereço.
-Segredo `RESEND_API_KEY`. E-mails enviados:
-- Código de verificação do teste.
-- Boas-vindas com o serial (primeira compra).
-- Serial reenviado.
+terceiros). Exige **domínio próprio verificado**. Segredo `RESEND_API_KEY`.
+E-mails enviados: boas-vindas com serial, serial reenviado, backup da última entrada.
+Textos em português nesta versão.
 
-Os textos dos e-mails ficam em português nesta versão.
+**Sem domínio:** o serial aparece na tela na primeira ativação (com e-mail + código
+da transação Hotmart) e o backup da última entrada fica **só como download**. O código
+é o mesmo; o envio é ligado por configuração (`EMAIL_ATIVO`).
 
-**Sem domínio**, dá para lançar assim: sem verificação de e-mail no teste (as
-barreiras 2 a 5 continuam) e com o serial aparecendo **na tela** quando a pessoa
-ativa pela primeira vez com e-mail + código da transação Hotmart. O envio por e-mail
-entra quando o domínio existir. O código é o mesmo; o envio é ligado por configuração
-(`EMAIL_ATIVO`).
+### 3.8 Backup por e-mail
 
-### 3.7 Segurança (pedido do item 6)
+- O arquivo chega **criptografado com a senha do usuário**. O servidor não tem a senha
+  e não consegue ler o conteúdo.
+- O servidor **não guarda** o arquivo nem o registra em log: repassa ao Resend como
+  anexo e descarta.
+- Só aceita de instalação que esteja em `desligados` (entrada final) ou ativa na licença.
+- Limite de tamanho: 10 MB. Acima disso → `413` e o app fica só com o download.
+- Limite: 3 backups por licença por dia.
+- Aviso na tela: "Sem a senha do backup não é possível abrir o arquivo. Nós não
+  conseguimos recuperar essa senha."
 
-1. **Status assinado.** O servidor assina o status com uma chave Ed25519 secreta
-   (`STATUS_CHAVE_PRIVADA`). O app guarda o token e confere a assinatura com a chave
-   pública embutida no código. Editar o armazenamento do navegador para virar
-   "assinante" não funciona. Para burlar, alguém teria que alterar o código do app.
-2. **Validade curta offline.** O token vale 3 dias. Sem internet por mais que isso,
-   o app volta ao modo restrito até conseguir consultar o servidor.
-3. **O que custa dinheiro fica no servidor.** A IA só responde depois que o servidor
-   confere teste/licença. Burlar o app não dá foto grátis.
-4. **Segredos só na Cloudflare.** Gemini, hottok, Resend e a chave de assinatura nunca
-   vão para o código do app nem para o repositório. O `TOKEN_APP` do app não é segredo
-   (já documentado) e continua só como freio.
-5. **Serial guardado como hash**, mensagens de erro genéricas, limites por IP em todas
-   as rotas e comparação em tempo constante no hottok.
-6. **Dados mínimos.** No servidor ficam só e-mail, datas, plano e ids de aparelho.
-   Os logs registram contagens, nunca e-mail (quando preciso, um hash curto).
+### 3.9 Segurança
 
-O que não se resolve: quem alterar o código JavaScript do app consegue usar o modo
-completo **sem IA**. Isso é aceito.
+1. **Status assinado** com chave Ed25519 (`STATUS_CHAVE_PRIVADA`). O app confere com
+   a chave pública embutida. Editar o armazenamento do navegador não vira "assinante".
+2. **Validade curta offline:** token de 3 dias. Depois disso, sem internet, o app vai
+   para o modo restrito até consultar o servidor.
+3. **O que custa dinheiro fica no servidor:** a IA só responde depois que o servidor
+   confere teste ou licença.
+4. **Segredos só na Cloudflare:** Gemini, hottok, Resend, chave de assinatura,
+   `TELEFONE_PEPPER` e o id do projeto Firebase.
+5. **Telefone guardado como HMAC**, serial como hash, erros genéricos, limites por IP
+   e por número, comparação em tempo constante no hottok.
+6. **Token do Firebase conferido no servidor:** o app não consegue inventar um telefone.
+7. **Backup:** criptografado no aparelho; o servidor só repassa.
+8. **Última entrada controlada pelo servidor** (`entradaFinalUsada`), marcada ao abrir.
+9. **Dados mínimos** no servidor: e-mail, datas, plano, ids de aparelho, HMAC do
+   telefone. Logs só com contagens.
 
-### 3.8 Cortesias para os 15 testadores
+O que não se resolve: quem alterar o código do app consegue usar o modo completo
+**sem IA**. Isso é aceito.
 
-- Workflow manual no GitHub Actions **"Criar cortesia"** (`workflow_dispatch`), com
-  um campo: e-mail do testador.
-- Cria `lic:<email>` com `origem = 'cortesia'`, `plano = 'cortesia'`,
-  `validoAte = agora + 10 anos`, mesmos limites de assinante (2 fotos/dia, 2 aparelhos).
-- Mostra o serial no resumo do workflow (repositório privado), para você mandar por
-  WhatsApp. Se o e-mail estiver ativo, também envia por e-mail.
-- Workflow **"Revogar licença"** para tirar o acesso de alguém.
-- Usa o `CLOUDFLARE_API_TOKEN` que já existe nos segredos do repositório. Não cria
-  nenhuma rota de administração no worker (nada novo exposto na internet).
+### 3.10 Cortesias para os 15 testadores
 
-### 3.9 Configuração
+- Workflow manual no GitHub Actions **"Criar cortesia"**: campo com o e-mail do testador.
+- Cria `lic:<email>` com `origem = 'cortesia'`, `validoAte = agora + 10 anos`, mesmos
+  limites de assinante. Testador **não precisa** de SMS nem de teste.
+- Mostra o serial no resumo do workflow (repositório privado) para você mandar por
+  WhatsApp; com e-mail ativo, também envia por e-mail.
+- Workflow **"Revogar licença"**.
+- Usa o `CLOUDFLARE_API_TOKEN` que já existe. Nenhuma rota de administração no worker.
+
+### 3.11 Configuração
 
 `[vars]`: `TESTE_DIAS = "7"`, `FOTOS_TESTE = "3"`, `FOTOS_ASSINANTE_DIA = "2"`,
-`MAX_APARELHOS = "2"`, `TOKEN_STATUS_DIAS = "3"`, `EMAIL_ATIVO`, `EMAIL_REMETENTE`,
+`MAX_APARELHOS = "2"`, `TOKEN_STATUS_DIAS = "3"`, `BACKUP_MAX_MB = "10"`,
+`EMAIL_ATIVO`, `EMAIL_REMETENTE`, `FIREBASE_PROJETO`,
 `HOTMART_PRODUTO_ID`, `HOTMART_PLANO_MENSAL`, `HOTMART_PLANO_ANUAL`.
-Segredos novos: `HOTMART_HOTTOK`, `RESEND_API_KEY`, `STATUS_CHAVE_PRIVADA`.
+Segredos novos: `HOTMART_HOTTOK`, `RESEND_API_KEY`, `STATUS_CHAVE_PRIVADA`,
+`TELEFONE_PEPPER`.
 
-### 3.10 Organização do código
+### 3.12 Organização do código
 
-`worker/src/index.js` hoje tem 242 linhas. Fica dividido em:
-- `index.js`: rotas, CORS, limites por IP.
+`worker/src/index.js` (242 linhas hoje) fica dividido em:
+- `index.js`: rotas, CORS, limites.
 - `ia.js`: Gemini e prompt (movido sem mudança).
-- `acesso.js`: e-mail normalizado, teste, status, ativação, cotas.
-- `licenca.js`: serial (gerar, hash), aparelhos, cortesia.
-- `hotmart.js`: leitura do payload e mapeamento de eventos.
-- `email.js`: envio pelo Resend e textos.
+- `acesso.js`: e-mail normalizado, teste, status, cotas.
+- `telefone.js`: conferência do token Firebase e HMAC.
+- `licenca.js`: serial, aparelhos, desligados, entrada final, cortesia.
+- `hotmart.js`: payload e eventos.
+- `email.js`: Resend, textos, anexo do backup.
 - `assinatura.js`: token Ed25519.
 
 ## 4. App
@@ -246,129 +280,149 @@ Provider novo em `app/_layout.tsx`, abaixo de `ProfileProvider`.
 - Guarda em AsyncStorage (`levia:acesso`) o último token assinado.
 - Consulta `/v1/status` ao abrir, ao voltar para o app depois de 1 h e depois de
   pagar/ativar.
-- Confere a assinatura do token. Token inválido, adulterado ou vencido → trata como
-  `expirado` até conseguir consultar.
-- `useAcesso()` expõe `fase`, `diasRestantes`, `fotosRestantes`, `podeRegistrar(tipo)`
-  e `exigirAssinatura()`.
-- `podeRegistrar(tipo)`: em `teste` ou `assinante` → tudo; em `expirado` → só
-  `'peso'` e `'glicemia'`.
+- Confere a assinatura do token. Inválido ou vencido → modo restrito até consultar.
+- `useAcesso()` expõe `fase`, `diasRestantes`, `fotosRestantes`, `podeRegistrar(tipo)`,
+  `exigirAssinatura()`.
+- `podeRegistrar(tipo)`: `teste`/`assinante` → tudo; `expirado` → só `'peso'` e
+  `'glicemia'`; `desligado` → nada.
 - A decisão fica numa função pura `calcularAcesso(token, agora)`, testável.
 
-### 4.3 Início do teste
+### 4.3 Cadastro e início do teste
 
-Depois do onboarding (ou ao abrir, para quem já fez o onboarding) e com fase
-`sem_teste`: tela **"Ative seus 7 dias grátis"**.
-1. Pede o e-mail (pré-preenchido com `profile.email`) e explica que não pede cartão.
-2. Pede o código de 6 dígitos que chegou no e-mail (se o e-mail estiver ativo).
-3. Chama `/v1/teste` e salva o e-mail em `profile.email`, que já existe.
+Depois do onboarding (ou ao abrir, para quem já fez) e com fase `sem_teste`:
+tela **"Ative seus 7 dias grátis"**.
+1. E-mail (pré-preenchido com `profile.email`) e **telefone celular, obrigatório**.
+2. Código de 6 dígitos por SMS (Firebase, com reCAPTCHA invisível).
+3. Chama `/v1/teste`. E-mail e telefone ficam salvos no perfil do aparelho
+   (`profile.email` já existe; entra `profile.telefone`).
+4. Se o telefone já usou o teste: mensagem clara e paywall.
 
-Link **"Já tenho um serial"** na mesma tela, para assinantes e testadores.
+Link **"Já tenho um serial"** na mesma tela, para assinantes e testadores. Quem ativa
+por serial **não** passa pelo SMS: a compra já comprova a pessoa.
 
-### 4.4 Modo restrito
+### 4.4 Modo restrito (teste acabou, sem pagar)
 
 Bloqueio em duas camadas:
-1. **Telas**: os botões de registro (refeição, água, exercício, medicação, notas,
-   apetite, GLP-1, receitas, foto) chamam `exigirAssinatura()`, que abre o paywall
-   em vez do formulário. Peso e glicose continuam normais.
-2. **Contextos**: as funções de escrita de `RecordsContext`, `DiabetesContext`,
+1. **Telas:** os botões de registro (refeição, água, exercício, medicação, notas,
+   apetite, GLP-1, receitas, foto) chamam `exigirAssinatura()`, que abre o paywall.
+   Peso e glicose seguem normais.
+2. **Contextos:** as funções de escrita de `RecordsContext`, `DiabetesContext`,
    `Glp1Context`, `MedicacoesContext` e `CustomRecipesContext` conferem
-   `podeRegistrar(...)` e não gravam se for proibido. A exceção é `adicionarPeso`
-   e `adicionarGlicemia`. Remover registros continua permitido.
+   `podeRegistrar(...)`. As exceções são `adicionarPeso` e `adicionarGlicemia`.
+   Remover registros continua permitido.
 
 Leitura, gráficos, relatórios, exportação e backup seguem liberados.
 
-### 4.5 Paywall (`app/assinar.tsx`)
+### 4.5 Aparelho desligado
+
+- Com `entradaFinal = true`: fluxo do 3.6 (tela única, senha do backup, envio por
+  e-mail, download).
+- Com `entradaFinal = false`: tela única "Este aparelho foi substituído. Para usar
+  aqui, ative com seu serial (isso desliga o outro aparelho)." Nada mais do app abre.
+
+### 4.6 Paywall (`app/assinar.tsx`)
 
 - Dois cartões: **Anual** (destaque, "R$ 0,34 por dia", R$ 124,51/ano) e **Mensal**
   (R$ 12,97).
 - O botão abre o checkout da Hotmart em nova aba, com o e-mail na URL (`?email=`,
-  a conferir na Hotmart), para a compra cair no mesmo e-mail do teste.
-- **"Já paguei"** → formulário com e-mail + serial. Link secundário "Não recebi o
-  serial" → e-mail + código da transação Hotmart (começa com `HP`) ou reenvio do
-  serial por e-mail.
+  a conferir), para a compra cair no mesmo e-mail.
+- **"Já paguei"** → e-mail + serial. "Não recebi o serial" → código da transação
+  Hotmart (começa com `HP`) ou reenvio por e-mail.
 - Ao voltar para a aba do app, ele reconsulta o status.
 - Aviso fixo: "Cancele quando quiser pela Hotmart. Garantia de 7 dias."
 
-### 4.6 Tela "Minha assinatura" (no Perfil)
+### 4.7 Outras telas e avisos
 
-Mostra plano, validade, aparelhos ativos (este aparelho + outro, se houver) e o botão
-"Reenviar serial por e-mail".
-
-### 4.7 Avisos
-
+- **Minha assinatura** (Perfil): plano, validade, aparelhos ativos, "Reenviar serial".
 - Banner no Início durante o teste: "Seu teste termina em N dias · Assinar".
-- No último dia e ao expirar: aviso em tela cheia, uma vez, com o paywall.
-- Quando o aparelho for desligado por ativação em outro: "Sua assinatura foi ativada
-  em outro aparelho. Para usar aqui, ative com seu serial."
+- Último dia do teste e expiração: aviso em tela cheia, uma vez, com o paywall.
+- **Lembrete de backup** a cada 30 dias (assinantes e teste), já que celular perdido
+  não manda backup.
 - Na análise de foto: "fotos restantes" e mensagens para `cota_teste`, `cota_dia`
   e `assinatura_necessaria`.
-- Textos novos nos 20 idiomas, pelo fluxo de traduções que já existe
-  (`scripts/adicionar_textos.py`).
+- Textos novos nos 20 idiomas, pelo fluxo de traduções que já existe.
 
 ## 5. Erros e casos-limite
 
 | Caso | Comportamento |
 |---|---|
-| Worker fora do ar ao abrir | Usa o token salvo enquanto ele valer (até 3 dias) |
-| Webhook chega antes da ativação | Normal: a licença espera o serial ser usado |
-| Pagou com outro e-mail | Ativa com o e-mail da compra + serial; o app passa a usar esse e-mail |
-| E-mail de boas-vindas não chegou | "Não recebi o serial": código da transação Hotmart ou reenvio |
-| Reembolso nos 7 dias (CDC art. 49) | `PURCHASE_REFUNDED` revoga; o app perde o acesso na próxima consulta ou em até 3 dias |
-| Renovação mensal | Novo `PURCHASE_APPROVED` estende `validoAte`; ninguém reativa |
+| Worker fora do ar ao abrir | Usa o token salvo enquanto valer (até 3 dias) |
+| SMS não chega | Reenviar após 60 s, até 3 vezes; depois, tentar mais tarde |
+| Telefone já usou o teste | Paywall com mensagem própria |
+| Webhook chega antes da ativação | Normal: a licença espera o serial |
+| Pagou com outro e-mail | Ativa com o e-mail da compra + serial |
+| E-mail de boas-vindas não chegou | Código da transação Hotmart ou reenvio |
+| Reembolso nos 7 dias (CDC art. 49) | `PURCHASE_REFUNDED` revoga; acesso cai na próxima consulta ou em até 3 dias |
+| Renovação mensal | Novo `PURCHASE_APPROVED` estende `validoAte` |
 | Hotmart reenvia o mesmo evento | Idempotência por `evento:<id>` |
-| Celular novo | Ativa com o serial; o aparelho mais antigo é desligado |
-| Serial vazou | "Reenviar serial" gera outro; o antigo não ativa mais aparelhos |
+| Celular novo | Ativa com serial; o antigo ganha a última entrada com backup |
+| Celular antigo perdido | Sem backup automático (3.6); vale o último backup feito |
+| Backup maior que 10 MB | Só download |
+| Esqueceu a senha do backup | Arquivo não abre; não há recuperação |
+| Serial vazou | "Reenviar serial" gera outro |
 
 ## 6. Testes
 
-- **Worker** (Jest, offline, no padrão de `worker-api-synthetic.test.ts`): hottok
-  inválido → 401; evento duplicado; aprovação gera serial; cancelamento mantém até
-  `validoAte`; reembolso revoga; normalização de e-mail (pontos e `+` do Gmail);
-  e-mail descartável recusado; código errado/expirado/5 tentativas; teste cria e expira;
-  aparelho com outro e-mail → 409; 3ª foto do teste ok e 4ª → 402; assinante 2/dia
-  e 3ª → 429; assinante fora do teto global; ativação com serial errado → 404 genérico;
-  3º aparelho desliga o mais antigo; token assinado confere e token adulterado falha.
-- **App**: testes de `calcularAcesso` (fases, token vencido/adulterado, datas no
-  limite) e de `podeRegistrar`.
-- **Manual antes de lançar**: compra real de R$ 12,97 com reembolso logo depois,
-  conferindo webhook, e-mail com serial, ativação em 3 aparelhos, renovação e revogação.
-- CI: as suítes novas entram no `pr-checks.yml`.
+- **Worker** (Jest, offline, no padrão de `worker-api-synthetic.test.ts`):
+  hottok inválido → 401; evento duplicado; aprovação gera serial; cancelamento mantém
+  até `validoAte`; reembolso revoga; normalização de e-mail; e-mail descartável
+  recusado; token Firebase inválido/expirado/de outro projeto → recusa; telefone já
+  usado com outro e-mail → 403; aparelho com outro e-mail → 409; 3ª foto do teste ok e
+  4ª → 402; assinante 2/dia e 3ª → 429; assinante fora do teto global; serial errado →
+  404 genérico; 3º aparelho desliga o mais antigo; status `desligado` com
+  `entradaFinal` true e depois false; backup acima do limite → 413; backup de
+  instalação estranha → recusa; token assinado confere e adulterado falha.
+- **App:** `calcularAcesso` (todas as fases, token vencido/adulterado, datas no limite)
+  e `podeRegistrar`.
+- **Manual antes de lançar:** SMS real; compra real de R$ 12,97 com reembolso logo
+  depois; ativação em 3 aparelhos conferindo última entrada, e-mail do backup e
+  restauração no aparelho novo; renovação e revogação.
+- CI: suítes novas no `pr-checks.yml`.
 
 ## 7. Riscos e pontos em aberto
 
-1. **Saque como pessoa física na Hotmart:** o blog oficial da Hotmart fala em limite
-   mensal de saque para CPF (R$ 1.900,00); outra fonte diz que o limite caiu. Conferir
-   no painel. Imposto de renda sobre as vendas é responsabilidade sua; consulte um contador.
-2. **Domínio para e-mail:** sem domínio próprio, não há código de verificação nem serial
-   por e-mail (veja 3.6).
-3. **Campos do payload da Hotmart e `?email=` no checkout:** confirmar com testes reais.
-4. **LGPD:** o servidor passa a guardar e-mail e situação de pagamento. A política de
-   privacidade precisa dizer isso (finalidade: controle de acesso; retenção: até 400 dias
-   após o fim da licença).
-5. **Custo da IA:** com 2 fotos por dia, um assinante custa no máximo cerca de
-   R$ 1,20 a R$ 3,00 por mês (estimativa). 15 cortesias no limite máximo: até ~R$ 45/mês.
-   Medir nos logs do worker.
+1. **Saque como pessoa física na Hotmart:** possível limite mensal de R$ 1.900,00 para
+   CPF (fontes divergem). Conferir no painel. Imposto de renda: responsabilidade sua;
+   consulte um contador.
+2. **Custo do SMS:** o Firebase cobra por SMS e não encontrei o preço para o Brasil.
+   Fontes de terceiros citam 10 SMS grátis por dia e cobrança por SMS acima disso. Exige
+   conta de faturamento no Google Cloud com cartão (não exige CNPJ). Configurar alerta
+   de orçamento.
+3. **Atrito do SMS:** pedir telefone e código antes de testar vai fazer uma parte das
+   pessoas desistir. Aceito em troca do bloqueio.
+4. **Domínio:** sem domínio próprio não há serial nem backup por e-mail (3.7).
+5. **Tamanho do app:** o SDK do Firebase Auth aumenta o pacote web. Carregar só na tela
+   de cadastro (import dinâmico).
+6. **Campos do payload da Hotmart e `?email=` no checkout:** confirmar com testes reais.
+7. **LGPD:** o servidor passa a guardar e-mail, HMAC do telefone e situação de pagamento,
+   e repassa o backup criptografado. A política de privacidade precisa dizer isso, e o
+   Firebase (Google) entra como operador para o SMS.
+8. **Custo da IA:** com 2 fotos por dia, até cerca de R$ 1,20 a R$ 3,00 por assinante por
+   mês (estimativa). 15 cortesias no limite: até ~R$ 45/mês.
 
 ## 8. O que o dono do produto faz fora do código
 
-1. Hotmart: criar o produto (software/app), assinatura com 2 planos e 7 dias de garantia.
-2. Pegar o **hottok** e os códigos do produto e dos planos.
-3. Cadastrar o webhook 2.0.0 para
-   `https://levia-ia-worker.ferpa2505.workers.dev/v1/webhook/hotmart` com os eventos da
-   tabela 3.4.
-4. Domínio (se for usar e-mail): registrar, verificar no Resend, criar a chave.
-5. Cadastrar os segredos do worker na Cloudflare (eu passo os comandos, um por vez).
-6. Enviar a lista de e-mails dos 15 testadores.
-7. Fazer a compra de teste com reembolso.
+1. Hotmart: produto (software/app), assinatura com 2 planos e 7 dias de garantia.
+2. Hottok e códigos do produto e dos planos.
+3. Webhook 2.0.0 para
+   `https://levia-ia-worker.ferpa2505.workers.dev/v1/webhook/hotmart`.
+4. Firebase: projeto, login por telefone ativado, região de SMS só Brasil, domínio da
+   PWA autorizado, faturamento com cartão e alerta de orçamento.
+5. Domínio próprio, verificação no Resend e chave de API.
+6. Segredos do worker na Cloudflare (eu passo os comandos, um por vez).
+7. Lista de e-mails dos 15 testadores.
+8. Compra de teste com reembolso.
 
 ## 9. Ordem de implementação
 
 1. Worker: dividir em módulos sem mudar comportamento + testes atuais passando.
-2. Worker: e-mail normalizado, código, teste, status assinado, licença/serial, ativação,
-   webhook, nova regra da IA + testes.
+2. Worker: e-mail normalizado, Firebase/telefone, teste, status assinado, licença,
+   serial, ativação, desligados e entrada final, backup por e-mail, webhook, nova regra
+   da IA + testes.
 3. Workflows "Criar cortesia" e "Revogar licença".
 4. App: `calcularAcesso` + verificação do token + `AssinaturaContext` + testes.
-5. App: início do teste, ativação por serial, paywall, "Minha assinatura", banner.
-6. App: modo restrito nas telas e nos contextos.
+5. App: cadastro com telefone e SMS, ativação por serial, paywall, "Minha assinatura",
+   banner.
+6. App: modo restrito; aparelho desligado (última entrada + backup).
 7. Traduções.
-8. Teste ponta a ponta com a Hotmart; criação das 15 cortesias.
+8. Teste ponta a ponta (SMS, Hotmart, 3 aparelhos); criação das 15 cortesias.
