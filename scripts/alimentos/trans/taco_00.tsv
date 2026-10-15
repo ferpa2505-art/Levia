@@ -1,0 +1,300 @@
+T1|Arroz integral cozido|Brown rice, cooked|Arroz integral cocido|Riz complet cuit|Riso integrale cotto
+T2|Arroz integral cru|Brown rice, raw|Arroz integral crudo|Riz complet cru|Riso integrale crudo
+T3|Arroz branco tipo 1 cozido|White rice (type 1), cooked|Arroz blanco (tipo 1) cocido|Riz blanc (type 1) cuit|Riso bianco (tipo 1) cotto
+T4|Arroz branco tipo 1 cru|White rice (type 1), raw|Arroz blanco (tipo 1) crudo|Riz blanc (type 1) cru|Riso bianco (tipo 1) crudo
+T5|Arroz branco tipo 2 cozido|White rice (type 2), cooked|Arroz blanco (tipo 2) cocido|Riz blanc (type 2) cuit|Riso bianco (tipo 2) cotto
+T6|Arroz branco tipo 2 cru|White rice (type 2), raw|Arroz blanco (tipo 2) crudo|Riz blanc (type 2) cru|Riso bianco (tipo 2) crudo
+T7|Aveia em flocos crua|Rolled oats, raw|Copos de avena crudos|Flocons d'avoine crus|Fiocchi d'avena crudi
+T8|Biscoito doce maisena|Cornstarch biscuit (Maria-type)|Galleta María|Biscuit sec type Marie|Biscotto secco tipo Maria
+T9|Biscoito recheado de chocolate|Chocolate sandwich cookie|Galleta rellena de chocolate|Biscuit fourré au chocolat|Biscotto farcito al cioccolato
+T10|Biscoito recheado de morango|Strawberry sandwich cookie|Galleta rellena de fresa|Biscuit fourré à la fraise|Biscotto farcito alla fragola
+T11|Wafer recheado de chocolate|Chocolate wafer|Barquillo relleno de chocolate|Gaufrette fourrée au chocolat|Wafer al cioccolato
+T12|Wafer recheado de morango|Strawberry wafer|Barquillo relleno de fresa|Gaufrette fourrée à la fraise|Wafer alla fragola
+T13|Biscoito cream cracker|Cream crackers|Galletas saladas tipo cracker|Crackers salés|Cracker salati
+T14|Mistura para bolo|Cake mix (powder)|Preparado para bizcocho|Préparation pour gâteau|Preparato per torta
+T15|Bolo de aipim (mandioca)|Cassava cake|Bizcocho de yuca|Gâteau de manioc|Torta di manioca
+T16|Bolo de chocolate pronto|Chocolate cake|Bizcocho de chocolate|Gâteau au chocolat|Torta al cioccolato
+T17|Bolo de coco pronto|Coconut cake|Bizcocho de coco|Gâteau à la noix de coco|Torta al cocco
+T18|Bolo de milho pronto|Corn cake|Bizcocho de maíz|Gâteau de maïs|Torta di mais
+T19|Canjica branca crua|White hominy, raw|Maíz blanco pelado (mote) crudo|Maïs blanc concassé cru|Mais bianco decorticato crudo
+T20|Canjica com leite integral|Hominy pudding with whole milk|Mazamorra de maíz con leche|Maïs blanc au lait entier|Budino di mais bianco al latte
+T21|Flocos de milho com sal|Corn flakes, salted|Copos de maíz con sal|Flocons de maïs salés|Fiocchi di mais salati
+T22|Flocos de milho sem sal|Corn flakes, unsalted|Copos de maíz sin sal|Flocons de maïs sans sel|Fiocchi di mais senza sale
+T23|Mingau de milho infantil (pó)|Infant corn cereal (powder)|Papilla de maíz infantil (polvo)|Bouillie de maïs pour bébé (poudre)|Crema di mais per l'infanzia (polvere)
+T24|Mistura para vitamina (trigo, cevada e aveia)|Cereal mix for smoothies (wheat, barley, oats)|Mezcla de cereales para batidos (trigo, cebada, avena)|Mélange de céréales pour smoothie (blé, orge, avoine)|Mix di cereali per frullati (grano, orzo, avena)
+T25|Cereal matinal de milho|Corn breakfast cereal|Cereal de desayuno de maíz|Céréales de petit-déjeuner au maïs|Cereali per colazione al mais
+T26|Cereal matinal de milho com açúcar|Frosted corn breakfast cereal|Cereal de maíz azucarado|Céréales de maïs sucrées|Cereali di mais zuccherati
+T27|Creme de arroz (pó)|Rice cream (powder)|Crema de arroz (polvo)|Crème de riz (poudre)|Crema di riso (polvere)
+T28|Creme de milho (pó)|Corn cream (powder)|Crema de maíz (polvo)|Crème de maïs (poudre)|Crema di mais (polvere)
+T29|Curau de milho verde|Sweet corn pudding (curau)|Pudín de maíz tierno (curau)|Crème de maïs doux (curau)|Budino di mais dolce (curau)
+T30|Mistura para curau de milho verde|Sweet corn pudding mix|Preparado para pudín de maíz|Préparation pour crème de maïs|Preparato per budino di mais
+T31|Farinha de arroz enriquecida|Rice flour, enriched|Harina de arroz enriquecida|Farine de riz enrichie|Farina di riso arricchita
+T32|Farinha de centeio integral|Whole rye flour|Harina de centeno integral|Farine de seigle complète|Farina di segale integrale
+T33|Farinha de milho amarela|Yellow cornmeal|Harina de maíz amarilla|Farine de maïs jaune|Farina di mais gialla
+T34|Farinha de rosca|Breadcrumbs|Pan rallado|Chapelure|Pangrattato
+T35|Farinha de trigo|Wheat flour|Harina de trigo|Farine de blé|Farina di frumento
+T36|Farinha láctea de cereais|Milk cereal flour (infant)|Harina lacteada de cereales|Farine lactée de céréales|Farina lattea di cereali
+T37|Massa de lasanha fresca cozida|Fresh lasagna pasta, cooked|Pasta fresca de lasaña cocida|Pâtes à lasagne fraîches cuites|Sfoglia fresca per lasagne cotta
+T38|Massa de lasanha fresca crua|Fresh lasagna pasta, raw|Pasta fresca de lasaña cruda|Pâtes à lasagne fraîches crues|Sfoglia fresca per lasagne cruda
+T39|Macarrão instantâneo|Instant noodles|Fideos instantáneos|Nouilles instantanées|Noodles istantanei
+T40|Macarrão de trigo cru|Wheat pasta, dry|Pasta de trigo cruda|Pâtes de blé crues|Pasta di grano cruda
+T41|Macarrão com ovos cru|Egg pasta, dry|Pasta al huevo cruda|Pâtes aux œufs crues|Pasta all'uovo cruda
+T42|Amido de milho|Cornstarch|Almidón de maíz (maicena)|Amidon de maïs (maïzena)|Amido di mais (maizena)
+T43|Fubá de milho cru|Fine cornmeal, raw|Harina fina de maíz cruda|Semoule fine de maïs crue|Farina fine di mais cruda
+T44|Milho verde cru|Sweet corn, raw|Maíz tierno crudo|Maïs doux cru|Mais dolce crudo
+T45|Milho verde em conserva, drenado|Canned sweet corn, drained|Maíz dulce en conserva, escurrido|Maïs doux en conserve, égoutté|Mais dolce in scatola, sgocciolato
+T46|Mingau tradicional (pó)|Porridge mix (powder)|Preparado para papilla (polvo)|Préparation pour bouillie (poudre)|Preparato per pappa (polvere)
+T47|Pamonha pré-cozida|Pamonha (sweet corn tamale), precooked|Pamonha (tamal de maíz) precocida|Pamonha (tamale de maïs) précuite|Pamonha (tamale di mais) precotta
+T48|Pão de forma de aveia|Oat sandwich bread|Pan de molde de avena|Pain de mie à l'avoine|Pancarré all'avena
+T49|Pão de soja|Soy bread|Pan de soja|Pain au soja|Pane di soia
+T50|Pão de glúten de forma|Gluten sandwich bread|Pan de molde de gluten|Pain de mie au gluten|Pancarré al glutine
+T51|Pão de milho de forma|Corn sandwich bread|Pan de molde de maíz|Pain de mie au maïs|Pancarré al mais
+T52|Pão de forma integral|Whole wheat sandwich bread|Pan de molde integral|Pain de mie complet|Pancarré integrale
+T53|Pão francês|French roll (pão francês)|Pan francés (bollo)|Petit pain (pão francês)|Panino tipo francese
+T54|Pão sovado|Sweet kneaded bread (pão sovado)|Pan sobado|Pain brioché (pão sovado)|Pane dolce impastato (pão sovado)
+T55|Pastel de carne cru|Beef pastel (turnover), raw|Empanada de carne cruda|Chausson frit à la viande, cru|Pastel di carne, crudo
+T56|Pastel de carne frito|Beef pastel (fried turnover)|Empanada de carne frita|Chausson frit à la viande|Pastel di carne fritto
+T57|Pastel de queijo cru|Cheese pastel (turnover), raw|Empanada de queso cruda|Chausson frit au fromage, cru|Pastel al formaggio, crudo
+T58|Pastel de queijo frito|Cheese pastel (fried turnover)|Empanada de queso frita|Chausson frit au fromage|Pastel al formaggio fritto
+T59|Massa de pastel crua|Pastel dough, raw|Masa de empanada cruda|Pâte à chausson crue|Pasta per pastel cruda
+T60|Massa de pastel frita|Pastel dough, fried|Masa de empanada frita|Pâte à chausson frite|Pasta per pastel fritta
+T61|Pipoca com óleo de soja, sem sal|Popcorn with soybean oil, unsalted|Palomitas con aceite de soja, sin sal|Pop-corn à l'huile de soja, sans sel|Popcorn con olio di soia, senza sale
+T62|Polenta pré-cozida|Precooked polenta|Polenta precocida|Polenta précuite|Polenta precotta
+T63|Torrada de pão francês|Toasted French roll|Tostada de pan francés|Pain grillé|Pane tostato
+T64|Abóbora cabotiá cozida|Kabocha squash, cooked|Calabaza kabocha cocida|Potiron kabocha cuit|Zucca kabocha cotta
+T65|Abóbora cabotiá crua|Kabocha squash, raw|Calabaza kabocha cruda|Potiron kabocha cru|Zucca kabocha cruda
+T66|Abóbora menina brasileira crua|Brazilian pumpkin (menina), raw|Calabaza (menina) cruda|Courge (menina) crue|Zucca (menina) cruda
+T67|Abóbora moranga crua|Pumpkin (moranga), raw|Calabaza moranga cruda|Citrouille crue|Zucca moranga cruda
+T68|Abóbora moranga refogada|Sautéed pumpkin|Calabaza salteada|Citrouille sautée|Zucca saltata
+T69|Abóbora pescoço crua|Crookneck squash, raw|Calabaza de cuello cruda|Courge à cou tors crue|Zucca a collo torto cruda
+T70|Abobrinha italiana cozida|Zucchini, cooked|Calabacín cocido|Courgette cuite|Zucchina cotta
+T71|Abobrinha italiana crua|Zucchini, raw|Calabacín crudo|Courgette crue|Zucchina cruda
+T72|Abobrinha italiana refogada|Sautéed zucchini|Calabacín salteado|Courgette sautée|Zucchine trifolate
+T73|Abobrinha paulista crua|Summer squash, raw|Calabacita cruda|Courge d'été crue|Zucchina chiara cruda
+T74|Acelga crua|Swiss chard, raw|Acelga cruda|Blette crue|Bietola cruda
+T75|Agrião cru|Watercress, raw|Berro crudo|Cresson cru|Crescione crudo
+T76|Aipo (salsão) cru|Celery, raw|Apio crudo|Céleri cru|Sedano crudo
+T77|Alface americana crua|Iceberg lettuce, raw|Lechuga iceberg cruda|Laitue iceberg crue|Lattuga iceberg cruda
+T78|Alface crespa crua|Curly lettuce, raw|Lechuga rizada cruda|Laitue frisée crue|Lattuga riccia cruda
+T79|Alface lisa crua|Butterhead lettuce, raw|Lechuga mantecosa cruda|Laitue beurre crue|Lattuga cappuccina cruda
+T80|Alface roxa crua|Red leaf lettuce, raw|Lechuga morada cruda|Laitue rouge crue|Lattuga rossa cruda
+T81|Alfavaca crua|Wild basil (alfavaca), raw|Albahaca silvestre cruda|Basilic sauvage cru|Basilico selvatico crudo
+T82|Alho cru|Garlic, raw|Ajo crudo|Ail cru|Aglio crudo
+T83|Alho-poró cru|Leek, raw|Puerro crudo|Poireau cru|Porro crudo
+T84|Almeirão cru|Chicory greens (almeirão), raw|Achicoria cruda|Chicorée sauvage crue|Cicoria cruda
+T85|Almeirão refogado|Sautéed chicory greens|Achicoria salteada|Chicorée sautée|Cicoria ripassata
+T86|Batata-baroa (mandioquinha) cozida|Arracacha (Peruvian parsnip), cooked|Arracacha cocida|Arracacha cuite|Arracacia cotta
+T87|Batata-baroa (mandioquinha) crua|Arracacha (Peruvian parsnip), raw|Arracacha cruda|Arracacha crue|Arracacia cruda
+T88|Batata-doce cozida|Sweet potato, boiled|Batata (boniato) cocida|Patate douce cuite|Patata dolce lessa
+T89|Batata-doce crua|Sweet potato, raw|Batata (boniato) cruda|Patate douce crue|Patata dolce cruda
+T90|Batata chips industrializada|Potato chips|Patatas fritas de bolsa|Chips de pommes de terre|Patatine in busta
+T91|Batata inglesa cozida|Potato, boiled|Patata cocida|Pomme de terre cuite à l'eau|Patata lessa
+T92|Batata inglesa crua|Potato, raw|Patata cruda|Pomme de terre crue|Patata cruda
+T93|Batata frita|French fries|Patatas fritas|Frites|Patatine fritte
+T94|Batata sauté|Sautéed potatoes|Patatas salteadas|Pommes de terre sautées|Patate saltate
+T95|Berinjela cozida|Eggplant, cooked|Berenjena cocida|Aubergine cuite|Melanzana cotta
+T96|Berinjela crua|Eggplant, raw|Berenjena cruda|Aubergine crue|Melanzana cruda
+T97|Beterraba cozida|Beetroot, cooked|Remolacha cocida|Betterave cuite|Barbabietola cotta
+T98|Beterraba crua|Beetroot, raw|Remolacha cruda|Betterave crue|Barbabietola cruda
+T99|Biscoito de polvilho doce|Cassava starch puffs (polvilho biscuit)|Rosquitas de almidón de yuca|Biscuits soufflés au manioc|Biscotti soffiati di manioca
+T100|Brócolis cozido|Broccoli, cooked|Brócoli cocido|Brocoli cuit|Broccoli cotti
+T101|Brócolis cru|Broccoli, raw|Brócoli crudo|Brocoli cru|Broccoli crudi
+T102|Cará cozido|Yam (cará), cooked|Ñame cocido|Igname cuite|Igname cotto
+T103|Cará cru|Yam (cará), raw|Ñame crudo|Igname crue|Igname crudo
+T104|Caruru cru|Amaranth greens, raw|Bledo (amaranto) crudo|Feuilles d'amarante crues|Foglie di amaranto crude
+T105|Catalonha crua|Catalonian chicory, raw|Achicoria catalana cruda|Chicorée catalogne crue|Cicoria catalogna cruda
+T106|Catalonha refogada|Sautéed Catalonian chicory|Achicoria catalana salteada|Chicorée catalogne sautée|Cicoria catalogna ripassata
+T107|Cebola crua|Onion, raw|Cebolla cruda|Oignon cru|Cipolla cruda
+T108|Cebolinha crua|Chives / green onion, raw|Cebollino crudo|Ciboulette crue|Erba cipollina cruda
+T109|Cenoura cozida|Carrot, cooked|Zanahoria cocida|Carotte cuite|Carota cotta
+T110|Cenoura crua|Carrot, raw|Zanahoria cruda|Carotte crue|Carota cruda
+T111|Chicória crua|Endive (chicory), raw|Endibia cruda|Chicorée frisée crue|Indivia cruda
+T112|Chuchu cozido|Chayote, cooked|Chayote cocido|Chayote cuit|Chayote cotto
+T113|Chuchu cru|Chayote, raw|Chayote crudo|Chayote cru|Chayote crudo
+T114|Coentro desidratado|Dried coriander leaves|Cilantro deshidratado|Coriandre séchée|Coriandolo essiccato
+T115|Couve-manteiga crua|Collard greens, raw|Berza cruda|Chou cavalier cru|Cavolo riccio crudo
+T116|Couve-manteiga refogada|Sautéed collard greens|Berza salteada|Chou cavalier sauté|Cavolo riccio saltato
+T117|Couve-flor crua|Cauliflower, raw|Coliflor cruda|Chou-fleur cru|Cavolfiore crudo
+T118|Couve-flor cozida|Cauliflower, cooked|Coliflor cocida|Chou-fleur cuit|Cavolfiore cotto
+T119|Espinafre cru|Spinach (New Zealand), raw|Espinaca (de Nueva Zelanda) cruda|Épinard (de Nouvelle-Zélande) cru|Spinacio (neozelandese) crudo
+T120|Espinafre refogado|Sautéed spinach|Espinacas salteadas|Épinards sautés|Spinaci saltati
+T121|Farinha de mandioca crua|Cassava flour, raw|Harina de yuca cruda|Farine de manioc crue|Farina di manioca cruda
+T122|Farinha de mandioca torrada|Toasted cassava flour|Harina de yuca tostada|Farine de manioc grillée|Farina di manioca tostata
+T123|Farinha de puba|Fermented cassava flour (puba)|Harina de yuca fermentada|Farine de manioc fermentée|Farina di manioca fermentata
+T124|Fécula de mandioca|Tapioca starch|Fécula de yuca (tapioca)|Fécule de manioc (tapioca)|Fecola di manioca (tapioca)
+T125|Broto de feijão cru|Mung bean sprouts, raw|Brotes de soja crudos|Pousses de haricot mungo crues|Germogli di soia crudi
+T126|Inhame cru|Taro (inhame), raw|Malanga (taro) cruda|Taro cru|Taro crudo
+T127|Jiló cru|Scarlet eggplant (jiló), raw|Berenjena escarlata (jiló) cruda|Aubergine écarlate (jiló) crue|Melanzana scarlatta (jiló) cruda
+T128|Jurubeba crua|Jurubeba fruit, raw|Jurubeba cruda|Jurubeba crue|Jurubeba cruda
+T129|Mandioca cozida|Cassava, boiled|Yuca cocida|Manioc cuit|Manioca lessa
+T130|Mandioca crua|Cassava, raw|Yuca cruda|Manioc cru|Manioca cruda
+T131|Farofa de mandioca temperada|Seasoned cassava farofa|Farofa de yuca condimentada|Farofa de manioc assaisonnée|Farofa di manioca condita
+T132|Mandioca frita|Fried cassava|Yuca frita|Manioc frit|Manioca fritta
+T133|Manjericão cru|Basil, raw|Albahaca cruda|Basilic cru|Basilico crudo
+T134|Maxixe cru|West Indian gherkin (maxixe), raw|Pepinillo antillano crudo|Concombre des Antilles cru|Cetriolo delle Antille crudo
+T135|Folha de mostarda crua|Mustard greens, raw|Hojas de mostaza crudas|Feuilles de moutarde crues|Foglie di senape crude
+T136|Nhoque de batata cozido|Potato gnocchi, cooked|Ñoquis de patata cocidos|Gnocchis de pomme de terre cuits|Gnocchi di patate cotti
+T137|Nabo cru|Turnip, raw|Nabo crudo|Navet cru|Rapa cruda
+T138|Palmito juçara em conserva|Heart of palm (juçara), canned|Palmito (juçara) en conserva|Cœur de palmier (juçara) en conserve|Cuore di palma (juçara) in scatola
+T139|Palmito pupunha em conserva|Heart of palm (peach palm), canned|Palmito de pejibaye en conserva|Cœur de palmier pêche en conserve|Cuore di palma pupunha in scatola
+T140|Pão de queijo assado|Cheese bread (pão de queijo), baked|Pan de queso horneado|Pain au fromage brésilien, cuit|Pane al formaggio brasiliano, cotto
+T141|Pão de queijo cru|Cheese bread (pão de queijo), raw dough|Pan de queso crudo|Pain au fromage brésilien, cru|Pane al formaggio brasiliano, crudo
+T142|Pepino cru|Cucumber, raw|Pepino crudo|Concombre cru|Cetriolo crudo
+T143|Pimentão amarelo cru|Yellow bell pepper, raw|Pimiento amarillo crudo|Poivron jaune cru|Peperone giallo crudo
+T144|Pimentão verde cru|Green bell pepper, raw|Pimiento verde crudo|Poivron vert cru|Peperone verde crudo
+T145|Pimentão vermelho cru|Red bell pepper, raw|Pimiento rojo crudo|Poivron rouge cru|Peperone rosso crudo
+T146|Polvilho doce|Sweet cassava starch|Almidón de yuca dulce|Amidon de manioc doux|Amido di manioca dolce
+T147|Quiabo cru|Okra, raw|Quimbombó (okra) crudo|Gombo cru|Gombo (okra) crudo
+T148|Rabanete cru|Radish, raw|Rábano crudo|Radis cru|Ravanello crudo
+T149|Repolho branco cru|White cabbage, raw|Repollo blanco crudo|Chou blanc cru|Cavolo cappuccio bianco crudo
+T150|Repolho roxo cru|Red cabbage, raw|Lombarda cruda|Chou rouge cru|Cavolo cappuccio rosso crudo
+T151|Repolho roxo refogado|Sautéed red cabbage|Lombarda salteada|Chou rouge sauté|Cavolo rosso saltato
+T152|Rúcula crua|Arugula, raw|Rúcula cruda|Roquette crue|Rucola cruda
+T153|Salsa (salsinha) crua|Parsley, raw|Perejil crudo|Persil cru|Prezzemolo crudo
+T154|Seleta de legumes enlatada|Canned mixed vegetables|Menestra de verduras en conserva|Macédoine de légumes en conserve|Verdure miste in scatola
+T155|Serralha crua|Sow thistle greens, raw|Cerraja cruda|Laiteron cru|Grespino crudo
+T156|Taioba crua|Taioba leaves, raw|Hojas de taioba crudas|Feuilles de taioba crues|Foglie di taioba crude
+T157|Tomate cru|Tomato, raw|Tomate crudo|Tomate crue|Pomodoro crudo
+T158|Extrato de tomate|Tomato paste|Concentrado de tomate|Concentré de tomate|Concentrato di pomodoro
+T159|Molho de tomate industrializado|Tomato sauce (store-bought)|Salsa de tomate envasada|Sauce tomate industrielle|Salsa di pomodoro pronta
+T160|Purê de tomate|Tomato purée|Puré de tomate|Purée de tomate|Passata di pomodoro
+T161|Salada de tomate|Tomato salad|Ensalada de tomate|Salade de tomates|Insalata di pomodori
+T162|Vagem crua|Green beans, raw|Judías verdes crudas|Haricots verts crus|Fagiolini crudi
+T163|Abacate cru|Avocado, raw|Aguacate crudo|Avocat cru|Avocado crudo
+T164|Abacaxi cru|Pineapple, raw|Piña cruda|Ananas cru|Ananas crudo
+T165|Polpa de abacaxi congelada|Frozen pineapple pulp|Pulpa de piña congelada|Pulpe d'ananas surgelée|Polpa di ananas surgelata
+T166|Abiu cru|Abiu fruit, raw|Abiu crudo|Abiu cru|Abiu crudo
+T167|Açaí com xarope de guaraná|Açaí pulp with guarana syrup|Pulpa de açaí con jarabe de guaraná|Pulpe d'açaí au sirop de guarana|Polpa di açaí con sciroppo di guaranà
+T168|Polpa de açaí congelada|Frozen açaí pulp|Pulpa de açaí congelada|Pulpe d'açaí surgelée|Polpa di açaí surgelata
+T169|Acerola crua|Acerola cherry, raw|Acerola cruda|Acérola crue|Acerola cruda
+T170|Polpa de acerola congelada|Frozen acerola pulp|Pulpa de acerola congelada|Pulpe d'acérola surgelée|Polpa di acerola surgelata
+T171|Ameixa em calda enlatada|Canned plums in syrup|Ciruelas en almíbar|Prunes au sirop|Prugne sciroppate
+T172|Ameixa crua|Plum, raw|Ciruela cruda|Prune crue|Prugna cruda
+T173|Ameixa em calda, drenada|Canned plums, drained|Ciruelas en almíbar, escurridas|Prunes au sirop, égouttées|Prugne sciroppate, sgocciolate
+T174|Atemoia crua|Atemoya, raw|Atemoya cruda|Atémoya crue|Atemoya cruda
+T175|Banana-da-terra crua|Plantain, raw|Plátano macho crudo|Banane plantain crue|Platano crudo
+T176|Bananada (doce em barra)|Banana paste bar|Dulce de plátano en barra|Pâte de banane|Barretta di banana
+T177|Banana-figo crua|Banana (figo variety), raw|Plátano (variedad figo) crudo|Banane (variété figo) crue|Banana (varietà figo) cruda
+T178|Banana-maçã crua|Apple banana, raw|Plátano manzano crudo|Banane pomme crue|Banana mela cruda
+T179|Banana-nanica crua|Cavendish banana, raw|Plátano (Cavendish) crudo|Banane (Cavendish) crue|Banana (Cavendish) cruda
+T180|Banana-ouro crua|Lady finger banana, raw|Plátano dominico crudo|Banane naine (figue sucrée) crue|Banana baby cruda
+T181|Banana-pacova crua|Pacova banana, raw|Plátano pacova crudo|Banane pacova crue|Banana pacova cruda
+T182|Banana-prata crua|Silver banana (prata), raw|Plátano prata crudo|Banane prata crue|Banana prata cruda
+T183|Cacau cru|Cacao fruit, raw|Cacao crudo|Cacao cru|Cacao crudo
+T184|Cajá-manga cru|Ambarella (June plum), raw|Jobo de la India (ambarella) crudo|Pomme cythère crue|Ambarella cruda
+T185|Polpa de cajá congelada|Frozen yellow mombin pulp|Pulpa de jobo congelada|Pulpe de mombin jaune surgelée|Polpa di mombin giallo surgelata
+T186|Caju cru|Cashew apple, raw|Marañón crudo|Pomme de cajou crue|Falso frutto dell'anacardio crudo
+T187|Polpa de caju congelada|Frozen cashew apple pulp|Pulpa de marañón congelada|Pulpe de pomme de cajou surgelée|Polpa di anacardio surgelata
+T188|Suco concentrado de caju|Cashew apple juice concentrate|Zumo concentrado de marañón|Jus concentré de pomme de cajou|Succo concentrato di anacardio
+T189|Caqui chocolate cru|Persimmon (chocolate), raw|Caqui chocolate crudo|Kaki chocolat cru|Cachi cioccolato crudo
+T190|Carambola crua|Star fruit, raw|Carambola cruda|Carambole crue|Carambola cruda
+T191|Seriguela crua|Red mombin (seriguela), raw|Ciruela de huesito cruda|Mombin rouge cru|Mombin rosso crudo
+T192|Cupuaçu cru|Cupuaçu fruit, raw|Copoazú crudo|Cupuaçu cru|Cupuaçu crudo
+T193|Polpa de cupuaçu congelada|Frozen cupuaçu pulp|Pulpa de copoazú congelada|Pulpe de cupuaçu surgelée|Polpa di cupuaçu surgelata
+T194|Figo cru|Fig, raw|Higo crudo|Figue crue|Fico crudo
+T195|Figo em calda enlatado|Canned figs in syrup|Higos en almíbar|Figues au sirop|Fichi sciroppati
+T196|Fruta-pão crua|Breadfruit, raw|Fruta de pan cruda|Fruit à pain cru|Frutto dell'albero del pane crudo
+T197|Goiaba branca com casca crua|White guava with skin, raw|Guayaba blanca con piel cruda|Goyave blanche avec peau crue|Guava bianca con buccia cruda
+T198|Goiabada (doce em pasta)|Guava paste|Dulce de guayaba (pasta)|Pâte de goyave|Cotognata di guava
+T199|Goiabada cascão|Guava paste with skin (cascão)|Dulce de guayaba con cáscara|Pâte de goyave rustique|Marmellata densa di guava
+T200|Goiaba vermelha com casca crua|Red guava with skin, raw|Guayaba roja con piel cruda|Goyave rouge avec peau crue|Guava rossa con buccia cruda
+T201|Graviola crua|Soursop, raw|Guanábana cruda|Corossol cru|Graviola cruda
+T202|Polpa de graviola congelada|Frozen soursop pulp|Pulpa de guanábana congelada|Pulpe de corossol surgelée|Polpa di graviola surgelata
+T203|Jabuticaba crua|Jaboticaba, raw|Jabuticaba cruda|Jaboticaba crue|Jaboticaba cruda
+T204|Jaca crua|Jackfruit, raw|Yaca cruda|Jacquier (jaque) cru|Giaca cruda
+T205|Jambo cru|Malay rose apple (jambo), raw|Pomarrosa malaya cruda|Jambose rouge crue|Jambo crudo
+T206|Jamelão cru|Java plum (jamelão), raw|Jambolán crudo|Jamelonier (jamblon) cru|Jambolan crudo
+T207|Kiwi cru|Kiwi, raw|Kiwi crudo|Kiwi cru|Kiwi crudo
+T208|Laranja-baía crua|Navel orange, raw|Naranja navel cruda|Orange navel crue|Arancia navel cruda
+T209|Suco de laranja-baía|Navel orange juice|Zumo de naranja navel|Jus d'orange navel|Succo d'arancia navel
+T210|Laranja-da-terra crua|Bitter orange, raw|Naranja amarga cruda|Orange amère crue|Arancia amara cruda
+T211|Suco de laranja-da-terra|Bitter orange juice|Zumo de naranja amarga|Jus d'orange amère|Succo d'arancia amara
+T212|Laranja-lima crua|Sweet lime orange (lima), raw|Naranja lima cruda|Orange douce (lima) crue|Arancia lima cruda
+T213|Suco de laranja-lima|Sweet lime orange juice|Zumo de naranja lima|Jus d'orange lima|Succo d'arancia lima
+T214|Laranja-pera crua|Pera orange, raw|Naranja pera cruda|Orange pera crue|Arancia pera cruda
+T215|Suco de laranja-pera|Orange juice (pera)|Zumo de naranja (pera)|Jus d'orange (pera)|Succo d'arancia (pera)
+T216|Laranja-valência crua|Valencia orange, raw|Naranja valencia cruda|Orange valencia crue|Arancia valencia cruda
+T217|Suco de laranja-valência|Valencia orange juice|Zumo de naranja valencia|Jus d'orange valencia|Succo d'arancia valencia
+T218|Suco de limão-cravo|Rangpur lime juice|Zumo de lima mandarina|Jus de citron rangpur|Succo di limetta rangpur
+T219|Suco de limão-galego|Key lime juice|Zumo de lima ácida|Jus de citron vert (key lime)|Succo di limetta (key lime)
+T220|Limão-taiti cru|Lime (Tahiti), raw|Lima (Tahití) cruda|Citron vert cru|Lime crudo
+T221|Maçã argentina com casca crua|Red Delicious apple with skin, raw|Manzana roja con piel cruda|Pomme rouge avec peau crue|Mela rossa con buccia cruda
+T222|Maçã fuji com casca crua|Fuji apple with skin, raw|Manzana fuji con piel cruda|Pomme Fuji avec peau crue|Mela Fuji con buccia cruda
+T223|Macaúba crua|Macaúba palm fruit, raw|Macaúba cruda|Macaúba crue|Macaúba cruda
+T224|Doce de mamão em calda, drenado|Papaya in syrup, drained|Dulce de papaya en almíbar, escurrido|Papaye au sirop, égouttée|Papaya sciroppata, sgocciolata
+T225|Mamão formosa cru|Papaya (Formosa), raw|Papaya (Formosa) cruda|Papaye (Formosa) crue|Papaya (Formosa) cruda
+T226|Mamão papaia cru|Papaya (Solo), raw|Papaya (Solo) cruda|Papaye (Solo) crue|Papaya (Solo) cruda
+T227|Doce de mamão verde em calda, drenado|Green papaya in syrup, drained|Dulce de papaya verde en almíbar, escurrido|Papaye verte au sirop, égouttée|Papaya verde sciroppata, sgocciolata
+T228|Manga haden crua|Mango (Haden), raw|Mango (Haden) crudo|Mangue (Haden) crue|Mango (Haden) crudo
+T229|Manga palmer crua|Mango (Palmer), raw|Mango (Palmer) crudo|Mangue (Palmer) crue|Mango (Palmer) crudo
+T230|Polpa de manga congelada|Frozen mango pulp|Pulpa de mango congelada|Pulpe de mangue surgelée|Polpa di mango surgelata
+T231|Manga tommy atkins crua|Mango (Tommy Atkins), raw|Mango (Tommy Atkins) crudo|Mangue (Tommy Atkins) crue|Mango (Tommy Atkins) crudo
+T232|Maracujá cru|Passion fruit, raw|Maracuyá crudo|Fruit de la passion cru|Frutto della passione crudo
+T233|Polpa de maracujá congelada|Frozen passion fruit pulp|Pulpa de maracuyá congelada|Pulpe de fruit de la passion surgelée|Polpa di frutto della passione surgelata
+T234|Suco concentrado de maracujá|Passion fruit juice concentrate|Zumo concentrado de maracuyá|Jus concentré de fruit de la passion|Succo concentrato di frutto della passione
+T235|Melancia crua|Watermelon, raw|Sandía cruda|Pastèque crue|Anguria cruda
+T236|Melão cru|Melon, raw|Melón crudo|Melon cru|Melone crudo
+T237|Mexerica murcote crua|Murcott tangerine, raw|Mandarina murcott cruda|Mandarine murcott crue|Mandarino murcott crudo
+T238|Mexerica rio crua|Mandarin (rio), raw|Mandarina (rio) cruda|Mandarine (rio) crue|Mandarino (rio) crudo
+T239|Morango cru|Strawberry, raw|Fresa cruda|Fraise crue|Fragola cruda
+T240|Nêspera crua|Loquat, raw|Níspero crudo|Nèfle du Japon crue|Nespola cruda
+T241|Pequi cru|Pequi fruit, raw|Pequi crudo|Pequi cru|Pequi crudo
+T242|Pera park crua|Pear (Park), raw|Pera (Park) cruda|Poire (Park) crue|Pera (Park) cruda
+T243|Pera williams crua|Williams pear, raw|Pera williams cruda|Poire williams crue|Pera williams cruda
+T244|Pêssego aurora cru|Peach (Aurora), raw|Melocotón (Aurora) crudo|Pêche (Aurora) crue|Pesca (Aurora) cruda
+T245|Pêssego em calda enlatado|Canned peaches in syrup|Melocotón en almíbar|Pêches au sirop|Pesche sciroppate
+T246|Pinha (fruta-do-conde) crua|Sugar apple, raw|Anón (chirimoya) crudo|Pomme cannelle crue|Annona squamosa cruda
+T247|Pitanga crua|Surinam cherry (pitanga), raw|Pitanga cruda|Cerise de Cayenne crue|Pitanga cruda
+T248|Polpa de pitanga congelada|Frozen pitanga pulp|Pulpa de pitanga congelada|Pulpe de cerise de Cayenne surgelée|Polpa di pitanga surgelata
+T249|Romã crua|Pomegranate, raw|Granada cruda|Grenade crue|Melograno crudo
+T250|Tamarindo cru|Tamarind, raw|Tamarindo crudo|Tamarin cru|Tamarindo crudo
+T251|Tangerina poncã crua|Ponkan tangerine, raw|Mandarina ponkan cruda|Mandarine ponkan crue|Mandarino ponkan crudo
+T252|Suco de tangerina poncã|Ponkan tangerine juice|Zumo de mandarina ponkan|Jus de mandarine ponkan|Succo di mandarino ponkan
+T253|Tucumã cru|Tucumã palm fruit, raw|Tucumá crudo|Tucumã cru|Tucumã crudo
+T254|Umbu cru|Umbu fruit, raw|Umbú crudo|Umbu cru|Umbu crudo
+T255|Polpa de umbu congelada|Frozen umbu pulp|Pulpa de umbú congelada|Pulpe d'umbu surgelée|Polpa di umbu surgelata
+T256|Uva itália crua|Italia grape, raw|Uva Italia cruda|Raisin Italia cru|Uva Italia cruda
+T257|Uva rubi crua|Ruby grape, raw|Uva rubí cruda|Raisin rubis cru|Uva rubino cruda
+T258|Suco concentrado de uva|Grape juice concentrate|Zumo concentrado de uva|Jus de raisin concentré|Succo d'uva concentrato
+T259|Azeite de dendê|Red palm oil (dendê)|Aceite de palma rojo|Huile de palme rouge|Olio di palma rosso
+T260|Azeite de oliva extravirgem|Extra virgin olive oil|Aceite de oliva virgen extra|Huile d'olive vierge extra|Olio extravergine d'oliva
+T261|Manteiga com sal|Salted butter|Mantequilla con sal|Beurre demi-sel|Burro salato
+T262|Manteiga sem sal|Unsalted butter|Mantequilla sin sal|Beurre doux|Burro non salato
+T263|Margarina com sal (65% gordura)|Margarine, salted (65% fat)|Margarina con sal (65% grasa)|Margarine salée (65 % MG)|Margarina salata (65% grassi)
+T264|Margarina sem sal (80% gordura)|Margarine, unsalted (80% fat)|Margarina sin sal (80% grasa)|Margarine non salée (80 % MG)|Margarina non salata (80% grassi)
+T265|Margarina interesterificada com sal (65%)|Interesterified margarine, salted (65%)|Margarina interesterificada con sal (65%)|Margarine interestérifiée salée (65 %)|Margarina interesterificata salata (65%)
+T266|Margarina interesterificada sem sal (65%)|Interesterified margarine, unsalted (65%)|Margarina interesterificada sin sal (65%)|Margarine interestérifiée non salée (65 %)|Margarina interesterificata non salata (65%)
+T267|Óleo de babaçu|Babassu oil|Aceite de babasú|Huile de babassu|Olio di babassu
+T268|Óleo de canola|Canola oil|Aceite de canola|Huile de colza|Olio di colza
+T269|Óleo de girassol|Sunflower oil|Aceite de girasol|Huile de tournesol|Olio di girasole
+T270|Óleo de milho|Corn oil|Aceite de maíz|Huile de maïs|Olio di mais
+T271|Óleo de pequi|Pequi oil|Aceite de pequi|Huile de pequi|Olio di pequi
+T272|Óleo de soja|Soybean oil|Aceite de soja|Huile de soja|Olio di soia
+T273|Abadejo (filé) assado|Pollock fillet, baked|Abadejo (filete) al horno|Lieu (filet) cuit au four|Merluzzo carbonaro (filetto) al forno
+T274|Abadejo (filé) cozido|Pollock fillet, boiled|Abadejo (filete) hervido|Lieu (filet) poché|Merluzzo carbonaro (filetto) lesso
+T275|Abadejo (filé) cru|Pollock fillet, raw|Abadejo (filete) crudo|Lieu (filet) cru|Merluzzo carbonaro (filetto) crudo
+T276|Abadejo (filé) grelhado|Pollock fillet, grilled|Abadejo (filete) a la plancha|Lieu (filet) grillé|Merluzzo carbonaro (filetto) alla griglia
+T277|Atum em conserva no óleo|Tuna canned in oil|Atún en aceite|Thon à l'huile|Tonno sott'olio
+T278|Atum fresco cru|Fresh tuna, raw|Atún fresco crudo|Thon frais cru|Tonno fresco crudo
+T279|Bacalhau salgado cru|Salt cod, raw|Bacalao salado crudo|Morue salée crue|Baccalà salato crudo
+T280|Bacalhau refogado|Sautéed salt cod|Bacalao salteado|Morue sautée|Baccalà in umido
+T281|Cação empanado frito|Dogfish steak, floured and fried|Cazón enharinado frito|Émissole farinée frite|Palombo infarinato fritto
+T282|Cação cozido|Dogfish steak, boiled|Cazón hervido|Émissole pochée|Palombo lesso
+T283|Cação cru|Dogfish steak, raw|Cazón crudo|Émissole crue|Palombo crudo
+T284|Camarão grande cozido|Large shrimp, boiled|Langostinos cocidos|Grosses crevettes cuites|Gamberoni lessi
+T285|Camarão grande cru|Large shrimp, raw|Langostinos crudos|Grosses crevettes crues|Gamberoni crudi
+T286|Camarão sete-barbas frito|Small shrimp, fried|Camarones pequeños fritos|Petites crevettes frites|Gamberetti fritti
+T287|Caranguejo cozido|Crab, boiled|Cangrejo cocido|Crabe cuit|Granchio lesso
+T288|Curimbatá cru|Curimbatá fish, raw|Curimbatá crudo|Curimbatá cru|Curimbatá crudo
+T289|Curimbatá assado|Curimbatá fish, baked|Curimbatá al horno|Curimbatá au four|Curimbatá al forno
+T290|Curimbatá cozido|Curimbatá fish, boiled|Curimbatá hervido|Curimbatá poché|Curimbatá lesso
+T291|Corvina de água doce crua|Freshwater drum, raw|Corvina de agua dulce cruda|Malachigan cru|Ombrina d'acqua dolce cruda
+T292|Corvina do mar crua|Croaker, raw|Corvina de mar cruda|Courbine crue|Ombrina di mare cruda
+T293|Corvina assada|Croaker, baked|Corvina al horno|Courbine au four|Ombrina al forno
+T294|Corvina cozida|Croaker, boiled|Corvina hervida|Courbine pochée|Ombrina lessa
+T295|Dourado de água doce fresco|Golden dorado (river fish), fresh|Dorado de río fresco|Dorado de rivière frais|Dorado di fiume fresco
+T296|Lambari congelado cru|Lambari (small river fish), frozen, raw|Lambari congelado crudo|Lambari surgelé cru|Lambari surgelato crudo
+T297|Lambari frito|Lambari (small river fish), fried|Lambari frito|Lambari frit|Lambari fritto
+T298|Lambari fresco cru|Lambari (small river fish), raw|Lambari fresco crudo|Lambari frais cru|Lambari fresco crudo
+T299|Manjuba empanada frita|Anchovy-like fish, floured and fried|Boquerones enharinados fritos|Petits poissons farinés frits|Alici infarinate fritte
+T300|Manjuba frita|Small fried fish (manjuba)|Pescaditos fritos|Petite friture|Frittura di pesciolini

@@ -16,6 +16,7 @@
     "skipLibCheck": true,
     "strict": true,
     "target": "ES2020",
+    "types": ["jest", "react", "react-native"],
     "baseUrl": ".",
     "paths": {
       "@/*": ["src/*"],
@@ -31,6 +32,6 @@
     }
   },
   "include": ["**/*.ts", "**/*.tsx"],
-  "exclude": ["node_modules"],
+  "exclude": ["node_modules", "src/_desativado", "src/screens", "*.js", "__tests__"],
   "extends": "expo/tsconfig.base"
 }

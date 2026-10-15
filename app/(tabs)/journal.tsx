@@ -1,248 +1,227 @@
 import { useState } from 'react';
-import { View, ScrollView, StyleSheet, Pressable } from 'react-native';
+import { View, Pressable, Image } from 'react-native';
 import { useRouter } from 'expo-router';
-import { X } from 'lucide-react-native';
+import { ChevronLeft, ChevronRight, Plus, X, BookOpen, Camera, CalendarDays, ChevronDown, ChevronUp } from 'lucide-react-native';
+import { Dica } from '@components/Dica';
+import { textoNutrientes } from '@utils/textoNutrientes';
+import { TelaRolavel } from '@components/TelaRolavel';
 import { ThemedView } from '@components/ThemedView';
 import { ThemedText } from '@components/ThemedText';
 import { Button } from '@components/Button';
-import { Input } from '@components/Input';
 import { useRecords } from '@context/RecordsContext';
-import { useCustomRecipes } from '@context/CustomRecipesContext';
-import { buscarReceitas, ReceitaConhecida } from '@constants/recipes';
-import { ReceitaPersonalizada } from '@models/ingredients';
+import { usePreferences } from '@context/PreferencesContext';
+import { Refeicao, TIPOS_REFEICAO, TipoRefeicao } from '@models/records';
+import { dataDeHoje } from '@utils/recordsStorage';
 import { colors, spacing, radius } from '@constants/colors';
 import { estilosTema } from '@theme/estilos';
-import { usePreferences } from '@context/PreferencesContext';
 
 const OPCOES_AGUA = [200, 300, 500];
 
-export default function JournalScreen() {
-  const { t } = usePreferences();
+function deslocarData(iso: string, dias: number): string {
+  const [a, m, d] = iso.split('-').map(Number);
+  const dt = new Date(a, m - 1, d + dias);
+  return `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}-${String(dt.getDate()).padStart(2, '0')}`;
+}
+
+/** Aba Alimentação: refeições do dia (por tipo), totais e água */
+export default function AlimentacaoScreen() {
+  const { t, idioma } = usePreferences();
   const router = useRouter();
-  const {
-    refeicoesHoje,
-    aguasHoje,
-    aguaHojeMl,
-    adicionarAgua,
-    removerAgua,
-    adicionarRefeicao,
-    removerRefeicao,
-  } = useRecords();
-  const { buscarReceitasPersonalizadas } = useCustomRecipes();
-
+  const { refeicoes, aguasHoje, aguaHojeMl, adicionarAgua, removerAgua, nutrientesDoDia } = useRecords();
+  const hoje = dataDeHoje();
+  const [dia, setDia] = useState(hoje);
   const [mostrarListaAgua, setMostrarListaAgua] = useState(false);
-  const [mostrarForm, setMostrarForm] = useState(false);
-  const [nome, setNome] = useState('');
-  const [kcal, setKcal] = useState('');
-  const [proteina, setProteina] = useState('');
+  const [mostrarHistorico, setMostrarHistorico] = useState(false);
 
-  const sugestoes = buscarReceitas(nome);
-  const sugestoesPersonalizadas = buscarReceitasPersonalizadas(nome);
+  const doDia = refeicoes.filter((r) => r.data === dia).sort((a, b) => a.horario.localeCompare(b.horario));
+  const total = nutrientesDoDia(dia);
 
-  const kcalNum = parseInt(kcal, 10);
-  const proteinaNum = parseInt(proteina, 10) || 0;
-  const formValido = nome.trim().length > 0 && !isNaN(kcalNum) && kcalNum > 0;
-
-  function escolherSugestao(receita: ReceitaConhecida) {
-    setNome(receita.nome);
-    setKcal(String(receita.kcal));
-    setProteina(String(receita.proteinaG));
+  // últimos 30 dias (os dados antigos continuam guardados e vão no backup)
+  const historico = Array.from({ length: 30 }, (_, i) => deslocarData(hoje, -i))
+    .map((d) => ({ data: d, ...nutrientesDoDia(d) }))
+    .filter((d) => d.refeicoes > 0);
+  const media = (f: (d: (typeof historico)[number]) => number | undefined) =>
+    historico.length ? Math.round(historico.reduce((s, d) => s + (f(d) ?? 0), 0) / historico.length) : 0;
+  const porTipo = new Map<TipoRefeicao, Refeicao[]>();
+  for (const r of doDia) {
+    const tp = r.tipo ?? 'outro';
+    porTipo.set(tp, [...(porTipo.get(tp) ?? []), r]);
   }
 
-  function escolherReceitaPersonalizada(receita: ReceitaPersonalizada) {
-    // valores da receita personalizada são por 100g; o usuário pode ajustar
-    // a quantidade depois, editando os campos livremente.
-    setNome(receita.nome);
-    setKcal(String(receita.kcalPor100g));
-    setProteina(String(receita.proteinaGPor100g));
-  }
+  const rotuloDe = (data: string) => {
+    if (data === hoje) return t('ali.hoje');
+    if (data === deslocarData(hoje, -1)) return t('ali.ontem');
+    const [a, m, d] = data.split('-').map(Number);
+    try {
+      return new Date(a, m - 1, d).toLocaleDateString(idioma, { weekday: 'short', day: '2-digit', month: '2-digit' });
+    } catch {
+      return `${d}/${m}`;
+    }
+  };
+  const rotuloDia = rotuloDe(dia);
 
-  async function handleAdicionarRefeicao() {
-    if (!formValido) return;
-    await adicionarRefeicao(nome.trim(), kcalNum, proteinaNum);
-    setNome('');
-    setKcal('');
-    setProteina('');
-    setMostrarForm(false);
-  }
+  const novaRefeicao = (tipo?: TipoRefeicao) =>
+    router.push({ pathname: '/refeicao', params: { data: dia, ...(tipo ? { tipo } : {}) } });
 
   return (
-    <ScrollView style={{ flex: 1, backgroundColor: colors.background }} contentContainerStyle={{ padding: spacing.lg }}>
-      <ThemedView style={styles.container}>
-        <View style={styles.header}>
-          <ThemedText variant="heading" color="text">{t('abas.diario')}</ThemedText>
-          <ThemedText variant="body" color="textSecondary" style={{ marginTop: spacing.xs }}>
-            {t('d.sub')}
-          </ThemedText>
-        </View>
+    <TelaRolavel>
+      {/* Dia */}
+      <View style={styles.navDia}>
+        <Pressable onPress={() => setDia(deslocarData(dia, -1))} hitSlop={10} style={styles.navBotao}>
+          <ChevronLeft size={22} color={colors.primary} strokeWidth={2} />
+        </Pressable>
+        <ThemedText variant="subheading" color="text" style={{ flex: 1, textAlign: 'center' }}>{rotuloDia}</ThemedText>
+        <Pressable onPress={() => setDia(deslocarData(dia, 1))} disabled={dia === hoje} hitSlop={10} style={[styles.navBotao, dia === hoje && { opacity: 0.3 }]}>
+          <ChevronRight size={22} color={colors.primary} strokeWidth={2} />
+        </Pressable>
+      </View>
 
-        {/* Água */}
+      {/* Totais */}
+      <ThemedView variant="surface" style={[styles.card, styles.cardShadow, styles.totais]}>
+        <Total valor={total.kcal} rotulo="kcal" cor="primary" />
+        <Total valor={Math.round(total.proteinaG)} rotulo={t('ali.proteina')} cor="secondary" />
+        <Total valor={Math.round(total.carboidratoG ?? 0)} rotulo={t('ali.carbo')} cor="accent" />
+        <Total valor={Math.round(total.gorduraG ?? 0)} rotulo={t('home.gordura')} cor="secondary" />
+        <Total valor={Math.round(total.fibraG ?? 0)} rotulo={t('home.fibra')} cor="primary" />
+      </ThemedView>
+
+      <Dica id="ali.registrar" texto="dica.alimentacao" />
+
+      <Button label={t('ali.registrar')} size="lg" icon={<Plus size={18} color={colors.background} strokeWidth={2.5} />} onPress={() => novaRefeicao()} style={{ marginBottom: spacing.lg }} />
+
+      {/* Refeições por tipo */}
+      {doDia.length === 0 ? (
         <ThemedView variant="surface" style={[styles.card, styles.cardShadow]}>
-          <View style={styles.aguaHeader}>
-            <ThemedText variant="subheading" color="text">{t('d.agua')}</ThemedText>
+          <ThemedText variant="body" color="textSecondary">{t('ali.vazio')}</ThemedText>
+          <View style={[styles.chips, { marginTop: spacing.md }]}>
+            {TIPOS_REFEICAO.filter((tp) => tp !== 'outro').map((tp) => (
+              <Pressable key={tp} onPress={() => novaRefeicao(tp)} style={styles.chip}>
+                <Plus size={12} color={colors.primary} strokeWidth={2.5} />
+                <ThemedText variant="small" color="primary" style={{ marginLeft: 2 }}>{t(`ref.tipo.${tp}` as never)}</ThemedText>
+              </Pressable>
+            ))}
+          </View>
+        </ThemedView>
+      ) : (
+        TIPOS_REFEICAO.filter((tp) => porTipo.has(tp)).map((tp) => (
+          <ThemedView key={tp} variant="surface" style={[styles.card, styles.cardShadow]}>
+            <View style={styles.cabecalhoTipo}>
+              <ThemedText variant="subheading" color="text" style={{ flex: 1 }}>{t(`ref.tipo.${tp}` as never)}</ThemedText>
+              <ThemedText variant="small" color="textSecondary">
+                {Math.round(porTipo.get(tp)!.reduce((s, r) => s + r.kcal, 0))} kcal
+              </ThemedText>
+            </View>
+            {porTipo.get(tp)!.map((r) => (
+              <Pressable key={r.id} onPress={() => router.push({ pathname: '/refeicao', params: { id: r.id } })} style={styles.refeicao}>
+                {r.fotoUri ? (
+                  <Image source={{ uri: r.fotoUri }} style={styles.miniatura} />
+                ) : (
+                  <View style={[styles.miniatura, styles.semFoto]}>
+                    <Camera size={16} color={colors.textSecondary} strokeWidth={1.5} />
+                  </View>
+                )}
+                <View style={{ flex: 1, marginLeft: spacing.md }}>
+                  <ThemedText variant="body" color="text" numberOfLines={2}>
+                    {tp === 'outro' && r.tipoPersonalizado ? `${r.tipoPersonalizado}: ` : ''}
+                    {r.nome}
+                  </ThemedText>
+                  <ThemedText variant="caption" color="textSecondary">
+                    {r.horario} · {textoNutrientes(t, r)}
+                  </ThemedText>
+                </View>
+                <ChevronRight size={16} color={colors.textSecondary} strokeWidth={2} />
+              </Pressable>
+            ))}
+          </ThemedView>
+        ))
+      )}
+
+      {/* Água (só no dia de hoje) */}
+      {dia === hoje && (
+        <ThemedView variant="surface" style={[styles.card, styles.cardShadow]}>
+          <View style={styles.cabecalhoTipo}>
+            <ThemedText variant="subheading" color="text" style={{ flex: 1 }}>{t('d.agua')}</ThemedText>
             {aguasHoje.length > 0 && (
               <Pressable onPress={() => setMostrarListaAgua((v) => !v)}>
-                <ThemedText variant="small" color="accent">
-                  {mostrarListaAgua ? t('d.ocultar') : t('d.ver')}
-                </ThemedText>
+                <ThemedText variant="small" color="accent">{mostrarListaAgua ? t('d.ocultar') : t('d.ver')}</ThemedText>
               </Pressable>
             )}
           </View>
-          <ThemedText variant="title" color="accent" style={{ marginVertical: spacing.sm }}>
-            {aguaHojeMl} ml
-          </ThemedText>
-          <View style={styles.aguaRow}>
+          <ThemedText variant="title" color="accent" style={{ marginVertical: spacing.sm }}>{aguaHojeMl} ml</ThemedText>
+          <View style={styles.chips}>
             {OPCOES_AGUA.map((ml) => (
-              <Pressable
-                key={ml}
-                style={styles.aguaChip}
-                onPress={() => adicionarAgua(ml)}
-              >
+              <Pressable key={ml} style={[styles.chip, { borderColor: colors.accent }]} onPress={() => adicionarAgua(ml)}>
                 <ThemedText variant="body" color="accent">+{ml} ml</ThemedText>
               </Pressable>
             ))}
           </View>
-
-          {mostrarListaAgua && (
-            <View style={styles.lista}>
-              {aguasHoje.map((a) => (
-                <View key={a.id} style={styles.itemLista}>
-                  <ThemedText variant="body" color="text">{a.horario} · {a.ml} ml</ThemedText>
-                  <Pressable onPress={() => removerAgua(a.id)} style={styles.removerBotao}>
-                    <X size={16} color={colors.textSecondary} strokeWidth={2} />
-                  </Pressable>
-                </View>
-              ))}
-            </View>
-          )}
+          {mostrarListaAgua &&
+            aguasHoje.map((a) => (
+              <View key={a.id} style={styles.itemAgua}>
+                <ThemedText variant="body" color="text">{a.horario} · {a.ml} ml</ThemedText>
+                <Pressable onPress={() => removerAgua(a.id)} hitSlop={8}>
+                  <X size={16} color={colors.textSecondary} strokeWidth={2} />
+                </Pressable>
+              </View>
+            ))}
         </ThemedView>
+      )}
 
-        {/* Refeições */}
-        <ThemedView variant="surface" style={[styles.card, styles.cardShadow]}>
-          <View style={styles.refeicoesHeader}>
-            <ThemedText variant="subheading" color="text">{t('d.refeicoes')}</ThemedText>
-            {!mostrarForm && (
-              <View style={{ flexDirection: 'row' }}>
-                <Button
-                  label={t('titulos.receitas')}
-                  variant="outline"
-                  size="sm"
-                  onPress={() => router.push('/recipe-builder')}
-                  style={{ marginRight: spacing.sm }}
-                />
-                <Button label={t('d.adicionar')} variant="outline" size="sm" onPress={() => setMostrarForm(true)} />
-              </View>
-            )}
-          </View>
-
-          {mostrarForm && (
-            <View style={styles.form}>
-              <Input
-                value={nome}
-                onChangeText={setNome}
-                placeholder={t('d.nomeRefeicao')}
-                style={styles.formInput}
-                autoFocus
-              />
-
-              {(sugestoesPersonalizadas.length > 0 || sugestoes.length > 0) && (
-                <View style={styles.sugestoes}>
-                  {sugestoesPersonalizadas.map((r) => (
-                    <Pressable
-                      key={`personalizada-${r.id}`}
-                      style={styles.sugestaoItem}
-                      onPress={() => escolherReceitaPersonalizada(r)}
-                    >
-                      <ThemedText variant="small" color="text">{t('d.suaReceita', { nome: r.nome })}</ThemedText>
-                      <ThemedText variant="small" color="textSecondary">
-                        {t('d.valores100', { kcal: r.kcalPor100g, prot: r.proteinaGPor100g })}
-                      </ThemedText>
-                    </Pressable>
-                  ))}
-                  {sugestoes.map((s) => (
-                    <Pressable
-                      key={s.nome}
-                      style={styles.sugestaoItem}
-                      onPress={() => escolherSugestao(s)}
-                    >
-                      <ThemedText variant="small" color="text">{s.nome}</ThemedText>
-                      <ThemedText variant="small" color="textSecondary">
-                        {t('d.valores', { kcal: s.kcal, prot: s.proteinaG })}
-                      </ThemedText>
-                    </Pressable>
-                  ))}
-                </View>
-              )}
-
-              <View style={styles.formRow}>
-                <View style={styles.formCol}>
-                  <Input
-                    value={kcal}
-                    onChangeText={setKcal}
-                    placeholder={t('home.kcal')}
-                    keyboardType="number-pad"
-                    style={styles.formInput}
-                  />
-                </View>
-                <View style={styles.formCol}>
-                  <Input
-                    value={proteina}
-                    onChangeText={setProteina}
-                    placeholder={t('home.proteina')}
-                    keyboardType="number-pad"
-                    style={styles.formInput}
-                  />
-                </View>
-              </View>
-              <View style={styles.formButtons}>
-                <Button
-                  label={t('comum.cancelar')}
-                  variant="outline"
-                  size="sm"
-                  onPress={() => setMostrarForm(false)}
-                  style={{ marginRight: spacing.sm }}
-                />
-                <Button
-                  label={t('comum.salvar')}
-                  variant="primary"
-                  size="sm"
-                  onPress={handleAdicionarRefeicao}
-                  disabled={!formValido}
-                />
-              </View>
-            </View>
-          )}
-
-          {refeicoesHoje.length === 0 && !mostrarForm ? (
-            <ThemedText variant="body" color="textSecondary" style={{ marginTop: spacing.md }}>
-              {t('d.vazio')}
-            </ThemedText>
+      {/* Histórico de 30 dias */}
+      <ThemedView variant="surface" style={[styles.card, styles.cardShadow]}>
+        <Pressable onPress={() => setMostrarHistorico((v) => !v)} style={styles.cabecalhoTipo} hitSlop={6}>
+          <CalendarDays size={18} color={colors.primary} strokeWidth={2} />
+          <ThemedText variant="subheading" color="text" style={{ flex: 1, marginLeft: spacing.xs }}>{t('ali.historico')}</ThemedText>
+          {mostrarHistorico ? (
+            <ChevronUp size={18} color={colors.textSecondary} strokeWidth={2} />
           ) : (
-            <View style={styles.lista}>
-              {refeicoesHoje.map((r) => (
-                <View key={r.id} style={styles.itemRefeicao}>
-                  <View style={{ flex: 1 }}>
-                    <ThemedText variant="body" color="text">{r.nome}</ThemedText>
-                    <ThemedText variant="small" color="textSecondary">
-                      {r.horario} · {t('d.valores', { kcal: r.kcal, prot: r.proteinaG })}
-                    </ThemedText>
-                  </View>
-                  <Pressable onPress={() => removerRefeicao(r.id)} style={styles.removerBotao}>
-                    <X size={16} color={colors.textSecondary} strokeWidth={2} />
-                  </Pressable>
-                </View>
-              ))}
-            </View>
+            <ChevronDown size={18} color={colors.textSecondary} strokeWidth={2} />
           )}
-        </ThemedView>
+        </Pressable>
+        {historico.length === 0 ? (
+          <ThemedText variant="small" color="textSecondary">{t('ali.historicoVazio')}</ThemedText>
+        ) : (
+          <ThemedText variant="small" color="textSecondary">
+            {t('ali.media', {
+              n: historico.length,
+              kcal: media((d) => d.kcal),
+              prot: media((d) => d.proteinaG),
+              carb: media((d) => d.carboidratoG),
+              gord: media((d) => d.gorduraG),
+              fibra: media((d) => d.fibraG),
+            })}
+          </ThemedText>
+        )}
+        {mostrarHistorico &&
+          historico.map((d) => (
+            <Pressable key={d.data} onPress={() => setDia(d.data)} style={[styles.refeicao, d.data === dia && { backgroundColor: colors.primarySoft }]}>
+              <View style={{ flex: 1 }}>
+                <ThemedText variant="body" color="text">{rotuloDe(d.data)}</ThemedText>
+                <ThemedText variant="caption" color="textSecondary">{textoNutrientes(t, d)}</ThemedText>
+              </View>
+              <ChevronRight size={16} color={colors.textSecondary} strokeWidth={2} />
+            </Pressable>
+          ))}
       </ThemedView>
-    </ScrollView>
+
+      <Pressable onPress={() => router.push('/recipe-builder')} style={styles.linkReceitas}>
+        <BookOpen size={16} color={colors.primary} strokeWidth={2} />
+        <ThemedText variant="body" color="primary" style={{ marginLeft: spacing.xs }}>{t('titulos.receitas')}</ThemedText>
+      </Pressable>
+    </TelaRolavel>
+  );
+}
+
+function Total({ valor, rotulo, cor }: { valor: number; rotulo: string; cor: 'primary' | 'secondary' | 'accent' }) {
+  return (
+    <View style={{ flex: 1, alignItems: 'center' }}>
+      <ThemedText variant="heading" color={cor}>{valor}</ThemedText>
+      <ThemedText variant="caption" color="textSecondary">{rotulo}</ThemedText>
+    </View>
   );
 }
 
 const styles = estilosTema(() => ({
-  container: { flex: 1 },
-  header: { marginBottom: spacing['2xl'] },
   card: { padding: spacing.lg, marginBottom: spacing.lg, borderRadius: radius.xl },
   cardShadow: {
     shadowColor: colors.text,
@@ -251,50 +230,35 @@ const styles = estilosTema(() => ({
     shadowRadius: 12,
     elevation: 2,
   },
-  aguaHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  aguaRow: { flexDirection: 'row', marginTop: spacing.sm },
-  aguaChip: {
-    borderWidth: 1,
-    borderColor: colors.accent,
+  navDia: { flexDirection: 'row', alignItems: 'center', marginBottom: spacing.md },
+  navBotao: { padding: spacing.xs, borderRadius: radius.full, backgroundColor: colors.primarySoft },
+  totais: { flexDirection: 'row' },
+  chips: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs },
+  chip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 6,
+    paddingHorizontal: spacing.md,
     borderRadius: radius.full,
-    paddingVertical: spacing.sm,
-    paddingHorizontal: spacing.md,
-    marginRight: spacing.sm,
-  },
-  refeicoesHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  form: { marginTop: spacing.md },
-  formInput: { textAlign: 'left', marginBottom: spacing.sm },
-  sugestoes: {
     borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: radius.md,
-    marginBottom: spacing.sm,
-    overflow: 'hidden',
+    borderColor: colors.primary,
   },
-  sugestaoItem: {
-    paddingVertical: spacing.sm,
-    paddingHorizontal: spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-  },
-  formRow: { flexDirection: 'row', gap: spacing.sm },
-  formCol: { flex: 1 },
-  formButtons: { flexDirection: 'row', marginTop: spacing.sm },
-  lista: { marginTop: spacing.md },
-  itemRefeicao: {
+  cabecalhoTipo: { flexDirection: 'row', alignItems: 'center', marginBottom: spacing.xs },
+  refeicao: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: spacing.sm,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
   },
-  itemLista: {
+  miniatura: { width: 48, height: 48, borderRadius: radius.md },
+  semFoto: { alignItems: 'center', justifyContent: 'center', backgroundColor: colors.primarySoft },
+  itemAgua: {
     flexDirection: 'row',
-    alignItems: 'center',
     justifyContent: 'space-between',
     paddingVertical: spacing.sm,
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
   },
-  removerBotao: { padding: spacing.sm },
+  linkReceitas: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', padding: spacing.lg },
 }));

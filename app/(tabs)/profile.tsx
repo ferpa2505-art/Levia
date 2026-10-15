@@ -1,6 +1,8 @@
 import { useState } from 'react';
-import { View, ScrollView } from 'react-native';
-import { Target, Pencil } from 'lucide-react-native';
+import { View, ScrollView, TouchableOpacity, Pressable } from 'react-native';
+import { TelaRolavel } from '@components/TelaRolavel';
+import { Target, Pencil, Crown, ChevronRight } from 'lucide-react-native';
+import { useRouter } from 'expo-router';
 import { ThemedView } from '@components/ThemedView';
 import { ThemedText } from '@components/ThemedText';
 import { Button } from '@components/Button';
@@ -9,9 +11,14 @@ import { useProfile } from '@context/ProfileContext';
 import { useRecords } from '@context/RecordsContext';
 import { colors, spacing, radius } from '@constants/colors';
 import { useT } from '@context/PreferencesContext';
+import { MensagemErro } from '@components/forms/MensagemErro';
 import { estilosTema } from '@theme/estilos';
+import { ListaMedicacoes } from '@components/ListaMedicacoes';
+import { CartaoMeusDados } from '@components/CartaoMeusDados';
+import { CartaoSeguranca } from '@components/seguranca/CartaoSeguranca';
 
 export default function ProfileScreen() {
+  const router = useRouter();
   const t = useT();
   const { profile, updateProfile, salvarAlteracoes } = useProfile();
   const { pesoAtualKg } = useRecords();
@@ -20,6 +27,8 @@ export default function ProfileScreen() {
   const [metaTexto, setMetaTexto] = useState(
     profile.metaPesoKg != null ? String(profile.metaPesoKg) : ''
   );
+
+  const erroMeta = metaTexto.trim() && !(parseFloat(metaTexto.replace(',', '.')) >= 20 && parseFloat(metaTexto.replace(',', '.')) <= 400) ? t('form.erroPeso') : null;
 
   async function handleSalvarMeta() {
     const novaMeta = parseFloat(metaTexto.replace(',', '.'));
@@ -31,7 +40,7 @@ export default function ProfileScreen() {
   }
 
   return (
-    <ScrollView style={{ flex: 1, backgroundColor: colors.background }} contentContainerStyle={{ padding: spacing.lg }}>
+    <TelaRolavel>
       <ThemedView style={styles.container}>
         <View style={styles.header}>
           <ThemedText variant="heading" color="text">
@@ -41,6 +50,8 @@ export default function ProfileScreen() {
             {t('perfil.subtitulo')}
           </ThemedText>
         </View>
+
+        <ListaMedicacoes />
 
         <ThemedView variant="surface" style={[styles.card, styles.cardShadow]}>
           <ThemedText variant="subheading" color="text" style={{ marginBottom: spacing.md }}>
@@ -81,16 +92,19 @@ export default function ProfileScreen() {
                 keyboardType="decimal-pad"
                 placeholder="0"
                 autoFocus
-                style={styles.metaInput}
+                style={[styles.metaInput, erroMeta && { borderColor: colors.error }]}
               />
               <ThemedText variant="body" color="textSecondary" style={{ marginLeft: spacing.sm }}>
                 kg
               </ThemedText>
               <View style={styles.editButtons}>
                 <Button label={t('comum.cancelar')} variant="outline" size="sm" onPress={() => setEditandoMeta(false)} style={{ marginRight: spacing.sm }} />
-                <Button label={t('comum.salvar')} variant="primary" size="sm" onPress={handleSalvarMeta} />
+                <Button label={t('comum.salvar')} variant="primary" size="sm" onPress={handleSalvarMeta} disabled={!!erroMeta} />
               </View>
             </View>
+          ) : null}
+          {editandoMeta ? (
+            <MensagemErro texto={erroMeta} />
           ) : (
             <ThemedText variant="title" color="primary" style={{ marginTop: spacing.sm }}>
               {profile.metaPesoKg != null ? `${profile.metaPesoKg} kg` : t('perfil.definaMeta')}
@@ -98,8 +112,11 @@ export default function ProfileScreen() {
           )}
         </ThemedView>
 
+
+        <CartaoSeguranca />
+        <CartaoMeusDados />
       </ThemedView>
-    </ScrollView>
+    </TelaRolavel>
   );
 }
 
@@ -160,5 +177,23 @@ const styles = estilosTema(() => ({
   editButtons: {
     flexDirection: 'row',
     marginTop: spacing.md,
+  },
+  premiumCard: {
+    backgroundColor: 'linear-gradient(135deg, #FFF9E6 0%, #FFF0D9 100%)',
+    borderWidth: 2,
+    borderColor: '#FFD700',
+  },
+  premiumContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+  },
+  premiumIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: '#FFE55C',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 }));

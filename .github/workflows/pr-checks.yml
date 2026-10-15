@@ -1,0 +1,40 @@
+name: PR checks
+
+on:
+  pull_request:
+    branches:
+      - main
+      - pwa-v0.4.0
+  push:
+    branches:
+      - main
+      - pwa-v0.4.0
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  worker-api-tests:
+    runs-on: ubuntu-26.04
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+      - run: npm run type-check
+      - run: npm test -- --runInBand --watch=false __tests__/ia-consentimento.test.ts
+
+      - run: npm test -- --runInBand --watch=false __tests__/worker-api-synthetic.test.ts
+
+      - run: |
+          if [ -f public/sw.js ]; then
+            node --check public/sw.js
+          fi
+          if [ -f worker/src/index.js ]; then
+            node --check worker/src/index.js
+          fi

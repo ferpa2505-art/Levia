@@ -1,0 +1,24 @@
+name = "levia-ia-worker"
+main = "src/index.js"
+compatibility_date = "2026-09-21"
+workers_dev = true
+preview_urls = false
+
+# Logs só com contagens e tempos — nunca a foto
+[observability]
+enabled = true
+
+[vars]
+GEMINI_MODEL = "gemini-3.8-flash"
+# grátis: fotos por instalação a cada 7 dias
+FOTOS_GRATIS_7D = "2"
+# teto de segurança da conta inteira por dia (protege o saldo pré-pago)
+MAX_FOTOS_DIA = "300"
+# por endereço IP, por hora
+MAX_FOTOS_IP_HORA = "20"
+
+[[kv_namespaces]]
+binding = "LEVIA_COTAS"
+id = "7cb6991665974b96b3d7ce447f067a9a"
+
+# Segredos (não ficam aqui): GEMINI_API_KEY, APP_TOKEN

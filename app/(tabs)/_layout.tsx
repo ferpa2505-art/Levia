@@ -1,11 +1,13 @@
 import { Tabs } from 'expo-router';
-import { Home, BookOpen, Dumbbell, Newspaper, User } from 'lucide-react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Home, BookOpen, Dumbbell, Newspaper, HeartPulse, Droplet } from 'lucide-react-native';
 import { colors } from '@constants/colors';
 import { MenuOpcoes } from '@components/MenuOpcoes';
 import { useT } from '@context/PreferencesContext';
 
 export default function TabsLayout() {
   const t = useT();
+  const insets = useSafeAreaInsets();
 
   return (
     <Tabs
@@ -16,12 +18,14 @@ export default function TabsLayout() {
         tabBarStyle: {
           backgroundColor: colors.surface,
           borderTopColor: colors.border,
-          height: 62,
-          paddingBottom: 8,
-          paddingTop: 8,
+          // 76 dp de barra (antes 62) + espaço da barra de navegação do Android
+          height: 76 + insets.bottom,
+          paddingBottom: 12 + insets.bottom,
+          paddingTop: 10,
         },
+        tabBarIconStyle: { marginBottom: 2 },
         tabBarLabelStyle: {
-          fontSize: 12,
+          fontSize: 12.5,
           fontWeight: '600',
         },
         headerStyle: {
@@ -57,6 +61,16 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
+        name="diabetes"
+        options={{
+          title: t('abas.diabetes') || 'Diabetes',
+          tabBarLabel: t('abas.diabetes') || 'Diabetes',
+          tabBarIcon: ({ color, focused, size }) => (
+            <Droplet size={size} color={color} strokeWidth={focused ? 2.5 : 2} />
+          ),
+        }}
+      />
+      <Tabs.Screen
         name="exercises"
         options={{
           title: t('abas.exercicios'),
@@ -79,10 +93,10 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="profile"
         options={{
-          title: t('abas.perfil'),
-          tabBarLabel: t('abas.perfil'),
+          title: t('abas.saude'),
+          tabBarLabel: t('abas.saude'),
           tabBarIcon: ({ color, focused, size }) => (
-            <User size={size} color={color} strokeWidth={focused ? 2.5 : 2} />
+            <HeartPulse size={size} color={color} strokeWidth={focused ? 2.5 : 2} />
           ),
         }}
       />

@@ -1,10 +1,12 @@
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import { createContext, useContext, useEffect, useState, ReactNode, useRef } from 'react';
 import {
   Glp1Data,
   glp1DadosVazios,
   RegistroDoseGLP1,
   RegistroSintomaGLP1,
   NivelIntensidadeSintoma,
+  NivelApetite,
+  RegistroApetite,
 } from '@models/glp1';
 import { carregarGlp1, salvarGlp1 } from '@utils/glp1Storage';
 import { dataDeHoje, horarioAgora, gerarId } from '@utils/recordsStorage';
@@ -62,6 +64,11 @@ interface Glp1ContextValue {
     observacoes?: string
   ) => Promise<void>;
   removerSintoma: (id: string) => Promise<void>;
+  /** Mais recente primeiro */
+  apetites: RegistroApetite[];
+  apetiteHoje: RegistroApetite | null;
+  registrarApetite: (nivel: NivelApetite, observacoes?: string) => Promise<void>;
+  removerApetite: (id: string) => Promise<void>;
   atualizarConfigCaneta: (mgTotalCaneta: number | null, cliquesTotaisCaneta: number | null) => Promise<void>;
   atualizarConfigLembrete: (ativo: boolean, frequenciaDias: number) => Promise<void>;
 }
@@ -70,16 +77,20 @@ const Glp1Context = createContext<Glp1ContextValue | undefined>(undefined);
 
 export function Glp1Provider({ children }: { children: ReactNode }) {
   const [dados, setDados] = useState<Glp1Data>(glp1DadosVazios);
+  // sempre a versão mais nova dos dados (evita perder registros em toques rápidos)
+  const dadosRef = useRef(dados);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     carregarGlp1().then((d) => {
+      dadosRef.current = d;
       setDados(d);
       setLoading(false);
     });
   }, []);
 
   async function persistir(novosDados: Glp1Data) {
+    dadosRef.current = novosDados;
     setDados(novosDados);
     await salvarGlp1(novosDados);
   }
@@ -138,13 +149,13 @@ export function Glp1Provider({ children }: { children: ReactNode }) {
       local,
       observacoes: observacoes?.trim() || undefined,
     };
-    const intermediario: Glp1Data = { ...dados, doses: [...dados.doses, nova] };
+    const intermediario: Glp1Data = { ...dadosRef.current, doses: [...dadosRef.current.doses, nova] };
     const configLembrete = await reagendarLembrete(intermediario);
     await persistir({ ...intermediario, configLembrete });
   }
 
   async function removerDose(id: string) {
-    const intermediario: Glp1Data = { ...dados, doses: dados.doses.filter((d) => d.id !== id) };
+    const intermediario: Glp1Data = { ...dadosRef.current, doses: dadosRef.current.doses.filter((d) => d.id !== id) };
     const configLembrete = await reagendarLembrete(intermediario);
     await persistir({ ...intermediario, configLembrete });
   }
@@ -162,21 +173,38 @@ export function Glp1Provider({ children }: { children: ReactNode }) {
       intensidade,
       observacoes: observacoes?.trim() || undefined,
     };
-    await persistir({ ...dados, sintomas: [...dados.sintomas, novo] });
+    await persistir({ ...dadosRef.current, sintomas: [...dadosRef.current.sintomas, novo] });
   }
 
   async function removerSintoma(id: string) {
-    await persistir({ ...dados, sintomas: dados.sintomas.filter((s) => s.id !== id) });
+    await persistir({ ...dadosRef.current, sintomas: dadosRef.current.sintomas.filter((s) => s.id !== id) });
+  }
+
+  // Um registro por dia: salvar de novo no mesmo dia substitui o anterior
+  async function registrarApetite(nivel: NivelApetite, observacoes?: string) {
+    const hoje = dataDeHoje();
+    const novo: RegistroApetite = {
+      id: gerarId(),
+      data: hoje,
+      horario: horarioAgora(),
+      nivel,
+      observacoes: observacoes?.trim() || undefined,
+    };
+    await persistir({ ...dadosRef.current, apetites: [...dadosRef.current.apetites.filter((a) => a.data !== hoje), novo] });
+  }
+
+  async function removerApetite(id: string) {
+    await persistir({ ...dadosRef.current, apetites: dadosRef.current.apetites.filter((a) => a.id !== id) });
   }
 
   async function atualizarConfigCaneta(mgTotalCaneta: number | null, cliquesTotaisCaneta: number | null) {
-    await persistir({ ...dados, configCaneta: { mgTotalCaneta, cliquesTotaisCaneta } });
+    await persistir({ ...dadosRef.current, configCaneta: { mgTotalCaneta, cliquesTotaisCaneta } });
   }
 
   async function atualizarConfigLembrete(ativo: boolean, frequenciaDias: number) {
     const intermediario: Glp1Data = {
-      ...dados,
-      configLembrete: { ...dados.configLembrete, ativo, frequenciaDias },
+      ...dadosRef.current,
+      configLembrete: { ...dadosRef.current.configLembrete, ativo, frequenciaDias },
     };
     const configLembrete = await reagendarLembrete(intermediario);
     await persistir({ ...intermediario, configLembrete });
@@ -198,6 +226,10 @@ export function Glp1Provider({ children }: { children: ReactNode }) {
         removerDose,
         adicionarSintoma,
         removerSintoma,
+        apetites: ordenarPorDataHorarioDesc(dados.apetites),
+        apetiteHoje: dados.apetites.find((a) => a.data === dataDeHoje()) ?? null,
+        registrarApetite,
+        removerApetite,
         atualizarConfigCaneta,
         atualizarConfigLembrete,
       }}

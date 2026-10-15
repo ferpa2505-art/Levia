@@ -16,8 +16,11 @@ type NotificationsModule = typeof import('expo-notifications');
 let notificationsModule: NotificationsModule | null = null;
 let jaTentouCarregar = false;
 
-function getNotifications(): NotificationsModule | null {
-  if (isExpoGo) return null;
+/** Na versão web (PWA) não há lembretes agendados pelo navegador. */
+const lembretesDisponiveis = Platform.OS !== 'web';
+
+export function getNotifications(): NotificationsModule | null {
+  if (isExpoGo || !lembretesDisponiveis) return null;
   if (jaTentouCarregar) return notificationsModule;
   jaTentouCarregar = true;
   try {
@@ -100,4 +103,4 @@ export async function agendarLembreteDose(dataProximaDose: Date): Promise<string
   }
 }
 
-export { isExpoGo };
+export { isExpoGo, lembretesDisponiveis };

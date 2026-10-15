@@ -19,6 +19,17 @@ export interface RegistroSintomaGLP1 {
   observacoes?: string;
 }
 
+/** 1 = sem fome ... 5 = muita fome */
+export type NivelApetite = 1 | 2 | 3 | 4 | 5;
+
+export interface RegistroApetite {
+  id: string;
+  data: string; // YYYY-MM-DD — um registro por dia
+  horario: string;
+  nivel: NivelApetite;
+  observacoes?: string;
+}
+
 export interface ConfiguracaoCaneta {
   mgTotalCaneta: number | null;
   cliquesTotaisCaneta: number | null;
@@ -33,6 +44,7 @@ export interface ConfiguracaoLembreteGLP1 {
 export interface Glp1Data {
   doses: RegistroDoseGLP1[];
   sintomas: RegistroSintomaGLP1[];
+  apetites: RegistroApetite[];
   configCaneta: ConfiguracaoCaneta;
   configLembrete: ConfiguracaoLembreteGLP1;
 }
@@ -40,6 +52,7 @@ export interface Glp1Data {
 export const glp1DadosVazios: Glp1Data = {
   doses: [],
   sintomas: [],
+  apetites: [],
   configCaneta: { mgTotalCaneta: null, cliquesTotaisCaneta: null },
   configLembrete: { ativo: false, frequenciaDias: 7, notificationId: null },
 };

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { View, ScrollView, StyleSheet, Pressable } from 'react-native';
+import { TelaRolavel } from '@components/TelaRolavel';
 import {
   Syringe,
   Calendar,
@@ -9,13 +10,16 @@ import {
   RotateCw,
   Info,
   X,
+  Utensils,
+  ChevronRight,
 } from 'lucide-react-native';
+import { useRouter } from 'expo-router';
 import { ThemedView } from '@components/ThemedView';
 import { ThemedText } from '@components/ThemedText';
 import { Button } from '@components/Button';
 import { Input } from '@components/Input';
 import { useGlp1 } from '@context/Glp1Context';
-import { isExpoGo } from '@utils/glp1Notifications';
+import { isExpoGo, lembretesDisponiveis } from '@utils/glp1Notifications';
 import {
   LOCAIS_APLICACAO,
   SINTOMAS_COMUNS,
@@ -25,6 +29,7 @@ import {
 } from '@constants/glp1';
 import { NivelIntensidadeSintoma } from '@models/glp1';
 import { colors, spacing, radius } from '@constants/colors';
+import { MensagemErro } from '@components/forms/MensagemErro';
 import { estilosTema } from '@theme/estilos';
 import { usePreferences } from '@context/PreferencesContext';
 
@@ -62,6 +67,7 @@ function formatarDataRegistro(dataIso: string, idioma: string): string {
 
 export default function Glp1Screen() {
   const { t, tc, idioma } = usePreferences();
+  const router = useRouter();
   // separador decimal do exemplo: vírgula ou ponto, conforme o idioma
   const exemploDecimal = (0.5).toLocaleString(idioma);
   const {
@@ -133,6 +139,10 @@ export default function Glp1Screen() {
   const [doseDesejadaTexto, setDoseDesejadaTexto] = useState('');
 
   const mgCanetaNum = parseFloat(mgCanetaTexto.replace(',', '.'));
+  const erroDosagem = dosagemTexto.trim() && !(parseFloat(dosagemTexto.replace(',', '.')) > 0 && parseFloat(dosagemTexto.replace(',', '.')) <= 50) ? t('form.erroNumero') : null;
+  const erroMgCaneta = mgCanetaTexto.trim() && !(parseFloat(mgCanetaTexto.replace(',', '.')) > 0 && parseFloat(mgCanetaTexto.replace(',', '.')) <= 100) ? t('form.erroNumero') : null;
+  const erroCliques = cliquesCanetaTexto.trim() && !(parseInt(cliquesCanetaTexto, 10) > 0 && parseInt(cliquesCanetaTexto, 10) <= 1000 && /^\d+$/.test(cliquesCanetaTexto.trim())) ? t('form.erroNumero') : null;
+  const erroDoseDesejada = doseDesejadaTexto.trim() && !(parseFloat(doseDesejadaTexto.replace(',', '.')) > 0 && parseFloat(doseDesejadaTexto.replace(',', '.')) <= 50) ? t('form.erroNumero') : null;
   const cliquesCanetaNum = parseInt(cliquesCanetaTexto, 10);
   const doseDesejadaNum = parseFloat(doseDesejadaTexto.replace(',', '.'));
 
@@ -157,7 +167,7 @@ export default function Glp1Screen() {
   }
 
   return (
-    <ScrollView style={{ flex: 1, backgroundColor: colors.background }} contentContainerStyle={{ padding: spacing.lg }}>
+    <TelaRolavel>
       <ThemedView style={styles.container}>
         <View style={styles.header}>
           <ThemedText variant="heading" color="text">{t('titulos.glp1')}</ThemedText>
@@ -165,6 +175,17 @@ export default function Glp1Screen() {
             {t('g.sub')}
           </ThemedText>
         </View>
+
+        <Pressable onPress={() => router.push('/apetite')}>
+          <ThemedView variant="surface" style={[styles.card, styles.cardShadow, styles.atalhoRow]}>
+            <Utensils size={18} color={colors.primary} strokeWidth={2} />
+            <View style={{ flex: 1, marginLeft: spacing.sm }}>
+              <ThemedText variant="subheading" color="text">{t('titulos.apetite')}</ThemedText>
+              <ThemedText variant="small" color="textSecondary">{t('g.apetiteDesc')}</ThemedText>
+            </View>
+            <ChevronRight size={20} color={colors.textSecondary} strokeWidth={2} />
+          </ThemedView>
+        </Pressable>
 
         {/* Próxima dose */}
         <ThemedView variant="surface" style={[styles.card, styles.cardShadow]}>
@@ -192,7 +213,10 @@ export default function Glp1Screen() {
               {formatarDiasRestantes(null, t)}
             </ThemedText>
           )}
-{configLembrete.ativo && isExpoGo && (
+          {/* Lembretes: só no app instalado (na versão web o navegador não dispara) */}
+          {lembretesDisponiveis && (
+            <>
+              {configLembrete.ativo && isExpoGo && (
   <ThemedText variant="caption" color="textSecondary" style={{ marginTop: spacing.sm }}>
     {t('g.expoGo')}
   </ThemedText>
@@ -231,6 +255,8 @@ export default function Glp1Screen() {
                 );
               })}
             </View>
+          )}
+            </>
           )}
         </ThemedView>
 
@@ -278,8 +304,9 @@ export default function Glp1Screen() {
                 onChangeText={setDosagemTexto}
                 placeholder={t('g.exemplo', { v: exemploDecimal })}
                 keyboardType="decimal-pad"
-                style={styles.formInput}
+                style={[styles.formInput, erroDosagem && { borderColor: colors.error }]}
               />
+              <MensagemErro texto={erroDosagem} />
 
               <ThemedText variant="small" color="textSecondary" style={styles.rotulo}>
                 {t('g.local')}
@@ -379,8 +406,9 @@ export default function Glp1Screen() {
                 onChangeText={setMgCanetaTexto}
                 placeholder={t('g.exemplo', { v: 5 })}
                 keyboardType="decimal-pad"
-                style={styles.formInput}
+                style={[styles.formInput, erroMgCaneta && { borderColor: colors.error }]}
               />
+              <MensagemErro texto={erroMgCaneta} />
             </View>
             <View style={styles.formCol}>
               <ThemedText variant="small" color="textSecondary" style={styles.rotulo}>
@@ -391,8 +419,9 @@ export default function Glp1Screen() {
                 onChangeText={setCliquesCanetaTexto}
                 placeholder={t('g.exemplo', { v: 60 })}
                 keyboardType="number-pad"
-                style={styles.formInput}
+                style={[styles.formInput, erroCliques && { borderColor: colors.error }]}
               />
+              <MensagemErro texto={erroCliques} />
             </View>
           </View>
 
@@ -413,9 +442,10 @@ export default function Glp1Screen() {
             onChangeText={setDoseDesejadaTexto}
             placeholder={t('g.exemplo', { v: exemploDecimal })}
             keyboardType="decimal-pad"
-            style={styles.formInput}
+            style={[styles.formInput, erroDoseDesejada && { borderColor: colors.error }]}
             editable={configCanetaValida}
           />
+          <MensagemErro texto={erroDoseDesejada} />
 
           {cliquesCalculados !== null && (
             <ThemedText variant="title" color="primary" style={{ marginTop: spacing.md }}>
@@ -536,7 +566,7 @@ export default function Glp1Screen() {
           )}
         </ThemedView>
       </ThemedView>
-    </ScrollView>
+    </TelaRolavel>
   );
 }
 
@@ -552,6 +582,7 @@ const styles = estilosTema(() => ({
     elevation: 2,
   },
   cardTituloRow: { flexDirection: 'row', alignItems: 'center' },
+  atalhoRow: { flexDirection: 'row', alignItems: 'center' },
   cardHeaderComBotao: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   lembreteRow: {
     flexDirection: 'row',

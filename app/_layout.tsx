@@ -1,19 +1,29 @@
+import '@utils/alertaWeb';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
-import { colors } from '@constants/colors';
+import { StatusBar } from 'expo-status-bar';
+import { colors, TEMAS_ESCUROS } from '@constants/colors';
 import { ProfileProvider, useProfile } from '@context/ProfileContext';
 import { RecordsProvider } from '@context/RecordsContext';
 import { CustomRecipesProvider } from '@context/CustomRecipesContext';
 import { NewsProvider } from '@context/NewsContext';
 import { Glp1Provider } from '@context/Glp1Context';
+import { DiabetesProvider } from '@context/DiabetesContext';
+import { MedicacoesProvider } from '@context/MedicacoesContext';
+import { SegurancaProvider, useSeguranca } from '@context/SegurancaContext';
+import { PortaoSeguranca } from '@components/seguranca/PortaoSeguranca';
+import { useVerificarAtualizacao } from '@hooks/useVerificarAtualizacao';
 import { PreferencesProvider, usePreferences } from '@context/PreferencesContext';
-import { OmniRouteProvider } from '@context/OmniRouteContext';
 
 SplashScreen.preventAutoHideAsync();
 
 function RootNavigation() {
-  const { profile, loading } = useProfile();
+  const { profile, loading: carregandoPerfil } = useProfile();
+  // não mostra nada do app antes de saber se precisa da tela de bloqueio
+  const { carregado: segurancaCarregada } = useSeguranca();
+  const loading = carregandoPerfil || !segurancaCarregada;
+  useVerificarAtualizacao(!loading);
   const { t } = usePreferences();
   const segments = useSegments();
   const router = useRouter();
@@ -34,6 +44,7 @@ function RootNavigation() {
   }
 
   return (
+    <>
     <Stack
       screenOptions={{
         headerShown: false,
@@ -48,7 +59,14 @@ function RootNavigation() {
       <Stack.Screen name="onboarding" options={{ headerShown: false }} />
       <Stack.Screen name="recipe-builder" options={{ headerShown: true, title: t('titulos.receitas') }} />
       <Stack.Screen name="glp1" options={{ headerShown: true, title: t('titulos.glp1') }} />
+      <Stack.Screen name="diabetes" options={{ headerShown: true, title: t('titulos.diabetes') }} />
+      <Stack.Screen name="peso" options={{ headerShown: true, title: t('titulos.peso') }} />
+      <Stack.Screen name="medicacao" options={{ headerShown: true, title: t('med.tituloTela') }} />
+      <Stack.Screen name="refeicao" options={{ headerShown: true, title: t('ref.titulo') }} />
+      <Stack.Screen name="apetite" options={{ headerShown: true, title: t('titulos.apetite') }} />
     </Stack>
+    <PortaoSeguranca />
+    </>
   );
 }
 
@@ -58,24 +76,33 @@ function RootNavigation() {
  */
 function NavegacaoComTema() {
   const { tema } = usePreferences();
-  return <RootNavigation key={tema} />;
+  return (
+    <>
+      <StatusBar style={TEMAS_ESCUROS.includes(tema) ? 'light' : 'dark'} />
+      <RootNavigation key={tema} />
+    </>
+  );
 }
 
 export default function RootLayout() {
   return (
     <PreferencesProvider>
       <ProfileProvider>
-        <OmniRouteProvider>
-          <RecordsProvider>
-            <CustomRecipesProvider>
-              <NewsProvider>
-                <Glp1Provider>
-                  <NavegacaoComTema />
-                </Glp1Provider>
-              </NewsProvider>
-            </CustomRecipesProvider>
-          </RecordsProvider>
-        </OmniRouteProvider>
+        <SegurancaProvider>
+        <RecordsProvider>
+          <CustomRecipesProvider>
+            <NewsProvider>
+              <Glp1Provider>
+                <DiabetesProvider>
+                  <MedicacoesProvider>
+                    <NavegacaoComTema />
+                  </MedicacoesProvider>
+                </DiabetesProvider>
+              </Glp1Provider>
+            </NewsProvider>
+          </CustomRecipesProvider>
+        </RecordsProvider>
+        </SegurancaProvider>
       </ProfileProvider>
     </PreferencesProvider>
   );

@@ -2,21 +2,83 @@
   "expo": {
     "name": "Leviã",
     "slug": "levia-app",
-    "version": "0.1.0",
+    "version": "0.4.0",
     "orientation": "portrait",
-    "assetBundlePatterns": ["**/*"],
+    "icon": "./assets/icon.png",
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
-      "bundleIdentifier": "com.levia.app"
+      "bundleIdentifier": "com.ferpa2505art.levia"
     },
     "android": {
-      "package": "com.levia.app"
+      "package": "com.ferpa2505art.levia",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#6FA58E"
+      },
+      "runtimeVersion": {
+        "policy": "appVersion"
+      },
+      "blockedPermissions": [
+        "com.google.android.gms.permission.AD_ID"
+      ]
     },
-    "plugins": ["expo-router", "expo-notifications"],
+    "plugins": [
+      "expo-router",
+      "expo-notifications",
+      "expo-font",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash-icon.png",
+          "imageWidth": 160,
+          "backgroundColor": "#6FA58E"
+        }
+      ],
+      [
+        "expo-calendar",
+        {
+          "calendarPermission": "O Leviã usa o calendário para criar lembretes dos seus medicamentos, se você ativar essa opção."
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "cameraPermission": "O Leviã usa a câmera para você fotografar seus pratos. A foto fica no seu aparelho, salvo se você pedir a análise opcional por IA.",
+          "photosPermission": "O Leviã acessa suas fotos para você escolher a foto de um prato. A foto fica no seu aparelho, salvo se você pedir a análise opcional por IA."
+        }
+      ],
+      "expo-sharing",
+      "expo-secure-store",
+      "expo-mail-composer",
+      [
+        "expo-local-authentication",
+        {
+          "faceIDPermission": "O Leviã usa o reconhecimento facial para desbloquear o app com segurança."
+        }
+      ]
+    ],
     "scheme": "levia",
     "extra": {
       "eas": {
-        "projectId": "levia-dev-project"
+        "projectId": "c19a5f1e-5fbd-4100-ad78-43b05b47a977"
       }
+    },
+    "owner": "ferpa2505-art",
+    "updates": {
+      "url": "https://u.expo.dev/c19a5f1e-5fbd-4100-ad78-43b05b47a977",
+      "checkAutomatically": "ON_LOAD",
+      "fallbackToCacheTimeout": 5000
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "single",
+      "favicon": "./public/icons/favicon.png",
+      "name": "Leviã",
+      "shortName": "Leviã",
+      "themeColor": "#6FA58E",
+      "backgroundColor": "#FBF8F3"
     }
   }
 }
