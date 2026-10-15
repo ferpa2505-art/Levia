@@ -29,10 +29,7 @@ jobs:
       - run: npm run type-check
       - run: npm test -- --runInBand --watch=false __tests__/ia-consentimento.test.ts
 
-      - run: |
-          if [ -f __tests__/worker-api-synthetic.test.ts ]; then
-            npm test -- --runInBand --watch=false __tests__/worker-api-synthetic.test.ts
-          fi
+      - run: npm test -- --runInBand --watch=false __tests__/worker-api-synthetic.test.ts
 
       - run: |
           if [ -f public/sw.js ]; then
