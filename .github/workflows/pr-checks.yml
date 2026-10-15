@@ -9,12 +9,13 @@ on:
     branches:
       - main
       - pwa-v0.4.0
+  workflow_dispatch:
 
 permissions:
   contents: read
 
 jobs:
-  checks:
+  worker-api-tests:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -27,6 +28,11 @@ jobs:
       - run: npm ci
       - run: npm run type-check
       - run: npm test -- --runInBand --watch=false __tests__/ia-consentimento.test.ts
+
+      - run: |
+          if [ -f __tests__/worker-api-synthetic.test.ts ]; then
+            npm test -- --runInBand --watch=false __tests__/worker-api-synthetic.test.ts
+          fi
 
       - run: |
           if [ -f public/sw.js ]; then
