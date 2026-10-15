@@ -554,7 +554,7 @@ const ptBR = {
   "ia.descartar": "Descartar",
   "ia.restantes": "Análises grátis restantes nesta semana: {n}",
   "ia.consentTitulo": "Analisar a foto com IA?",
-  "ia.consentMsg": "Com seu consentimento, a foto reduzida, um identificador aleatório da instalação, o idioma e dados técnicos como o IP são enviados ao servidor do Leviã na Cloudflare e encaminhados ao Google Gemini para identificar os alimentos. Seu nome, peso, glicemia, medicações e outros registros não vão junto. A foto não fica guardada pelo Leviã; o Google pode retê-la por tempo limitado para prestar o serviço e detectar abuso. Não fotografe rostos nem documentos.",
+   "ia.consentMsg": "Ao tocar em Concordo, enviamos estes dados ao servidor do Leviã na Cloudflare e ao Google Gemini, só para identificar os alimentos: uma cópia reduzida da foto do prato, um identificador aleatório desta instalação, o idioma e dados técnicos, como o IP. Seu nome, peso, glicemia, medicamentos e outros registros não são enviados. O Leviã não guarda a foto. O Google pode retê-la por tempo limitado, para prestar o serviço e evitar abusos. Não fotografe rostos nem documentos. A análise é opcional: você pode cancelar e registrar tudo manualmente.",
   "ia.consentOk": "Concordo, analisar",
   "ia.cotaTitulo": "Análises grátis usadas",
   "ia.cotaMsg": "Você já usou as análises grátis desta semana. Elas voltam em {data}. Enquanto isso, registre buscando o alimento pelo nome.",
