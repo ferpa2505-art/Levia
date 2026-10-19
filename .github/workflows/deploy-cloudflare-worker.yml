@@ -3,7 +3,7 @@ name: Deploy Worker (levia-ia-worker)
 on:
   push:
     branches:
-      - pwa-v0.4.0
+      - main
     paths:
       - "worker/**"
       - ".github/workflows/deploy-cloudflare-worker.yml"
