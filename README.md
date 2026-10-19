@@ -289,4 +289,4 @@ Consulte a documentação em `docs/` ou veja os comentários no código.
 
 **"Mais leve a cada dia" 🍃**
 
-Última atualização: 21/09/2026
+Última atualização: 20/10/2026
