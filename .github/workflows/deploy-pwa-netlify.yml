@@ -53,7 +53,7 @@ jobs:
           NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
         run: >
           npx --yes netlify-cli@17.38.1 deploy
-          --prod --no-build --dir dist
+          --prod --dir dist
           --message "main ${GITHUB_SHA::7}"
 
       - name: Conferir o site no ar
