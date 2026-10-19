@@ -1,3 +1,5 @@
+import { iniciarTeste } from './licencas';
+
 /**
  * levia-ia-worker — análise de foto do prato para o app Leviã.
  *
@@ -144,7 +146,6 @@ async function perguntarAoGemini(env, imagemBase64, idioma) {
   const dados = await r.json();
   const texto = dados?.candidates?.[0]?.content?.parts?.find((p) => typeof p.text === 'string')?.text;
   const uso = dados?.usageMetadata ?? {};
-  // só números: base do estudo de custo por foto
   console.log('uso', modelo, uso.promptTokenCount, uso.candidatesTokenCount, uso.thoughtsTokenCount ?? 0);
   try {
     const res = JSON.parse(texto);
@@ -187,18 +188,14 @@ async function analisarPrato(request, env) {
   const ip = request.headers.get('cf-connecting-ip') ?? 'sem-ip';
   const hora = new Date().toISOString().slice(0, 13);
 
-  // 1) teto da conta inteira por dia — protege o saldo
   const chaveDia = `dia:${dia}`;
   const usadosDia = await lerNumero(kv, chaveDia);
   if (usadosDia >= Number(env.MAX_FOTOS_DIA || 300)) return json({ erro: 'limite_servico' }, 429);
 
-  // 2) limite por IP por hora — freia robôs que inventam ids de instalação
   const chaveIp = `ip:${ip}:${hora}`;
   const usadosIp = await lerNumero(kv, chaveIp);
   if (usadosIp >= Number(env.MAX_FOTOS_IP_HORA || 20)) return json({ erro: 'muitas_tentativas' }, 429);
 
-  // 3) cota grátis da instalação: N fotos a cada 7 dias (janela móvel)
-  // TODO(v0.4.x): assinante confirmado no RevenueCat ganha cota maior
   const chaveInst = `inst:${instalacao}`;
   const historico = ((await kv.get(chaveInst, 'json')) ?? []).filter((t) => agora - t < SETE_DIAS_MS);
   const limite = Number(env.FOTOS_GRATIS_7D || 2);
@@ -210,7 +207,6 @@ async function analisarPrato(request, env) {
   const resultado = await perguntarAoGemini(env, imagem, idioma);
   if (!resultado || resultado.falha) return json({ erro: 'falha_ia', motivo: resultado?.falha }, 502);
 
-  // só conta a foto quando a IA respondeu
   historico.push(agora);
   await Promise.all([
     kv.put(chaveInst, JSON.stringify(historico), { expirationTtl: 8 * 24 * 3600 }),
@@ -227,6 +223,14 @@ export default {
     const origem = request.headers.get('Origin');
     if (pathname === '/v1/analisar-prato' && request.method === 'OPTIONS') {
       return new Response(null, { status: 204, headers: cabecalhosCors(origem) });
+    }
+    if (pathname === '/v1/teste/iniciar' && request.method === 'POST') {
+      try {
+        return iniciarTeste(request, env);
+      } catch (e) {
+        console.error('erro teste', e?.message);
+        return json({ erro: 'interno' }, 500);
+      }
     }
     if (pathname === '/v1/analisar-prato' && request.method === 'POST') {
       try {
