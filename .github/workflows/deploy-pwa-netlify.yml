@@ -1,0 +1,63 @@
+name: Deploy PWA (Netlify)
+
+on:
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - "worker/**"
+      - "docs/**"
+      - "screenshots/**"
+      - "**/*.md"
+      - ".github/workflows/deploy-cloudflare-worker.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-levia-pwa
+  cancel-in-progress: false
+
+jobs:
+  build-deploy:
+    runs-on: ubuntu-26.04
+    environment:
+      name: production
+      url: https://levia-app.netlify.app
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+      - run: npm run type-check
+      - run: npm test -- --runInBand --watch=false __tests__/ia-consentimento.test.ts
+
+      - name: Gerar a PWA
+        run: npx expo export --platform web --output-dir dist
+
+      - name: Conferir arquivos da PWA
+        run: |
+          for f in index.html manifest.webmanifest sw.js _redirects _headers icons/icon-192.png icons/icon-512.png; do
+            test -f "dist/$f" || { echo "Faltando dist/$f"; exit 1; }
+          done
+          node --check dist/sw.js
+
+      - name: Publicar no Netlify
+        env:
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
+        run: >
+          npx --yes netlify-cli@17.38.1 deploy
+          --prod --no-build --dir dist
+          --message "main ${GITHUB_SHA::7}"
+
+      - name: Conferir o site no ar
+        run: |
+          curl -fsS https://levia-app.netlify.app/ | grep -q '<title>Leviã</title>'
+          curl -fsS https://levia-app.netlify.app/manifest.webmanifest | grep -q '"short_name"'
+          curl -fsS https://levia-app.netlify.app/sw.js | grep -q 'levia-v'
