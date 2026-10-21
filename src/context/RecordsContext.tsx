@@ -27,6 +27,8 @@ interface RecordsContextValue {
   refeicoesHoje: Refeicao[];
   aguasHoje: RegistroAgua[];
   aguaHojeMl: number;
+  /** Toda a água registrada (gráficos e relatórios) */
+  aguas: RegistroAgua[];
   kcalHoje: number;
   proteinaHojeG: number;
   pesoAtualKg: number | null;
@@ -238,6 +240,7 @@ export function RecordsProvider({ children }: { children: ReactNode }) {
         refeicoesHoje,
         aguasHoje,
         aguaHojeMl,
+        aguas: dados.aguas,
         kcalHoje,
         proteinaHojeG,
         pesoAtualKg,

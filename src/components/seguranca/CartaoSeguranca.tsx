@@ -137,6 +137,10 @@ export function CartaoSeguranca() {
         <ThemedText variant="body" color="text" style={{ flex: 1 }}>{t('seg.relMensal')}</ThemedText>
         <Switch value={seg.config.relatorioMensal} onValueChange={(v) => seg.atualizarConfig({ relatorioMensal: v })} trackColor={{ true: colors.primary, false: colors.border }} />
       </View>
+      <View style={styles.linha}>
+        <ThemedText variant="body" color="text" style={{ flex: 1 }}>{t('seg.relResumoDiario')}</ThemedText>
+        <Switch value={seg.config.relatorioResumoDiario !== false} onValueChange={(v) => seg.atualizarConfig({ relatorioResumoDiario: v })} trackColor={{ true: colors.primary, false: colors.border }} />
+      </View>
       <ThemedText variant="caption" color="textSecondary" style={{ marginTop: spacing.xs }}>{t('seg.relComoFunciona')}</ThemedText>
       <Pressable onPress={enviarAgora} disabled={enviando} style={styles.enviar}>
         {enviando ? <ActivityIndicator color={colors.primary} /> : <Send size={16} color={colors.primary} strokeWidth={2} />}

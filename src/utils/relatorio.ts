@@ -9,6 +9,8 @@ import { carregarGlp1 } from '@utils/glp1Storage';
 import { valorMgDl, momentoGlicemia, media } from '@utils/glicemia';
 import { rotuloUnidade, Medicacao, MedicacoesData } from '@models/medicacoes';
 import { suspenderBloqueio } from '@utils/bloqueioSuspenso';
+import { carregarConfigSeguranca } from '@utils/seguranca';
+import { somarNutrientes } from '@models/ingredients';
 
 /**
  * Relatório em PDF para levar à consulta: peso, glicemia, medicações,
@@ -61,12 +63,13 @@ function resumo(itens: [string, string | number][]) {
 }
 
 export async function montarHtmlRelatorio(dias: number): Promise<string> {
-  const [perfil, registros, diabetes, glp1, medsRaw] = await Promise.all([
+  const [perfil, registros, diabetes, glp1, medsRaw, seg] = await Promise.all([
     carregarPerfil(),
     carregarRegistros(),
     carregarDiabetes(),
     carregarGlp1(),
     AsyncStorage.getItem('levia:medicacoes'),
+    carregarConfigSeguranca(),
   ]);
   const meds: Medicacao[] = medsRaw ? ((JSON.parse(medsRaw) as MedicacoesData).medicacoes ?? []) : [];
   const idioma = obterIdiomaAtual();
@@ -98,6 +101,39 @@ export async function montarHtmlRelatorio(dias: number): Promise<string> {
   const mediaDia = (f: (r: (typeof refeicoes)[number]) => number) =>
     diasComRefeicao ? Math.round(refeicoes.reduce((s, r) => s + f(r), 0) / diasComRefeicao) : 0;
 
+  // --- Resumo de cada dia (opcional, ligado por padrão) ---
+  const comResumoDiario = seg.relatorioResumoDiario !== false;
+  const linhasDiarias: (string | number)[][] = [];
+  if (comResumoDiario) {
+    const d = new Date(inicio);
+    while (isoLocal(d) <= hojeIso) {
+      const iso = isoLocal(d);
+      d.setDate(d.getDate() + 1);
+      const refs = refeicoes.filter((r) => r.data === iso);
+      const n = somarNutrientes(refs);
+      const aguaMl = registros.aguas.filter((a) => a.data === iso).reduce((s, a) => s + a.ml, 0);
+      const exKcal = registros.exercicios.filter((e) => e.data === iso).reduce((s, e) => s + e.kcalGasto, 0);
+      const peso = registros.pesos.find((p) => p.data === iso)?.pesoKg;
+      const glicDia = glic.filter((g) => g.data === iso);
+      const dosesDia = doses.filter((x) => x.data === iso);
+      if (!refs.length && !aguaMl && !exKcal && peso == null && !glicDia.length && !dosesDia.length) continue;
+      const g1 = (v: number | undefined) => (v == null ? '–' : Math.round(v));
+      linhasDiarias.push([
+        dataBR(iso),
+        refs.length ? n.kcal : '–',
+        refs.length ? g1(n.proteinaG) : '–',
+        refs.length ? g1(n.carboidratoG) : '–',
+        refs.length ? g1(n.gorduraG) : '–',
+        refs.length ? g1(n.fibraG) : '–',
+        aguaMl || '–',
+        exKcal ? Math.round(exKcal) : '–',
+        peso ?? '–',
+        glicDia.length ? glicDia.map((g) => `${g.horario} ${valorMgDl(g)}`).join(' · ') : '–',
+        dosesDia.length ? dosesDia.map((x) => `${x.medicamento} ${x.dosagemMg} mg`).join(' · ') : '–',
+      ]);
+    }
+  }
+
   const nome = perfil.nome || perfil.comoChamar || '';
   const geradoEm = new Date().toLocaleString(idioma, { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 
@@ -115,6 +151,7 @@ export async function montarHtmlRelatorio(dias: number): Promise<string> {
   table { width: 100%; border-collapse: collapse; margin-top: 6px; font-size: 9.5pt; }
   th { text-align: left; background: #EEF4F1; padding: 5px; } td { padding: 4px 5px; border-bottom: 1px solid #EDF0EE; }
   .vazio { color: #8B938F; font-style: italic; }
+  table.diario { font-size: 8pt; } table.diario td, table.diario th { padding: 3px 4px; }
   .aviso { margin-top: 26px; font-size: 8.5pt; color: #6B746F; border-top: 1px solid #DCE6E0; padding-top: 8px; }
 </style></head><body>
 <h1>${esc(t('rel.titulo'))}</h1>
@@ -171,7 +208,18 @@ ${resumo([
     [t('rel.kcalDia'), diasComRefeicao ? mediaDia((r) => r.kcal) : '–'],
     [t('rel.protDia'), diasComRefeicao ? mediaDia((r) => r.proteinaG) : '–'],
     [t('rel.carbDia'), diasComRefeicao ? mediaDia((r) => r.carboidratoG ?? 0) : '–'],
+    [t('rel.gordDia'), diasComRefeicao ? mediaDia((r) => r.gorduraG ?? 0) : '–'],
+    [t('rel.fibraDia'), diasComRefeicao ? mediaDia((r) => r.fibraG ?? 0) : '–'],
   ])}
+${
+    comResumoDiario
+      ? `<h2>${esc(t('rel.resumoDiario'))}</h2>${tabela(
+          [t('rel.data'), 'kcal', t('rel.colProt'), t('rel.colCarb'), t('rel.colGord'), t('rel.colFibra'), t('rel.colAgua'), t('rel.colExerc'), 'kg', t('rel.colGlic'), 'GLP-1'],
+          linhasDiarias,
+          t('rel.semRegistros')
+        ).replace('<table>', '<table class="diario">')}`
+      : ''
+  }
 
 <p class="aviso">${esc(t('rel.aviso'))}</p>
 </body></html>`;

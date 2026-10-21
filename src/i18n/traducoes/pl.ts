@@ -1,6 +1,6 @@
-import type { Traducoes } from './pt-BR';
+import type { TraducoesParciais } from './pt-BR';
 
-const traducoes: Traducoes = {
+const traducoes: TraducoesParciais = {
   "comum.continuar": "Dalej",
   "comum.voltar": "← Wstecz",
   "comum.cancelar": "Anuluj",

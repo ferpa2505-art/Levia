@@ -6,6 +6,9 @@ export type TipoRefeicao = (typeof TIPOS_REFEICAO)[number];
 export interface ItemRefeicao {
   nome: string;
   gramas?: number;
+  /** Medida escolhida pela pessoa (ex.: 2 colher_sopa = 30 g) */
+  quantidade?: number;
+  unidade?: string;
   kcal: number;
   proteinaG: number;
   carboidratoG?: number;

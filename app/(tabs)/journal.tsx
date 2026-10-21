@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { View, Pressable, Image } from 'react-native';
 import { useRouter } from 'expo-router';
-import { ChevronLeft, ChevronRight, Plus, X, BookOpen, Camera, CalendarDays, ChevronDown, ChevronUp } from 'lucide-react-native';
+import { ChevronLeft, ChevronRight, Plus, X, BookOpen, Camera, CalendarDays, ChevronDown, ChevronUp, ChartColumn } from 'lucide-react-native';
 import { Dica } from '@components/Dica';
 import { textoNutrientes } from '@utils/textoNutrientes';
 import { TelaRolavel } from '@components/TelaRolavel';
@@ -84,6 +84,15 @@ export default function AlimentacaoScreen() {
         <Total valor={Math.round(total.gorduraG ?? 0)} rotulo={t('home.gordura')} cor="secondary" />
         <Total valor={Math.round(total.fibraG ?? 0)} rotulo={t('home.fibra')} cor="primary" />
       </ThemedView>
+
+      <Pressable onPress={() => router.push('/grafico-nutricao')} style={[styles.linkGrafico, styles.cardShadow]}>
+        <ChartColumn size={18} color={colors.primary} strokeWidth={2} />
+        <View style={{ flex: 1, marginLeft: spacing.sm }}>
+          <ThemedText variant="body" color="primary">{t('gn.abrir')}</ThemedText>
+          <ThemedText variant="caption" color="textSecondary">{t('gn.abrirDesc')}</ThemedText>
+        </View>
+        <ChevronRight size={16} color={colors.textSecondary} strokeWidth={2} />
+      </Pressable>
 
       <Dica id="ali.registrar" texto="dica.alimentacao" />
 
@@ -259,6 +268,14 @@ const styles = estilosTema(() => ({
     paddingVertical: spacing.sm,
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
+  },
+  linkGrafico: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: spacing.md,
+    marginBottom: spacing.lg,
+    borderRadius: radius.xl,
+    backgroundColor: colors.surface,
   },
   linkReceitas: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', padding: spacing.lg },
 }));

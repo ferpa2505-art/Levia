@@ -1,18 +1,20 @@
 # Política de Privacidade — Leviã
 
-**Última atualização:** 7 de outubro de 2026  
-**Versão do app:** 0.4.0
+**Última atualização:** 21 de outubro de 2026 (rascunho para revisão jurídica)  
+**Versão do app:** 0.5.0
 
 ## 1. Quem somos
 
-O Leviã é um aplicativo de registro pessoal de peso, alimentação, tratamento com medicamentos GLP-1 e diabetes. Para dúvidas ou pedidos relacionados à privacidade, entre em contato pelo e-mail **contatoapplevia@gmail.com**.
+O Leviã é um aplicativo de registro pessoal de peso, alimentação, tratamento com medicamentos GLP-1 e diabetes, oferecido por [RAZÃO SOCIAL OU NOME DO RESPONSÁVEL], [CNPJ/CPF], que é o controlador dos dados descritos aqui. Para dúvidas ou pedidos relacionados à privacidade, entre em contato pelo e-mail **contatoapplevia@gmail.com**.
 
 ## 2. Quais dados o app guarda
 
 O Leviã guarda no armazenamento interno do seu aparelho somente as informações que você registra ou configura:
 
 - **Perfil:** nome, como prefere ser chamado(a), pronome, sexo biológico, idade, altura, peso, meta de peso e tipo de diabetes, se informados.
-- **Peso e alimentação:** pesagens, refeições, alimentos, horários, calorias, proteínas, carboidratos, gorduras, fibras, água, receitas e exercícios.
+- **Peso e alimentação:** pesagens, refeições, alimentos, medidas (g, ml, colheres, xícaras...), horários, calorias, proteínas, carboidratos, gorduras, fibras, água, receitas e exercícios.
+- **Meus alimentos:** alimentos e bebidas que você digitou, com os valores informados, para reaproveitar nos próximos registros.
+- **Gráficos:** a última configuração escolhida (período, refeições e nutrientes).
 - **Fotos dos pratos:** se você fotografar ou escolher uma foto, uma cópia reduzida pode ficar guardada junto da refeição no aparelho.
 - **GLP-1:** doses, dosagem, local de aplicação, sintomas, apetite e configuração da caneta.
 - **Diabetes:** glicemias, faixa-alvo, lembretes e notas.
@@ -25,7 +27,9 @@ Alguns desses dados são dados pessoais sensíveis de saúde, nos termos da LGPD
 
 ## 3. Onde os dados ficam
 
-Os registros ficam no armazenamento interno do aplicativo, no seu aparelho. O Leviã não tem cadastro, login nem servidor próprio recebendo seus registros de saúde.
+Os registros de saúde ficam no armazenamento interno do aplicativo (ou do navegador, na versão web), no seu aparelho. O servidor do Leviã não recebe seus registros de saúde: refeições, peso, glicemias, medicações e relatórios continuam só no aparelho.
+
+O que fica no servidor é apenas o necessário para a conta, o teste gratuito e o plano, descrito na seção 4.2.
 
 Se o backup automático do Android estiver ativado na sua conta Google, o próprio sistema poderá incluir os dados do app no backup da sua conta, conforme a política do Google.
 
@@ -37,6 +41,7 @@ O Leviã se conecta à internet somente para:
 - **Atualizações:** verificar e baixar correções pelos servidores da Expo, que podem receber informações técnicas como versão do app e sistema operacional, nunca seus registros.
 - **Google Play:** instalação e atualizações, conforme a política do Google.
 - **Análise opcional de foto por IA:** somente quando você toca para analisar e concorda com o envio.
+- **Conta, teste e plano:** para liberar o teste de 7 dias e conferir se o plano está ativo (seção 4.2).
 
 ### 4.1 Análise opcional da foto do prato por IA
 
@@ -55,6 +60,29 @@ A resposta volta para o aparelho e você confere, corrige ou descarta as sugest�
 
 Fotografe apenas o prato. Não inclua rostos, documentos ou outras informações pessoais na imagem.
 
+### 4.2 Conta, teste gratuito e plano
+
+O teste gratuito começa pelo atendimento no WhatsApp. Para liberar o acesso, o Leviã recebe e guarda no servidor (Cloudflare D1):
+
+- **e-mail**, guardado cifrado (AES-GCM), para enviar o link de acesso e avisos sobre o teste e o plano;
+- **telefone**, guardado apenas como um código irreversível (hash), para evitar que o mesmo número use o teste mais de uma vez;
+- **consentimento de contato** dado no atendimento;
+- datas de início e fim do teste, quantidade de análises de foto usadas e, se houver, o plano contratado (mensal ou anual), o valor, o status do pagamento e o código da transação.
+
+O link de acesso é enviado por e-mail pelo serviço **Resend**. Contadores técnicos (por e-mail, telefone e IP) limitam pedidos repetidos e expiram em 1 hora.
+
+O pagamento é processado por [NOME DO PROVEDOR DE PAGAMENTO]. O Leviã não recebe nem guarda o número completo do seu cartão.
+
+### 4.3 Atendimento pelo WhatsApp e anúncios
+
+As conversas no WhatsApp passam pela Meta (WhatsApp) e pelo serviço de atendimento automático [TYPEBOT OU OUTRO], conforme as políticas desses serviços. Não peça nem envie dados de saúde pelo WhatsApp: o atendimento só trata de acesso, planos e pagamento.
+
+Se os anúncios do Leviã em Facebook, Instagram ou TikTok usarem pixel ou ferramenta de medição, isso acontece no site ou página do anúncio, com aviso e consentimento de cookies antes do disparo. O app não envia seus registros de saúde para essas plataformas.
+
+### 4.4 Envio opcional de alimento para a equipe
+
+Quando você salva um alimento novo, o app pode perguntar se você quer enviá-lo para a equipe do Leviã revisar e incluir no banco de alimentos. Se aceitar, o app abre o seu aplicativo de e-mail com uma mensagem para **contatoapplevia@gmail.com** contendo o nome do alimento, os valores por 100 g, a medida usada, o idioma e a versão do app. Nenhum outro registro vai junto. Você vê a mensagem e decide se envia. O e-mail chega com o seu endereço de remetente, como qualquer e-mail. Você pode escolher "Não perguntar mais" a qualquer momento.
+
 ## 5. Notificações, câmera, fotos e calendário
 
 - Lembretes de dose, medicação, glicemia e refeições são agendados no próprio aparelho.
@@ -66,22 +94,32 @@ Fotografe apenas o prato. Não inclua rostos, documentos ou outras informações
 
 ## 6. O que não fazemos
 
-O Leviã não vende seus dados, não exibe anúncios e não usa ferramentas de rastreamento ou estatísticas de uso. Não acessa localização, contatos ou microfone. Não compartilha seus registros de saúde com terceiros; a única exceção é o envio opcional da foto para a análise descrita na seção 4.1.
+O Leviã não vende seus dados, não exibe anúncios e não usa ferramentas de rastreamento ou estatísticas de uso. Não acessa localização, contatos ou microfone. Não compartilha seus registros de saúde com terceiros; as únicas exceções são o envio opcional da foto para a análise descrita na seção 4.1 e o envio opcional de um alimento por e-mail (seção 4.4), ambos só quando você pede.
 
-## 7. Retenção e exclusão
+## 7. Bases legais
 
-Os dados ficam no aparelho até você apagá-los. Você pode excluir registros dentro do app. Desinstalar o Leviã ou limpar os dados do app remove as informações armazenadas no aparelho. Os contadores técnicos da análise por IA expiram conforme os prazos descritos na seção 4.1.
+- **Registros de saúde no aparelho e análise de foto:** consentimento específico e destacado (LGPD, art. 11, I), que você pode retirar a qualquer momento.
+- **Conta, teste e plano:** execução do contrato (LGPD, art. 7º, V).
+- **Pagamento e documentos fiscais:** cumprimento de obrigação legal (LGPD, art. 7º, II).
+- **Limites contra abuso (contadores por IP, e-mail e telefone):** legítimo interesse em proteger o serviço (LGPD, art. 7º, IX).
+- **Mensagens de contato pelo WhatsApp e e-mail:** consentimento dado no atendimento.
 
-## 8. Seus direitos
+## 8. Retenção e exclusão
 
-Você pode consultar, corrigir e excluir seus dados dentro do app. Para dúvidas ou solicitações relacionadas à privacidade e à LGPD, escreva para **contatoapplevia@gmail.com**.
+Os dados no aparelho ficam lá até você apagá-los. Você pode excluir registros dentro do app. Desinstalar o Leviã ou limpar os dados do app (ou do navegador) remove as informações armazenadas no aparelho.
 
-## 9. Crianças e aviso de saúde
+Os contadores técnicos expiram nos prazos das seções 4.1 e 4.2. Os dados da conta ficam guardados enquanto ela existir e são apagados em até [30] dias depois do pedido de exclusão, exceto os registros de pagamento que a lei obriga a manter (em geral, 5 anos para fins fiscais). Os registros técnicos de conexão da Cloudflare seguem a política de retenção da Cloudflare.
+
+## 9. Seus direitos
+
+Você pode consultar, corrigir e excluir seus dados dentro do app. Também pode pedir acesso, correção, portabilidade ou exclusão dos dados da conta, e retirar consentimentos. Para dúvidas ou solicitações relacionadas à privacidade e à LGPD, escreva para **contatoapplevia@gmail.com**.
+
+## 10. Crianças e aviso de saúde
 
 O Leviã não é destinado a menores de 18 anos. Ele é uma ferramenta de registro e organização pessoal: não diagnostica, não prescreve tratamento e não substitui médico, nutricionista ou outro profissional de saúde.
 
-## 10. Alterações nesta política
+## 11. Alterações nesta política
 
 Se uma versão futura passar a enviar outros dados para fora do aparelho ou usar outros serviços, esta política será atualizada antes do lançamento, explicando quais dados são enviados, para quem e por quê.
 
-**Versão 0.4.0 — 7 de outubro de 2026**
+**Versão 0.5.0 — 21 de outubro de 2026**
