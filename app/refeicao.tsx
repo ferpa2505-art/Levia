@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { View, Pressable, Switch, Alert, Image } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Camera, ImagePlus, Sparkles, Trash2, X, Minus, Plus, PencilLine } from 'lucide-react-native';
@@ -22,8 +22,24 @@ import { colors, spacing, radius } from '@constants/colors';
 import { SeletorHorario } from '@components/forms/SeletorHorario';
 import { MensagemErro } from '@components/forms/MensagemErro';
 import { estilosTema } from '@theme/estilos';
+import { buscarPorNome } from '@utils/buscaAlimentos';
+import {
+  AlimentoSalvo,
+  UNIDADES,
+  UnidadeMedida,
+  carregarAlimentosSalvos,
+  gramasPadraoDaUnidade,
+  marcarUso,
+  naoPerguntarCompartilhar,
+  nuncaCompartilhar,
+  recentes,
+  removerAlimento,
+  salvarAlimento,
+  unidadeDireta,
+} from '@utils/alimentosSalvos';
+import { enviarAlimentoParaEquipe } from '@utils/emailAlimento';
 
-type Opcao = { tipo: 'por100'; alimento: AlimentoPor100g; rotulo: string };
+type Opcao = { tipo: 'por100'; alimento: AlimentoPor100g; rotulo: string; salvo?: AlimentoSalvo };
 
 const arred = (n: number, casas = 0) => Math.round(n * 10 ** casas) / 10 ** casas;
 
@@ -36,6 +52,7 @@ export default function RefeicaoScreen() {
   const existente = params.id ? refeicoes.find((r) => r.id === params.id) : undefined;
 
   const agora = horarioAgora();
+  const numero = (txt: string) => parseFloat(txt.replace(',', '.'));
   const [tipo, setTipo] = useState<TipoRefeicao>(existente?.tipo ?? params.tipo ?? tipoPeloHorario(agora));
   const [tipoLivre, setTipoLivre] = useState(existente?.tipoPersonalizado ?? '');
   const [horario, setHorario] = useState(existente?.horario ?? agora);
@@ -60,7 +77,15 @@ export default function RefeicaoScreen() {
   // busca de alimentos
   const [busca, setBusca] = useState('');
   const [escolhido, setEscolhido] = useState<Opcao | null>(null);
+  /** quantidade na medida escolhida (em g/ml, é a própria quantidade) */
   const [gramas, setGramas] = useState('');
+  const [unidade, setUnidade] = useState<UnidadeMedida>('g');
+  const [gPorUnidade, setGPorUnidade] = useState('');
+  // alimentos digitados antes, guardados no aparelho
+  const [salvos, setSalvos] = useState<AlimentoSalvo[]>([]);
+  useEffect(() => {
+    carregarAlimentosSalvos().then(setSalvos);
+  }, []);
   // item digitado à mão
   const [manual, setManual] = useState(false);
   const [mNome, setMNome] = useState('');
@@ -69,10 +94,15 @@ export default function RefeicaoScreen() {
   const [mCarb, setMCarb] = useState('');
   const [mGord, setMGord] = useState('');
   const [mFibra, setMFibra] = useState('');
+  const [mQtd, setMQtd] = useState('1');
+  const [mUnidade, setMUnidade] = useState<UnidadeMedida>('porcao');
+  const [mGPorUnidade, setMGPorUnidade] = useState(String(gramasPadraoDaUnidade('porcao')));
+  const [mSalvar, setMSalvar] = useState(true);
 
   const opcoes: Opcao[] = !busca.trim() || escolhido
     ? []
     : [
+        ...buscarPorNome(salvos, busca, (a) => a.nome, 4).map((a) => ({ tipo: 'por100' as const, alimento: a, salvo: a, rotulo: t('alim.seuAlimento', { nome: a.nome }) })),
         ...buscarReceitasPersonalizadas(busca).map((r) => ({ tipo: 'por100' as const, alimento: r, rotulo: t('d.suaReceita', { nome: r.nome }) })),
         ...buscarIngredientes(busca, 6).map((i) => ({
           tipo: 'por100' as const,
@@ -82,43 +112,108 @@ export default function RefeicaoScreen() {
       ];
   // com a busca vazia, atalhos para as receitas salvas
   const atalhos = !busca.trim() && !escolhido ? receitasPersonalizadas.slice(-4).reverse() : [];
+  const atalhosSalvos = !busca.trim() && !escolhido ? recentes(salvos, 6) : [];
 
   function escolher(o: Opcao) {
     setEscolhido(o);
-    setGramas(String(o.alimento.porcaoPadraoG ?? PORCAO_PADRAO_G));
+    const u = o.salvo?.unidade ?? 'g';
+    setUnidade(u);
+    setGPorUnidade(String(o.salvo?.gramasPorUnidade ?? gramasPadraoDaUnidade(u, o.alimento.porcaoPadraoG)));
+    setGramas(unidadeDireta(u) ? String(o.alimento.porcaoPadraoG ?? PORCAO_PADRAO_G) : '1');
   }
+
+  function trocarUnidade(u: UnidadeMedida) {
+    if (!escolhido) return;
+    // ao trocar entre g/ml e uma medida caseira, recomeça com a porção padrão / 1 medida
+    if (unidadeDireta(u) !== unidadeDireta(unidade)) {
+      setGramas(unidadeDireta(u) ? String(escolhido.alimento.porcaoPadraoG ?? PORCAO_PADRAO_G) : '1');
+    }
+    setUnidade(u);
+    const s = escolhido.salvo;
+    setGPorUnidade(String(s && s.unidade === u ? s.gramasPorUnidade : gramasPadraoDaUnidade(u, escolhido.alimento.porcaoPadraoG)));
+  }
+
+  function trocarUnidadeManual(u: UnidadeMedida) {
+    if (unidadeDireta(u) !== unidadeDireta(mUnidade)) setMQtd(unidadeDireta(u) ? '100' : '1');
+    setMUnidade(u);
+    setMGPorUnidade(String(gramasPadraoDaUnidade(u)));
+  }
+
+  /** gramas totais de `qtd` na medida `u` */
+  const emGramas = (qtd: string, u: UnidadeMedida, porUn: string) =>
+    unidadeDireta(u) ? numero(qtd) : numero(qtd) * numero(porUn);
 
   function confirmarEscolhido() {
     if (!escolhido) return;
-    const g = parseFloat(gramas.replace(',', '.'));
+    const g = arred(emGramas(gramas, unidade, gPorUnidade), 1);
     if (!(g > 0)) return;
     const a = escolhido.alimento;
-    setItens((l) => [...l, { nome: a.nome, gramas: g, ...valoresDaPorcao(a, g) }]);
+    const medida = unidade === 'g' ? {} : { quantidade: numero(gramas), unidade };
+    setItens((l) => [...l, { nome: a.nome, gramas: g, ...medida, ...valoresDaPorcao(a, g) }]);
+    if (escolhido.salvo) marcarUso(escolhido.salvo.id).then(setSalvos);
     setEscolhido(null);
     setBusca('');
   }
 
-  function adicionarManual() {
+  function excluirSalvo(a: AlimentoSalvo) {
+    Alert.alert(t('alim.excluirTitulo', { nome: a.nome }), undefined, [
+      { text: t('comum.cancelar'), style: 'cancel' },
+      { text: t('alim.excluir'), style: 'destructive', onPress: () => removerAlimento(a.id).then(setSalvos) },
+    ]);
+  }
+
+  /** Só para alimentos novos: pergunta se pode mandar à equipe revisar e incluir no banco */
+  async function oferecerCompartilhar(a: AlimentoSalvo) {
+    if (await naoPerguntarCompartilhar()) return;
+    Alert.alert(t('alim.compartilharTitulo'), t('alim.compartilharMsg', { nome: a.nome }), [
+      // na web as ações viram perguntas em sequência: Enviar? → Não perguntar mais? → (agora não)
+      { text: t('alim.agoraNao'), style: 'cancel' },
+      { text: t('alim.enviar'), onPress: () => enviarAlimentoParaEquipe(a) },
+      { text: t('alim.nuncaPerguntar'), onPress: () => nuncaCompartilhar() },
+    ]);
+  }
+
+  async function adicionarManual() {
     const kcal = parseFloat(mKcal.replace(',', '.'));
     if (!mNome.trim() || !(kcal >= 0)) return;
     const opcional = (txt: string) => (txt.trim() ? arred(parseFloat(txt.replace(',', '.')) || 0, 1) : undefined);
-    setItens((l) => [
-      ...l,
-      {
-        nome: mNome.trim(),
-        kcal: arred(kcal),
-        proteinaG: arred(parseFloat(mProt.replace(',', '.')) || 0, 1),
-        carboidratoG: opcional(mCarb),
-        gorduraG: opcional(mGord),
-        fibraG: opcional(mFibra),
-      },
-    ]);
+    const g = arred(emGramas(mQtd, mUnidade, mGPorUnidade), 1);
+    const item: ItemRefeicao = {
+      nome: mNome.trim(),
+      ...(g > 0 ? { gramas: g } : {}),
+      ...(g > 0 && mUnidade !== 'g' ? { quantidade: numero(mQtd), unidade: mUnidade } : {}),
+      kcal: arred(kcal),
+      proteinaG: arred(parseFloat(mProt.replace(',', '.')) || 0, 1),
+      carboidratoG: opcional(mCarb),
+      gorduraG: opcional(mGord),
+      fibraG: opcional(mFibra),
+    };
+    setItens((l) => [...l, item]);
+    if (mSalvar && g > 0) {
+      // guarda por 100 g, para servir a qualquer quantidade da próxima vez
+      const por100 = (v: number | undefined) => (v == null ? undefined : arred((v * 100) / g, 1));
+      const { lista, novo } = await salvarAlimento({
+        nome: item.nome,
+        kcalPor100g: arred((item.kcal * 100) / g),
+        proteinaGPor100g: por100(item.proteinaG) ?? 0,
+        carboidratoGPor100g: por100(item.carboidratoG),
+        gorduraGPor100g: por100(item.gorduraG),
+        fibraGPor100g: por100(item.fibraG),
+        porcaoPadraoG: unidadeDireta(mUnidade) ? g : numero(mGPorUnidade),
+        unidade: mUnidade,
+        gramasPorUnidade: unidadeDireta(mUnidade) ? 1 : numero(mGPorUnidade),
+      });
+      setSalvos(lista);
+      const salvo = lista.find((a) => a.nome === item.nome);
+      if (novo && salvo) oferecerCompartilhar(salvo);
+    }
     setMNome('');
     setMKcal('');
     setMProt('');
     setMCarb('');
     setMGord('');
     setMFibra('');
+    setMQtd(unidadeDireta(mUnidade) ? '100' : '1');
     setManual(false);
   }
 
@@ -133,14 +228,17 @@ export default function RefeicaoScreen() {
   }
 
   const total = somarNutrientes(itens);
-  const numero = (txt: string) => parseFloat(txt.replace(',', '.'));
-  const erroGramas = gramas.trim() && !(numero(gramas) > 0 && numero(gramas) <= 5000) ? t('form.erroGramas') : null;
+  const gramasEscolhido = emGramas(gramas, unidade, gPorUnidade);
+  const erroGramas =
+    gramas.trim() && !(numero(gramas) > 0 && gramasEscolhido > 0 && gramasEscolhido <= 5000) ? t('form.erroGramas') : null;
+  const gramasManual = emGramas(mQtd, mUnidade, mGPorUnidade);
+  const erroManualQtd = mQtd.trim() && !(gramasManual > 0 && gramasManual <= 5000) ? t('form.erroGramas') : null;
   const erroManualKcal = mKcal.trim() && !(numero(mKcal) >= 0 && numero(mKcal) <= 5000) ? t('form.erroNumero') : null;
   const erroManualProt = mProt.trim() && !(numero(mProt) >= 0 && numero(mProt) <= 500) ? t('form.erroNumero') : null;
   const erroManualCarb = mCarb.trim() && !(numero(mCarb) >= 0 && numero(mCarb) <= 1000) ? t('form.erroNumero') : null;
   const erroManualGord = mGord.trim() && !(numero(mGord) >= 0 && numero(mGord) <= 500) ? t('form.erroNumero') : null;
   const erroManualFibra = mFibra.trim() && !(numero(mFibra) >= 0 && numero(mFibra) <= 200) ? t('form.erroNumero') : null;
-  const erroManual = erroManualKcal || erroManualProt || erroManualCarb || erroManualGord || erroManualFibra;
+  const erroManual = erroManualKcal || erroManualProt || erroManualCarb || erroManualGord || erroManualFibra || erroManualQtd;
 
   async function handleSalvar() {
     if (itens.length === 0 && !foto) {
@@ -257,7 +355,7 @@ export default function RefeicaoScreen() {
             <View style={{ flex: 1 }}>
               <ThemedText variant="body" color="text">
                 {i.nome}
-                {i.gramas ? <ThemedText variant="small" color="textSecondary">{`  ${i.gramas} g`}</ThemedText> : null}
+                {i.gramas ? <ThemedText variant="small" color="textSecondary">{`  ${rotuloQuantidade(t, i)}`}</ThemedText> : null}
               </ThemedText>
               <ThemedText variant="caption" color="textSecondary">
                 {textoNutrientes(t, i)}
@@ -272,23 +370,29 @@ export default function RefeicaoScreen() {
         {escolhido ? (
           <View style={styles.caixaGramas}>
             <ThemedText variant="body" color="text">{escolhido.alimento.nome}</ThemedText>
+            <SeletorMedida valor={unidade} onChange={trocarUnidade} />
             <View style={[styles.linha, { marginTop: spacing.sm }]}>
               <Input
                 value={gramas}
                 onChangeText={setGramas}
                 keyboardType="decimal-pad"
                 autoFocus
-                style={[styles.input, { width: 100 }, erroGramas && styles.inputErro]}
+                style={[styles.input, { width: 80 }, erroGramas && styles.inputErro]}
               />
-              <ThemedText variant="body" color="textSecondary" style={{ marginHorizontal: spacing.sm }}>g</ThemedText>
+              <ThemedText variant="body" color="textSecondary" style={{ marginHorizontal: spacing.sm }}>{t(`un.${unidade}` as never)}</ThemedText>
+              <View style={{ flex: 1 }} />
               <Button label={t('ref.incluir')} size="sm" onPress={confirmarEscolhido} disabled={!gramas.trim() || !!erroGramas} />
               <Pressable onPress={() => setEscolhido(null)} style={{ marginLeft: spacing.md }} hitSlop={8}>
                 <X size={18} color={colors.textSecondary} strokeWidth={2} />
               </Pressable>
             </View>
-            {!erroGramas && numero(gramas) > 0 && (
+            {!unidadeDireta(unidade) && (
+              <GramasPorMedida unidade={unidade} valor={gPorUnidade} onChange={setGPorUnidade} />
+            )}
+            {!erroGramas && gramasEscolhido > 0 && (
               <ThemedText variant="caption" color="textSecondary" style={{ marginTop: spacing.xs }}>
-                {textoNutrientes(t, valoresDaPorcao(escolhido.alimento, numero(gramas)))}
+                {`${arred(gramasEscolhido, 1)} ${unidade === 'ml' ? 'ml' : 'g'} · `}
+                {textoNutrientes(t, valoresDaPorcao(escolhido.alimento, gramasEscolhido))}
               </ThemedText>
             )}
             <MensagemErro texto={erroGramas} />
@@ -296,6 +400,14 @@ export default function RefeicaoScreen() {
         ) : manual ? (
           <View style={styles.caixaGramas}>
             <Input value={mNome} onChangeText={setMNome} placeholder={t('ref.manualNome')} style={styles.input} />
+            <ThemedText variant="caption" color="textSecondary" style={{ marginTop: spacing.sm }}>{t('alim.quantoComeu')}</ThemedText>
+            <SeletorMedida valor={mUnidade} onChange={trocarUnidadeManual} />
+            <View style={[styles.linha, { marginTop: spacing.xs }]}>
+              <Input value={mQtd} onChangeText={setMQtd} keyboardType="decimal-pad" style={[styles.input, { width: 80 }, erroManualQtd && styles.inputErro]} />
+              <ThemedText variant="body" color="textSecondary" style={{ marginHorizontal: spacing.sm }}>{t(`un.${mUnidade}` as never)}</ThemedText>
+            </View>
+            {!unidadeDireta(mUnidade) && <GramasPorMedida unidade={mUnidade} valor={mGPorUnidade} onChange={setMGPorUnidade} />}
+            <ThemedText variant="caption" color="textSecondary" style={{ marginTop: spacing.sm }}>{t('alim.valoresDaQtd')}</ThemedText>
             <View style={[styles.linha, { gap: spacing.xs, marginTop: spacing.xs }]}>
               <Input value={mKcal} onChangeText={setMKcal} placeholder="kcal" keyboardType="decimal-pad" style={[styles.input, { flex: 1 }, erroManualKcal && styles.inputErro]} />
               <Input value={mProt} onChangeText={setMProt} placeholder={t('ref.protG')} keyboardType="decimal-pad" style={[styles.input, { flex: 1 }, erroManualProt && styles.inputErro]} />
@@ -308,6 +420,15 @@ export default function RefeicaoScreen() {
             </View>
             <MensagemErro texto={erroManual || null} />
             <View style={[styles.linha, { marginTop: spacing.sm }]}>
+              <ThemedText variant="small" color="textSecondary" style={{ flex: 1 }}>{t('alim.salvarParaDepois')}</ThemedText>
+              <Switch
+                value={mSalvar}
+                onValueChange={setMSalvar}
+                trackColor={{ true: colors.primary, false: colors.border }}
+                style={{ transform: [{ scaleX: 0.85 }, { scaleY: 0.85 }] }}
+              />
+            </View>
+            <View style={[styles.linha, { marginTop: spacing.sm }]}>
               <Button label={t('ref.incluir')} size="sm" onPress={adicionarManual} disabled={!mNome.trim() || !mKcal || !!erroManual} />
               <Pressable onPress={() => setManual(false)} style={{ marginLeft: spacing.md }}>
                 <ThemedText variant="small" color="textSecondary">{t('comum.cancelar')}</ThemedText>
@@ -317,8 +438,22 @@ export default function RefeicaoScreen() {
         ) : (
           <>
             <Input value={busca} onChangeText={setBusca} placeholder={t('ref.buscarPh')} style={[styles.input, { marginTop: spacing.md }]} />
-            {(opcoes.length > 0 || atalhos.length > 0) && (
+            {(opcoes.length > 0 || atalhos.length > 0 || atalhosSalvos.length > 0) && (
               <View style={styles.sugestoes}>
+                {atalhosSalvos.length > 0 && (
+                  <ThemedText variant="caption" color="textSecondary" style={styles.sugTitulo}>{t('alim.meusAlimentos')}</ThemedText>
+                )}
+                {atalhosSalvos.map((a) => (
+                  <View key={`sv-${a.id}`} style={[styles.sugestao, styles.linha]}>
+                    <Pressable style={{ flex: 1 }} onPress={() => escolher({ tipo: 'por100', alimento: a, salvo: a, rotulo: a.nome })}>
+                      <ThemedText variant="small" color="text">{a.nome}</ThemedText>
+                      <ThemedText variant="caption" color="textSecondary">{textoNutrientes100(t, a)}</ThemedText>
+                    </Pressable>
+                    <Pressable onPress={() => excluirSalvo(a)} hitSlop={8} style={{ marginLeft: spacing.sm }}>
+                      <Trash2 size={14} color={colors.textSecondary} strokeWidth={2} />
+                    </Pressable>
+                  </View>
+                ))}
                 {atalhos.length > 0 && (
                   <ThemedText variant="caption" color="textSecondary" style={styles.sugTitulo}>{t('d.minhasReceitas')}</ThemedText>
                 )}
@@ -391,6 +526,40 @@ export default function RefeicaoScreen() {
       )}
       <View style={{ height: spacing['2xl'] }} />
     </TelaRolavel>
+  );
+}
+
+type Traduzir = ReturnType<typeof usePreferences>['t'];
+
+/** "2 colher de sopa (30 g)" ou "150 g" */
+function rotuloQuantidade(t: Traduzir, i: ItemRefeicao) {
+  const u = i.unidade as UnidadeMedida | undefined;
+  if (!u || i.quantidade == null) return `${i.gramas} g`;
+  if (u === 'ml') return `${i.quantidade} ml`;
+  return `${i.quantidade} ${t(`un.${u}` as never)} (${i.gramas} g)`;
+}
+
+/** Chips com as medidas: g, ml, unidade, porção, fatia, colheres, xícara, copo */
+function SeletorMedida({ valor, onChange }: { valor: UnidadeMedida; onChange: (u: UnidadeMedida) => void }) {
+  const { t } = usePreferences();
+  return (
+    <View style={[styles.chips, { marginTop: spacing.sm }]}>
+      {UNIDADES.map((u) => (
+        <Chip key={u} ativo={valor === u} texto={t(`un.${u}` as never)} onPress={() => onChange(u)} />
+      ))}
+    </View>
+  );
+}
+
+/** "1 colher de sopa = [15] g": a pessoa ajusta o peso da medida caseira */
+function GramasPorMedida({ unidade, valor, onChange }: { unidade: UnidadeMedida; valor: string; onChange: (v: string) => void }) {
+  const { t } = usePreferences();
+  return (
+    <View style={[styles.linha, { marginTop: spacing.xs }]}>
+      <ThemedText variant="small" color="textSecondary">{t('alim.umaMedida', { u: t(`un.${unidade}` as never) })}</ThemedText>
+      <Input value={valor} onChangeText={onChange} keyboardType="decimal-pad" style={[styles.input, { width: 70, marginHorizontal: spacing.xs }]} />
+      <ThemedText variant="small" color="textSecondary">g</ThemedText>
+    </View>
   );
 }
 

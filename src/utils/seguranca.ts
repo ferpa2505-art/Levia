@@ -40,6 +40,8 @@ export interface ConfigSeguranca {
   bloquearAposSeg: number;
   relatorioSemanal: boolean;
   relatorioMensal: boolean;
+  /** Inclui no relatório a tabela dia a dia (alimentação, água, peso, glicemias, GLP-1) */
+  relatorioResumoDiario?: boolean;
   relatorioIds?: string[];
 }
 

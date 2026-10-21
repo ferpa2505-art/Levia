@@ -1,236 +1,105 @@
-# Termos de Serviço - Leviã
+# Termos de Uso — Leviã
 
-**Última atualização:** 29 de setembro de 2026
+**Versão:** 0.5.0 (rascunho para revisão jurídica)
+**Última atualização:** 21 de outubro de 2026
 
-## 1. Aceitação dos Termos
+> Itens entre colchetes, como [RAZÃO SOCIAL], precisam ser preenchidos antes da publicação.
 
-Ao baixar, instalar e usar Leviã, você concorda em estar vinculado a estes Termos de Serviço. Se você não concorda com qualquer parte, por favor não use o aplicativo.
+## 1. Quem oferece o Leviã
 
-## 2. Definição do Serviço
+O Leviã é oferecido por [RAZÃO SOCIAL OU NOME DO RESPONSÁVEL], inscrito no [CNPJ/CPF] sob o nº [NÚMERO], com endereço em [ENDEREÇO]. Canal único de atendimento, dúvidas sobre estes Termos e pedidos sobre dados pessoais: **contatoapplevia@gmail.com**.
 
-**Leviã** é um aplicativo móvel para Android projetado para:
-- Rastreamento pessoal de leituras de glicemia
-- Registro de medicações
-- Acompanhamento de refeições
-- Notas pessoais sobre saúde
+## 2. O que é o Leviã
 
-## 3. ISENÇÃO DE RESPONSABILIDADE MÉDICA ⚠️
+O Leviã é um aplicativo de organização pessoal, usado no navegador (PWA) e, quando disponível, no Android. Ele permite registrar e acompanhar:
 
-### 3.1 Não é Dispositivo Médico
-Leviã é uma **ferramenta de ASSISTÊNCIA PESSOAL**, não:
-- ❌ Um dispositivo médico certificado (FDA, CE, ANVISA)
-- ❌ Um substituto para consulta médica profissional
-- ❌ Um diagnóstico, tratamento ou cura para diabetes
-- ❌ Uma alternativa ao acompanhamento com médico endocrinologista
+- refeições, alimentos, bebidas, água e exercícios;
+- peso e metas;
+- glicemias, medicações e tratamento com GLP-1;
+- relatórios e gráficos feitos a partir desses registros.
 
-### 3.2 Consulte seu Médico
-Você **DEVE**:
-- ✅ Consultar seu médico regularmente
-- ✅ Seguir as recomendações do seu médico
-- ✅ Usar medicações prescritas
-- ✅ Fazer exames regulares (HbA1c, glicemia em jejum)
-- ✅ Relatar mudanças significativas ao seu médico
+Os registros de saúde ficam guardados no seu aparelho, como explica a Política de Privacidade.
 
-### 3.3 Emergências Médicas
-Se você tiver:
-- ❌ Sintomas de hipoglicemia grave (confusão, perda de consciência)
-- ❌ Sintomas de hiperglicemia extrema
-- ❌ Dolores no peito, falta de ar
-- ❌ Qualquer emergência médica
+## 3. Aviso de saúde
 
-**CHAME IMEDIATAMENTE** 911 (EUA) ou 192 (Brasil) ou emergência local.
+O Leviã não é um dispositivo médico, não faz diagnóstico, não prescreve tratamento, não calcula dose de insulina ou de qualquer medicamento e não substitui médico, nutricionista ou outro profissional de saúde.
 
-Leviã NÃO é um sistema de alerta de emergência.
+Gráficos e comparações do app mostram apenas o que variou junto nos seus registros. Eles não provam causa e não devem ser usados, sozinhos, para mudar um tratamento.
 
-## 4. Uso Apropriado
+Em caso de sintomas de hipoglicemia grave, confusão, desmaio, dor no peito, falta de ar ou qualquer emergência, ligue imediatamente para o **SAMU (192)** ou para o serviço de emergência local. O Leviã não é um sistema de alerta de emergência.
 
-### 4.1 Você Concorda em:
-- ✅ Usar Leviã apenas para fins pessoais
-- ✅ Inserir dados PRECISOS e HONESTOS
-- ✅ Manter a privacidade de sua conta
-- ✅ Não compartilhar sua senha com outros
-- ✅ Não usar para fins comerciais ou de pesquisa sem permissão
+## 4. Quem pode usar
 
-### 4.2 Você Concorda que NÃO vai:
-- ❌ Usar para diagnosticar ou tratar diabetes em outros
-- ❌ Compartilhar dados de pacientes sem consentimento
-- ❌ Usar de forma a violentar outras pessoas
-- ❌ Discriminar ou prejudicar terceiros
-- ❌ Tentar hackear ou comprometer o app
+O Leviã é destinado a pessoas com 18 anos ou mais.
 
-## 5. Precisão de Dados
+## 5. Teste gratuito, planos e pagamento
 
-### 5.1 Responsabilidade do Usuário
-Você é **TOTALMENTE RESPONSÁVEL** pelos dados que insere:
-- A precisão das leituras de glicemia
-- A correção dos medicamentos e dosagens
-- A qualidade das notas pessoais
+### 5.1 Teste gratuito
+Quem inicia o teste pelo atendimento no WhatsApp recebe **7 dias de uso gratuito**, com direito a **2 análises de foto por IA**. O teste é concedido uma vez por pessoa (e-mail e telefone). Ao fim do teste, nenhuma cobrança é feita automaticamente.
 
-Leviã não valida se seus dados estão corretos.
+### 5.2 Planos
+Depois do teste, o uso pode continuar com um plano:
 
-### 5.2 O que Fazemos
-- Armazenamos os dados que você insere
-- Não alteramos seus dados
-- Não interpretamos sua glicemia como "alta" ou "baixa"
-- Nenhuma análise automática ou alertas inteligentes
+- **Mensal:** [VALOR] por 30 dias;
+- **Anual:** [VALOR] por 12 meses.
 
-### 5.3 O que Não Fazemos
-- ❌ Não verificamos se você está tomando medicação corretamente
-- ❌ Não alertamos sobre padrões perigosos
-- ❌ Não fazemos recomendações médicas
-- ❌ Não substituímos monitoramento profissional
+O preço, o que cada plano inclui (por exemplo, a quantidade de análises de foto por IA) e a forma de pagamento são informados antes da contratação.
 
-## 6. Limitações de Responsabilidade
+### 5.3 Contratação e renovação
+A contratação é feita pelo atendimento no WhatsApp e pago pelo meio informado no fechamento (por exemplo, PIX ou cartão). [ESCOLHER UMA DAS OPÇÕES E APAGAR A OUTRA:]
 
-### 6.1 ISENÇÃO COMPLETA
-LEVIÃ É FORNECIDO **"COMO ESTÁ"**, SEM GARANTIAS DE QUALQUER TIPO, EXPRESSAS OU IMPLÍCITAS.
+- **Sem renovação automática:** cada período é pago à parte. Antes do vencimento, você recebe um aviso e decide se quer renovar.
+- **Com renovação automática:** o plano é renovado e cobrado ao fim de cada período até você cancelar. Você recebe um aviso antes de cada cobrança e pode cancelar a qualquer momento, sem multa, pelo e-mail ou pelo WhatsApp de atendimento; o acesso continua até o fim do período já pago.
 
-Nós NÃO GARANTIMOS:
-- ❌ Que o app funcionará sem erros
-- ❌ Que seus dados não serão perdidos
-- ❌ Precisão dos cálculos ou estatísticas
-- ❌ Que o app funcionará no seu dispositivo específico
+### 5.4 Direito de arrependimento
+Você pode desistir da contratação em até **7 dias** a partir do pagamento, com devolução integral do valor pago, conforme o art. 49 do Código de Defesa do Consumidor. Basta pedir pelo e-mail ou pelo WhatsApp de atendimento.
 
-### 6.2 Limitação de Responsabilidade
-NÓS NÃO SEREMOS RESPONSÁVEIS POR:
+### 5.5 Fim do plano
+Se o plano não for renovado, os recursos pagos deixam de funcionar, mas seus registros continuam no seu aparelho e podem ser exportados pelo backup do app.
 
-**Danos Diretos:**
-- Perda de dados
-- Malfunction do app
-- Desempenho inadequado
+## 6. Análise de foto por IA
 
-**Danos Indiretos:**
-- Lesão física
-- Morte
-- Complicações médicas
-- Hospitalizações
-- Custos médicos
-- Qualquer consequência médica relacionada a diabetes
+A análise de foto é opcional e só acontece quando você pede. A IA sugere alimentos e quantidades, que podem estar errados: confira e corrija antes de salvar. As fotos são processadas e descartadas, como descrito na Política de Privacidade.
 
-**MESMO SE** nós fomos informados da possibilidade de tais danos.
+## 7. Alimentos que você cadastra
 
-### 6.3 Responsabilidade Máxima
-Nossa responsabilidade total, em qualquer caso, é **ZERO REAIS** ou o equivalente do que você pagou pelo app (neste caso: GRÁTIS).
+Alimentos e bebidas que você digita ficam salvos no seu aparelho para os próximos registros. Se você autorizar, o app abre um e-mail para **contatoapplevia@gmail.com** com o nome do alimento e os valores que você informou. Você confirma o envio no seu app de e-mail. Ao enviar, você autoriza o uso gratuito dessa sugestão para revisar e melhorar o banco de alimentos do Leviã.
 
-## 7. Privacidade
+## 8. Uso adequado
 
-Veja nossa Política de Privacidade (PRIVACIDADE.md) para detalhes completos sobre:
-- Que dados coletamos
-- Como usamos seus dados
-- Como protegemos seus dados
-- Seus direitos sobre seus dados
+Você concorda em usar o Leviã para fins pessoais, em não tentar invadir, copiar ou sobrecarregar o serviço e em não usar o app para acompanhar outra pessoa sem o consentimento dela.
 
-## 8. Propriedade Intelectual
+Você é responsável pelos dados que registra. O Leviã não verifica se as leituras, doses ou valores informados estão corretos.
 
-- Leviã e seu design são propriedade de FP Tech & Art
-- Você tem licença para usar para fins pessoais apenas
-- Você NÃO pode:
-  - ❌ Copiar ou duplicar
-  - ❌ Modificar ou criar derivados
-  - ❌ Vender ou comercializar
-  - ❌ Distribuir sem permissão
+## 9. Disponibilidade e responsabilidade
 
-## 9. Modificações do Serviço
+Trabalhamos para manter o Leviã funcionando e corrigir falhas, mas o serviço pode ter interrupções, erros ou falhas de funcionamento. Como os registros ficam no seu aparelho, recomendamos fazer backups periódicos pelo próprio app.
 
-Podemos:
-- Adicionar ou remover features
-- Alterar o design
-- Descontinuar o serviço com aviso prévio
-- Atualizar funcionalidades
+Respondemos pelos danos que causarmos nos termos da lei, inclusive do Código de Defesa do Consumidor. Não respondemos por decisões de saúde tomadas apenas com base no app, sem orientação profissional, nem por perda de dados causada por limpeza do navegador, desinstalação ou falha do aparelho sem backup. Nada nestes Termos limita direitos que a lei garante ao consumidor.
 
-Você será notificado sobre mudanças significativas através do app.
+## 10. Propriedade intelectual
 
-## 10. Descontinuação
+O nome Leviã, a marca, o design e o código pertencem a [RAZÃO SOCIAL OU NOME DO RESPONSÁVEL]. O uso do app não transfere esses direitos. As bases de alimentos de terceiros são usadas conforme suas licenças, com os créditos exibidos no app.
 
-Se Leviã for descontinuado:
-- Você será notificado com antecedência
-- Poderá exportar seus dados
-- Terá tempo para transferir informações para outro sistema
+## 11. Privacidade
 
-## 11. Conformidade Legal
+O tratamento de dados pessoais está descrito na Política de Privacidade do Leviã, que faz parte destes Termos.
 
-### 11.1 LGPD (Brasil)
-Leviã está em conformidade com Lei Geral de Proteção de Dados.
+## 12. Mudanças
 
-### 11.2 GDPR (UE)
-Se residente da UE, seus direitos sob GDPR são respeitados.
+Podemos atualizar estes Termos. Mudanças relevantes, principalmente de preço ou de cobrança, serão avisadas com antecedência pelo app, por e-mail ou pelo WhatsApp. Mudança de preço não vale para um período já pago.
 
-### 11.3 Jurisdição
-Estes termos são regidos pelas leis do Brasil.
+## 13. Lei e foro
 
-## 12. Alterações nos Termos
+Estes Termos seguem as leis do Brasil. Fica eleito o foro do domicílio do consumidor.
 
-Podemos atualizar estes termos a qualquer tempo. Seu uso contínuo do app após notificação de mudanças significa aceitação.
+## 14. Contato
+
+**E-mail:** contatoapplevia@gmail.com
+**Responsável:** [RAZÃO SOCIAL OU NOME DO RESPONSÁVEL]
+
+Respondemos em até 7 dias úteis.
 
 **Histórico:**
-- v1.0 - 29/09/2026 - Lançamento inicial
-
-## 13. Feedback e Sugestões
-
-Se você tiver feedback sobre Leviã:
-- Email: luis.fernandopl@yahoo.com
-- Reviewers no Google Play
-- Issues no repositório do projeto
-
-Você nos autoriza a usar seu feedback para melhorar o app.
-
-## 14. Conflitos de Termos
-
-Se houver conflito entre:
-- **Google Play Termos de Serviço** e
-- **Estes Termos**
-
-Os termos mais restritivos (protetores do usuário) prevalecerão.
-
-## 15. Integridade do Acordo
-
-Se qualquer parte deste acordo for inválida:
-- As partes restantes continuam em vigor
-- A disposição inválida será modificada minimamente
-
-## 16. Contato
-
-Para questões sobre estes termos:
-
-**Email:** luis.fernandopl@yahoo.com  
-**Desenvolvedor:** FP Tech & Art "ferpa2505-Art"  
-**País:** Brasil  
-
-Responderemos em até 7 dias.
-
----
-
-## Resumo Executivo
-
-| Item | Status |
-|------|--------|
-| **Leviã é dispositivo médico?** | ❌ NÃO |
-| **Substitui médico?** | ❌ NÃO |
-| **É seguro guardar meus dados?** | ✅ SIM (privado) |
-| **Preciso informar meu médico que uso?** | ✅ SIM (recomendado) |
-| **Devo seguir conselhos do app?** | ❌ NÃO (consulte médico) |
-| **Posso usar em emergência médica?** | ❌ NÃO (ligue 192/911) |
-| **Vocês vendem meus dados?** | ❌ NUNCA |
-
----
-
-## ✅ Declaração Final
-
-**Ao usar Leviã, você reconhece e aceita:**
-
-1. ✅ Que é uma ferramenta de assistência, não médica
-2. ✅ Que consultará seu médico regularmente
-3. ✅ Que é responsável pelos dados que insere
-4. ✅ Que em emergências médicas você ligará para 192/911
-5. ✅ Que sua privacidade é protegida
-6. ✅ Que o app é fornecido "como está"
-7. ✅ Que nós não somos responsáveis por consequências médicas
-8. ✅ Que leu e compreendeu estes termos
-
-**Data de aceitação:** [data do download]
-
----
-
-*Última atualização: 29 de setembro de 2026*
-
-**Obrigado por usar Leviã! 💚**
+- 0.5.0 — 21/10/2026 — teste de 7 dias, planos mensal e anual, alimentos salvos, revisão das cláusulas de responsabilidade.
+- 1.0 — 29/09/2026 — primeira versão.
