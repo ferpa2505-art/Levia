@@ -1,0 +1,48 @@
+name: Deploy Cloudflare Worker
+
+on:
+  push:
+    branches:
+      - pwa-v0.4.0
+    paths:
+      - worker/**
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test-worker-api:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Run worker API synthetic test
+        run: npm test -- --runInBand --watch=false __tests__/worker-api-synthetic.test.ts
+
+  deploy-worker:
+    needs: test-worker-api
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Deploy Cloudflare Worker
+        uses: cloudflare/wrangler-action@v3
+        with:
+          command: deploy --config worker/wrangler.toml
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
