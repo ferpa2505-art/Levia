@@ -16,17 +16,20 @@ FOTOS_GRATIS_7D = "2"
 MAX_FOTOS_DIA = "300"
 # por endereço IP, por hora
 MAX_FOTOS_IP_HORA = "20"
+# Hostnames que podem concluir o desafio Turnstile (sitekey e secret são configurados no Worker)
+TURNSTILE_ALLOWED_HOSTNAMES = "levia-app.netlify.app,localhost"
 
 [[kv_namespaces]]
 binding = "LEVIA_COTAS"
 id = "7cb6991665974b96b3d7ce447f067a9a"
 
 # Banco de desenvolvimento para contas, testes, pagamentos e licenças.
-# Esta etapa apenas registra o binding; as rotas passarão a usá-lo em PRs seguintes.
 [[d1_databases]]
 binding = "LEVIA_DB"
 database_name = "levia-licencas-dev"
 database_id = "e12692fa-0123-4cfc-811d-18ca91ec39da"
 migrations_dir = "migrations"
 
-# Segredos (não ficam aqui): GEMINI_API_KEY, APP_TOKEN
+# Segredos do Worker: GEMINI_API_KEY, TURNSTILE_SECRET_KEY, TYPEBOT_SHARED_SECRET,
+# TYPEBOT_PHONE_HMAC_KEY, RESEND_API_KEY, EMAIL_ENCRYPTION_KEY.
+# TURNSTILE_SITE_KEY é uma variável pública de execução, nunca uma chave secreta.
