@@ -25,4 +25,13 @@ MAX_FOTOS_IP_HORA = "20"
 binding = "LEVIA_COTAS"
 id = "7cb6991665974b96b3d7ce447f067a9a"
 
-# Segredos (não ficam aqui): GEMINI_API_KEY, APP_TOKEN
+# Banco de desenvolvimento para contas, testes, pagamentos e licenças.
+[[d1_databases]]
+binding = "LEVIA_DB"
+database_name = "levia-licencas-dev"
+database_id = "e12692fa-0123-4cfc-811d-18ca91ec39da"
+migrations_dir = "migrations"
+
+# Segredos do Worker: GEMINI_API_KEY, TURNSTILE_SECRET_KEY, TYPEBOT_SHARED_SECRET,
+# TYPEBOT_PHONE_HMAC_KEY, RESEND_API_KEY, EMAIL_ENCRYPTION_KEY.
+# TURNSTILE_SITE_KEY é uma variável pública de execução, nunca uma chave secreta.
