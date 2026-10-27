@@ -1,31 +1,31 @@
-name = "levia-ia-worker"
+ï»¿name = "levia-ia-worker"
 main = "src/index.js"
 compatibility_date = "2026-09-21"
 workers_dev = true
 preview_urls = false
 
-# Logs só com contagens e tempos — nunca a foto
+# Logs sï¿½ com contagens e tempos ï¿½ nunca a foto
 [observability]
 enabled = true
 
 [vars]
 GEMINI_MODEL = "gemini-3.8-flash"
-# Turnstile site key (público - usado no frontend para renderizar o widget)
+# Turnstile site key (pï¿½blico - usado no frontend para renderizar o widget)
 TURNSTILE_SITE_KEY = "0x4AAAAAAFoARAgjnyw8rcwX"
-# Hostnames permitidos pelo Turnstile (padrão: levia-app.netlify.app,localhost)
+# Hostnames permitidos pelo Turnstile (padrï¿½o: levia-app.netlify.app,localhost)
 TURNSTILE_ALLOWED_HOSTNAMES = "levia-app.netlify.app,localhost"
-# grátis: fotos por instalação a cada 7 dias
+# grï¿½tis: fotos por instalaï¿½ï¿½o a cada 7 dias
 FOTOS_GRATIS_7D = "2"
-# teto de segurança da conta inteira por dia (protege o saldo pré-pago)
+# teto de seguranï¿½a da conta inteira por dia (protege o saldo prï¿½-pago)
 MAX_FOTOS_DIA = "300"
-# por endereço IP, por hora
+# por endereï¿½o IP, por hora
 MAX_FOTOS_IP_HORA = "20"
 
 [[kv_namespaces]]
 binding = "LEVIA_COTAS"
 id = "7cb6991665974b96b3d7ce447f067a9a"
 
-# Banco de desenvolvimento para contas, testes, pagamentos e licenças.
+# Banco de desenvolvimento para contas, testes, pagamentos e licenï¿½as.
 [[d1_databases]]
 binding = "LEVIA_DB"
 database_name = "levia-licencas-dev"
@@ -34,4 +34,8 @@ migrations_dir = "migrations"
 
 # Segredos do Worker: GEMINI_API_KEY, TURNSTILE_SECRET_KEY, TYPEBOT_SHARED_SECRET,
 # TYPEBOT_PHONE_HMAC_KEY, RESEND_API_KEY, EMAIL_ENCRYPTION_KEY.
-# TURNSTILE_SITE_KEY é uma variável pública de execução, nunca uma chave secreta.
+# TURNSTILE_SITE_KEY ï¿½ uma variï¿½vel pï¿½blica de execuï¿½ï¿½o, nunca uma chave secreta.
+
+# Cron Triggers para lembretes (executa diariamente ï¿½s 09:00 UTC = 06:00 BRT)
+[triggers]
+crons = ["0 9 * * *"]
