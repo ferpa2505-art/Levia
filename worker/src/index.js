@@ -9,7 +9,7 @@ const TAMANHO_MAX_BASE64 = 2_000_000;
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const SETE_DIAS_MS = 7 * 24 * 3600 * 1000;
 const IDIOMAS = { pt: 'português do Brasil', en: 'English', es: 'español', fr: 'français', it: 'italiano' };
-const ORIGENS_WEB = ['https://levia-app.netlify.app', 'http://localhost:8081'];
+const ORIGENS_WEB = ['https://levia-app.netlify.app', 'http://localhost:8081', 'https://typebot.com', 'https://app.typebot.io'];
 
 function cabecalhosCors(origem) {
   if (!origem || !ORIGENS_WEB.includes(origem)) return {};
@@ -168,11 +168,62 @@ async function analisarPrato(request, env) {
   return json({ ...resultado, restantes: Math.max(0, limite - historico.length) });
 }
 
+async function processarLead(request, env) {
+  const kv = env.LEVIA_COTAS;
+  const ip = request.headers.get('cf-connecting-ip') ?? 'sem-ip';
+  const minuto = new Date().toISOString().slice(0, 16).replace(':', '');
+  const chaveRateLimit = `lead:ip:${ip}:${minuto}`;
+  const usados = await lerNumero(kv, chaveRateLimit);
+  if (usados >= 10) return json({ erro: 'muitas_tentativas' }, 429);
+
+  let corpo;
+  try { corpo = await request.json(); } catch { return json({ erro: 'corpo_invalido' }, 400); }
+
+  const { name, phone, email, pain_point, source } = corpo ?? {};
+  if (!name || typeof name !== 'string' || name.trim().length === 0) {
+    return json({ erro: 'nome_obrigatorio' }, 400);
+  }
+  if (!phone || typeof phone !== 'string' || phone.trim().length === 0) {
+    return json({ erro: 'telefone_obrigatorio' }, 400);
+  }
+
+  // Increment rate limit counter
+  await kv.put(chaveRateLimit, String(usados + 1), { expirationTtl: 120 });
+
+  const leadId = crypto.randomUUID();
+  const agora = new Date().toISOString();
+
+  // Try to save to D1
+  let salvo = false;
+  if (env.LEVIA_DB) {
+    try {
+      await env.LEVIA_DB.prepare(
+        'INSERT INTO leads (id, name, phone, email, pain_point, source, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)'
+      ).bind(leadId, name.trim(), phone.trim(), email?.trim() ?? null, pain_point?.trim() ?? null, source?.trim() ?? null, agora).run();
+      salvo = true;
+    } catch (e) {
+      console.error('Erro ao salvar lead no D1:', e?.message);
+    }
+  }
+
+  // Fallback to KV if D1 failed
+  if (!salvo) {
+    try {
+      const leadData = { id: leadId, name: name.trim(), phone: phone.trim(), email: email?.trim() ?? null, pain_point: pain_point?.trim() ?? null, source: source?.trim() ?? null, created_at: agora };
+      await kv.put(`lead:${leadId}`, JSON.stringify(leadData), { expirationTtl: 30 * 24 * 3600 });
+    } catch (e) {
+      console.error('Erro ao salvar lead no KV:', e?.message);
+    }
+  }
+
+  return json({ pwaLink: `https://levia.app/onboarding?lead=${leadId}` });
+}
+
 export default {
   async fetch(request, env) {
     const { pathname } = new URL(request.url);
     const origem = request.headers.get('Origin');
-    if ((pathname === '/v1/analisar-prato' || pathname === '/v1/turnstile/sitekey') && request.method === 'OPTIONS') {
+    if ((pathname === '/v1/analisar-prato' || pathname === '/v1/turnstile/sitekey' || pathname === '/api/lead') && request.method === 'OPTIONS') {
       return new Response(null, { status: 204, headers: cabecalhosCors(origem) });
     }
     if (pathname === '/v1/turnstile/sitekey' && request.method === 'GET') {
@@ -185,6 +236,10 @@ export default {
     if (pathname === '/v1/analisar-prato' && request.method === 'POST') {
       try { return comCors(await analisarPrato(request, env), origem); }
       catch (e) { console.error('erro', e?.message); return comCors(json({ erro: 'interno' }, 500), origem); }
+    }
+    if (pathname === '/api/lead' && request.method === 'POST') {
+      try { return comCors(await processarLead(request, env), origem); }
+      catch (e) { console.error('erro lead', e?.message); return comCors(json({ erro: 'interno' }, 500), origem); }
     }
     if (pathname === '/health') return json({ ok: true });
     return json({ erro: 'nao_encontrado' }, 404);
