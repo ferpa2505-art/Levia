@@ -1,4 +1,4 @@
-// Mesmos atalhos de import do tsconfig.json (@utils/…, @constants/…)
+// Mesmos atalhos de import do tsconfig.json (@utils/..., @constants/...)
 module.exports = {
   testPathIgnorePatterns: ['/node_modules/', '/worker/'],
   moduleNameMapper: {
@@ -12,4 +12,16 @@ module.exports = {
     '^@context/(.*)$': '<rootDir>/src/context/$1',
     '^@services/(.*)$': '<rootDir>/src/services/$1',
   },
+  transform: {
+    '^.+\\.jsx?$': 'babel-jest',
+    '^.+\\.tsx?$': 'ts-jest',
+  },
+  transformIgnorePatterns: [
+    '/node_modules/(?!@babel/runtime)'
+  ],
+  globals: {
+    'ts-jest': {
+      useESM: true
+    }
+  }
 };

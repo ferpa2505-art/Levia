@@ -16,32 +16,32 @@ const EMAIL_ENCRYPTION_KEY = "c3ludGhldGljLWVtYWlsLWVuY3J5cHRpb24ta2V5LTMy";
 
 // Create a properly signed JWT session token matching Worker's approach
 async function createMockSessionToken(accountId: string): Promise<string> {
-  const crypto = globalThis.crypto;
+  const crypto = (globalThis as any).crypto;
   
   const header = { alg: "HS256", typ: "JWT" };
   const payload = { sub: accountId, iat: Math.floor(Date.now() / 1000), exp: Math.floor(Date.now() / 1000) + 30 * 24 * 3600 };
   
   const base64urlEncode = (bytes: Uint8Array) => {
-    return Buffer.from(bytes).toString("base64").replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+    return (globalThis as any).Buffer.from(bytes).toString("base64").replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
   };
   
-  const headerB64 = base64urlEncode(new TextEncoder().encode(JSON.stringify(header)));
-  const payloadB64 = base64urlEncode(new TextEncoder().encode(JSON.stringify(payload)));
+  const headerB64 = base64urlEncode(new (globalThis as any).TextEncoder().encode(JSON.stringify(header)));
+  const payloadB64 = base64urlEncode(new (globalThis as any).TextEncoder().encode(JSON.stringify(payload)));
   const signingInput = headerB64 + "." + payloadB64;
   
   // IMPORTANT: Worker uses the base64 STRING directly as HMAC key (via TextEncoder)
   // NOT the decoded bytes! This is what importSigningKey does:
-  // new TextEncoder().encode(secret) where secret = EMAIL_ENCRYPTION_KEY (the base64 string)
+  // new (globalThis as any).TextEncoder().encode(secret) where secret = EMAIL_ENCRYPTION_KEY (the base64 string)
   const key = await crypto.subtle.importKey(
     "raw",
-    new TextEncoder().encode(EMAIL_ENCRYPTION_KEY),  // Use the base64 string directly as UTF-8
+    new (globalThis as any).TextEncoder().encode(EMAIL_ENCRYPTION_KEY),  // Use the base64 string directly as UTF-8
     { name: "HMAC", hash: "SHA-256" },
     false,
     ["sign"]
   );
   
   // Sign
-  const signature = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(signingInput));
+  const signature = await crypto.subtle.sign("HMAC", key, new (globalThis as any).TextEncoder().encode(signingInput));
   const signatureB64 = base64urlEncode(new Uint8Array(signature));
   
   return `${signingInput}.${signatureB64}`;
@@ -181,7 +181,7 @@ function geminiSuccess(body: unknown = { ehComida: true, itens: [] }) {
 let fetchMock: jest.Mock;
 
 describe("Cloudflare Worker API (synthetic, offline)", () => {
-  const originalFetch = global.fetch;
+  const originalFetch = (globalThis as any).fetch;
   let testAccountId: string;
   let testTrials: Map<string, any>;
   let mockSessionToken: string;
@@ -203,9 +203,9 @@ describe("Cloudflare Worker API (synthetic, offline)", () => {
 
   beforeEach(() => { 
     fetchMock = jest.fn(); 
-    global.fetch = fetchMock as typeof fetch; 
+    (globalThis as any).fetch = fetchMock as typeof fetch; 
   });
-  afterEach(() => { global.fetch = originalFetch; });
+  afterEach(() => { (globalThis as any).fetch = originalFetch; });
 
   test("GET /health returns the health contract", async () => {
     await expectJson(await send(makeRequest("/health")), 200, { ok: true });
