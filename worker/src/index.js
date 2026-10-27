@@ -1,5 +1,9 @@
-import { iniciarTeste } from './licencas';
+import { iniciarTeste, ativarTeste, verifySessionToken, validarLicenca } from './licencas';
 import { turnstileSitekey, validarTurnstile } from './turnstile';
+import { handleHotmartWebhook } from './webhook';
+import { enviarWhatsApp } from './whatsapp';
+import { handleReminders } from './reminders';
+
 
 /**
  * levia-ia-worker — análise de foto do prato para o app Leviã.
@@ -16,7 +20,7 @@ function cabecalhosCors(origem) {
   return {
     'Access-Control-Allow-Origin': origem,
     'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
     'Access-Control-Max-Age': '86400',
     Vary: 'Origin',
   };
@@ -125,17 +129,53 @@ async function perguntarAoGemini(env, imagemBase64, idioma) {
   }
 }
 
+async function validarSessaoETrial(request, env) {
+  const auth = request.headers.get('Authorization');
+  if (!auth || !auth.startsWith('Bearer ')) return { erro: 'sessao_obrigatoria' };
+  
+  const token = auth.slice(7);
+  const accountId = await verifySessionToken(token, env);
+  if (!accountId) return { erro: 'sessao_invalida' };
+  
+  const trial = await env.LEVIA_DB.prepare(
+    'SELECT * FROM trials WHERE account_id = ? AND status = ? LIMIT 1'
+  ).bind(accountId, 'active').first();
+  
+  if (!trial) return { erro: 'trial_inexistente' };
+  
+  const agora = new Date();
+  const expiraEm = new Date(trial.expires_at);
+  if (agora > expiraEm) {
+    await env.LEVIA_DB.prepare(
+      'UPDATE trials SET status = ?, updated_at = ? WHERE account_id = ?'
+    ).bind('expired', agora.toISOString(), accountId).run();
+    return { erro: 'trial_expirado' };
+  }
+  
+  if (trial.photo_used >= trial.photo_limit) {
+    const liberaEm = new Date(agora.getTime() + SETE_DIAS_MS).toISOString();
+    return { erro: 'cota_esgotada', limite: trial.photo_limit, liberaEm };
+  }
+  
+  return { accountId, trial };
+}
+
 async function analisarPrato(request, env) {
   if (!env.GEMINI_API_KEY) return json({ erro: 'nao_configurado' }, 503);
   if (!env.TURNSTILE_SECRET_KEY || !env.TURNSTILE_SITE_KEY) return json({ erro: 'protecao_nao_configurada' }, 503);
+  
   let corpo;
   try { corpo = await request.json(); } catch { return json({ erro: 'corpo_invalido' }, 400); }
+  
   const { imagem, instalacao, idioma, turnstileToken } = corpo ?? {};
   if (typeof instalacao !== 'string' || !UUID.test(instalacao)) return json({ erro: 'instalacao_invalida' }, 400);
   if (!imagemJpegValida(imagem)) return json({ erro: 'imagem_invalida' }, 400);
 
   const verificacao = await validarTurnstile(request, env, turnstileToken);
   if (!verificacao.ok) return verificacao.response;
+
+  const sessao = await validarSessaoETrial(request, env);
+  if (sessao.erro) return json(sessao, sessao.erro === 'trial_expirado' ? 410 : sessao.erro === 'cota_esgotada' ? 402 : sessao.erro === 'sessao_obrigatoria' || sessao.erro === 'sessao_invalida' ? 401 : 403);
 
   const kv = env.LEVIA_COTAS;
   const agora = Date.now();
@@ -148,45 +188,87 @@ async function analisarPrato(request, env) {
   const chaveIp = `ip:${ip}:${hora}`;
   const usadosIp = await lerNumero(kv, chaveIp);
   if (usadosIp >= Number(env.MAX_FOTOS_IP_HORA || 20)) return json({ erro: 'muitas_tentativas' }, 429);
-  const chaveInst = `inst:${instalacao}`;
-  const historico = ((await kv.get(chaveInst, 'json')) ?? []).filter((t) => agora - t < SETE_DIAS_MS);
-  const limite = Number(env.FOTOS_GRATIS_7D || 2);
-  if (historico.length >= limite) {
-    const liberaEm = new Date(Math.min(...historico) + SETE_DIAS_MS).toISOString();
-    return json({ erro: 'cota_esgotada', limite, liberaEm }, 402);
-  }
 
   // Reserva cota antes da chamada externa para que falhas do Gemini também contem.
-  historico.push(agora);
   await Promise.all([
-    kv.put(chaveInst, JSON.stringify(historico), { expirationTtl: 8 * 24 * 3600 }),
     kv.put(chaveDia, String(usadosDia + 1), { expirationTtl: 3 * 24 * 3600 }),
     kv.put(chaveIp, String(usadosIp + 1), { expirationTtl: 2 * 3600 }),
+    env.LEVIA_DB.prepare(
+      'UPDATE trials SET photo_used = photo_used + 1, updated_at = ? WHERE account_id = ?'
+    ).bind(new Date().toISOString(), sessao.accountId).run(),
   ]);
+  
   const resultado = await perguntarAoGemini(env, imagem, idioma);
   if (!resultado || resultado.falha) return json({ erro: 'falha_ia', motivo: resultado?.falha }, 502);
-  return json({ ...resultado, restantes: Math.max(0, limite - historico.length) });
+  
+  // Buscar trial atualizado para retornar restantes
+  const trialAtualizado = await env.LEVIA_DB.prepare(
+    'SELECT photo_limit, photo_used FROM trials WHERE account_id = ?'
+  ).bind(sessao.accountId).first();
+  
+  const restantes = trialAtualizado ? Math.max(0, trialAtualizado.photo_limit - trialAtualizado.photo_used) : 0;
+  
+  return json({ ...resultado, restantes });
 }
 
 export default {
   async fetch(request, env) {
     const { pathname } = new URL(request.url);
     const origem = request.headers.get('Origin');
-    if ((pathname === '/v1/analisar-prato' || pathname === '/v1/turnstile/sitekey') && request.method === 'OPTIONS') {
+    
+    // CORS preflight
+    if ((pathname === '/v1/analisar-prato' || pathname === '/v1/turnstile/sitekey' || pathname === '/v1/teste/ativar' || pathname === '/v1/licenca/validar') && request.method === 'OPTIONS') {
       return new Response(null, { status: 204, headers: cabecalhosCors(origem) });
     }
+    
     if (pathname === '/v1/turnstile/sitekey' && request.method === 'GET') {
       return comCors(turnstileSitekey(env), origem);
     }
+    
     if (pathname === '/v1/teste/iniciar' && request.method === 'POST') {
       try { return iniciarTeste(request, env); }
       catch (e) { console.error('erro teste', e?.message); return json({ erro: 'interno' }, 500); }
     }
+    
+    if (pathname === '/v1/teste/ativar' && request.method === 'POST') {
+      try { return ativarTeste(request, env); }
+      catch (e) { console.error('erro ativar', e?.message); return json({ erro: 'interno' }, 500); }
+    }
+    
     if (pathname === '/v1/analisar-prato' && request.method === 'POST') {
       try { return comCors(await analisarPrato(request, env), origem); }
       catch (e) { console.error('erro', e?.message); return comCors(json({ erro: 'interno' }, 500), origem); }
     }
+    
+    if (pathname === '/v1/licenca/validar' && request.method === 'POST') {
+      try { return comCors(await validarLicenca(request, env), origem); }
+      catch (e) { console.error('erro validar licenca', e?.message); return comCors(json({ erro: 'interno' }, 500), origem); }
+    }
+
+    if (pathname === '/v1/webhook/hotmart' && request.method === 'POST') {
+      try { return handleHotmartWebhook(request, env); }
+      catch (e) { console.error('erro webhook', e?.message); return json({ erro: 'interno' }, 500); }
+    }
+    
+    if (pathname === '/v1/whatsapp' && request.method === 'POST') {
+      try { return enviarWhatsApp(request, env); }
+      catch (e) { console.error('erro whatsapp', e?.message); return json({ erro: 'interno' }, 500); }
+    }
+
     if (pathname === '/health') return json({ ok: true });
     return json({ erro: 'nao_encontrado' }, 404);
   },
+
+  async scheduled(event, env, ctx) {
+    if (event.cron === '0 9 * * *') {
+      ctx.waitUntil(handleReminders(env));
+    }
+  },
 };
+
+
+
+
+
+
+
