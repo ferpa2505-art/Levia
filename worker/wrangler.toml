@@ -4,21 +4,25 @@ compatibility_date = "2026-09-21"
 workers_dev = true
 preview_urls = false
 
-# Logs sÃ³ com contagens e tempos â€” nunca a foto
+# Logs só com contagens e tempos — nunca a foto
 [observability]
 enabled = true
 
 [vars]
 GEMINI_MODEL = "gemini-3.8-flash"
-# grÃ¡tis: fotos por instalaÃ§Ã£o a cada 7 dias
+# Turnstile site key (público - usado no frontend para renderizar o widget)
+TURNSTILE_SITE_KEY = "0x4AAAAAAFoARAgjnyw8rcwX"
+# Hostnames permitidos pelo Turnstile (padrão: levia-app.netlify.app,localhost)
+TURNSTILE_ALLOWED_HOSTNAMES = "levia-app.netlify.app,localhost"
+# grátis: fotos por instalação a cada 7 dias
 FOTOS_GRATIS_7D = "2"
-# teto de seguranÃ§a da conta inteira por dia (protege o saldo prÃ©-pago)
+# teto de segurança da conta inteira por dia (protege o saldo pré-pago)
 MAX_FOTOS_DIA = "300"
-# por endereÃ§o IP, por hora
+# por endereço IP, por hora
 MAX_FOTOS_IP_HORA = "20"
 
 [[kv_namespaces]]
 binding = "LEVIA_COTAS"
 id = "7cb6991665974b96b3d7ce447f067a9a"
 
-# Segredos (nÃ£o ficam aqui): GEMINI_API_KEY, APP_TOKEN
+# Segredos (não ficam aqui): GEMINI_API_KEY, APP_TOKEN
