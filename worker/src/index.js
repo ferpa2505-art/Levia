@@ -296,12 +296,15 @@ async function processarLead(request, env) {
 async function processarWhatsAppInbound(request, env) {
   // Verificar assinatura do webhook (se configurado)
   const signature = request.headers.get('x-webhook-signature');
+  
+  // DEBUG: Log incoming request details
   console.log('DEBUG: signature header:', signature);
   console.log('DEBUG: WHATSAPP_WEBHOOK_SECRET:', env.WHATSAPP_WEBHOOK_SECRET ? 'set' : 'not set');
+  
   if (env.WHATSAPP_WEBHOOK_SECRET && signature) {
     const crypto = require('crypto');
     const body = await request.text();
-    console.log('DEBUG: raw body:', body);
+    console.log('DEBUG: raw body (signature branch):', body);
     const expected = crypto.createHmac('sha256', env.WHATSAPP_WEBHOOK_SECRET)
       .update(body)
       .digest('hex');
@@ -313,9 +316,11 @@ async function processarWhatsAppInbound(request, env) {
     let corpo;
     try { corpo = JSON.parse(body); } catch { return json({ erro: 'corpo_invalido' }, 400); }
   } else {
-    const text = await request.text();
-    console.log('DEBUG: raw body (else branch):', text);
-    try { corpo = JSON.parse(text); } catch { return json({ erro: 'corpo_invalido' }, 400); }
+    // Use request.text() + JSON.parse() instead of request.json() to avoid Cloudflare Workers parsing issues
+    const rawBody = await request.text();
+    console.log('DEBUG: raw body (else branch):', rawBody);
+    let corpo;
+    try { corpo = JSON.parse(rawBody); } catch { return json({ erro: 'corpo_invalido' }, 400); }
   }
 
   // Estrutura esperada do Baileys/webhook
