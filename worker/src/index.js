@@ -2,14 +2,15 @@ import { iniciarTeste } from './licencas';
 import { turnstileSitekey, validarTurnstile } from './turnstile';
 
 /**
- * levia-ia-worker — análise de foto do prato para o app Leviã.
- * A imagem não é persistida nem registrada em logs.
+ * levia-ia-worker - analise de foto do prato para o app Leviã.
+ * A imagem nao e persistida nem registrada em logs.
  */
 const TAMANHO_MAX_BASE64 = 2_000_000;
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const SETE_DIAS_MS = 7 * 24 * 3600 * 1000;
 const IDIOMAS = { pt: 'português do Brasil', en: 'English', es: 'español', fr: 'français', it: 'italiano' };
 const ORIGENS_WEB = ['https://levia-app.netlify.app', 'http://localhost:8081', 'https://typebot.com', 'https://app.typebot.io'];
+const APP_BASE_URL_DEFAULT = 'https://leviapp.org';
 
 function cabecalhosCors(origem) {
   if (!origem || !ORIGENS_WEB.includes(origem)) return {};
@@ -49,6 +50,20 @@ function imagemJpegValida(valor) {
   } catch {
     return false;
   }
+}
+
+function normalizarTelefoneBR(phone) {
+  const digits = String(phone).replace(/\D/g, '');
+  if (digits.startsWith('55') && digits.length >= 12) {
+    return '+' + digits;
+  }
+  if (digits.length === 10 || digits.length === 11) {
+    return '+55' + digits;
+  }
+  if (digits.startsWith('0') && (digits.length === 11 || digits.length === 12)) {
+    return '+55' + digits.slice(1);
+  }
+  return '+55' + digits;
 }
 
 function prompt(idioma) {
@@ -156,7 +171,6 @@ async function analisarPrato(request, env) {
     return json({ erro: 'cota_esgotada', limite, liberaEm }, 402);
   }
 
-  // Reserva cota antes da chamada externa para que falhas do Gemini também contem.
   historico.push(agora);
   await Promise.all([
     kv.put(chaveInst, JSON.stringify(historico), { expirationTtl: 8 * 24 * 3600 }),
@@ -168,7 +182,36 @@ async function analisarPrato(request, env) {
   return json({ ...resultado, restantes: Math.max(0, limite - historico.length) });
 }
 
+async function verificarAutenticacao(request, env) {
+  const authHeader = request.headers.get('Authorization');
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return json({ erro: 'nao_autorizado' }, 401);
+  }
+  const token = authHeader.slice(7).trim();
+  const expected = env.GATEWAY_TOKEN;
+  if (!expected || token !== expected) {
+    return json({ erro: 'token_invalido' }, 401);
+  }
+  return null;
+}
+
+async function buscarLeadExistente(env, phoneNormalizado) {
+  if (!env.LEVIA_DB) return null;
+  try {
+    const result = await env.LEVIA_DB.prepare(
+      'SELECT id FROM leads WHERE phone = ? ORDER BY created_at DESC LIMIT 1'
+    ).bind(phoneNormalizado).first();
+    return result?.id ?? null;
+  } catch (e) {
+    console.error('Erro ao buscar lead existente:', e?.message);
+    return null;
+  }
+}
+
 async function processarLead(request, env) {
+  const authError = await verificarAutenticacao(request, env);
+  if (authError) return authError;
+
   const kv = env.LEVIA_COTAS;
   const ip = request.headers.get('cf-connecting-ip') ?? 'sem-ip';
   const minuto = new Date().toISOString().slice(0, 16).replace(':', '');
@@ -187,36 +230,65 @@ async function processarLead(request, env) {
     return json({ erro: 'telefone_obrigatorio' }, 400);
   }
 
-  // Increment rate limit counter
   await kv.put(chaveRateLimit, String(usados + 1), { expirationTtl: 120 });
 
-  const leadId = crypto.randomUUID();
+  const phoneNormalizado = normalizarTelefoneBR(phone.trim());
   const agora = new Date().toISOString();
 
-  // Try to save to D1
+  const leadIdExistente = await buscarLeadExistente(env, phoneNormalizado);
+  if (leadIdExistente) {
+    const baseUrl = env.APP_BASE_URL || APP_BASE_URL_DEFAULT;
+    return json({ pwaLink: `${baseUrl}/onboarding?lead=${leadIdExistente}` });
+  }
+
+  const leadId = crypto.randomUUID();
   let salvo = false;
   if (env.LEVIA_DB) {
     try {
       await env.LEVIA_DB.prepare(
-        'INSERT INTO leads (id, name, phone, email, pain_point, source, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)'
-      ).bind(leadId, name.trim(), phone.trim(), email?.trim() ?? null, pain_point?.trim() ?? null, source?.trim() ?? null, agora).run();
+        `INSERT INTO leads (id, name, phone, email, pain_point, source, consent_at, channel, created_at, updated_at) 
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+      ).bind(
+        leadId, 
+        name.trim(), 
+        phoneNormalizado, 
+        email?.trim() ?? null, 
+        pain_point?.trim() ?? null, 
+        source?.trim() ?? 'typebot',
+        agora, // consent_at
+        'typebot', // channel
+        agora, // created_at
+        agora  // updated_at
+      ).run();
       salvo = true;
     } catch (e) {
       console.error('Erro ao salvar lead no D1:', e?.message);
     }
   }
 
-  // Fallback to KV if D1 failed
   if (!salvo) {
     try {
-      const leadData = { id: leadId, name: name.trim(), phone: phone.trim(), email: email?.trim() ?? null, pain_point: pain_point?.trim() ?? null, source: source?.trim() ?? null, created_at: agora };
+      const leadData = { 
+        id: leadId, 
+        name: name.trim(), 
+        phone: phoneNormalizado, 
+        email: email?.trim() ?? null, 
+        pain_point: pain_point?.trim() ?? null, 
+        source: source?.trim() ?? 'typebot',
+        consent_at: agora,
+        channel: 'typebot',
+        created_at: agora,
+        updated_at: agora
+      };
       await kv.put(`lead:${leadId}`, JSON.stringify(leadData), { expirationTtl: 30 * 24 * 3600 });
     } catch (e) {
       console.error('Erro ao salvar lead no KV:', e?.message);
+      return json({ erro: 'falha_armazenamento' }, 503);
     }
   }
 
-  return json({ pwaLink: `https://levia.app/onboarding?lead=${leadId}` });
+  const baseUrl = env.APP_BASE_URL || APP_BASE_URL_DEFAULT;
+  return json({ pwaLink: `${baseUrl}/onboarding?lead=${leadId}` });
 }
 
 export default {
