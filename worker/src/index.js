@@ -1,5 +1,6 @@
 import { iniciarTeste } from './licencas';
 import { turnstileSitekey, validarTurnstile } from './turnstile';
+import { processarMensagemWhatsApp } from './fluxo';
 
 /**
  * levia-ia-worker - analise de foto do prato para o app Leviã.
@@ -291,6 +292,75 @@ async function processarLead(request, env) {
   return json({ pwaLink: `${baseUrl}/onboarding?lead=${leadId}` });
 }
 
+
+async function processarWhatsAppInbound(request, env) {
+  // Verificar assinatura do webhook (se configurado)
+  const signature = request.headers.get('x-webhook-signature');
+  if (env.WHATSAPP_WEBHOOK_SECRET && signature) {
+    const crypto = require('crypto');
+    const body = await request.text();
+    const expected = crypto.createHmac('sha256', env.WHATSAPP_WEBHOOK_SECRET)
+      .update(body)
+      .digest('hex');
+    if (signature !== expected) {
+      console.warn('Assinatura de webhook inválida');
+      return json({ erro: 'assinatura_invalida' }, 401);
+    }
+    // Re-parse body since we consumed it
+    let corpo;
+    try { corpo = JSON.parse(body); } catch { return json({ erro: 'corpo_invalido' }, 400); }
+  } else {
+    try { corpo = await request.json(); } catch { return json({ erro: 'corpo_invalido' }, 400); }
+  }
+
+  // Estrutura esperada do Baileys/webhook
+  const { messages, phone, messageId, timestamp, type } = corpo ?? {};
+
+  // Se não tem messages array, assumir mensagem única
+  const mensagens = Array.isArray(messages) ? messages : 
+    (corpo.text || corpo.body ? [{ text: corpo.text || corpo.body, id: messageId, from: phone, timestamp }] : []);
+
+  if (mensagens.length === 0) {
+    return json({ erro: 'nenhuma_mensagem' }, 400);
+  }
+
+  const resultados = [];
+
+  for (const msg of mensagens) {
+    const texto = (msg.text || msg.body || '').trim();
+    const msgPhone = msg.from || msg.phone || phone;
+    const msgId = msg.id || messageId || `${msgPhone}-${Date.now()}`;
+    const msgTimestamp = msg.timestamp || timestamp || Math.floor(Date.now() / 1000);
+
+    if (!msgPhone || !texto) {
+      resultados.push({ phone: msgPhone, status: 'ignorado', motivo: 'dados_incompletos' });
+      continue;
+    }
+
+    try {
+      const resultado = await processarMensagemWhatsApp(env, msgPhone, texto, msgId);
+      
+      if (resultado.tipo === 'duplicado') {
+        resultados.push({ phone: msgPhone, status: 'duplicado' });
+        continue;
+      }
+
+      resultados.push({
+        phone: msgPhone,
+        status: resultado.tipo,
+        resposta: resultado.resposta,
+        pwaLink: resultado.pwaLink,
+        leadId: resultado.leadId,
+      });
+    } catch (e) {
+      console.error('Erro ao processar mensagem:', e?.message);
+      resultados.push({ phone: msgPhone, status: 'erro', erro: e?.message });
+    }
+  }
+
+  return json({ processados: resultados.length, resultados });
+}
+
 export default {
   async fetch(request, env) {
     const { pathname } = new URL(request.url);
@@ -312,6 +382,10 @@ export default {
     if (pathname === '/api/lead' && request.method === 'POST') {
       try { return comCors(await processarLead(request, env), origem); }
       catch (e) { console.error('erro lead', e?.message); return comCors(json({ erro: 'interno' }, 500), origem); }
+    }
+    if (pathname === '/api/wa/inbound' && request.method === 'POST') {
+      try { return comCors(await processarWhatsAppInbound(request, env), origem); }
+      catch (e) { console.error('erro wa inbound', e?.message); return comCors(json({ erro: 'interno' }, 500), origem); }
     }
     if (pathname === '/health') return json({ ok: true });
     return json({ erro: 'nao_encontrado' }, 404);
