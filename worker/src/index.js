@@ -1,14 +1,13 @@
 import { iniciarTeste } from './licencas';
 
 /**
- * levia-ia-worker — análise de foto do prato para o app Leviã.
+ * levia-ia-worker — análise de foto do prato + captura de leads WhatsApp para o app Leviã.
  *
- * O app manda a foto (JPEG reduzido, em base64) e o id da instalação.
- * O worker confere as cotas, pergunta ao Gemini QUAIS alimentos há no prato
- * e QUANTOS GRAMAS de cada, e devolve só essa lista. Os nutrientes são
- * calculados no próprio app, com o banco de alimentos (TACO/CIQUAL/USDA).
- *
- * A foto não é guardada nem registrada em log.
+ * Rotas:
+ * - POST /v1/analisar-prato      → análise de foto (existente)
+ * - POST /v1/teste/iniciar       → iniciar teste (existente)
+ * - POST /api/lead               → capturar lead do WhatsApp/Typebot (NOVO - PR 1)
+ * - GET  /health                 → health check
  */
 
 const TAMANHO_MAX_BASE64 = 2_000_000; // ~1,5 MB de imagem
@@ -24,12 +23,31 @@ const IDIOMAS = { pt: 'português do Brasil', en: 'English', es: 'español', fr:
  */
 const ORIGENS_WEB = ['https://levia-app.netlify.app', 'http://localhost:8081'];
 
+/** Origens permitidas para o endpoint /api/lead (Typebot, WhatsApp gateway, etc.) */
+const ORIGENS_LEAD = [
+  'https://levia-app.netlify.app',
+  'http://localhost:8081',
+  'https://app.typebot.io',
+  'https://typebot.com',
+];
+
 function cabecalhosCors(origem) {
   if (!origem || !ORIGENS_WEB.includes(origem)) return {};
   return {
     'Access-Control-Allow-Origin': origem,
     'Access-Control-Allow-Methods': 'POST, OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type, x-levia-app',
+    'Access-Control-Max-Age': '86400',
+    Vary: 'Origin',
+  };
+}
+
+function cabecalhosCorsLead(origem) {
+  if (!origem || !ORIGENS_LEAD.includes(origem)) return {};
+  return {
+    'Access-Control-Allow-Origin': origem,
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
     'Access-Control-Max-Age': '86400',
     Vary: 'Origin',
   };
@@ -44,6 +62,14 @@ function json(corpo, status = 200) {
 
 function comCors(resposta, origem) {
   const extra = cabecalhosCors(origem);
+  if (!Object.keys(extra).length) return resposta;
+  const h = new Headers(resposta.headers);
+  for (const [k, v] of Object.entries(extra)) h.set(k, v);
+  return new Response(resposta.body, { status: resposta.status, headers: h });
+}
+
+function comCorsLead(resposta, origem) {
+  const extra = cabecalhosCorsLead(origem);
   if (!Object.keys(extra).length) return resposta;
   const h = new Headers(resposta.headers);
   for (const [k, v] of Object.entries(extra)) h.set(k, v);
@@ -217,10 +243,210 @@ async function analisarPrato(request, env) {
   return json({ ...resultado, restantes: Math.max(0, limite - historico.length) });
 }
 
+/**
+ * ===== NOVO: Endpoint /api/lead (PR 1 - Worker hardening) =====
+ * Captura leads do WhatsApp/Typebot com:
+ * - Auth via GATEWAY_TOKEN (Bearer)
+ * - Validação server-side (tamanhos, email, phone E.164, source whitelist)
+ * - Dedupe por telefone (reutiliza lead existente)
+ * - Retorna 503 se D1+KV falharem
+ * - Link usando APP_BASE_URL (default leviapp.org)
+ * - Rate limit por IP (10 req/min) via KV
+ */
+
+const MAX_NAME = 80;
+const MAX_PAIN_POINT = 500;
+const MAX_EMAIL = 254;
+const PHONE_E164 = /^\+[1-9]\d{7,14}$/;
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+const SOURCES_PERMITIDOS = ['whatsapp', 'web', 'typebot', 'api'];
+
+function normalizarTelefone(valor) {
+  if (typeof valor !== 'string') return '';
+  let limpo = valor.replace(/[\s().-]/g, '');
+  if (!limpo.startsWith('+')) {
+    // Assume Brasil se não tem código do país
+    if (limpo.length === 10 || limpo.length === 11) {
+      limpo = '+55' + limpo;
+    } else if (limpo.length === 12 && limpo.startsWith('55')) {
+      limpo = '+' + limpo;
+    }
+  }
+  return limpo;
+}
+
+function validarLead(body) {
+  const erros = [];
+  
+  // name (obrigatório)
+  const name = typeof body?.name === 'string' ? body.name.trim() : '';
+  if (!name) erros.push('name: obrigatório');
+  else if (name.length > MAX_NAME) erros.push(`name: máx ${MAX_NAME} caracteres`);
+  
+  // phone (obrigatório)
+  const phoneRaw = typeof body?.phone === 'string' ? body.phone : '';
+  const phone = normalizarTelefone(phoneRaw);
+  if (!phone) erros.push('phone: obrigatório');
+  else if (!PHONE_E164.test(phone)) erros.push('phone: formato inválido (use E.164, ex: +5511999999999)');
+  
+  // email (opcional)
+  let email = '';
+  if (body?.email) {
+    email = typeof body.email === 'string' ? body.email.trim().toLowerCase() : '';
+    if (email && (email.length > MAX_EMAIL || !EMAIL_RE.test(email))) {
+      erros.push('email: formato inválido');
+    }
+  }
+  
+  // pain_point (opcional)
+  let pain_point = '';
+  if (body?.pain_point) {
+    pain_point = typeof body.pain_point === 'string' ? body.pain_point.trim() : '';
+    if (pain_point.length > MAX_PAIN_POINT) {
+      erros.push(`pain_point: máx ${MAX_PAIN_POINT} caracteres`);
+    }
+  }
+  
+  // source (opcional, default whatsapp)
+  const source = SOURCES_PERMITIDOS.includes(body?.source) ? body.source : 'whatsapp';
+  
+  // consent (opcional, timestamp ISO)
+  let consent_at = null;
+  if (body?.consent_at) {
+    const d = new Date(body.consent_at);
+    if (!isNaN(d.getTime())) consent_at = d.toISOString();
+  }
+  
+  return { name, phone, email, pain_point, source, consent_at, erros };
+}
+
+async function rateLimitCheck(kv, ip) {
+  const chave = `ratelimit:lead:${ip}:${Math.floor(Date.now() / 60000)}`; // janela de 1 min
+  const atual = Number((await kv.get(chave)) ?? 0);
+  if (atual >= 10) return false; // 10 req/min
+  await kv.put(chave, String(atual + 1), { expirationTtl: 120 });
+  return true;
+}
+
+async function buscarLeadPorTelefone(db, phone) {
+  const row = await db.prepare('SELECT id FROM leads WHERE phone = ? LIMIT 1').bind(phone).first();
+  return row?.id || null;
+}
+
+async function criarOuAtualizarLead(db, leadData) {
+  const { name, phone, email, pain_point, source, consent_at } = leadData;
+  const agora = new Date().toISOString();
+  const leadId = crypto.randomUUID();
+  
+  // Tenta inserir novo
+  try {
+    await db.prepare(
+      `INSERT INTO leads (id, name, phone, email, pain_point, source, consent_at, channel, created_at, updated_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+    ).bind(leadId, name, phone, email || null, pain_point || null, source, consent_at, source, agora, agora).run();
+    return { leadId, isNew: true };
+  } catch (e) {
+    // Se falhou por duplicate phone, busca o existente e atualiza
+    const existingId = await buscarLeadPorTelefone(db, phone);
+    if (existingId) {
+      await db.prepare(
+        `UPDATE leads SET name = ?, email = ?, pain_point = ?, source = ?, consent_at = ?, channel = ?, updated_at = ?
+         WHERE id = ?`
+      ).bind(name, email || null, pain_point || null, source, consent_at, source, agora, existingId).run();
+      return { leadId: existingId, isNew: false };
+    }
+    throw e; // Re-throw se não foi duplicate phone
+  }
+}
+
+async function salvarLeadKV(kv, leadData, leadId) {
+  const chave = `lead:${leadId}`;
+  await kv.put(chave, JSON.stringify({ ...leadData, id: leadId }), { expirationTtl: 30 * 24 * 3600 });
+}
+
+async function processarLead(request, env) {
+  const origem = request.headers.get('Origin');
+  
+  // CORS preflight
+  if (request.method === 'OPTIONS') {
+    return new Response(null, { status: 204, headers: cabecalhosCorsLead(origem) });
+  }
+  
+  if (request.method !== 'POST') {
+    return comCorsLead(json({ erro: 'metodo_nao_permitido' }, 405), origem);
+  }
+  
+  // Auth: GATEWAY_TOKEN obrigatório
+  const authHeader = request.headers.get('Authorization') ?? '';
+  const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : '';
+  if (!env.GATEWAY_TOKEN || !iguais(token, env.GATEWAY_TOKEN)) {
+    return comCorsLead(json({ erro: 'nao_autorizado' }, 401), origem);
+  }
+  
+  // Rate limit por IP
+  const ip = request.headers.get('cf-connecting-ip') ?? 'sem-ip';
+  const okRate = await rateLimitCheck(env.LEVIA_COTAS, ip);
+  if (!okRate) {
+    return comCorsLead(json({ erro: 'muitas_tentativas' }, 429), origem);
+  }
+  
+  // Parse body
+  let body;
+  try {
+    body = await request.json();
+  } catch {
+    return comCorsLead(json({ erro: 'corpo_invalido' }, 400), origem);
+  }
+  
+  // Validação
+  const { name, phone, email, pain_point, source, consent_at, erros } = validarLead(body);
+  if (erros.length > 0) {
+    return comCorsLead(json({ erro: 'validacao', detalhes: erros }, 400), origem);
+  }
+  
+  // Verifica se já existe lead para este telefone (dedupe)
+  let leadId = await buscarLeadPorTelefone(env.LEVIA_DB, phone);
+  let isNew = false;
+  
+  if (!leadId) {
+    // Cria novo lead
+    try {
+      const result = await criarOuAtualizarLead(env.LEVIA_DB, { name, phone, email, pain_point, source, consent_at });
+      leadId = result.leadId;
+      isNew = result.isNew;
+    } catch (e) {
+      console.error('Erro ao criar lead no D1:', e?.message);
+      // Fallback: tenta KV
+      leadId = crypto.randomUUID();
+      await salvarLeadKV(env.LEVIA_COTAS, { name, phone, email, pain_point, source, consent_at }, leadId);
+      isNew = true;
+    }
+  } else {
+    // Atualiza lead existente
+    try {
+      await criarOuAtualizarLead(env.LEVIA_DB, { name, phone, email, pain_point, source, consent_at });
+      isNew = false;
+    } catch (e) {
+      console.error('Erro ao atualizar lead no D1:', e?.message);
+      // Fallback KV
+      await salvarLeadKV(env.LEVIA_COTAS, { name, phone, email, pain_point, source, consent_at }, leadId);
+      isNew = false;
+    }
+  }
+  
+  // Monta link de onboarding usando APP_BASE_URL
+  const baseUrl = env.APP_BASE_URL || 'https://leviapp.org';
+  const pwaLink = `${baseUrl}/onboarding?lead=${leadId}`;
+  
+  return comCorsLead(json({ pwaLink, lead_id: leadId, is_new: isNew }), origem);
+}
+
 export default {
   async fetch(request, env) {
     const { pathname } = new URL(request.url);
     const origem = request.headers.get('Origin');
+    
+    // Rotas existentes
     if (pathname === '/v1/analisar-prato' && request.method === 'OPTIONS') {
       return new Response(null, { status: 204, headers: cabecalhosCors(origem) });
     }
@@ -240,6 +466,18 @@ export default {
         return comCors(json({ erro: 'interno' }, 500), origem);
       }
     }
+    
+    // NOVA ROTA: /api/lead
+    if (pathname === '/api/lead') {
+      try {
+        return await processarLead(request, env);
+      } catch (e) {
+        console.error('erro lead', e?.message);
+        // Se D1 e KV falharem, retorna 503
+        return comCorsLead(json({ erro: 'servico_indisponivel' }, 503), origem);
+      }
+    }
+    
     if (pathname === '/health') return json({ ok: true });
     return json({ erro: 'nao_encontrado' }, 404);
   },
