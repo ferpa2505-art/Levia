@@ -1,0 +1,26 @@
+version: '3.8'
+
+services:
+  baileys-gateway:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: levia-baileys-gateway
+    restart: unless-stopped
+    environment:
+      - WORKER_URL=https://levia-ia-worker.ferpa2505.workers.dev
+      - WHATSAPP_WEBHOOK_SECRET=${WHATSAPP_WEBHOOK_SECRET}
+      - HEARTBEAT_INTERVAL_MS=30000
+      - RECONNECT_DELAY_MS=5000
+    volumes:
+      - baileys-auth:/app/auth
+      - ./logs:/app/logs
+    healthcheck:
+      test: ["CMD", "node", "-e", "console.log('ok')"]
+      interval: 60s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+volumes:
+  baileys-auth:
