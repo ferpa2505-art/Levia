@@ -122,7 +122,7 @@ async function perguntarAoGemini(env, imagemBase64, idioma) {
     headers: { 'Content-Type': 'application/json', 'x-goog-api-key': env.GEMINI_API_KEY },
     body: JSON.stringify({
       contents: [{ role: 'user', parts: [{ inline_data: { mime_type: 'image/jpeg', data: imagemBase64 } }, { text: prompt(idioma) }] }],
-      generationConfig: { temperature: 0.2, responseMimeType: 'application/json', responseSchema: ESKEMA },
+      generationConfig: { temperature: 0.2, responseMimeType: 'application/json', responseSchema: ESQUEMA },
     }),
   });
   if (!r.ok) {
@@ -430,6 +430,7 @@ export default {
     return json({ erro: 'nao_encontrado' }, 404);
   },
 };
+
 
 
 
