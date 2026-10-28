@@ -54,16 +54,26 @@ function imagemJpegValida(valor) {
 }
 
 function normalizarTelefoneBR(phone) {
+  // Remove all non-digits
   const digits = String(phone).replace(/\D/g, '');
+  
+  // If already has country code (starts with 55), return as-is
   if (digits.startsWith('55') && digits.length >= 12) {
     return '+' + digits;
   }
+  
+  // Brazilian numbers: assume +55
+  // Format: +55 DDD NUMBER (e.g., +5511999999999)
   if (digits.length === 10 || digits.length === 11) {
     return '+55' + digits;
   }
+  
+  // If it has a leading 0 (common in Brazil), remove it
   if (digits.startsWith('0') && (digits.length === 11 || digits.length === 12)) {
     return '+55' + digits.slice(1);
   }
+  
+  // Default: return with +55 prefix
   return '+55' + digits;
 }
 
@@ -112,7 +122,7 @@ async function perguntarAoGemini(env, imagemBase64, idioma) {
     headers: { 'Content-Type': 'application/json', 'x-goog-api-key': env.GEMINI_API_KEY },
     body: JSON.stringify({
       contents: [{ role: 'user', parts: [{ inline_data: { mime_type: 'image/jpeg', data: imagemBase64 } }, { text: prompt(idioma) }] }],
-      generationConfig: { temperature: 0.2, responseMimeType: 'application/json', responseSchema: ESQUEMA },
+      generationConfig: { temperature: 0.2, responseMimeType: 'application/json', responseSchema: ESKEMA },
     }),
   });
   if (!r.ok) {
@@ -172,6 +182,7 @@ async function analisarPrato(request, env) {
     return json({ erro: 'cota_esgotada', limite, liberaEm }, 402);
   }
 
+  // Reserva cota antes da chamada externa para que falhas do Gemini também contem.
   historico.push(agora);
   await Promise.all([
     kv.put(chaveInst, JSON.stringify(historico), { expirationTtl: 8 * 24 * 3600 }),
@@ -193,7 +204,7 @@ async function verificarAutenticacao(request, env) {
   if (!expected || token !== expected) {
     return json({ erro: 'token_invalido' }, 401);
   }
-  return null;
+  return null; // OK
 }
 
 async function buscarLeadExistente(env, phoneNormalizado) {
@@ -210,9 +221,11 @@ async function buscarLeadExistente(env, phoneNormalizado) {
 }
 
 async function processarLead(request, env) {
+  // 1. Verificar autenticação
   const authError = await verificarAutenticacao(request, env);
   if (authError) return authError;
 
+  // 2. Rate limiting (10 req/min por IP)
   const kv = env.LEVIA_COTAS;
   const ip = request.headers.get('cf-connecting-ip') ?? 'sem-ip';
   const minuto = new Date().toISOString().slice(0, 16).replace(':', '');
@@ -220,10 +233,13 @@ async function processarLead(request, env) {
   const usados = await lerNumero(kv, chaveRateLimit);
   if (usados >= 10) return json({ erro: 'muitas_tentativas' }, 429);
 
+  // 3. Parse e validação do corpo
   let corpo;
   try { corpo = await request.json(); } catch { return json({ erro: 'corpo_invalido' }, 400); }
 
   const { name, phone, email, pain_point, source } = corpo ?? {};
+  
+  // Validação obrigatória
   if (!name || typeof name !== 'string' || name.trim().length === 0) {
     return json({ erro: 'nome_obrigatorio' }, 400);
   }
@@ -231,18 +247,24 @@ async function processarLead(request, env) {
     return json({ erro: 'telefone_obrigatorio' }, 400);
   }
 
+  // Increment rate limit counter
   await kv.put(chaveRateLimit, String(usados + 1), { expirationTtl: 120 });
 
+  // Normalizar telefone para E.164
   const phoneNormalizado = normalizarTelefoneBR(phone.trim());
   const agora = new Date().toISOString();
 
+  // 4. Deduplicação: verificar se já existe lead com esse telefone
   const leadIdExistente = await buscarLeadExistente(env, phoneNormalizado);
   if (leadIdExistente) {
     const baseUrl = env.APP_BASE_URL || APP_BASE_URL_DEFAULT;
     return json({ pwaLink: `${baseUrl}/onboarding?lead=${leadIdExistente}` });
   }
 
+  // 5. Criar novo lead
   const leadId = crypto.randomUUID();
+
+  // Try to save to D1
   let salvo = false;
   if (env.LEVIA_DB) {
     try {
@@ -267,6 +289,7 @@ async function processarLead(request, env) {
     }
   }
 
+  // Fallback to KV if D1 failed
   if (!salvo) {
     try {
       const leadData = { 
@@ -314,13 +337,13 @@ async function processarWhatsAppInbound(request, env) {
     }
     // Re-parse body since we consumed it
     let corpo;
-    try { corpo = JSON.parse(body); } catch { return json({ erro: 'corpo_invalido' }, 400); }
+    try { corpo = JSON.parse(body) } catch { return json({ erro: 'corpo_invalido' }, 400) }
   } else {
     // Use request.text() + JSON.parse() instead of request.json() to avoid Cloudflare Workers parsing issues
     const rawBody = await request.text();
     console.log('DEBUG: raw body (else branch):', rawBody);
     let corpo;
-    try { corpo = JSON.parse(rawBody); } catch { return json({ erro: 'corpo_invalido' }, 400); }
+    try { corpo = JSON.parse(rawBody) } catch { return json({ erro: 'corpo_invalido' }, 400) }
   }
 
   // Estrutura esperada do Baileys/webhook
