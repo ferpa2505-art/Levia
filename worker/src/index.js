@@ -1,4 +1,4 @@
-import { iniciarTeste } from './licencas';
+﻿﻿﻿﻿import { iniciarTeste } from './licencas';
 import { turnstileSitekey, validarTurnstile } from './turnstile';
 import { processarMensagemWhatsApp } from './fluxo';
 
@@ -429,8 +429,7 @@ export default {
     if (pathname === '/health') return json({ ok: true });
     return json({ erro: 'nao_encontrado' }, 404);
   },
-};
-
+};\r\n
 
 
 
