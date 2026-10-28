@@ -53,35 +53,25 @@ function imagemJpegValida(valor) {
 }
 
 function normalizarTelefoneBR(phone) {
-  // Remove all non-digits
   const digits = String(phone).replace(/\D/g, '');
-  
-  // If already has country code (starts with 55), return as-is
   if (digits.startsWith('55') && digits.length >= 12) {
     return '+' + digits;
   }
-  
-  // Brazilian numbers: assume +55
-  // Format: +55 DDD NUMBER (e.g., +5511999999999)
   if (digits.length === 10 || digits.length === 11) {
     return '+55' + digits;
   }
-  
-  // If it has a leading 0 (common in Brazil), remove it
   if (digits.startsWith('0') && (digits.length === 11 || digits.length === 12)) {
     return '+55' + digits.slice(1);
   }
-  
-  // Default: return with +55 prefix
   return '+55' + digits;
 }
 
 function prompt(idioma) {
   const lingua = IDIOMAS[idioma] ?? IDIOMAS.pt;
-  return \Você é um nutricionista analisando a foto de uma refeição.
+  return `Você é um nutricionista analisando a foto de uma refeição.
 Liste cada alimento visível no prato e estime o peso em gramas da porção como servida (cozida/pronta, parte comestível).
 Regras:
-- "nome": nome simples e genérico do alimento em \, com o preparo quando der para ver.
+- "nome": nome simples e genérico do alimento em ${lingua}, com o preparo quando der para ver.
 - "nomeIngles": o mesmo nome em inglês.
 - Separe os componentes do prato. Molhos e óleos visíveis contam como item próprio.
 - "unidades": quantas unidades daquele alimento aparecem; para alimentos sem unidade, use 1.
@@ -89,7 +79,7 @@ Regras:
 - "por100g": estimativa de kcal, proteína, carboidrato, gordura e fibra por 100 g.
 - "confianca": de 0 a 1, confiança na identificação e no peso.
 - Se não for comida, devolva "ehComida": false e lista vazia.
-- No máximo 12 itens. Não invente alimentos que não aparecem.\;
+- No máximo 12 itens. Não invente alimentos que não aparecem.`;
 }
 
 const ESQUEMA = {
@@ -116,7 +106,7 @@ function limparPor100g(v) {
 
 async function perguntarAoGemini(env, imagemBase64, idioma) {
   const modelo = env.GEMINI_MODEL || 'gemini-3.8-flash';
-  const r = await fetch(\https://generativelanguage.googleapis.com/v1beta/models/\:generateContent\, {
+  const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${modelo}:generateContent`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'x-goog-api-key': env.GEMINI_API_KEY },
     body: JSON.stringify({
@@ -128,7 +118,7 @@ async function perguntarAoGemini(env, imagemBase64, idioma) {
     let motivo = '';
     try { motivo = String((await r.json())?.error?.status ?? ''); } catch {}
     console.error('gemini', r.status, motivo);
-    return { falha: \\ \\.trim() };
+    return { falha: `${r.status} ${motivo}`.trim() };
   }
   const dados = await r.json();
   const texto = dados?.candidates?.[0]?.content?.parts?.find((p) => typeof p.text === 'string')?.text;
@@ -146,7 +136,7 @@ async function perguntarAoGemini(env, imagemBase64, idioma) {
   } catch {
     const fim = dados?.candidates?.[0]?.finishReason ?? dados?.promptFeedback?.blockReason ?? 'sem_texto';
     console.error('gemini: resposta sem JSON válido', fim);
-    return { falha: \json \ \\ };
+    return { falha: `json ${fim} ${typeof texto === 'string' ? texto.length : 0}` };
   }
 }
 
@@ -167,13 +157,13 @@ async function analisarPrato(request, env) {
   const dia = hojeUTC();
   const ip = request.headers.get('cf-connecting-ip') ?? 'sem-ip';
   const hora = new Date().toISOString().slice(0, 13);
-  const chaveDia = \dia:\\;
+  const chaveDia = `dia:${dia}`;
   const usadosDia = await lerNumero(kv, chaveDia);
   if (usadosDia >= Number(env.MAX_FOTOS_DIA || 300)) return json({ erro: 'limite_servico' }, 429);
-  const chaveIp = \ip:\:\\;
+  const chaveIp = `ip:${ip}:${hora}`;
   const usadosIp = await lerNumero(kv, chaveIp);
   if (usadosIp >= Number(env.MAX_FOTOS_IP_HORA || 20)) return json({ erro: 'muitas_tentativas' }, 429);
-  const chaveInst = \inst:\\;
+  const chaveInst = `inst:${instalacao}`;
   const historico = ((await kv.get(chaveInst, 'json')) ?? []).filter((t) => agora - t < SETE_DIAS_MS);
   const limite = Number(env.FOTOS_GRATIS_7D || 2);
   if (historico.length >= limite) {
@@ -181,7 +171,6 @@ async function analisarPrato(request, env) {
     return json({ erro: 'cota_esgotada', limite, liberaEm }, 402);
   }
 
-  // Reserva cota antes da chamada externa para que falhas do Gemini também contem.
   historico.push(agora);
   await Promise.all([
     kv.put(chaveInst, JSON.stringify(historico), { expirationTtl: 8 * 24 * 3600 }),
@@ -203,7 +192,7 @@ async function verificarAutenticacao(request, env) {
   if (!expected || token !== expected) {
     return json({ erro: 'token_invalido' }, 401);
   }
-  return null; // OK
+  return null;
 }
 
 async function buscarLeadExistente(env, phoneNormalizado) {
@@ -220,25 +209,20 @@ async function buscarLeadExistente(env, phoneNormalizado) {
 }
 
 async function processarLead(request, env) {
-  // 1. Verificar autenticação
   const authError = await verificarAutenticacao(request, env);
   if (authError) return authError;
 
-  // 2. Rate limiting (10 req/min por IP)
   const kv = env.LEVIA_COTAS;
   const ip = request.headers.get('cf-connecting-ip') ?? 'sem-ip';
   const minuto = new Date().toISOString().slice(0, 16).replace(':', '');
-  const chaveRateLimit = \lead:ip:\:\\;
+  const chaveRateLimit = `lead:ip:${ip}:${minuto}`;
   const usados = await lerNumero(kv, chaveRateLimit);
   if (usados >= 10) return json({ erro: 'muitas_tentativas' }, 429);
 
-  // 3. Parse e validação do corpo
   let corpo;
   try { corpo = await request.json(); } catch { return json({ erro: 'corpo_invalido' }, 400); }
 
   const { name, phone, email, pain_point, source } = corpo ?? {};
-  
-  // Validação obrigatória
   if (!name || typeof name !== 'string' || name.trim().length === 0) {
     return json({ erro: 'nome_obrigatorio' }, 400);
   }
@@ -246,30 +230,24 @@ async function processarLead(request, env) {
     return json({ erro: 'telefone_obrigatorio' }, 400);
   }
 
-  // Increment rate limit counter
   await kv.put(chaveRateLimit, String(usados + 1), { expirationTtl: 120 });
 
-  // Normalizar telefone para E.164
   const phoneNormalizado = normalizarTelefoneBR(phone.trim());
   const agora = new Date().toISOString();
 
-  // 4. Deduplicação: verificar se já existe lead com esse telefone
   const leadIdExistente = await buscarLeadExistente(env, phoneNormalizado);
   if (leadIdExistente) {
     const baseUrl = env.APP_BASE_URL || APP_BASE_URL_DEFAULT;
-    return json({ pwaLink: \\/onboarding?lead=\\ });
+    return json({ pwaLink: `${baseUrl}/onboarding?lead=${leadIdExistente}` });
   }
 
-  // 5. Criar novo lead
   const leadId = crypto.randomUUID();
-
-  // Try to save to D1
   let salvo = false;
   if (env.LEVIA_DB) {
     try {
       await env.LEVIA_DB.prepare(
-        \INSERT INTO leads (id, name, phone, email, pain_point, source, consent_at, channel, created_at, updated_at) 
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)\
+        `INSERT INTO leads (id, name, phone, email, pain_point, source, consent_at, channel, created_at, updated_at) 
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
       ).bind(
         leadId, 
         name.trim(), 
@@ -288,7 +266,6 @@ async function processarLead(request, env) {
     }
   }
 
-  // Fallback to KV if D1 failed
   if (!salvo) {
     try {
       const leadData = { 
@@ -303,7 +280,7 @@ async function processarLead(request, env) {
         created_at: agora,
         updated_at: agora
       };
-      await kv.put(\lead:\\, JSON.stringify(leadData), { expirationTtl: 30 * 24 * 3600 });
+      await kv.put(`lead:${leadId}`, JSON.stringify(leadData), { expirationTtl: 30 * 24 * 3600 });
     } catch (e) {
       console.error('Erro ao salvar lead no KV:', e?.message);
       return json({ erro: 'falha_armazenamento' }, 503);
@@ -311,7 +288,7 @@ async function processarLead(request, env) {
   }
 
   const baseUrl = env.APP_BASE_URL || APP_BASE_URL_DEFAULT;
-  return json({ pwaLink: \\/onboarding?lead=\\ });
+  return json({ pwaLink: `${baseUrl}/onboarding?lead=${leadId}` });
 }
 
 export default {
