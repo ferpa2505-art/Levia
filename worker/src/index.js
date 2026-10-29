@@ -1,6 +1,7 @@
 import { iniciarTeste } from './licencas';
 import { turnstileSitekey } from './turnstile';
 import { processarMensagemWhatsApp } from './fluxo';
+import { puxarVencidos } from './lembretes';
 import { reservarCotaFoto } from './cotas';
 import { ativarSerial, validarLicenca } from './serial';
 
@@ -319,21 +320,36 @@ async function hmacHex(segredo, texto) {
  * O gateway assina `${x-timestamp}.${corpo}` com HMAC-SHA256 (header x-signature).
  * Sem segredo configurado a rota fica fechada; o timestamp (janela de 5 min) impede reenvio de mensagens antigas.
  */
-async function processarWhatsAppInbound(request, env) {
+/** Confere a assinatura do gateway (HMAC de `${carimbo}.${corpo}`). Devolve { bruto } ou { resposta } com o erro. */
+async function lerCorpoAssinadoDoGateway(request, env) {
   const segredo = env.WHATSAPP_WEBHOOK_SECRET;
-  if (!segredo) return json({ erro: 'nao_configurado' }, 503);
+  if (!segredo) return { resposta: json({ erro: 'nao_configurado' }, 503) };
 
   const bruto = await request.text();
-  if (bruto.length > 100_000) return json({ erro: 'corpo_grande' }, 413);
+  if (bruto.length > 100_000) return { resposta: json({ erro: 'corpo_grande' }, 413) };
 
   const assinatura = request.headers.get('x-signature') ?? '';
   const carimbo = request.headers.get('x-timestamp') ?? '';
   const instante = Number(carimbo);
   if (!Number.isFinite(instante) || Math.abs(Date.now() - instante) > JANELA_ASSINATURA_MS) {
-    return json({ erro: 'assinatura_invalida' }, 401);
+    return { resposta: json({ erro: 'assinatura_invalida' }, 401) };
   }
   const esperado = await hmacHex(segredo, `${carimbo}.${bruto}`);
-  if (!iguais(assinatura, esperado)) return json({ erro: 'assinatura_invalida' }, 401);
+  if (!iguais(assinatura, esperado)) return { resposta: json({ erro: 'assinatura_invalida' }, 401) };
+  return { bruto };
+}
+
+/** O gateway busca aqui os lembretes que já venceram e os envia (cada um sai no máximo uma vez). */
+async function entregarLembretesAoGateway(request, env) {
+  const lido = await lerCorpoAssinadoDoGateway(request, env);
+  if (lido.resposta) return lido.resposta;
+  return json({ mensagens: await puxarVencidos(env) });
+}
+
+async function processarWhatsAppInbound(request, env) {
+  const lido = await lerCorpoAssinadoDoGateway(request, env);
+  if (lido.resposta) return lido.resposta;
+  const bruto = lido.bruto;
 
   let corpo;
   try { corpo = JSON.parse(bruto); } catch { return json({ erro: 'corpo_invalido' }, 400); }
@@ -400,6 +416,10 @@ export default {
     if (pathname === '/api/lead' && request.method === 'POST') {
       try { return comCors(await processarLead(request, env), origem); }
       catch (e) { console.error('erro lead', e?.message); return comCors(json({ erro: 'interno' }, 500), origem); }
+    }
+    if (pathname === '/api/wa/outbox/pull' && request.method === 'POST') {
+      try { return await entregarLembretesAoGateway(request, env); }
+      catch (e) { console.error('erro wa outbox', e?.message); return json({ erro: 'interno' }, 500); }
     }
     if (pathname === '/api/wa/inbound' && request.method === 'POST') {
       try { return comCors(await processarWhatsAppInbound(request, env), origem); }
