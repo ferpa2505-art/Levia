@@ -87,6 +87,17 @@ export async function emitirSerial(env, { telefone, agora = Date.now() }) {
 }
 
 /**
+ * Direito de exclusão: apaga a conta do telefone. Teste, aparelhos, códigos e assinaturas caem junto
+ * (ON DELETE CASCADE); o serial e as licenças já emitidas deixam de valer na hora.
+ */
+export async function apagarContaPorTelefone(env, telefone) {
+  if (!env.LEVIA_DB || !env.TYPEBOT_PHONE_HMAC_KEY) return false;
+  const telefoneHash = await hmacHex(env.TYPEBOT_PHONE_HMAC_KEY, telefone);
+  await env.LEVIA_DB.prepare('DELETE FROM accounts WHERE phone_hash = ?').bind(telefoneHash).run();
+  return true;
+}
+
+/**
  * O que a conta pode usar agora: assinatura ativa, ou o teste de 7 dias. Quando houver os dois,
  * vale a assinatura. Devolve { plano, limite, janelaMs, fim } ou null (sem acesso).
  */

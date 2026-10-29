@@ -1,113 +1,144 @@
 /**
- * fluxo.js - Máquina de estados do fluxo de onboarding WhatsApp para Leviã
- * 
- * Estados:
- * - 'inicio' → Saudação + pede nome
- * - 'aguardando_nome' → Recebe nome → pede dor/objetivo
- * - 'aguardando_dor' → Recebe dor → pede consentimento LGPD
- * - 'aguardando_consentimento' → Recebe consentimento → cria lead → retorna link PWA
- * - 'finalizado' → Lead criado, fluxo encerrado
+ * fluxo.js - Conversa do LEVI (assistente virtual do Leviã) no WhatsApp.
+ *
+ * Etapas (a autorização vem ANTES de qualquer dado pessoal):
+ *   sem sessão     → LEVI se apresenta e pergunta o idioma (1 BR, 2 PT, 3 EN, 4 ES, 5 IT)
+ *   idioma         → pede o consentimento (1 = SIM, 2 = NÃO), já no idioma escolhido
+ *   consentimento  → 1: pede o nome | 2: encerra sem guardar nada
+ *   nome           → pede o objetivo (opções numeradas)
+ *   objetivo       → cria o lead, emite o serial e manda o link
+ * Comandos em qualquer etapa: PARAR (não escrever mais), APAGAR (excluir tudo), SERIAL, MENU.
+ * Quem para de responder recebe lembretes (ver lembretes.js). Os textos estão em textos.js.
  */
 
-import { emitirSerial } from './serial';
+import { apagarContaPorTelefone, emitirSerial } from './serial';
+import { agendarLembretes, cancelarLembretes } from './lembretes';
+import {
+  MENU_IDIOMA, OBJETIVOS_GRAVADOS, TEXTOS, TOQUE_IDIOMA, idiomaEscolhido, idiomaPeloTelefone,
+} from './textos';
 
-// Mensagens do fluxo
-const MENSAGENS = {
-  saudacao: (nome = '') => 
-    `Olá! 👋 Sou o assistente da Leviã.\n\n` +
-    `Para começar, qual é o seu nome?`,
-  
-  pedirNome: () =>
-    `Como posso te chamar?`,
-  
-  pedirDor: (nome) =>
-    `Prazer, ${nome}! 😊\n\n` +
-    `Qual é o seu principal objetivo ou dificuldade hoje?\n` +
-    `Ex: "Quero emagrecer", "Tenho diabetes e preciso controlar", "Quero ganhar massa muscular", etc.`,
-  
-  pedirConsentimento: (nome, dor) =>
-    `Entendido, ${nome}. Obrigado por compartilhar! 📝\n\n` +
-    `Para que eu possa criar seu perfil e te enviar o link do app, preciso do seu consentimento para:\n` +
-    `• Armazenar seu nome, telefone e objetivo\n` +
-    `• Usar esses dados para personalizar sua experiência no app\n` +
-    `• Entrar em contato via WhatsApp se necessário\n\n` +
-    `Responda "SIM" ou "CONCORDO" para continuar.`,
-  
-  consentimentoNegado: () =>
-    `Tudo bem! Sem problemas. Se mudar de ideia, é só me chamar novamente. 👋`,
-  
-  leadCriado: (serial, link) =>
-    `Perfeito! ✅ Seu perfil foi criado.\n\n` +
-    `Seu serial de acesso (é pessoal, não compartilhe):\n*${serial}*\n\n` +
-    `Como usar: abra ${link} (ou o app Leviã), toque em "Ativar" e digite o serial. ` +
-    `Ele vale para até 2 aparelhos e seu teste de 7 dias começa na ativação.\n\n` +
-    `Perdeu o serial? Digite SERIAL aqui que eu gero outro (o anterior deixa de valer).`,
+const POLITICA_URL = 'https://ferpa2505-art.github.io/levia-policies/privacidade.html';
 
-  serialNovo: (serial, link) =>
-    `Aqui está seu novo serial (o anterior deixou de valer):\n*${serial}*\n\n` +
-    `Ative em ${link}. Os aparelhos que você já ativou continuam funcionando.`,
+// objetivo digitado por extenso → número da opção (todos os idiomas do atendimento)
+const PALAVRAS_DO_OBJETIVO = [
+  ['todos', 6], ['todas', 6], ['all', 6], ['tutt', 6],
+  ['emagrec', 1], ['lose', 1], ['weight', 1], ['adelgaz', 1], ['dimagr', 1],
+  ['diabet', 2],
+  ['glp', 3],
+  ['massa', 4], ['muscle', 4], ['muscol', 4],
+  ['aliment', 5], ['eating', 5],
+];
 
-  serialIndisponivel: () =>
-    `Seu perfil foi criado, mas não consegui gerar o serial agora. Digite SERIAL em alguns minutos para tentar de novo.`,
+const COMANDOS_PARAR = ['parar', 'pare', 'stop', 'sair', 'salir', 'detener', 'fermati', 'esci'];
+const COMANDOS_APAGAR = ['apagar', 'apagar tudo', 'delete', 'delete all', 'delete my data', 'borrar', 'borrar todo', 'eliminar', 'elimina', 'cancella', 'cancella tutto'];
+const COMANDOS_REINICIAR = ['menu', 'reiniciar', 'comecar', 'iniciar', 'start', 'restart', 'ricomincia', 'empezar'];
 
-  serialLimite: () =>
-    `Você já pediu serial 3 vezes hoje. Tente de novo amanhã.`,
-
-  erroGenerico: () =>
-    `Ops, ocorreu um erro. Tente novamente em alguns instantes ou digite "MENU" para reiniciar.`,
-
-  jaFinalizado: () =>
-    `Você já completou o cadastro! 🎉\n\n` +
-    `Para receber um novo serial de acesso, digite SERIAL.`,
-  
-  comandoInvalido: (estado) => {
-    const opcoes = {
-      aguardando_nome: 'Digite seu nome para continuar.',
-      aguardando_dor: 'Conte seu objetivo/dificuldade (ex: "quero emagrecer").',
-      aguardando_consentimento: 'Responda "SIM" ou "CONCORDO" para autorizar.',
-    };
-    return `Não entendi. ${opcoes[estado] || 'Digite "MENU" para reiniciar.'}`;
-  },
-};
-
-// Validadores
-function validarNome(texto) {
-  const limpo = texto.trim();
-  return limpo.length >= 2 && limpo.length <= 80 && /^[a-zA-ZÀ-ÿ\s'-]+$/.test(limpo);
-}
-
-function validarDor(texto) {
-  const limpo = texto.trim();
-  return limpo.length >= 3 && limpo.length <= 500;
-}
-
-function validarConsentimento(texto) {
-  const limpo = texto.trim().toLowerCase();
-  return ['sim', 'concordo', 'ok', 'aceito', 'autorizo', 'permito'].includes(limpo);
-}
-
-// Máquina de estados
 const ESTADOS = {
-  INICIO: 'inicio',
-  AGUARDANDO_NOME: 'aguardando_nome',
-  AGUARDANDO_DOR: 'aguardando_dor',
+  AGUARDANDO_IDIOMA: 'aguardando_idioma',
   AGUARDANDO_CONSENTIMENTO: 'aguardando_consentimento',
-  FINALIZADO: 'finalizado',
-  ERRO: 'erro',
+  AGUARDANDO_NOME: 'aguardando_nome',
+  AGUARDANDO_OBJETIVO: 'aguardando_objetivo',
+  CONFIRMAR_APAGAR: 'confirmar_apagar',
 };
+
+const linkApp = (env) => `${env.APP_BASE_URL || 'https://leviapp.org'}/ativar`;
+const linkPolitica = (env) => env.POLITICA_URL || POLITICA_URL;
+
+/** A pergunta que está em aberto, para repetir e para os lembretes do dia seguinte. */
+function perguntaDaEtapa(estado, dados, env, idioma) {
+  const T = TEXTOS[idioma];
+  if (estado === ESTADOS.AGUARDANDO_IDIOMA) return MENU_IDIOMA;
+  if (estado === ESTADOS.AGUARDANDO_CONSENTIMENTO) return T.consentimento(linkPolitica(env));
+  if (estado === ESTADOS.AGUARDANDO_NOME) return T.pedirNome;
+  if (estado === ESTADOS.AGUARDANDO_OBJETIVO) return T.pedirObjetivo(dados.nome, T.objetivos);
+  return T.confirmarApagar;
+}
+
+function toquesDaEtapa(estado, dados, env, idioma) {
+  const T = TEXTOS[idioma];
+  if (estado === ESTADOS.AGUARDANDO_IDIOMA) {
+    return {
+      primeiro: TOQUE_IDIOMA,
+      segundo: 'Sem pressa! · No rush! · ¡Sin prisa! · Nessuna fretta! 😊\nPara parar · To stop · Para parar · Per fermare: PARAR / STOP',
+      diaSeguinte: `Olá! 👋 Hello! ¡Hola! Ciao! — LEVI, Leviã.\n\n${MENU_IDIOMA}`,
+    };
+  }
+  const primeiro = {
+    [ESTADOS.AGUARDANDO_CONSENTIMENTO]: T.toqueConsentimento,
+    [ESTADOS.AGUARDANDO_NOME]: T.toqueNome,
+    [ESTADOS.AGUARDANDO_OBJETIVO]: T.toqueObjetivo,
+  }[estado] ?? T.toqueConsentimento;
+  return {
+    primeiro,
+    segundo: T.toqueSegundo,
+    diaSeguinte: `${T.toqueDiaSeguinte}\n\n${perguntaDaEtapa(estado, dados, env, idioma)}`,
+  };
+}
+
+// ---------- entendimento do texto ----------
+
+const semAcento = (t) => t.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').trim();
+/** "OIIII", "olá!!" e "Hello" viram a mesma forma para comparar com a lista de cumprimentos. */
+const forma = (t) => semAcento(t).replace(/[^a-z]/g, '').replace(/(.)\1+/g, '$1');
+
+const NAO_SAO_NOMES = new Set([
+  'oi', 'oie', 'ola', 'alo', 'hello', 'hi', 'hey', 'hola', 'bonjour', 'ciao', 'hallo', 'salve', 'opa', 'eai', 'eae',
+  'bomdia', 'boatarde', 'boanoite', 'goodmorning', 'goodafternoon', 'goodevening', 'buenosdias', 'buenastardes',
+  'buenasnoches', 'buongiorno', 'buonasera', 'tudobem', 'tdbem', 'ok', 'sim', 'nao', 'si', 'yes', 'no', 'teste', 'test',
+  'menu', 'start', 'comecar', 'iniciar', 'quero', 'obrigado', 'obrigada', 'thanks', 'gracias', 'grazie', 'ajuda', 'help',
+].map(forma));
+
+const SAUDACAO_INICIAL = /^[\s,!.¡¿?-]*(?:oi+e?|ol[aá]+|al[oô]|hello|hi|hey|hola|bonjour|ciao|hallo|salve|opa|e\s*a[ií]|bom\s*dia|boa\s*tarde|boa\s*noite|good\s*(?:morning|afternoon|evening)|buenos\s*d[ií]as|buenas\s*(?:tardes|noches)|buongiorno|buonasera|tudo\s*bem)(?=[\s,!.¡¿?-]|$)/i;
+const APRESENTACAO = /^[\s,!.-]*(?:meu\s+nome\s+(?:é|e)|me\s+chamo|eu\s+sou(?:\s+(?:o|a))?|sou(?:\s+(?:o|a))?|my\s+name\s+is|i\s*am|i'm|me\s+llamo|mi\s+nombre\s+es|soy|mi\s+chiamo|mi\s+chiamano)\s+/i;
+const PARTICULAS = new Set(['da', 'de', 'do', 'das', 'dos', 'e', 'di', 'van', 'von', 'la', 'le']);
+
+function iniciaisMaiusculas(nome) {
+  return nome.split(/\s+/).map((p, i) => {
+    if (i > 0 && PARTICULAS.has(p.toLowerCase())) return p.toLowerCase();
+    const tudoIgual = p === p.toLowerCase() || p === p.toUpperCase();
+    return tudoIgual ? p.charAt(0).toUpperCase() + p.slice(1).toLowerCase() : p;
+  }).join(' ');
+}
+
+/** { nome } ou { invalido: true, ehSaudacao } — "oi, sou a Renata" vira "Renata"; "olá" não é nome. */
+function extrairNome(texto) {
+  let resto = texto.trim();
+  let tinhaSaudacao = false;
+  for (let i = 0; i < 3 && SAUDACAO_INICIAL.test(resto); i++) {
+    resto = resto.replace(SAUDACAO_INICIAL, '');
+    tinhaSaudacao = true;
+  }
+  resto = resto.replace(APRESENTACAO, '').replace(/^[\s,!.?-]+|[\s,!.?]+$/g, '');
+  if (!resto) return { invalido: true, ehSaudacao: tinhaSaudacao || NAO_SAO_NOMES.has(forma(texto)) };
+  const palavras = resto.split(/\s+/);
+  const valido = resto.length >= 2 && resto.length <= 60 && palavras.length <= 5 && /^[\p{L}][\p{L}'’ -]*$/u.test(resto);
+  if (!valido || NAO_SAO_NOMES.has(forma(resto))) {
+    return { invalido: true, ehSaudacao: tinhaSaudacao || NAO_SAO_NOMES.has(forma(resto)) };
+  }
+  return { nome: iniciaisMaiusculas(resto) };
+}
+
+function respostaSimNao(texto) {
+  const t = semAcento(texto).replace(/[^a-z0-9 ]/g, '').trim();
+  if (['1', 'sim', 'concordo', 'aceito', 'autorizo', 'ok', 'claro', 'quero', 'yes', 'si', 'accetto', 'acuerdo'].includes(t)) return 'sim';
+  if (['2', 'nao', 'nao concordo', 'nao quero', 'cancelar', 'no', 'non'].includes(t)) return 'nao';
+  return null;
+}
+
+function escolherObjetivo(texto) {
+  const t = semAcento(texto).replace(/[^a-z0-9 ]/g, '').trim();
+  if (/^[1-6]$/.test(t)) return Number(t);
+  for (const [trecho, numero] of PALAVRAS_DO_OBJETIVO) if (t.includes(trecho)) return numero;
+  return null;
+}
+
+// ---------- banco ----------
 
 async function obterSessao(db, phone) {
   if (!db) return null;
   try {
-    const row = await db.prepare(
-      'SELECT * FROM wa_sessions WHERE phone = ? ORDER BY updated_at DESC LIMIT 1'
-    ).bind(phone).first();
-    return row ? {
-      phone: row.phone,
-      estado: row.stage,
-      data: JSON.parse(row.data_json || '{}'),
-      updated_at: row.updated_at,
-    } : null;
+    const row = await db.prepare('SELECT * FROM wa_sessions WHERE phone = ? ORDER BY updated_at DESC LIMIT 1').bind(phone).first();
+    return row ? { estado: row.stage, data: JSON.parse(row.data_json || '{}') } : null;
   } catch (e) {
     console.error('Erro ao buscar sessão:', e?.message);
     return null;
@@ -117,15 +148,10 @@ async function obterSessao(db, phone) {
 async function salvarSessao(db, phone, estado, data) {
   if (!db) return false;
   try {
-    const agora = new Date().toISOString();
     await db.prepare(
-      `INSERT INTO wa_sessions (phone, stage, data_json, updated_at) 
-       VALUES (?, ?, ?, ?)
-       ON CONFLICT(phone) DO UPDATE SET 
-         stage = excluded.stage,
-         data_json = excluded.data_json,
-         updated_at = excluded.updated_at`
-    ).bind(phone, estado, JSON.stringify(data), agora).run();
+      `INSERT INTO wa_sessions (phone, stage, data_json, updated_at) VALUES (?, ?, ?, ?)
+       ON CONFLICT(phone) DO UPDATE SET stage = excluded.stage, data_json = excluded.data_json, updated_at = excluded.updated_at`,
+    ).bind(phone, estado, JSON.stringify(data), new Date().toISOString()).run();
     return true;
   } catch (e) {
     console.error('Erro ao salvar sessão:', e?.message);
@@ -147,8 +173,7 @@ async function limparSessao(db, phone) {
 async function verificarProcessado(db, messageId) {
   if (!db) return false;
   try {
-    const row = await db.prepare('SELECT 1 FROM wa_processed WHERE msg_id = ?').bind(messageId).first();
-    return !!row;
+    return !!(await db.prepare('SELECT 1 FROM wa_processed WHERE msg_id = ?').bind(messageId).first());
   } catch (e) {
     console.error('Erro ao verificar processado:', e?.message);
     return false;
@@ -158,10 +183,7 @@ async function verificarProcessado(db, messageId) {
 async function marcarProcessado(db, messageId) {
   if (!db) return false;
   try {
-    const agora = new Date().toISOString();
-    await db.prepare(
-      'INSERT OR IGNORE INTO wa_processed (msg_id, created_at) VALUES (?, ?)'
-    ).bind(messageId, agora).run();
+    await db.prepare('INSERT OR IGNORE INTO wa_processed (msg_id, created_at) VALUES (?, ?)').bind(messageId, new Date().toISOString()).run();
     return true;
   } catch (e) {
     console.error('Erro ao marcar processado:', e?.message);
@@ -169,195 +191,17 @@ async function marcarProcessado(db, messageId) {
   }
 }
 
-async function criarLeadCompleto(env, leadData) {
-  const { phone, name, dor, consent_at } = leadData;
-  const agora = new Date().toISOString();
-  const leadId = crypto.randomUUID();
-  
-  let salvo = false;
-  if (env.LEVIA_DB) {
-    try {
-      await env.LEVIA_DB.prepare(
-        `INSERT INTO leads (id, name, phone, pain_point, source, consent_at, channel, created_at, updated_at) 
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
-      ).bind(
-        leadId,
-        name,
-        phone,
-        dor,
-        'whatsapp',
-        consent_at,
-        'whatsapp',
-        agora,
-        agora
-      ).run();
-      salvo = true;
-    } catch (e) {
-      console.error('Erro ao salvar lead no D1:', e?.message);
-    }
-  }
-  
-  if (!salvo) {
-    try {
-      const leadData = {
-        id: leadId,
-        name,
-        phone,
-        pain_point: dor,
-        source: 'whatsapp',
-        consent_at,
-        channel: 'whatsapp',
-        created_at: agora,
-        updated_at: agora,
-      };
-      await env.LEVIA_COTAS.put(`lead:${leadId}`, JSON.stringify(leadData), { expirationTtl: 30 * 24 * 3600 });
-      salvo = true;
-    } catch (e) {
-      console.error('Erro ao salvar lead no KV:', e?.message);
-      return null;
-    }
-  }
-  
-  return leadId;
-}
-
-export async function processarMensagemWhatsApp(env, phone, texto, messageId) {
-  // Normalizar telefone
-  const phoneNormalizado = String(phone).replace(/\D/g, '');
-  const phoneFormatado = phoneNormalizado.startsWith('55') ? '+' + phoneNormalizado : '+55' + phoneNormalizado;
-  
-  // Verificar idempotência
-  if (await verificarProcessado(env.LEVIA_DB, messageId)) {
-    return { tipo: 'duplicado', resposta: null };
-  }
-  
-  // Verificar se já finalizou (lead existe): o único pedido possível é um novo serial
-  const leadExistente = await buscarLeadPorTelefone(env.LEVIA_DB, phoneFormatado);
-  if (leadExistente) {
-    const link = `${env.APP_BASE_URL || 'https://leviapp.org'}/ativar`;
-    await marcarProcessado(env.LEVIA_DB, messageId);
-    if (texto.trim().toLowerCase() === 'serial') {
-      const emissao = await emitirSerial(env, { telefone: phoneFormatado });
-      if (emissao.ok) return { tipo: 'serial_novo', resposta: MENSAGENS.serialNovo(emissao.serial, link), leadId: leadExistente };
-      if (emissao.motivo === 'limite') return { tipo: 'serial_limite', resposta: MENSAGENS.serialLimite() };
-      return { tipo: 'erro', resposta: MENSAGENS.erroGenerico() };
-    }
-    return { tipo: 'ja_finalizado', resposta: MENSAGENS.jaFinalizado(), pwaLink: link };
-  }
-  
-  // Obter sessão atual
-  const sessao = await obterSessao(env.LEVIA_DB, phoneFormatado);
-  const estadoAtual = sessao?.estado || ESTADOS.INICIO;
-  const dados = sessao?.data || {};
-  
-  // Processar comando de reinício
-  const textoLimpo = texto.trim().toLowerCase();
-  if (['menu', 'reiniciar', 'começar', 'iniciar', 'start'].includes(textoLimpo)) {
-    await limparSessao(env.LEVIA_DB, phoneFormatado);
-    await salvarSessao(env.LEVIA_DB, phoneFormatado, ESTADOS.AGUARDANDO_NOME, {});
-    await marcarProcessado(env.LEVIA_DB, messageId);
-    return { tipo: 'reiniciado', resposta: MENSAGENS.saudacao() };
-  }
-  
-  // Máquina de estados
-  switch (estadoAtual) {
-    case ESTADOS.INICIO: {
-      await salvarSessao(env.LEVIA_DB, phoneFormatado, ESTADOS.AGUARDANDO_NOME, {});
-      await marcarProcessado(env.LEVIA_DB, messageId);
-      return { tipo: 'pergunta_nome', resposta: MENSAGENS.saudacao() };
-    }
-    
-    case ESTADOS.AGUARDANDO_NOME: {
-      if (!validarNome(texto)) {
-        await marcarProcessado(env.LEVIA_DB, messageId);
-        return { tipo: 'nome_invalido', resposta: MENSAGENS.comandoInvalido(ESTADOS.AGUARDANDO_NOME) };
-      }
-      
-      const nome = texto.trim();
-      await salvarSessao(env.LEVIA_DB, phoneFormatado, ESTADOS.AGUARDANDO_DOR, { nome });
-      await marcarProcessado(env.LEVIA_DB, messageId);
-      return { tipo: 'pergunta_dor', resposta: MENSAGENS.pedirDor(nome) };
-    }
-    
-    case ESTADOS.AGUARDANDO_DOR: {
-      if (!validarDor(texto)) {
-        await marcarProcessado(env.LEVIA_DB, messageId);
-        return { tipo: 'dor_invalida', resposta: MENSAGENS.comandoInvalido(ESTADOS.AGUARDANDO_DOR) };
-      }
-      
-      const dor = texto.trim();
-      await salvarSessao(env.LEVIA_DB, phoneFormatado, ESTADOS.AGUARDANDO_CONSENTIMENTO, { 
-        ...dados, 
-        dor 
-      });
-      await marcarProcessado(env.LEVIA_DB, messageId);
-      return { tipo: 'pergunta_consentimento', resposta: MENSAGENS.pedirConsentimento(dados.nome, dor) };
-    }
-    
-    case ESTADOS.AGUARDANDO_CONSENTIMENTO: {
-      if (!validarConsentimento(texto)) {
-        if (['não', 'nao', 'não quero', 'cancelar'].includes(textoLimpo)) {
-          await limparSessao(env.LEVIA_DB, phoneFormatado);
-          await marcarProcessado(env.LEVIA_DB, messageId);
-          return { tipo: 'cancelado', resposta: MENSAGENS.consentimentoNegado() };
-        }
-        await marcarProcessado(env.LEVIA_DB, messageId);
-        return { tipo: 'consentimento_invalido', resposta: MENSAGENS.comandoInvalido(ESTADOS.AGUARDANDO_CONSENTIMENTO) };
-      }
-      
-      // Criar lead
-      const consent_at = new Date().toISOString();
-      const leadId = await criarLeadCompleto(env, {
-        phone: phoneFormatado,
-        name: dados.nome,
-        dor: dados.dor,
-        consent_at,
-      });
-      
-      if (!leadId) {
-        await marcarProcessado(env.LEVIA_DB, messageId);
-        return { tipo: 'erro', resposta: MENSAGENS.erroGenerico() };
-      }
-      
-      // Limpar sessão e finalizar
-      await limparSessao(env.LEVIA_DB, phoneFormatado);
-      await marcarProcessado(env.LEVIA_DB, messageId);
-      
-      const pwaLink = `${env.APP_BASE_URL || 'https://leviapp.org'}/ativar`;
-      const emissao = await emitirSerial(env, { telefone: phoneFormatado });
-      if (!emissao.ok) {
-        // o lead já existe: quem digitar SERIAL depois tenta de novo
-        return { tipo: 'finalizado_sem_serial', resposta: MENSAGENS.serialIndisponivel(), leadId };
-      }
-
-      return {
-        tipo: 'finalizado',
-        resposta: MENSAGENS.leadCriado(emissao.serial, pwaLink),
-        pwaLink,
-        leadId,
-      };
-    }
-
-    case ESTADOS.FINALIZADO: {
-      await marcarProcessado(env.LEVIA_DB, messageId);
-      return {
-        tipo: 'ja_finalizado',
-        resposta: MENSAGENS.jaFinalizado(),
-        pwaLink: `${env.APP_BASE_URL || 'https://leviapp.org'}/ativar`,
-      };
-    }
-    
-    default: {
-      // Estado desconhecido - reiniciar
-      await limparSessao(env.LEVIA_DB, phoneFormatado);
-      await salvarSessao(env.LEVIA_DB, phoneFormatado, ESTADOS.AGUARDANDO_NOME, {});
-      await marcarProcessado(env.LEVIA_DB, messageId);
-      return { tipo: 'reiniciado', resposta: MENSAGENS.saudacao() };
-    }
+/** Conversas abandonadas e registros de mensagens antigos não ficam guardados para sempre. */
+async function limparAntigos(db, agora) {
+  if (!db || Math.random() >= 0.05) return;
+  try {
+    await db.prepare('DELETE FROM wa_sessions WHERE updated_at < ?').bind(new Date(agora - 3 * 24 * 3600 * 1000).toISOString()).run();
+    await db.prepare('DELETE FROM wa_processed WHERE created_at < ?').bind(new Date(agora - 30 * 24 * 3600 * 1000).toISOString()).run();
+  } catch (e) {
+    console.error('Erro ao limpar antigos:', e?.message);
   }
 }
 
-// Função auxiliar (importada do index.js ou duplicada aqui)
 async function buscarLeadPorTelefone(db, phone) {
   if (!db) return null;
   try {
@@ -369,4 +213,168 @@ async function buscarLeadPorTelefone(db, phone) {
   }
 }
 
+async function criarLeadCompleto(env, { phone, name, dor, consent_at }) {
+  const agora = new Date().toISOString();
+  const leadId = crypto.randomUUID();
+  if (env.LEVIA_DB) {
+    try {
+      await env.LEVIA_DB.prepare(
+        `INSERT INTO leads (id, name, phone, pain_point, source, consent_at, channel, created_at, updated_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      ).bind(leadId, name, phone, dor, 'whatsapp', consent_at, 'whatsapp', agora, agora).run();
+      return leadId;
+    } catch (e) {
+      console.error('Erro ao salvar lead no D1:', e?.message);
+    }
+  }
+  try {
+    await env.LEVIA_COTAS.put(
+      `lead:${leadId}`,
+      JSON.stringify({ id: leadId, name, phone, pain_point: dor, source: 'whatsapp', consent_at, channel: 'whatsapp', created_at: agora, updated_at: agora }),
+      { expirationTtl: 30 * 24 * 3600 },
+    );
+    return leadId;
+  } catch (e) {
+    console.error('Erro ao salvar lead no KV:', e?.message);
+    return null;
+  }
+}
 
+async function apagarTudoDe(env, phone) {
+  if (env.LEVIA_DB) {
+    for (const sql of [
+      'DELETE FROM leads WHERE phone = ?',
+      'DELETE FROM wa_sessions WHERE phone = ?',
+      'DELETE FROM wa_outbox WHERE phone = ?',
+    ]) {
+      try { await env.LEVIA_DB.prepare(sql).bind(phone).run(); } catch (e) { console.error('apagar:', e?.message); }
+    }
+  }
+  await apagarContaPorTelefone(env, phone);
+}
+
+// ---------- a conversa ----------
+
+export async function processarMensagemWhatsApp(env, phone, texto, messageId, agora = Date.now()) {
+  // o gateway do WhatsApp já manda o número com o código do país (E.164): não se acrescenta +55
+  const phoneFormatado = '+' + String(phone).replace(/\D/g, '');
+  const db = env.LEVIA_DB;
+
+  if (await verificarProcessado(db, messageId)) return { tipo: 'duplicado', resposta: null };
+  await marcarProcessado(db, messageId);
+  // qualquer mensagem da pessoa cancela os lembretes pendentes; a pergunta seguinte agenda os novos
+  await cancelarLembretes(env, phoneFormatado, agora);
+  await limparAntigos(db, agora);
+
+  const comando = semAcento(texto).replace(/[^a-z0-9 ]/g, '').trim();
+  const sessao = await obterSessao(db, phoneFormatado);
+  const estadoAtual = sessao?.estado;
+  const dados = sessao?.data || {};
+  // o idioma escolhido fica na conversa; quem já se cadastrou é atendido no idioma do país do número
+  const idioma = dados.idioma || idiomaPeloTelefone(phoneFormatado);
+  const T = TEXTOS[idioma];
+
+  const perguntar = async (estado, novosDados, tipo, idiomaDaPergunta = novosDados.idioma || idioma) => {
+    await salvarSessao(db, phoneFormatado, estado, novosDados);
+    await agendarLembretes(env, phoneFormatado, toquesDaEtapa(estado, novosDados, env, idiomaDaPergunta), agora);
+    return { tipo, resposta: perguntaDaEtapa(estado, novosDados, env, idiomaDaPergunta) };
+  };
+  const repetir = async (estado, resposta, tipo) => {
+    await agendarLembretes(env, phoneFormatado, toquesDaEtapa(estado, dados, env, idioma), agora);
+    return { tipo, resposta };
+  };
+
+  // apagar: pede confirmação e só então exclui
+  if (estadoAtual === ESTADOS.CONFIRMAR_APAGAR) {
+    const r = respostaSimNao(texto);
+    if (r === 'sim') {
+      await apagarTudoDe(env, phoneFormatado);
+      return { tipo: 'apagado', resposta: T.apagado };
+    }
+    if (r === 'nao') {
+      if (dados.voltarPara) return perguntar(dados.voltarPara, dados.dadosAnteriores || {}, 'apagar_cancelado');
+      await limparSessao(db, phoneFormatado);
+      return { tipo: 'apagar_cancelado', resposta: T.apagarCancelado };
+    }
+    return { tipo: 'apagar_pendente', resposta: `${T.naoEntendi}\n\n${T.confirmarApagar}` };
+  }
+  if (COMANDOS_APAGAR.includes(comando)) {
+    await salvarSessao(db, phoneFormatado, ESTADOS.CONFIRMAR_APAGAR, estadoAtual ? { voltarPara: estadoAtual, dadosAnteriores: dados, idioma } : { idioma });
+    return { tipo: 'confirmar_apagar', resposta: T.confirmarApagar };
+  }
+
+  // parar: nada de lembretes nem novas mensagens por iniciativa do LEVI
+  if (COMANDOS_PARAR.includes(comando)) {
+    await limparSessao(db, phoneFormatado);
+    return { tipo: 'parou', resposta: T.parar };
+  }
+
+  // quem já se cadastrou: o pedido possível é um novo serial
+  const leadExistente = await buscarLeadPorTelefone(db, phoneFormatado);
+  if (leadExistente) {
+    if (comando === 'serial') {
+      const emissao = await emitirSerial(env, { telefone: phoneFormatado });
+      if (emissao.ok) return { tipo: 'serial_novo', resposta: T.serialNovo(emissao.serial, linkApp(env)), leadId: leadExistente };
+      if (emissao.motivo === 'limite') return { tipo: 'serial_limite', resposta: T.serialLimite };
+      return { tipo: 'erro', resposta: T.erro };
+    }
+    return { tipo: 'ja_finalizado', resposta: T.jaFinalizado, pwaLink: linkApp(env) };
+  }
+
+  if (COMANDOS_REINICIAR.includes(comando)) {
+    return perguntar(ESTADOS.AGUARDANDO_IDIOMA, {}, 'reiniciado', 'pt-BR');
+  }
+
+  switch (estadoAtual) {
+    case ESTADOS.AGUARDANDO_IDIOMA: {
+      const escolhido = idiomaEscolhido(texto);
+      if (!escolhido) return repetir(estadoAtual, MENU_IDIOMA, 'idioma_invalido');
+      return perguntar(ESTADOS.AGUARDANDO_CONSENTIMENTO, { idioma: escolhido }, 'pergunta_consentimento');
+    }
+
+    case ESTADOS.AGUARDANDO_CONSENTIMENTO: {
+      const r = respostaSimNao(texto);
+      if (r === 'nao') {
+        await limparSessao(db, phoneFormatado);
+        return { tipo: 'cancelado', resposta: T.consentimentoNegado };
+      }
+      if (r !== 'sim') {
+        // "oi", "ok?" etc.: repete a pergunta com o aviso, sem avançar
+        return repetir(estadoAtual, `${T.naoEntendi}\n\n${perguntaDaEtapa(estadoAtual, dados, env, idioma)}`, 'consentimento_invalido');
+      }
+      return perguntar(ESTADOS.AGUARDANDO_NOME, { idioma, consentimento_em: new Date(agora).toISOString() }, 'pergunta_nome');
+    }
+
+    case ESTADOS.AGUARDANDO_NOME: {
+      const r = extrairNome(texto);
+      if (r.invalido) return repetir(estadoAtual, r.ehSaudacao ? T.nomeSaudacao : T.nomeInvalido, 'nome_invalido');
+      return perguntar(ESTADOS.AGUARDANDO_OBJETIVO, { ...dados, nome: r.nome }, 'pergunta_objetivo');
+    }
+
+    case ESTADOS.AGUARDANDO_OBJETIVO: {
+      const escolha = escolherObjetivo(texto);
+      if (!escolha) {
+        return repetir(estadoAtual, `${T.naoEntendi}\n\n${perguntaDaEtapa(estadoAtual, dados, env, idioma)}`, 'objetivo_invalido');
+      }
+      const leadId = await criarLeadCompleto(env, {
+        phone: phoneFormatado,
+        name: dados.nome,
+        dor: OBJETIVOS_GRAVADOS[escolha - 1],
+        consent_at: dados.consentimento_em || new Date(agora).toISOString(),
+      });
+      if (!leadId) return { tipo: 'erro', resposta: T.erro };
+
+      await limparSessao(db, phoneFormatado);
+      const emissao = await emitirSerial(env, { telefone: phoneFormatado });
+      if (!emissao.ok) {
+        // o lead já existe: quem digitar SERIAL depois tenta de novo
+        return { tipo: 'finalizado_sem_serial', resposta: T.serialIndisponivel, leadId };
+      }
+      return { tipo: 'finalizado', resposta: T.leadCriado(emissao.serial, linkApp(env)), pwaLink: linkApp(env), leadId };
+    }
+
+    default:
+      // sem conversa (ou etapa antiga): o LEVI se apresenta e pergunta o idioma
+      return perguntar(ESTADOS.AGUARDANDO_IDIOMA, {}, 'pergunta_idioma', 'pt-BR');
+  }
+}

@@ -2,6 +2,7 @@ import { createHmac } from 'node:crypto';
 import worker from '../worker/src/index';
 import { emitirSerial, normalizarCodigo } from '../worker/src/serial';
 import { processarMensagemWhatsApp } from '../worker/src/fluxo';
+import { diaSeguinteAs19, fusoDoTelefone, puxarVencidos } from '../worker/src/lembretes';
 import { sha256 } from '../worker/src/cripto';
 import { criarD1, temSqlite } from '../test-utils/d1';
 
@@ -337,9 +338,10 @@ describe('serial: fluxo do WhatsApp', () => {
 
   async function cadastrar(env: any) {
     await falar(env, 'oi');
+    await falar(env, '1'); // idioma: português (Brasil)
+    await falar(env, '1'); // consentimento
     await falar(env, 'Maria Silva');
-    await falar(env, 'quero emagrecer');
-    return falar(env, 'sim');
+    return falar(env, '3'); // objetivo
   }
 
   teste('a conversa termina com um serial que ativa o app', async () => {
@@ -391,5 +393,234 @@ describe('serial: script manual', () => {
     expect(res.status).toBe(200);
     const { licenca } = await res.json();
     expect((await analisar(env, licenca, A)).status).toBe(200);
+  });
+});
+
+describe('LEVI: idioma, conversa, consentimento e lembretes', () => {
+  let n = 0;
+  const TEL_BR = '5511987654321';
+  const falar = (env: any, texto: string, agora?: number, tel = TEL_BR) =>
+    processarMensagemWhatsApp(env, tel, texto, `lv-${++n}`, agora) as Promise<any>;
+  const pendentes = (db: any, tel = '+' + TEL_BR) =>
+    db.sql('SELECT texto, enviar_em FROM wa_outbox WHERE phone = ? AND enviado_em IS NULL AND cancelado_em IS NULL ORDER BY enviar_em', tel) as any[];
+  const contar = (db: any, tabela: string) => (db.sql(`SELECT COUNT(*) AS n FROM ${tabela}`)[0] as any).n;
+  /** oi → idioma → consentimento: deixa a conversa pronta para o nome. */
+  const ate_o_nome = async (env: any, idioma = '1') => {
+    await falar(env, 'oi');
+    await falar(env, idioma);
+    return falar(env, '1');
+  };
+
+  teste('a primeira pergunta é o idioma, com o LEVI se apresentando, e nada é guardado ainda', async () => {
+    const { db, env } = ambiente();
+    const r = await falar(env, 'oi');
+    expect(r.tipo).toBe('pergunta_idioma');
+    expect(r.resposta).toContain('LEVI');
+    for (const opcao of ['🇧🇷 Português (Brasil)', '🇵🇹 Português (Portugal)', '🇬🇧 English', '🇪🇸 Español', '🇮🇹 Italiano']) {
+      expect(r.resposta).toContain(opcao);
+    }
+    expect(contar(db, 'leads')).toBe(0);
+  });
+
+  teste('cada idioma recebe o consentimento no seu idioma, com LEVI, a política e 1 = SIM / 2 = NÃO', async () => {
+    const esperado: Record<string, string[]> = {
+      '1': ['assistente virtual', 'DIGITE *1* PARA *SIM', 'DIGITE *2* PARA *NÃO*'],
+      '2': ['assistente virtual', 'ESCREVA *1* PARA *SIM', 'telemóvel'],
+      '3': ["virtual assistant", 'TYPE *1* FOR *YES', 'TYPE *2* FOR *NO*'],
+      '4': ['asistente virtual', 'ESCRIBE *1* PARA *SÍ', 'ESCRIBE *2* PARA *NO*'],
+      '5': ['assistente virtuale', 'SCRIVI *1* PER *SÌ', 'SCRIVI *2* PER *NO*'],
+    };
+    for (const [numero, trechos] of Object.entries(esperado)) {
+      const { db, env } = ambiente();
+      await falar(env, 'oi', undefined, `5511${numero}0000000`);
+      const r = await falar(env, numero, undefined, `5511${numero}0000000`);
+      expect(r.tipo).toBe('pergunta_consentimento');
+      expect(r.resposta).toContain('LEVI');
+      expect(r.resposta).toContain('levia-policies/privacidade.html');
+      for (const trecho of trechos) expect(r.resposta).toContain(trecho);
+      expect(contar(db, 'leads')).toBe(0);
+    }
+  });
+
+  teste('o idioma também vale por palavra e o menu repete se a resposta não for uma opção', async () => {
+    const { env } = ambiente();
+    await falar(env, 'oi');
+    const nao = await falar(env, 'banana');
+    expect(nao.tipo).toBe('idioma_invalido');
+    expect(nao.resposta).toContain('🇮🇹 Italiano');
+    const ok = await falar(env, 'English');
+    expect(ok.resposta).toContain('virtual assistant');
+  });
+
+  teste('responder NÃO (em inglês, 2) encerra sem guardar nada nem agendar lembretes', async () => {
+    const { db, env } = ambiente();
+    await falar(env, 'oi');
+    await falar(env, '3');
+    const r = await falar(env, '2');
+    expect(r.tipo).toBe('cancelado');
+    expect(r.resposta).toContain('Nothing was saved');
+    expect(contar(db, 'wa_sessions')).toBe(0);
+    expect(contar(db, 'leads')).toBe(0);
+    expect(pendentes(db)).toHaveLength(0);
+  });
+
+  teste('cumprimentos não viram nome; "oi, sou a Renata" vira Renata', async () => {
+    const { db, env } = ambiente();
+    await ate_o_nome(env);
+    for (const saudacao of ['Oi', 'olá', 'HELLO', 'hi', 'Bom dia', 'oiii!!', 'tudo bem?', 'ciao', 'buenos días']) {
+      const r = await falar(env, saudacao);
+      expect(r.tipo).toBe('nome_invalido');
+      expect(r.resposta).toContain('cumprimento');
+    }
+    const ok = await falar(env, 'oi, sou a renata da silva');
+    expect(ok.tipo).toBe('pergunta_objetivo');
+    expect(ok.resposta).toContain('Renata da Silva');
+    expect(contar(db, 'leads')).toBe(0);
+  });
+
+  teste('em inglês as perguntas e o aviso do nome vêm em inglês e o objetivo grava em português', async () => {
+    const { db, env } = ambiente();
+    const nome = await ate_o_nome(env, '3');
+    expect(nome.resposta).toContain('What should I call you');
+    const saudacao = await falar(env, 'hello');
+    expect(saudacao.resposta).toContain('greeting');
+    const objetivo = await falar(env, 'My name is john smith');
+    expect(objetivo.resposta).toContain('John Smith');
+    expect(objetivo.resposta).toContain('6️⃣ All of the above');
+    const fim = await falar(env, '4');
+    expect(fim.tipo).toBe('finalizado');
+    expect(fim.resposta).toContain('Done!');
+    expect(db.sql('SELECT name, pain_point FROM leads')[0]).toMatchObject({ name: 'John Smith', pain_point: 'Ganhar massa muscular' });
+  });
+
+  teste('o objetivo é escolhido por número (6 = todos) e vira texto fixo no cadastro', async () => {
+    const { db, env } = ambiente();
+    await ate_o_nome(env);
+    await falar(env, 'Ana');
+    const invalido = await falar(env, 'sei lá');
+    expect(invalido.tipo).toBe('objetivo_invalido');
+    expect(invalido.resposta).toContain('Todos os acima');
+    const r = await falar(env, '6');
+    expect(r.tipo).toBe('finalizado');
+    expect(db.sql('SELECT name, pain_point FROM leads')[0]).toMatchObject({ name: 'Ana', pain_point: 'Todos os acima' });
+    expect((db.sql('SELECT consent_at FROM leads')[0] as any).consent_at).toBeTruthy();
+  });
+
+  teste('a pergunta agenda 30 s, 3 min e o dia seguinte às 19:00 do país; responder cancela', async () => {
+    const { db, env } = ambiente();
+    const agora = Date.UTC(2026, 9, 29, 20, 0, 0); // 29/10/2026 20:00 UTC
+    await falar(env, 'oi', agora);
+    const fila = pendentes(db);
+    expect(fila).toHaveLength(3);
+    expect(fila[0].enviar_em).toBe(agora + 30_000);
+    expect(fila[1].enviar_em).toBe(agora + 180_000);
+    expect(fila[2].enviar_em).toBe(Date.UTC(2026, 9, 30, 22, 0, 0)); // 19:00 em Brasília (UTC-3)
+    expect(fila[2].texto).toContain('LEVI');
+    expect(fila[2].texto).toContain('🇮🇹 Italiano'); // a pergunta pendente (idioma) vai junto
+    await falar(env, '1', agora + 10_000); // respondeu o idioma: cancela os antigos e agenda os da nova pergunta
+    const nova = pendentes(db);
+    expect(nova).toHaveLength(3);
+    expect(nova[0].texto).toContain('Ainda por aí');
+    expect(nova[2].texto).toContain('PARAR');
+    expect(nova[2].texto).toContain('DIGITE *1* PARA *SIM');
+  });
+
+  teste('os lembretes saem no idioma escolhido', async () => {
+    const { db, env } = ambiente();
+    const agora = Date.UTC(2026, 9, 29, 20, 0, 0);
+    await falar(env, 'oi', agora);
+    await falar(env, '5', agora + 1000); // italiano
+    const fila = pendentes(db);
+    expect(fila[0].texto).toContain('Ci sei?');
+    expect(fila[1].texto).toContain('STOP');
+    expect(fila[2].texto).toContain('Ieri hai iniziato');
+  });
+
+  teste('o dia seguinte usa o fuso do país do número', () => {
+    const agora = Date.UTC(2026, 9, 29, 20, 0, 0);
+    expect(fusoDoTelefone('+356 9900 1234')).toBe('Europe/Malta');
+    expect(fusoDoTelefone('351912345678')).toBe('Europe/Lisbon');
+    expect(fusoDoTelefone('5516996034777')).toBe('America/Sao_Paulo');
+    expect(diaSeguinteAs19(agora, 'Europe/Malta')).toBe(Date.UTC(2026, 9, 30, 18, 0, 0)); // UTC+1 depois de 25/10
+    expect(diaSeguinteAs19(agora, 'Europe/Lisbon')).toBe(Date.UTC(2026, 9, 30, 19, 0, 0)); // UTC+0
+    // vira o horário de verão no meio do caminho: 24/10 à noite em Malta (UTC+2), 25/10 19:00 já é UTC+1
+    const noite = Date.UTC(2026, 9, 24, 21, 0, 0);
+    expect(diaSeguinteAs19(noite, 'Europe/Malta')).toBe(Date.UTC(2026, 9, 25, 18, 0, 0));
+  });
+
+  teste('o gateway só recebe o que venceu, uma vez, e só de quem ainda tem conversa aberta', async () => {
+    const { db, env } = ambiente();
+    const agora = Date.UTC(2026, 9, 29, 20, 0, 0);
+    await falar(env, 'oi', agora);
+    expect(await puxarVencidos(env, agora + 10_000)).toHaveLength(0);
+    const primeiro = await puxarVencidos(env, agora + 31_000);
+    expect(primeiro).toHaveLength(1);
+    expect(primeiro[0]).toMatchObject({ telefone: TEL_BR });
+    expect(primeiro[0].texto).toContain('Ainda por aí');
+    expect(await puxarVencidos(env, agora + 31_000)).toHaveLength(0); // não repete
+    await falar(env, 'parar', agora + 40_000);
+    expect(await puxarVencidos(env, agora + 4 * 60_000)).toHaveLength(0); // PARAR cancela o resto
+    expect(contar(db, 'wa_sessions')).toBe(0);
+  });
+
+  teste('PARAR (e STOP) encerram e o LEVI não escreve mais', async () => {
+    const { db, env } = ambiente();
+    await falar(env, 'oi');
+    const r = await falar(env, 'PARAR');
+    expect(r.tipo).toBe('parou');
+    expect(pendentes(db)).toHaveLength(0);
+    await falar(env, 'oi');
+    await falar(env, '3');
+    expect((await falar(env, 'stop')).resposta).toContain("won't message you anymore");
+  });
+
+  teste('APAGAR pede confirmação e então exclui cadastro, conta e serial', async () => {
+    const { db, env } = ambiente();
+    await ate_o_nome(env);
+    await falar(env, 'Maria Silva');
+    const fim = await falar(env, '3');
+    const serial = fim.resposta.match(/[A-HJ-NP-Z2-9]{4}(?:-[A-HJ-NP-Z2-9]{4}){3}/)![0];
+    expect(contar(db, 'accounts')).toBe(1);
+
+    const pedido = await falar(env, 'apagar');
+    expect(pedido.tipo).toBe('confirmar_apagar');
+    expect(contar(db, 'leads')).toBe(1); // ainda não apagou
+
+    const desistiu = await falar(env, '2');
+    expect(desistiu.tipo).toBe('apagar_cancelado');
+    expect(contar(db, 'leads')).toBe(1);
+
+    await falar(env, 'APAGAR');
+    const feito = await falar(env, '1');
+    expect(feito.tipo).toBe('apagado');
+    for (const tabela of ['leads', 'accounts', 'activation_codes', 'wa_sessions', 'wa_outbox']) {
+      expect(contar(db, tabela)).toBe(0);
+    }
+    expect((await ativar(env, serial, A)).status).toBe(403); // o serial deixou de valer
+  });
+
+  teste('quem já se cadastrou é atendido no idioma do país do número (Itália → italiano)', async () => {
+    const { env } = ambiente();
+    const tel = '393331234567';
+    await falar(env, 'oi', undefined, tel);
+    await falar(env, '5', undefined, tel);
+    await falar(env, '1', undefined, tel);
+    await falar(env, 'Giulia', undefined, tel);
+    const fim = await falar(env, '2', undefined, tel);
+    expect(fim.resposta).toContain('Fatto!');
+    const outra = await falar(env, 'ciao', undefined, tel);
+    expect(outra.tipo).toBe('ja_finalizado');
+    expect(outra.resposta).toContain('Hai già completato');
+    const novo = await falar(env, 'SERIAL', undefined, tel);
+    expect(novo.resposta).toContain('nuovo seriale');
+  });
+
+  teste('sem a tabela de lembretes (migration 0006 pendente) a conversa continua funcionando', async () => {
+    const { db, env } = ambiente();
+    db.sql('DROP TABLE wa_outbox');
+    jest.spyOn(console, 'error').mockImplementation(() => {});
+    const r = await falar(env, 'oi');
+    expect(r.resposta).toContain('LEVI');
+    expect((await falar(env, '1')).tipo).toBe('pergunta_consentimento');
   });
 });
