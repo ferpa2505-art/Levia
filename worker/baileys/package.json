@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "Baileys WhatsApp Gateway for Leviã",
   "main": "src/index.js",
+  "type": "module",
   "scripts": {
     "baileys-gateway": "node src/index.js",
     "dev": "node --watch src/index.js",

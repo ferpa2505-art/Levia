@@ -8,6 +8,7 @@ import pino from 'pino';
 import crypto from 'node:crypto';
 import path from 'path';
 import axios from 'axios';
+import qrcode from 'qrcode-terminal';
 
 const logger = pino({ level: 'info' }, pino.destination({ dest: process.stdout.fd, sync: false }));
 
@@ -90,7 +91,6 @@ async function connect() {
   sock = makeWASocket({
     version,
     logger: logger.child({ module: 'baileys' }),
-    printQRInTerminal: true,
     auth: {
       creds: state.creds,
       keys: makeCacheableSignalKeyStore(state.keys, logger)
@@ -104,6 +104,8 @@ async function connect() {
     
     if (qr) {
       logger.info('QR Code gerado - escaneie com WhatsApp');
+      // o Baileys não imprime mais o QR sozinho; ele só vale por alguns segundos e troca sempre
+      qrcode.generate(qr, { small: true });
     }
     
     if (connection === 'open') {
