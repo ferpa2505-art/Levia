@@ -5,7 +5,7 @@
 
 import { default as makeWASocket, useMultiFileAuthState, DisconnectReason, fetchLatestBaileysVersion, makeCacheableSignalKeyStore } from '@whiskeysockets/baileys';
 import pino from 'pino';
-import fs from 'fs';
+import crypto from 'node:crypto';
 import path from 'path';
 import axios from 'axios';
 
@@ -27,33 +27,29 @@ let sock = null;
 let isConnected = false;
 let heartbeatTimer = null;
 
-function generateHMAC(payload) {
-  if (!WHATSAPP_WEBHOOK_SECRET) return null;
-  const crypto = require('crypto');
-  return crypto.createHmac('sha256', WHATSAPP_WEBHOOK_SECRET)
-    .update(JSON.stringify(payload))
-    .digest('hex');
+if (!WHATSAPP_WEBHOOK_SECRET) {
+  logger.fatal('WHATSAPP_WEBHOOK_SECRET ausente: o Worker recusa mensagens sem assinatura');
+  process.exit(1);
 }
 
+/** Envia ao Worker, assinado: HMAC-SHA256 de `${timestamp}.${corpo}` (o Worker confere os dois headers). */
 async function sendToWorker(messages) {
   try {
-    const payload = { messages };
-    const headers = { 'Content-Type': 'application/json' };
-    
-    const signature = generateHMAC(payload);
-    if (signature) {
-      headers['X-Signature'] = signature;
-    }
+    const corpo = JSON.stringify({ messages });
+    const carimbo = String(Date.now());
+    const assinatura = crypto.createHmac('sha256', WHATSAPP_WEBHOOK_SECRET).update(`${carimbo}.${corpo}`).digest('hex');
 
-    const response = await axios.post(`${WORKER_URL}/api/wa/inbound`, payload, {
-      headers,
-      timeout: 10000
+    const response = await axios.post(`${WORKER_URL}/api/wa/inbound`, corpo, {
+      headers: { 'Content-Type': 'application/json', 'X-Timestamp': carimbo, 'X-Signature': assinatura },
+      timeout: 10000,
+      transformRequest: [(d) => d], // envia exatamente os bytes assinados
     });
 
-    logger.info({ results: response.data }, 'Mensagens encaminhadas para Worker');
+    // sem telefone nem texto das mensagens nos logs (dado de saúde / LGPD)
+    logger.info({ processados: response.data?.processados }, 'Mensagens encaminhadas para Worker');
     return response.data;
   } catch (error) {
-    logger.error({ err: error.message, payload: messages }, 'Erro ao enviar para Worker');
+    logger.error({ err: error.message, status: error.response?.status, quantidade: messages.length }, 'Erro ao enviar para Worker');
     throw error;
   }
 }
@@ -135,30 +131,48 @@ async function connect() {
   sock.ev.on('messages.upsert', async ({ messages, type }) => {
     if (type !== 'notify') return;
 
-    const formattedMessages = messages
-      .filter(m => m.message && !m.key.fromMe)
-      .map(m => ({
-        message_id: m.key.id,
-        from: m.key.remoteJid.replace('@s.whatsapp.net', '').replace('@g.us', ''),
+    // só conversas diretas: grupos, status e canais ficam de fora
+    const diretas = messages.filter((m) => {
+      const jid = m.key?.remoteJid ?? '';
+      return m.message && !m.key.fromMe && jid.endsWith('@s.whatsapp.net');
+    });
+    const formattedMessages = diretas
+      .map((m) => ({
+        jid: m.key.remoteJid,
+        id: m.key.id,
+        from: m.key.remoteJid.replace('@s.whatsapp.net', ''),
         body: m.message.conversation || m.message.extendedTextMessage?.text || '',
         timestamp: m.messageTimestamp,
-        pushName: m.pushName
       }))
-      .filter(m => m.body);
+      .filter((m) => m.body);
 
-    if (formattedMessages.length > 0) {
-      logger.info({ count: formattedMessages.length }, 'Novas mensagens recebidas');
-      await sendToWorker(formattedMessages);
+    if (formattedMessages.length === 0) return;
+    logger.info({ count: formattedMessages.length }, 'Novas mensagens recebidas');
+    try {
+      const retorno = await sendToWorker(formattedMessages.map(({ jid, ...resto }) => resto));
+      // o Worker devolve um resultado por mensagem, na mesma ordem: responde cada pessoa
+      const resultados = retorno?.resultados ?? [];
+      for (let i = 0; i < formattedMessages.length; i++) {
+        const resposta = resultados[i]?.resposta;
+        if (typeof resposta === 'string' && resposta) {
+          await sock.sendMessage(formattedMessages[i].jid, { text: resposta });
+          await new Promise((r) => setTimeout(r, 1500)); // ritmo humano: reduz risco de bloqueio do número
+        }
+      }
+    } catch {
+      // já registrado em sendToWorker; a mensagem não é respondida
     }
   });
 
-  // Manter processo vivo
-  process.on('SIGINT', async () => {
+  // Encerrar sem sair da conta: logout() desvincularia o aparelho e exigiria novo QR Code
+  const encerrar = () => {
     logger.info('Encerrando...');
     stopHeartbeat();
-    if (sock) await sock.logout();
+    sock?.end(undefined);
     process.exit(0);
-  });
+  };
+  process.once('SIGINT', encerrar);
+  process.once('SIGTERM', encerrar);
 }
 
 logger.info('Iniciando Baileys Gateway...');

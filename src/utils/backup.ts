@@ -18,8 +18,8 @@ import { cifrar, decifrar, DadosCifrados } from '@utils/cifraBackup';
 /** 1 = dados abertos; 2 = dados cifrados com senha (campo `cifrado`) */
 const FORMATO = 1;
 const FORMATO_CIFRADO = 2;
-/** Chaves que não entram no backup (cache que o app refaz sozinho; id do aparelho) */
-const IGNORAR = new Set(['levia:news_cache', 'levia:instalacao']);
+/** Chaves que não entram no backup nem na restauração: cache, id do aparelho, consentimento da IA e configuração de segurança (um arquivo de fora não decide isso) */
+const IGNORAR = new Set(['levia:news_cache', 'levia:instalacao', 'levia:consentimentoIA', 'levia:seguranca']);
 /** Depois de restaurar, as medicações reagendam os lembretes ao abrir */
 export const CHAVE_REAGENDAR = 'levia:reagendarLembretes';
 

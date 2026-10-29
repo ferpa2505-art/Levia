@@ -3,6 +3,8 @@ import * as Crypto from 'expo-crypto';
 import * as LocalAuthentication from 'expo-local-authentication';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Platform } from 'react-native';
+import { scryptAsync } from '@noble/hashes/scrypt';
+import { utf8ToBytes } from '@noble/hashes/utils';
 
 /**
  * No celular a senha fica no cofre do sistema (SecureStore). No navegador (PWA)
@@ -20,7 +22,7 @@ const cofre = Platform.OS === 'web'
 /**
  * Senha do app (4 a 10 dígitos) e desbloqueio por biometria.
  *
- * A senha nunca é guardada como foi digitada: guardamos só um hash SHA-256
+ * A senha nunca é guardada como foi digitada: guardamos só um hash (scrypt)
  * com "sal" aleatório, no armazenamento seguro do Android (Keystore). A
  * biometria é verificada pelo próprio sistema — o app não tem acesso à
  * digital nem ao rosto, só recebe "deu certo" ou "não deu".
@@ -56,8 +58,26 @@ export function pinValido(pin: string) {
   return new RegExp(`^\\d{${PIN_MIN},${PIN_MAX}}$`).test(pin);
 }
 
-async function hash(pin: string, sal: string) {
+/** Formato antigo (v1): SHA-256 simples. Só é lido para migrar para o scrypt no primeiro desbloqueio. */
+async function hashLegado(pin: string, sal: string) {
   return Crypto.digestStringAsync(Crypto.CryptoDigestAlgorithm.SHA256, `${sal}:${pin}`);
+}
+
+// scrypt deixa cada tentativa cara (uma senha de poucos dígitos nunca será à prova de quem
+// copia o armazenamento do aparelho, mas isso tira a quebra instantânea do SHA-256 puro)
+const SCRYPT = { N: 2 ** 14, r: 8, p: 1, dkLen: 32 };
+
+async function hash(pin: string, sal: string) {
+  const bytes = await scryptAsync(utf8ToBytes(pin), utf8ToBytes(sal), SCRYPT);
+  return Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('');
+}
+
+/** Comparação em tempo constante */
+function iguais(a: string, b: string) {
+  if (a.length !== b.length) return false;
+  let dif = 0;
+  for (let i = 0; i < a.length; i++) dif |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  return dif === 0;
 }
 
 export async function temSenha(): Promise<boolean> {
@@ -68,7 +88,7 @@ export async function salvarSenha(pin: string) {
   if (!pinValido(pin)) throw new Error('senha inválida');
   const bytes = Crypto.getRandomBytes(16);
   const sal = Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('');
-  await cofre.setItemAsync(CHAVE_PIN, JSON.stringify({ sal, hash: await hash(pin, sal), tam: pin.length }));
+  await cofre.setItemAsync(CHAVE_PIN, JSON.stringify({ v: 2, sal, hash: await hash(pin, sal), tam: pin.length }));
 }
 
 /** Quantidade de dígitos da senha (para desbloquear sem precisar tocar em OK) */
@@ -85,8 +105,12 @@ export async function conferirSenha(pin: string): Promise<boolean> {
   const salvo = await cofre.getItemAsync(CHAVE_PIN).catch(() => null);
   if (!salvo) return false;
   try {
-    const { sal, hash: esperado } = JSON.parse(salvo) as { sal: string; hash: string };
-    return (await hash(pin, sal)) === esperado;
+    const { v, sal, hash: esperado } = JSON.parse(salvo) as { v?: number; sal: string; hash: string };
+    if (v === 2) return iguais(await hash(pin, sal), esperado);
+    // senha criada antes do scrypt: confere do jeito antigo e já regrava no formato novo
+    if (!iguais(await hashLegado(pin, sal), esperado)) return false;
+    await salvarSenha(pin).catch(() => {});
+    return true;
   } catch {
     return false;
   }

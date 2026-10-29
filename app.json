@@ -22,7 +22,8 @@
       },
       "blockedPermissions": [
         "com.google.android.gms.permission.AD_ID"
-      ]
+      ],
+      "allowBackup": false
     },
     "plugins": [
       "expo-router",
