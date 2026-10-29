@@ -1,4 +1,5 @@
-﻿<<<<<<< HEAD
+﻿import { iniciarTeste } from './licencas';
+<<<<<<< HEAD
 ï»¿ï»¿ï»¿ï»¿ï»¿ï»¿ï»¿ï»¿ï»¿ï»¿ï»¿ï»¿import { iniciarTeste } from './licencas';
 =======
 ï»¿ï»¿ï»¿ï»¿ï»¿ï»¿ï»¿ï»¿ï»¿ï»¿import { iniciarTeste } from './licencas';
@@ -433,6 +434,8 @@ export default {
     return json({ erro: 'nao_encontrado' }, 404);
   },
 };
+
+
 
 
 
