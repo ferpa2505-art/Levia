@@ -5,8 +5,9 @@
  *   sem sessão     → LEVI se apresenta e pergunta o idioma (1 BR, 2 PT, 3 EN, 4 ES, 5 IT)
  *   idioma         → pede o consentimento (1 = SIM, 2 = NÃO), já no idioma escolhido
  *   consentimento  → 1: pede o nome | 2: encerra sem guardar nada
- *   nome           → pede o objetivo (opções numeradas)
- *   objetivo       → cria o lead, emite o serial e manda o link
+ *   nome           → pede o e-mail (opcional: 2 pula)
+ *   e-mail         → pede o objetivo (opções numeradas)
+ *   objetivo       → cria o lead; manda o serial em mensagens separadas (explicação, serial sozinho, como usar) e o vídeo
  * Comandos em qualquer etapa: PARAR (não escrever mais), APAGAR (excluir tudo), SERIAL, MENU.
  * Quem para de responder recebe lembretes (ver lembretes.js). Os textos estão em textos.js.
  */
@@ -16,6 +17,11 @@ import { agendarLembretes, cancelarLembretes } from './lembretes';
 import {
   MENU_IDIOMA, OBJETIVOS_GRAVADOS, TEXTOS, TOQUE_IDIOMA, idiomaEscolhido, idiomaPeloTelefone,
 } from './textos';
+
+/** Nome da mídia que o gateway envia (vídeo de uso do app); sem o arquivo ele manda só o texto. */
+const MIDIA_VIDEO = 'video';
+const EMAIL = /^[^\s@]{1,64}@[^\s@]{1,190}\.[^\s@]{2,}$/;
+const PULAR = ['2', 'pular', 'pula', 'skip', 'saltar', 'salta', 'omitir', 'saltare', 'nao', 'no'];
 
 const POLITICA_URL = 'https://ferpa2505-art.github.io/levia-policies/privacidade.html';
 
@@ -37,9 +43,18 @@ const ESTADOS = {
   AGUARDANDO_IDIOMA: 'aguardando_idioma',
   AGUARDANDO_CONSENTIMENTO: 'aguardando_consentimento',
   AGUARDANDO_NOME: 'aguardando_nome',
+  AGUARDANDO_EMAIL: 'aguardando_email',
   AGUARDANDO_OBJETIVO: 'aguardando_objetivo',
   CONFIRMAR_APAGAR: 'confirmar_apagar',
 };
+
+/** Resposta em várias mensagens: `respostas` (texto ou { texto, midia }) e `resposta` (o texto junto, p/ compatibilidade). */
+const varias = (tipo, itens, extra = {}) => ({
+  tipo,
+  respostas: itens,
+  resposta: itens.map((i) => (typeof i === 'string' ? i : i.texto)).join('\n\n'),
+  ...extra,
+});
 
 const linkApp = (env) => `${env.APP_BASE_URL || 'https://leviapp.org'}/ativar`;
 const linkPolitica = (env) => env.POLITICA_URL || POLITICA_URL;
@@ -50,6 +65,7 @@ function perguntaDaEtapa(estado, dados, env, idioma) {
   if (estado === ESTADOS.AGUARDANDO_IDIOMA) return MENU_IDIOMA;
   if (estado === ESTADOS.AGUARDANDO_CONSENTIMENTO) return T.consentimento(linkPolitica(env));
   if (estado === ESTADOS.AGUARDANDO_NOME) return T.pedirNome;
+  if (estado === ESTADOS.AGUARDANDO_EMAIL) return T.pedirEmail(dados.nome);
   if (estado === ESTADOS.AGUARDANDO_OBJETIVO) return T.pedirObjetivo(dados.nome, T.objetivos);
   return T.confirmarApagar;
 }
@@ -60,18 +76,26 @@ function toquesDaEtapa(estado, dados, env, idioma) {
     return {
       primeiro: TOQUE_IDIOMA,
       segundo: 'Sem pressa! · No rush! · ¡Sin prisa! · Nessuna fretta! 😊\nPara parar · To stop · Para parar · Per fermare: PARAR / STOP',
-      diaSeguinte: `Olá! 👋 Hello! ¡Hola! Ciao! — LEVI, Leviã.\n\n${MENU_IDIOMA}`,
+      diaSeguinte: `Olá! 👋 Hello! ¡Hola! Ciao! — LEVI, Leviã.
+
+${MENU_IDIOMA}`,
     };
   }
+  const nome = dados.nome;
   const primeiro = {
     [ESTADOS.AGUARDANDO_CONSENTIMENTO]: T.toqueConsentimento,
     [ESTADOS.AGUARDANDO_NOME]: T.toqueNome,
-    [ESTADOS.AGUARDANDO_OBJETIVO]: T.toqueObjetivo,
+    [ESTADOS.AGUARDANDO_EMAIL]: T.toqueEmail(nome),
+    [ESTADOS.AGUARDANDO_OBJETIVO]: T.toqueObjetivo(nome),
   }[estado] ?? T.toqueConsentimento;
+  // só quem já autorizou recebe o vídeo; antes do consentimento os toques são só texto
+  const texto = `${T.toqueDiaSeguinte(nome)}
+
+${perguntaDaEtapa(estado, dados, env, idioma)}`;
   return {
     primeiro,
-    segundo: T.toqueSegundo,
-    diaSeguinte: `${T.toqueDiaSeguinte}\n\n${perguntaDaEtapa(estado, dados, env, idioma)}`,
+    segundo: T.toqueSegundo(nome),
+    diaSeguinte: dados.consentimento_em ? { texto, midia: MIDIA_VIDEO } : texto,
   };
 }
 
@@ -213,15 +237,15 @@ async function buscarLeadPorTelefone(db, phone) {
   }
 }
 
-async function criarLeadCompleto(env, { phone, name, dor, consent_at }) {
+async function criarLeadCompleto(env, { phone, name, email, dor, consent_at }) {
   const agora = new Date().toISOString();
   const leadId = crypto.randomUUID();
   if (env.LEVIA_DB) {
     try {
       await env.LEVIA_DB.prepare(
-        `INSERT INTO leads (id, name, phone, pain_point, source, consent_at, channel, created_at, updated_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      ).bind(leadId, name, phone, dor, 'whatsapp', consent_at, 'whatsapp', agora, agora).run();
+        `INSERT INTO leads (id, name, phone, email, pain_point, source, consent_at, channel, created_at, updated_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      ).bind(leadId, name, phone, email, dor, 'whatsapp', consent_at, 'whatsapp', agora, agora).run();
       return leadId;
     } catch (e) {
       console.error('Erro ao salvar lead no D1:', e?.message);
@@ -230,7 +254,7 @@ async function criarLeadCompleto(env, { phone, name, dor, consent_at }) {
   try {
     await env.LEVIA_COTAS.put(
       `lead:${leadId}`,
-      JSON.stringify({ id: leadId, name, phone, pain_point: dor, source: 'whatsapp', consent_at, channel: 'whatsapp', created_at: agora, updated_at: agora }),
+      JSON.stringify({ id: leadId, name, phone, email, pain_point: dor, source: 'whatsapp', consent_at, channel: 'whatsapp', created_at: agora, updated_at: agora }),
       { expirationTtl: 30 * 24 * 3600 },
     );
     return leadId;
@@ -314,7 +338,7 @@ export async function processarMensagemWhatsApp(env, phone, texto, messageId, ag
   if (leadExistente) {
     if (comando === 'serial') {
       const emissao = await emitirSerial(env, { telefone: phoneFormatado });
-      if (emissao.ok) return { tipo: 'serial_novo', resposta: T.serialNovo(emissao.serial, linkApp(env)), leadId: leadExistente };
+      if (emissao.ok) return varias('serial_novo', [T.serialNovoIntro, emissao.serial, T.serialNovoUso(linkApp(env))], { leadId: leadExistente });
       if (emissao.motivo === 'limite') return { tipo: 'serial_limite', resposta: T.serialLimite };
       return { tipo: 'erro', resposta: T.erro };
     }
@@ -348,17 +372,29 @@ export async function processarMensagemWhatsApp(env, phone, texto, messageId, ag
     case ESTADOS.AGUARDANDO_NOME: {
       const r = extrairNome(texto);
       if (r.invalido) return repetir(estadoAtual, r.ehSaudacao ? T.nomeSaudacao : T.nomeInvalido, 'nome_invalido');
-      return perguntar(ESTADOS.AGUARDANDO_OBJETIVO, { ...dados, nome: r.nome }, 'pergunta_objetivo');
+      return perguntar(ESTADOS.AGUARDANDO_EMAIL, { ...dados, nome: r.nome }, 'pergunta_email');
+    }
+
+    case ESTADOS.AGUARDANDO_EMAIL: {
+      if (PULAR.includes(comando)) {
+        return perguntar(ESTADOS.AGUARDANDO_OBJETIVO, { ...dados, email: null }, 'pergunta_objetivo');
+      }
+      const email = texto.trim().toLowerCase();
+      if (!EMAIL.test(email) || email.length > 120) return repetir(estadoAtual, T.emailInvalido, 'email_invalido');
+      return perguntar(ESTADOS.AGUARDANDO_OBJETIVO, { ...dados, email }, 'pergunta_objetivo');
     }
 
     case ESTADOS.AGUARDANDO_OBJETIVO: {
       const escolha = escolherObjetivo(texto);
       if (!escolha) {
-        return repetir(estadoAtual, `${T.naoEntendi}\n\n${perguntaDaEtapa(estadoAtual, dados, env, idioma)}`, 'objetivo_invalido');
+        return repetir(estadoAtual, `${T.naoEntendi}
+
+${perguntaDaEtapa(estadoAtual, dados, env, idioma)}`, 'objetivo_invalido');
       }
       const leadId = await criarLeadCompleto(env, {
         phone: phoneFormatado,
         name: dados.nome,
+        email: dados.email || null,
         dor: OBJETIVOS_GRAVADOS[escolha - 1],
         consent_at: dados.consentimento_em || new Date(agora).toISOString(),
       });
@@ -370,7 +406,17 @@ export async function processarMensagemWhatsApp(env, phone, texto, messageId, ag
         // o lead já existe: quem digitar SERIAL depois tenta de novo
         return { tipo: 'finalizado_sem_serial', resposta: T.serialIndisponivel, leadId };
       }
-      return { tipo: 'finalizado', resposta: T.leadCriado(emissao.serial, linkApp(env)), pwaLink: linkApp(env), leadId };
+      // explicação → serial sozinho (fácil de copiar) → como usar → vídeo
+      return varias(
+        'finalizado',
+        [
+          T.serialIntro(dados.nome),
+          emissao.serial,
+          T.serialUso(linkApp(env)),
+          { texto: T.videoLegenda(dados.nome), midia: MIDIA_VIDEO },
+        ],
+        { pwaLink: linkApp(env), leadId },
+      );
     }
 
     default:

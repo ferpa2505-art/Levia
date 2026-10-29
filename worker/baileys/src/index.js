@@ -8,6 +8,7 @@ import pino from 'pino';
 import crypto from 'node:crypto';
 import path from 'path';
 import axios from 'axios';
+import fs from 'node:fs';
 import qrcode from 'qrcode-terminal';
 
 const logger = pino({ level: 'info' }, pino.destination({ dest: process.stdout.fd, sync: false }));
@@ -20,6 +21,7 @@ const {
   RECONNECT_DELAY_MS = '5000',
   ESPERA_RESPOSTA_MS: ESPERA_RESPOSTA = '5000',
   LEMBRETES_INTERVALO_MS = '5000',
+  MEDIA_DIR = '/app/media',
   SESSION_NAME = 'levia-gateway'
 } = process.env;
 
@@ -63,15 +65,36 @@ async function sendToWorker(messages) {
 
 const dormir = (ms) => new Promise((r) => setTimeout(r, ms));
 
+/** Arquivo de cada mídia que o Worker pede pelo nome. Sem o arquivo no servidor, só o texto é enviado. */
+function arquivoDaMidia(nome) {
+  if (typeof nome !== 'string') return null;
+  const arquivo = nome === 'video' ? 'levia-uso.mp4' : /^criativo-\d{1,2}$/.test(nome) ? `${nome}.jpg` : null;
+  if (!arquivo) return null;
+  const caminho = `${MEDIA_DIR}/${arquivo}`;
+  return fs.existsSync(caminho) ? { caminho, video: arquivo.endsWith('.mp4') } : null;
+}
+
+/** Conteúdo de uma mensagem: texto puro ou { texto, midia } (a mídia vai com o texto como legenda). */
+function montarConteudo(item) {
+  const texto = typeof item === 'string' ? item : item?.texto ?? '';
+  const midia = typeof item === 'object' ? arquivoDaMidia(item?.midia) : null;
+  if (!midia) return { text: texto };
+  const arquivo = fs.readFileSync(midia.caminho);
+  return midia.video
+    ? { video: arquivo, caption: texto, mimetype: 'video/mp4' }
+    : { image: arquivo, caption: texto };
+}
+
 // Todo envio passa por uma fila só: uma mensagem por vez, com intervalo e "digitando…" (ritmo humano
 // reduz o risco de bloqueio do número).
 let filaDeEnvio = Promise.resolve();
-function responder(jid, texto) {
+function responder(jid, item) {
   filaDeEnvio = filaDeEnvio.then(async () => {
     try {
+      const texto = typeof item === 'string' ? item : item?.texto ?? '';
       await sock.sendPresenceUpdate('composing', jid);
       await dormir(Math.min(4000, 1200 + texto.length * 12));
-      await sock.sendMessage(jid, { text: texto });
+      await sock.sendMessage(jid, montarConteudo(item));
       await sock.sendPresenceUpdate('paused', jid);
       await dormir(1500);
     } catch (e) {
@@ -105,8 +128,12 @@ async function processarGrupo(telefone) {
       body: grupo.textos.join(' '),
       timestamp: Math.floor(Date.now() / 1000),
     }]);
-    const resposta = retorno?.resultados?.[0]?.resposta;
-    if (typeof resposta === 'string' && resposta) await responder(grupo.jid, resposta);
+    const resultado = retorno?.resultados?.[0];
+    // o Worker pode responder com várias mensagens (ex.: explicação, serial sozinho, como usar, vídeo)
+    const itens = Array.isArray(resultado?.respostas) && resultado.respostas.length
+      ? resultado.respostas
+      : [resultado?.resposta].filter((r) => typeof r === 'string' && r);
+    for (const item of itens) await responder(grupo.jid, item);
   } catch {
     // já registrado em sendToWorker; a mensagem não é respondida
   }
@@ -120,7 +147,7 @@ async function enviarLembretesVencidos() {
   try {
     const { data } = await postAssinado('/api/wa/outbox/pull', {});
     for (const m of data?.mensagens ?? []) {
-      if (m?.telefone && m?.texto) await responder(`${m.telefone}@s.whatsapp.net`, m.texto);
+      if (m?.telefone && m?.texto) await responder(`${m.telefone}@s.whatsapp.net`, { texto: m.texto, midia: m.midia });
     }
     if (data?.mensagens?.length) logger.info({ enviados: data.mensagens.length }, 'Lembretes enviados');
   } catch (e) {
