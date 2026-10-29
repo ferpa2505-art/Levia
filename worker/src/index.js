@@ -1,4 +1,4 @@
-﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿import { iniciarTeste } from './licencas';
+﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿import { iniciarTeste } from './licencas';
 import { turnstileSitekey, validarTurnstile } from './turnstile';
 import { processarMensagemWhatsApp } from './fluxo';
 
@@ -330,27 +330,7 @@ async function processarWhatsAppInbound(request, env) {
   console.log('DEBUG: signature header:', signature);
   console.log('DEBUG: WHATSAPP_WEBHOOK_SECRET:', env.WHATSAPP_WEBHOOK_SECRET ? 'set' : 'not set');
   
-  if (env.WHATSAPP_WEBHOOK_SECRET && signature) {
-    const crypto = require('crypto');
-    const body = await request.text();
-    console.log('DEBUG: raw body (signature branch):', body);
-    const expected = crypto.createHmac('sha256', env.WHATSAPP_WEBHOOK_SECRET)
-      .update(body)
-      .digest('hex');
-    if (signature !== expected) {
-      console.warn('Assinatura de webhook inválida');
-      return json({ erro: 'assinatura_invalida' }, 401);
-    }
-    // Re-parse body since we consumed it
-    let corpo;
-    try { corpo = JSON.parse(body) } catch { return json({ erro: 'corpo_invalido' }, 400) }
-  } else {
-    // Use request.text() + JSON.parse() instead of request.json() to avoid Cloudflare Workers parsing issues
-    const rawBody = await request.text();
-    console.log('DEBUG: raw body (else branch):', rawBody);
-    let corpo;
-    try { corpo = JSON.parse(rawBody) } catch { return json({ erro: 'corpo_invalido' }, 400) }
-  }
+  let corpo;\n  if (env.WHATSAPP_WEBHOOK_SECRET && signature) {\n    const crypto = require('crypto');\n    const body = await request.text();\n    console.log('DEBUG: raw body (signature branch):', body);\n    const expected = crypto.createHmac('sha256', env.WHATSAPP_WEBHOOK_SECRET)\n      .update(body)\n      .digest('hex');\n    if (signature !== expected) {\n      console.warn('Assinatura de webhook inválida');\n      return json({ erro: 'assinatura_invalida' }, 401);\n    }\n    // Re-parse body since we consumed it\n    try { corpo = JSON.parse(body) } catch { return json({ erro: 'corpo_invalido' }, 400) }\n  } else {\n    // Use request.text() + JSON.parse() instead of request.json() to avoid Cloudflare Workers parsing issues\n    const rawBody = await request.text();\n    console.log('DEBUG: raw body (else branch):', rawBody);\n    try { corpo = JSON.parse(rawBody) } catch { return json({ erro: 'corpo_invalido' }, 400) }\n  }
 
   // Estrutura esperada do Baileys/webhook
   const { messages, phone, messageId, timestamp, type } = corpo ?? {};
