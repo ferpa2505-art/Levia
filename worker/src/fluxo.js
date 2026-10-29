@@ -27,10 +27,12 @@ const MENSAGENS = {
   
   pedirConsentimento: (nome, dor) =>
     `Entendido, ${nome}. Obrigado por compartilhar! 📝\n\n` +
-    `Para que eu possa criar seu perfil e te enviar o link do app, preciso do seu consentimento para:\n` +
-    `• Armazenar seu nome, telefone e objetivo\n` +
-    `• Usar esses dados para personalizar sua experiência no app\n` +
-    `• Entrar em contato via WhatsApp se necessário\n\n` +
+    `Para criar seu acesso e te enviar o serial do app, preciso do seu consentimento para:\n` +
+    `• Guardar seu nome, telefone e o objetivo que você contou (se citou algo sobre saúde, isso é um dado sensível)\n` +
+    `• Usar esses dados só para liberar seu acesso, dar suporte e te avisar por aqui quando necessário\n\n` +
+    `Seus registros de saúde do app ficam no seu aparelho; não vêm para cá. ` +
+    `Você pode pedir para apagar tudo ou retirar o consentimento quando quiser, em contatoapplevia@gmail.com. ` +
+    `Política: https://ferpa2505-art.github.io/levia-policies/privacidade.html\n\n` +
     `Responda "SIM" ou "CONCORDO" para continuar.`,
   
   consentimentoNegado: () =>
