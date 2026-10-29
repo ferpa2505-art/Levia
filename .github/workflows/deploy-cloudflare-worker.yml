@@ -31,6 +31,8 @@ jobs:
 
   deploy:
     needs: test
+    # disparo manual a partir de outro branch não publica em produção
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-26.04
     environment:
       name: production
