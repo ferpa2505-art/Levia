@@ -10,8 +10,12 @@ enabled = true
 
 [vars]
 GEMINI_MODEL = "gemini-3.8-flash"
-# grátis: fotos por instalação a cada 7 dias
+# fotos por conta durante o teste de 7 dias (começa quando o serial é ativado)
 FOTOS_GRATIS_7D = "2"
+# aparelhos por conta (cada serial vale para até este número de instalações)
+MAX_DISPOSITIVOS = "2"
+# dias que o serial emitido no WhatsApp pode ser ativado
+SERIAL_VALIDADE_DIAS = "30"
 # teto de segurança da conta inteira por dia (protege o saldo pré-pago)
 MAX_FOTOS_DIA = "300"
 # por endereço IP, por hora
@@ -33,6 +37,7 @@ migrations_dir = "migrations"
 # Segredos do Worker (wrangler secret put NOME): GEMINI_API_KEY, TURNSTILE_SECRET_KEY,
 # TYPEBOT_SHARED_SECRET, TYPEBOT_PHONE_HMAC_KEY (diferente do anterior), EMAIL_HASH_KEY (nova),
 # EMAIL_ENCRYPTION_KEY (32 bytes em base64), RESEND_API_KEY, EMAIL_FROM,
-# WHATSAPP_WEBHOOK_SECRET (igual ao do gateway Baileys), GATEWAY_TOKEN (rota /api/lead).
+# WHATSAPP_WEBHOOK_SECRET (igual ao do gateway Baileys), GATEWAY_TOKEN (rota /api/lead),
+# LICENCA_TOKEN_KEY (assina a licença do serial; sem ela /v1/ativar e a IA ficam fechados).
 # Variáveis públicas: TURNSTILE_SITE_KEY, APP_BASE_URL (domínio real do app).
 # TURNSTILE_SITE_KEY é uma variável pública de execução, nunca uma chave secreta.

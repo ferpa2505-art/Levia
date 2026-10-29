@@ -9,6 +9,8 @@
  * - 'finalizado' → Lead criado, fluxo encerrado
  */
 
+import { emitirSerial } from './serial';
+
 // Mensagens do fluxo
 const MENSAGENS = {
   saudacao: (nome = '') => 
@@ -34,17 +36,29 @@ const MENSAGENS = {
   consentimentoNegado: () =>
     `Tudo bem! Sem problemas. Se mudar de ideia, é só me chamar novamente. 👋`,
   
-  leadCriado: (pwaLink) =>
+  leadCriado: (serial, link) =>
     `Perfeito! ✅ Seu perfil foi criado.\n\n` +
-    `Acesse o app e complete seu onboarding aqui:\n${pwaLink}\n\n` +
-    `Qualquer dúvida, estou à disposição!`,
-  
+    `Seu serial de acesso (é pessoal, não compartilhe):\n*${serial}*\n\n` +
+    `Como usar: abra ${link} (ou o app Leviã), toque em "Ativar" e digite o serial. ` +
+    `Ele vale para até 2 aparelhos e seu teste de 7 dias começa na ativação.\n\n` +
+    `Perdeu o serial? Digite SERIAL aqui que eu gero outro (o anterior deixa de valer).`,
+
+  serialNovo: (serial, link) =>
+    `Aqui está seu novo serial (o anterior deixou de valer):\n*${serial}*\n\n` +
+    `Ative em ${link}. Os aparelhos que você já ativou continuam funcionando.`,
+
+  serialIndisponivel: () =>
+    `Seu perfil foi criado, mas não consegui gerar o serial agora. Digite SERIAL em alguns minutos para tentar de novo.`,
+
+  serialLimite: () =>
+    `Você já pediu serial 3 vezes hoje. Tente de novo amanhã.`,
+
   erroGenerico: () =>
     `Ops, ocorreu um erro. Tente novamente em alguns instantes ou digite "MENU" para reiniciar.`,
-  
+
   jaFinalizado: () =>
-    `Você já completou o onboarding! 🎉\n\n` +
-    `Se quiser acessar o app novamente, me avise que te mando o link.`,
+    `Você já completou o cadastro! 🎉\n\n` +
+    `Para receber um novo serial de acesso, digite SERIAL.`,
   
   comandoInvalido: (estado) => {
     const opcoes = {
@@ -217,16 +231,18 @@ export async function processarMensagemWhatsApp(env, phone, texto, messageId) {
     return { tipo: 'duplicado', resposta: null };
   }
   
-  // Verificar se já finalizou (lead existe)
+  // Verificar se já finalizou (lead existe): o único pedido possível é um novo serial
   const leadExistente = await buscarLeadPorTelefone(env.LEVIA_DB, phoneFormatado);
   if (leadExistente) {
-    const baseUrl = env.APP_BASE_URL || 'https://leviapp.org';
+    const link = `${env.APP_BASE_URL || 'https://leviapp.org'}/ativar`;
     await marcarProcessado(env.LEVIA_DB, messageId);
-    return { 
-      tipo: 'ja_finalizado', 
-      resposta: MENSAGENS.jaFinalizado(),
-      pwaLink: `${baseUrl}/onboarding?lead=${leadExistente}`
-    };
+    if (texto.trim().toLowerCase() === 'serial') {
+      const emissao = await emitirSerial(env, { telefone: phoneFormatado });
+      if (emissao.ok) return { tipo: 'serial_novo', resposta: MENSAGENS.serialNovo(emissao.serial, link), leadId: leadExistente };
+      if (emissao.motivo === 'limite') return { tipo: 'serial_limite', resposta: MENSAGENS.serialLimite() };
+      return { tipo: 'erro', resposta: MENSAGENS.erroGenerico() };
+    }
+    return { tipo: 'ja_finalizado', resposta: MENSAGENS.jaFinalizado(), pwaLink: link };
   }
   
   // Obter sessão atual
@@ -307,25 +323,27 @@ export async function processarMensagemWhatsApp(env, phone, texto, messageId) {
       await limparSessao(env.LEVIA_DB, phoneFormatado);
       await marcarProcessado(env.LEVIA_DB, messageId);
       
-      const baseUrl = env.APP_BASE_URL || 'https://leviapp.org';
-      const pwaLink = `${baseUrl}/onboarding?lead=${leadId}`;
-      
-      return { 
-        tipo: 'finalizado', 
-        resposta: MENSAGENS.leadCriado(pwaLink),
+      const pwaLink = `${env.APP_BASE_URL || 'https://leviapp.org'}/ativar`;
+      const emissao = await emitirSerial(env, { telefone: phoneFormatado });
+      if (!emissao.ok) {
+        // o lead já existe: quem digitar SERIAL depois tenta de novo
+        return { tipo: 'finalizado_sem_serial', resposta: MENSAGENS.serialIndisponivel(), leadId };
+      }
+
+      return {
+        tipo: 'finalizado',
+        resposta: MENSAGENS.leadCriado(emissao.serial, pwaLink),
         pwaLink,
         leadId,
       };
     }
-    
+
     case ESTADOS.FINALIZADO: {
-      const baseUrl = env.APP_BASE_URL || 'https://leviapp.org';
-      const leadId = await buscarLeadPorTelefone(env.LEVIA_DB, phoneFormatado);
       await marcarProcessado(env.LEVIA_DB, messageId);
-      return { 
-        tipo: 'ja_finalizado', 
+      return {
+        tipo: 'ja_finalizado',
         resposta: MENSAGENS.jaFinalizado(),
-        pwaLink: leadId ? `${baseUrl}/onboarding?lead=${leadId}` : null
+        pwaLink: `${env.APP_BASE_URL || 'https://leviapp.org'}/ativar`,
       };
     }
     

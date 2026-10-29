@@ -12,6 +12,9 @@ jest.mock('@react-native-async-storage/async-storage', () => ({
     setItem: jest.fn(async (k: string, v: string) => {
       mockArmazem[k] = v;
     }),
+    removeItem: jest.fn(async (k: string) => {
+      delete mockArmazem[k];
+    }),
   },
 }));
 
@@ -55,9 +58,38 @@ describe('Consentimento e análise por IA (dados fictícios)', () => {
     expect(await temConsentimentoIA()).toBe(true);
   });
 
-  test('payload tem só imagem, instalacao e idioma; resposta não salva nada', async () => {
+  const LICENCA = 'v1.cargo-ficticio.assinatura-ficticia';
+  const comLicenca = () => {
+    mockArmazem['levia:licenca'] = JSON.stringify({ licenca: LICENCA, plano: 'teste', acessoAte: '2030-01-01T00:00:00.000Z' });
+  };
+
+  test('sem licença não chama o servidor e pede a ativação do serial', async () => {
+    const r = await analisarFotoDoPrato('file:///ficticio.jpg', 'pt');
+    expect(r).toEqual({ ok: false, motivo: 'licenca' });
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  test('se o servidor recusa a licença, ela é apagada para pedir o serial de novo', async () => {
+    comLicenca();
+    fetchMock.mockResolvedValue({ ok: false, status: 403, json: async () => ({ erro: 'licenca_revogada' }) });
+    const r = await analisarFotoDoPrato('file:///ficticio.jpg', 'pt');
+    expect(r).toEqual({ ok: false, motivo: 'licenca' });
+    expect(mockArmazem['levia:licenca']).toBeUndefined();
+  });
+
+  test('acesso vencido e cota esgotada são avisos diferentes', async () => {
+    comLicenca();
+    fetchMock.mockResolvedValueOnce({ ok: false, status: 402, json: async () => ({ erro: 'acesso_expirado' }) });
+    expect(await analisarFotoDoPrato('file:///ficticio.jpg', 'pt')).toEqual({ ok: false, motivo: 'expirado' });
+    fetchMock.mockResolvedValueOnce({ ok: false, status: 402, json: async () => ({ erro: 'cota_esgotada', liberaEm: '2030-01-08T00:00:00.000Z' }) });
+    expect(await analisarFotoDoPrato('file:///ficticio.jpg', 'pt')).toEqual({ ok: false, motivo: 'cota', liberaEm: '2030-01-08T00:00:00.000Z' });
+    expect(mockArmazem['levia:licenca']).toBeDefined();
+  });
+
+  test('payload tem só imagem, instalacao, idioma e licença; resposta não salva nada', async () => {
     // dados de saúde fictícios existentes no armazenamento: não podem vazar
     mockArmazem['levia:perfil'] = JSON.stringify({ nome: 'Fulano Ficticio', peso: 80, glicemia: 100, medicamentos: ['X'] });
+    comLicenca();
     fetchMock.mockResolvedValue({
       ok: true,
       status: 200,
@@ -69,8 +101,8 @@ describe('Consentimento e análise por IA (dados fictícios)', () => {
 
     expect(fetchMock).toHaveBeenCalledTimes(1);
     const body = JSON.parse(fetchMock.mock.calls[0][1].body);
-    expect(Object.keys(body).sort()).toEqual(['idioma', 'imagem', 'instalacao']);
-    expect(body).toEqual({ imagem: mockBase64, instalacao: mockUuid, idioma: 'pt' });
+    expect(Object.keys(body).sort()).toEqual(['idioma', 'imagem', 'instalacao', 'licenca']);
+    expect(body).toEqual({ imagem: mockBase64, instalacao: mockUuid, idioma: 'pt', licenca: LICENCA });
     const texto = fetchMock.mock.calls[0][1].body as string;
     for (const proibido of ['Fulano', 'peso', 'glicemia', 'medicamentos', 'perfil']) {
       expect(texto).not.toContain(proibido);
@@ -85,7 +117,7 @@ describe('Consentimento e análise por IA (dados fictícios)', () => {
 
     // só a instalação (UUID) foi gravada; nenhuma refeição/registro salvo antes da confirmação
     const depois = JSON.parse(JSON.stringify(mockArmazem));
-    expect(Object.keys(depois).sort()).toEqual(['levia:instalacao', 'levia:perfil']);
+    expect(Object.keys(depois).sort()).toEqual(['levia:instalacao', 'levia:licenca', 'levia:perfil']);
     expect(JSON.stringify({ ...depois, 'levia:instalacao': undefined })).toBe(
       JSON.stringify({ ...JSON.parse(antes), 'levia:instalacao': undefined }),
     );

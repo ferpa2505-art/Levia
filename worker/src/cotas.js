@@ -22,7 +22,7 @@ async function reservarNoD1(db, escopos, agora) {
     for (const id of feitas) await db.prepare('DELETE FROM cotas_uso WHERE id = ?').bind(id).run();
     return { ok: false, escopo: e };
   }
-  if (Math.random() < 0.05) await db.prepare('DELETE FROM cotas_uso WHERE ts < ?').bind(agora - 8 * UM_DIA_MS).run();
+  if (Math.random() < 0.05) await db.prepare('DELETE FROM cotas_uso WHERE ts < ?').bind(agora - 31 * UM_DIA_MS).run();
   return { ok: true };
 }
 
@@ -41,37 +41,49 @@ async function reservarNoKv(kv, escopos, agora) {
 }
 
 /**
- * Reserva uma foto nos três limites (instalação 7 dias, IP 1 hora, serviço 24 h).
+ * Reserva uma unidade em cada escopo { nome, chave, limite, janelaMs }. Se um estoura,
+ * nenhuma reserva fica. Devolve { ok:true } ou { ok:false, escopo }.
+ */
+export async function reservarEscopos(env, escopos, agora = Date.now()) {
+  return env.LEVIA_DB ? reservarNoD1(env.LEVIA_DB, escopos, agora) : reservarNoKv(env.LEVIA_COTAS, escopos, agora);
+}
+
+async function usoDoEscopo(env, escopo, agora) {
+  if (env.LEVIA_DB) {
+    const linha = await env.LEVIA_DB.prepare('SELECT COUNT(*) AS n, MIN(ts) AS primeiro FROM cotas_uso WHERE chave = ?1 AND ts > ?2')
+      .bind(escopo.chave, agora - escopo.janelaMs).first();
+    return { n: Number(linha?.n ?? 0), primeiro: Number(linha?.primeiro ?? agora) };
+  }
+  const lista = ((await env.LEVIA_COTAS.get(escopo.chave, 'json')) ?? []).filter((t) => agora - t < escopo.janelaMs);
+  return { n: lista.length, primeiro: lista.length ? Math.min(...lista) : agora };
+}
+
+/**
+ * Reserva uma foto nos três limites: o do titular (conta do serial; ou, sem conta, a instalação
+ * por 7 dias), o do IP por hora e o do serviço em 24 h.
+ * `conta` = { id, limite, janelaMs } vem da licença validada.
  * Devolve { ok:true, restantes } ou { ok:false, status, corpo } pronto para responder.
  */
-export async function reservarCotaFoto(env, { instalacao, ip, agora = Date.now() }) {
-  const limiteInst = Number(env.FOTOS_GRATIS_7D || 2);
+export async function reservarCotaFoto(env, { instalacao, ip, conta, agora = Date.now() }) {
+  const titular = conta
+    ? { nome: 'inst', chave: `conta:${conta.id}`, limite: Number(conta.limite), janelaMs: Number(conta.janelaMs) }
+    : { nome: 'inst', chave: `inst:${instalacao}`, limite: Number(env.FOTOS_GRATIS_7D || 2), janelaMs: SETE_DIAS_MS };
   const escopos = [
-    { nome: 'inst', chave: `inst:${instalacao}`, limite: limiteInst, janelaMs: SETE_DIAS_MS },
+    titular,
     { nome: 'ip', chave: `ip:${ip}`, limite: Number(env.MAX_FOTOS_IP_HORA || 20), janelaMs: UMA_HORA_MS },
     { nome: 'dia', chave: 'dia:global', limite: Number(env.MAX_FOTOS_DIA || 300), janelaMs: UM_DIA_MS },
   ];
-  const r = env.LEVIA_DB ? await reservarNoD1(env.LEVIA_DB, escopos, agora) : await reservarNoKv(env.LEVIA_COTAS, escopos, agora);
+  const r = await reservarEscopos(env, escopos, agora);
   if (r.ok) {
-    let usadas = 1;
-    if (env.LEVIA_DB) {
-      const linha = await env.LEVIA_DB.prepare('SELECT COUNT(*) AS n FROM cotas_uso WHERE chave = ?1 AND ts > ?2')
-        .bind(escopos[0].chave, agora - SETE_DIAS_MS).first();
-      usadas = Number(linha?.n ?? 1);
-    } else {
-      usadas = ((await env.LEVIA_COTAS.get(escopos[0].chave, 'json')) ?? []).length;
-    }
-    return { ok: true, restantes: Math.max(0, limiteInst - usadas) };
+    const { n } = await usoDoEscopo(env, titular, agora);
+    return { ok: true, restantes: Math.max(0, titular.limite - n) };
   }
   if (r.escopo.nome === 'dia') return { ok: false, status: 429, corpo: { erro: 'limite_servico' } };
   if (r.escopo.nome === 'ip') return { ok: false, status: 429, corpo: { erro: 'muitas_tentativas' } };
-  let primeiro = agora;
-  if (env.LEVIA_DB) {
-    const linha = await env.LEVIA_DB.prepare('SELECT MIN(ts) AS t FROM cotas_uso WHERE chave = ?1 AND ts > ?2')
-      .bind(escopos[0].chave, agora - SETE_DIAS_MS).first();
-    primeiro = Number(linha?.t ?? agora);
-  } else {
-    primeiro = Math.min(...(((await env.LEVIA_COTAS.get(escopos[0].chave, 'json')) ?? [agora])));
-  }
-  return { ok: false, status: 402, corpo: { erro: 'cota_esgotada', limite: limiteInst, liberaEm: new Date(primeiro + SETE_DIAS_MS).toISOString() } };
+  const { primeiro } = await usoDoEscopo(env, titular, agora);
+  return {
+    ok: false,
+    status: 402,
+    corpo: { erro: 'cota_esgotada', limite: titular.limite, liberaEm: new Date(primeiro + titular.janelaMs).toISOString() },
+  };
 }
