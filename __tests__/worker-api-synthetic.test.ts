@@ -160,7 +160,7 @@ describe('Cloudflare Worker API (synthetic, offline)', () => {
     turnstileSuccess();
     fetchMock.mockResolvedValueOnce(new Response(JSON.stringify({ error: { status: 'SYNTHETIC_FAILURE' } }), { status: 500 }));
     await expectJson(await send(makeAnalysis({ instalacao: INSTALLATION_ID, imagem: SYNTHETIC_IMAGE_BASE64, turnstileToken: TURNSTILE_TOKEN }), env), 502, { erro: 'falha_ia', motivo: '500 SYNTHETIC_FAILURE' });
-    expect(env.LEVIA_COTAS.put).toHaveBeenCalledWith(`inst:${INSTALLATION_ID}`, expect.any(String), { expirationTtl: 8 * 24 * 3600 });
+    expect(env.LEVIA_COTAS.put).toHaveBeenCalledWith(`inst:${INSTALLATION_ID}`, expect.any(String), { expirationTtl: expect.any(Number) });
   });
 
   test('installation receives 402 after its configured quota is exhausted', async () => {

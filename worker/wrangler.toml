@@ -17,7 +17,7 @@ MAX_FOTOS_DIA = "300"
 # por endereço IP, por hora
 MAX_FOTOS_IP_HORA = "20"
 # Hostnames que podem concluir o desafio Turnstile (sitekey e secret são configurados no Worker)
-TURNSTILE_ALLOWED_HOSTNAMES = "levia-app.netlify.app,localhost"
+TURNSTILE_ALLOWED_HOSTNAMES = "leviapp.org,www.leviapp.org,levia-app.netlify.app,localhost"
 
 [[kv_namespaces]]
 binding = "LEVIA_COTAS"
@@ -30,6 +30,9 @@ database_name = "levia-licencas-dev"
 database_id = "e12692fa-0123-4cfc-811d-18ca91ec39da"
 migrations_dir = "migrations"
 
-# Segredos do Worker: GEMINI_API_KEY, TURNSTILE_SECRET_KEY, TYPEBOT_SHARED_SECRET,
-# TYPEBOT_PHONE_HMAC_KEY, RESEND_API_KEY, EMAIL_ENCRYPTION_KEY.
+# Segredos do Worker (wrangler secret put NOME): GEMINI_API_KEY, TURNSTILE_SECRET_KEY,
+# TYPEBOT_SHARED_SECRET, TYPEBOT_PHONE_HMAC_KEY (diferente do anterior), EMAIL_HASH_KEY (nova),
+# EMAIL_ENCRYPTION_KEY (32 bytes em base64), RESEND_API_KEY, EMAIL_FROM,
+# WHATSAPP_WEBHOOK_SECRET (igual ao do gateway Baileys), GATEWAY_TOKEN (rota /api/lead).
+# Variáveis públicas: TURNSTILE_SITE_KEY, APP_BASE_URL (domínio real do app).
 # TURNSTILE_SITE_KEY é uma variável pública de execução, nunca uma chave secreta.

@@ -17,8 +17,10 @@ export async function salvarRegistros(dados: RecordsData): Promise<void> {
   await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(dados));
 }
 
+/** Data de hoje no fuso do aparelho (toISOString usa UTC e jogava registros da noite para o dia seguinte) */
 export function dataDeHoje(): string {
-  return new Date().toISOString().slice(0, 10);
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
 
 export function horarioAgora(): string {
