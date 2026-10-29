@@ -55,24 +55,13 @@ async function sendToWorker(messages) {
   }
 }
 
+// O keep-alive é do próprio Baileys (keepAliveIntervalMs): um IQ de ping montado à mão
+// nunca recebe resposta do WhatsApp e só gerava "Timed Out" a cada ciclo.
 function startHeartbeat() {
   if (heartbeatTimer) clearInterval(heartbeatTimer);
-  
-  heartbeatTimer = setInterval(async () => {
-    if (sock && isConnected) {
-      try {
-        // Ping simples para manter conexão viva
-        await sock.query({
-          tag: 'iq',
-          attrs: { type: 'get', to: 's.whatsapp.net', id: `ping_${Date.now()}` },
-          content: [{ tag: 'ping', attrs: {} }]
-        });
-        logger.debug('Heartbeat enviado');
-      } catch (error) {
-        logger.warn({ err: error.message }, 'Heartbeat falhou');
-      }
-    }
-  }, heartbeatInterval);
+  heartbeatTimer = setInterval(() => {
+    logger.info({ conectado: isConnected }, 'Gateway ativo');
+  }, heartbeatInterval * 20); // a cada ~10 min, só para os logs mostrarem que o processo está vivo
 }
 
 function stopHeartbeat() {
@@ -96,7 +85,9 @@ async function connect() {
       keys: makeCacheableSignalKeyStore(state.keys, logger)
     },
     syncFullHistory: false,
-    markOnlineOnConnect: true
+    keepAliveIntervalMs: heartbeatInterval,
+    // false: o gateway não marca "online" e o celular do número continua recebendo as notificações
+    markOnlineOnConnect: false
   });
 
   sock.ev.on('connection.update', (update) => {
