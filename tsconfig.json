@@ -32,6 +32,6 @@
     }
   },
   "include": ["**/*.ts", "**/*.tsx"],
-  "exclude": ["node_modules", "src/_desativado", "src/screens", "*.js", "__tests__"],
+  "exclude": ["node_modules", "src/_desativado", "src/screens", "*.js", "__tests__", "test-utils"],
   "extends": "expo/tsconfig.base"
 }

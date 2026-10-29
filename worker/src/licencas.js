@@ -1,3 +1,5 @@
+import { base64url, hmacHex, iguais, sha256 } from './cripto';
+
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 const PHONE = /^\+[1-9]\d{7,14}$/;
 const MAX_EMAIL = 254;
@@ -12,13 +14,6 @@ function resposta(body, status = 200) {
   });
 }
 
-function iguais(a, b) {
-  if (typeof a !== 'string' || typeof b !== 'string' || a.length !== b.length) return false;
-  let diferente = 0;
-  for (let i = 0; i < a.length; i++) diferente |= a.charCodeAt(i) ^ b.charCodeAt(i);
-  return diferente === 0;
-}
-
 function normalizarEmail(valor) {
   return typeof valor === 'string' ? valor.trim().toLowerCase() : '';
 }
@@ -28,33 +23,9 @@ function normalizarTelefone(valor) {
   return valor.replace(/[\s().-]/g, '');
 }
 
-function base64url(bytes) {
-  let texto = '';
-  for (const byte of bytes) texto += String.fromCharCode(byte);
-  return btoa(texto).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
-}
-
 function base64Bytes(valor) {
   const binario = atob(valor);
   return Uint8Array.from(binario, (c) => c.charCodeAt(0));
-}
-
-async function sha256(texto) {
-  const bytes = new TextEncoder().encode(texto);
-  const digest = await crypto.subtle.digest('SHA-256', bytes);
-  return [...new Uint8Array(digest)].map((b) => b.toString(16).padStart(2, '0')).join('');
-}
-
-async function hmacHex(secret, texto) {
-  const key = await crypto.subtle.importKey(
-    'raw',
-    new TextEncoder().encode(secret),
-    { name: 'HMAC', hash: 'SHA-256' },
-    false,
-    ['sign'],
-  );
-  const sig = await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(texto));
-  return [...new Uint8Array(sig)].map((b) => b.toString(16).padStart(2, '0')).join('');
 }
 
 async function cifrarEmail(email, secret) {

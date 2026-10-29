@@ -1,7 +1,8 @@
 import { iniciarTeste } from './licencas';
-import { turnstileSitekey, validarTurnstile } from './turnstile';
+import { turnstileSitekey } from './turnstile';
 import { processarMensagemWhatsApp } from './fluxo';
 import { reservarCotaFoto } from './cotas';
+import { ativarSerial, validarLicenca } from './serial';
 
 /**
  * levia-ia-worker - analise de foto do prato para o app Leviã.
@@ -159,19 +160,19 @@ async function perguntarAoGemini(env, imagemBase64, idioma) {
 
 async function analisarPrato(request, env) {
   if (!env.GEMINI_API_KEY) return json({ erro: 'nao_configurado' }, 503);
-  if (!env.TURNSTILE_SECRET_KEY || !env.TURNSTILE_SITE_KEY) return json({ erro: 'protecao_nao_configurada' }, 503);
   if (Number(request.headers.get('content-length') ?? 0) > 3_000_000) return json({ erro: 'imagem_invalida' }, 413);
   let corpo;
   try { corpo = await request.json(); } catch { return json({ erro: 'corpo_invalido' }, 400); }
-  const { imagem, instalacao, idioma, turnstileToken } = corpo ?? {};
+  const { imagem, instalacao, idioma, licenca } = corpo ?? {};
   if (typeof instalacao !== 'string' || !UUID.test(instalacao)) return json({ erro: 'instalacao_invalida' }, 400);
   if (!imagemJpegValida(imagem)) return json({ erro: 'imagem_invalida' }, 400);
 
-  const verificacao = await validarTurnstile(request, env, turnstileToken);
-  if (!verificacao.ok) return verificacao.response;
+  // Só quem ativou um serial usa a IA: a licença é assinada pelo Worker e presa a esta instalação.
+  const acesso = await validarLicenca(env, licenca, instalacao);
+  if (!acesso.ok) return json(acesso.corpo, acesso.status);
 
   // Reserva a cota ANTES da chamada externa (falhas do Gemini também contam) e de forma atômica.
-  const reserva = await reservarCotaFoto(env, { instalacao, ip: request.headers.get('cf-connecting-ip') ?? 'sem-ip' });
+  const reserva = await reservarCotaFoto(env, { instalacao, conta: acesso.conta, ip: request.headers.get('cf-connecting-ip') ?? 'sem-ip' });
   if (!reserva.ok) return json(reserva.corpo, reserva.status);
   let resultado;
   try {
@@ -378,7 +379,7 @@ export default {
   async fetch(request, env) {
     const { pathname } = new URL(request.url);
     const origem = request.headers.get('Origin');
-    if ((pathname === '/v1/analisar-prato' || pathname === '/v1/turnstile/sitekey' || pathname === '/api/lead') && request.method === 'OPTIONS') {
+    if ((pathname === '/v1/analisar-prato' || pathname === '/v1/ativar' || pathname === '/v1/turnstile/sitekey' || pathname === '/api/lead') && request.method === 'OPTIONS') {
       return new Response(null, { status: 204, headers: cabecalhosCors(origem) });
     }
     if (pathname === '/v1/turnstile/sitekey' && request.method === 'GET') {
@@ -387,6 +388,10 @@ export default {
     if (pathname === '/v1/teste/iniciar' && request.method === 'POST') {
       try { return await iniciarTeste(request, env); }
       catch (e) { console.error('erro teste', e?.message); return json({ erro: 'interno' }, 500); }
+    }
+    if (pathname === '/v1/ativar' && request.method === 'POST') {
+      try { return comCors(await ativarSerial(request, env), origem); }
+      catch (e) { console.error('erro ativar', e?.message); return comCors(json({ erro: 'interno' }, 500), origem); }
     }
     if (pathname === '/v1/analisar-prato' && request.method === 'POST') {
       try { return comCors(await analisarPrato(request, env), origem); }

@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { View, Pressable, Alert, ActivityIndicator, Platform } from 'react-native';
+import { View, Pressable, Alert, ActivityIndicator } from 'react-native';
+import { useRouter } from 'expo-router';
 import { Sparkles, Check, X } from 'lucide-react-native';
 import { ThemedText } from '@components/ThemedText';
 import { Button } from '@components/Button';
@@ -9,7 +10,7 @@ import { idiomaDosAlimentos } from '@constants/alimentosGlobais';
 import { valoresDaPorcao } from '@models/ingredients';
 import { ItemRefeicao } from '@models/records';
 import { analisarFotoDoPrato, darConsentimentoIA, temConsentimentoIA, SugestaoIA } from '@utils/iaPrato';
-import { obterTurnstileToken } from '@utils/turnstile';
+import { lerLicenca } from '@utils/licenca';
 import { textoNutrientes } from '@utils/textoNutrientes';
 import { colors, spacing, radius } from '@constants/colors';
 import { estilosTema } from '@theme/estilos';
@@ -17,25 +18,34 @@ import { estilosTema } from '@theme/estilos';
 type Linha = SugestaoIA & { marcado: boolean; gramasTexto: string };
 
 /**
- * Botão de análise protegido pelo desafio Turnstile. O token é validado no
- * Worker e nunca é substituído por uma credencial fixa incluída no app.
+ * Botão de análise. Só funciona com a licença do serial ativado (assinada pelo Worker e presa
+ * a esta instalação); sem ela, leva à tela de ativação. Nenhuma credencial fixa vai no app.
  */
 export function AnaliseIAPrato({ fotoUri, onAdicionar }: { fotoUri: string; onAdicionar: (itens: ItemRefeicao[]) => void }) {
   const { t, idioma } = usePreferences();
+  const router = useRouter();
   const [estado, setEstado] = useState<'inicio' | 'analisando' | 'resultado'>('inicio');
   const [linhas, setLinhas] = useState<Linha[]>([]);
   const [restantes, setRestantes] = useState<number | null>(null);
 
   const numero = (txt: string) => parseFloat(txt.replace(',', '.'));
 
+  function pedirSerial() {
+    Alert.alert(t('ia.erro.licenca'), undefined, [
+      { text: t('comum.cancelar'), style: 'cancel' },
+      { text: t('ia.ativarBotao'), onPress: () => router.push('/ativar') },
+    ]);
+  }
+
   async function analisar() {
     setEstado('analisando');
     try {
-      const turnstileToken = await obterTurnstileToken();
-      const r = await analisarFotoDoPrato(fotoUri, idiomaDosAlimentos(idioma), turnstileToken);
+      const r = await analisarFotoDoPrato(fotoUri, idiomaDosAlimentos(idioma));
       if (!r.ok) {
         setEstado('inicio');
-        if (r.motivo === 'cota') {
+        if (r.motivo === 'licenca') {
+          pedirSerial();
+        } else if (r.motivo === 'cota') {
           let quando = '';
           try {
             quando = r.liberaEm ? new Date(r.liberaEm).toLocaleDateString(idioma, { day: '2-digit', month: '2-digit' }) : '';
@@ -56,10 +66,7 @@ export function AnaliseIAPrato({ fotoUri, onAdicionar }: { fotoUri: string; onAd
   }
 
   async function pedirAnalise() {
-    if (Platform.OS !== 'web') {
-      Alert.alert('Análise protegida', 'Para esta versão, faça a análise de foto pela PWA no navegador.');
-      return;
-    }
+    if (!(await lerLicenca())) return pedirSerial();
     if (await temConsentimentoIA()) return analisar();
     Alert.alert(t('ia.consentTitulo'), t('ia.consentMsg'), [
       { text: t('comum.cancelar'), style: 'cancel' },

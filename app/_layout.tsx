@@ -1,7 +1,7 @@
 import '@utils/alertaWeb';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { colors, TEMAS_ESCUROS } from '@constants/colors';
 import { ProfileProvider, useProfile } from '@context/ProfileContext';
@@ -15,14 +15,28 @@ import { SegurancaProvider, useSeguranca } from '@context/SegurancaContext';
 import { PortaoSeguranca } from '@components/seguranca/PortaoSeguranca';
 import { useVerificarAtualizacao } from '@hooks/useVerificarAtualizacao';
 import { PreferencesProvider, usePreferences } from '@context/PreferencesContext';
+import { aoMudarLicenca, lerLicenca } from '@utils/licenca';
 
 SplashScreen.preventAutoHideAsync();
+
+/**
+ * Com EXPO_PUBLIC_EXIGIR_SERIAL=1 (definido no build), o app só abre depois de ativar um serial.
+ * Desligado, só a IA exige serial. Isto é um portão de tela: quem barra de verdade é o servidor.
+ */
+const EXIGIR_SERIAL = process.env.EXPO_PUBLIC_EXIGIR_SERIAL === '1';
 
 function RootNavigation() {
   const { profile, loading: carregandoPerfil } = useProfile();
   // não mostra nada do app antes de saber se precisa da tela de bloqueio
   const { carregado: segurancaCarregada } = useSeguranca();
-  const loading = carregandoPerfil || !segurancaCarregada;
+  const [temLicenca, setTemLicenca] = useState<boolean | null>(EXIGIR_SERIAL ? null : true);
+  const loading = carregandoPerfil || !segurancaCarregada || temLicenca === null;
+
+  useEffect(() => {
+    if (!EXIGIR_SERIAL) return;
+    lerLicenca().then((l) => setTemLicenca(!!l));
+    return aoMudarLicenca(setTemLicenca);
+  }, []);
   useVerificarAtualizacao(!loading);
   const { t } = usePreferences();
   const segments = useSegments();
@@ -33,11 +47,16 @@ function RootNavigation() {
 
     SplashScreen.hideAsync();
 
+    if (EXIGIR_SERIAL && !temLicenca) {
+      if (segments[0] !== 'ativar') router.replace('/ativar');
+      return;
+    }
+
     const emOnboarding = segments[0] === 'onboarding';
     if (!profile.onboardingConcluido && !emOnboarding) {
       router.replace('/onboarding');
     }
-  }, [loading, profile.onboardingConcluido, segments]);
+  }, [loading, temLicenca, profile.onboardingConcluido, segments]);
 
   if (loading) {
     return null;
@@ -57,6 +76,7 @@ function RootNavigation() {
     >
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
       <Stack.Screen name="onboarding" options={{ headerShown: false }} />
+      <Stack.Screen name="ativar" options={{ headerShown: true, title: t('ativar.titulo') }} />
       <Stack.Screen name="recipe-builder" options={{ headerShown: true, title: t('titulos.receitas') }} />
       <Stack.Screen name="glp1" options={{ headerShown: true, title: t('titulos.glp1') }} />
       <Stack.Screen name="diabetes" options={{ headerShown: true, title: t('titulos.diabetes') }} />
