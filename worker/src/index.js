@@ -1,15 +1,19 @@
-﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿import { iniciarTeste } from './licencas';
+﻿<<<<<<< HEAD
+ï»¿ï»¿ï»¿ï»¿ï»¿ï»¿ï»¿ï»¿ï»¿ï»¿ï»¿ï»¿import { iniciarTeste } from './licencas';
+=======
+ï»¿ï»¿ï»¿ï»¿ï»¿ï»¿ï»¿ï»¿ï»¿ï»¿import { iniciarTeste } from './licencas';
+>>>>>>> origin/main
 import { turnstileSitekey, validarTurnstile } from './turnstile';
 import { processarMensagemWhatsApp } from './fluxo';
 
 /**
- * levia-ia-worker - analise de foto do prato para o app Leviã.
+ * levia-ia-worker - analise de foto do prato para o app LeviÃ£.
  * A imagem nao e persistida nem registrada em logs.
  */
 const TAMANHO_MAX_BASE64 = 2_000_000;
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const SETE_DIAS_MS = 7 * 24 * 3600 * 1000;
-const IDIOMAS = { pt: 'português do Brasil', en: 'English', es: 'español', fr: 'français', it: 'italiano' };
+const IDIOMAS = { pt: 'portuguÃªs do Brasil', en: 'English', es: 'espaÃ±ol', fr: 'franÃ§ais', it: 'italiano' };
 const ORIGENS_WEB = ['https://levia-app.netlify.app', 'http://localhost:8081', 'https://typebot.com', 'https://app.typebot.io'];
 const APP_BASE_URL_DEFAULT = 'https://leviapp.org';
 
@@ -79,18 +83,18 @@ function normalizarTelefoneBR(phone) {
 
 function prompt(idioma) {
   const lingua = IDIOMAS[idioma] ?? IDIOMAS.pt;
-  return `Você é um nutricionista analisando a foto de uma refeição.
-Liste cada alimento visível no prato e estime o peso em gramas da porção como servida (cozida/pronta, parte comestível).
+  return `VocÃª Ã© um nutricionista analisando a foto de uma refeiÃ§Ã£o.
+Liste cada alimento visÃ­vel no prato e estime o peso em gramas da porÃ§Ã£o como servida (cozida/pronta, parte comestÃ­vel).
 Regras:
-- "nome": nome simples e genérico do alimento em ${lingua}, com o preparo quando der para ver.
-- "nomeIngles": o mesmo nome em inglês.
-- Separe os componentes do prato. Molhos e óleos visíveis contam como item próprio.
+- "nome": nome simples e genÃ©rico do alimento em ${lingua}, com o preparo quando der para ver.
+- "nomeIngles": o mesmo nome em inglÃªs.
+- Separe os componentes do prato. Molhos e Ã³leos visÃ­veis contam como item prÃ³prio.
 - "unidades": quantas unidades daquele alimento aparecem; para alimentos sem unidade, use 1.
 - "gramas": peso TOTAL de todas as unidades daquele alimento no prato.
-- "por100g": estimativa de kcal, proteína, carboidrato, gordura e fibra por 100 g.
-- "confianca": de 0 a 1, confiança na identificação e no peso.
-- Se não for comida, devolva "ehComida": false e lista vazia.
-- No máximo 12 itens. Não invente alimentos que não aparecem.`;
+- "por100g": estimativa de kcal, proteÃ­na, carboidrato, gordura e fibra por 100 g.
+- "confianca": de 0 a 1, confianÃ§a na identificaÃ§Ã£o e no peso.
+- Se nÃ£o for comida, devolva "ehComida": false e lista vazia.
+- No mÃ¡ximo 12 itens. NÃ£o invente alimentos que nÃ£o aparecem.`;
 }
 
 const ESQUEMA = {
@@ -146,7 +150,7 @@ async function perguntarAoGemini(env, imagemBase64, idioma) {
     return { ehComida: res.ehComida !== false && itens.length > 0, itens };
   } catch {
     const fim = dados?.candidates?.[0]?.finishReason ?? dados?.promptFeedback?.blockReason ?? 'sem_texto';
-    console.error('gemini: resposta sem JSON válido', fim);
+    console.error('gemini: resposta sem JSON vÃ¡lido', fim);
     return { falha: `json ${fim} ${typeof texto === 'string' ? texto.length : 0}` };
   }
 }
@@ -182,7 +186,7 @@ async function analisarPrato(request, env) {
     return json({ erro: 'cota_esgotada', limite, liberaEm }, 402);
   }
 
-  // Reserva cota antes da chamada externa para que falhas do Gemini também contem.
+  // Reserva cota antes da chamada externa para que falhas do Gemini tambÃ©m contem.
   historico.push(agora);
   await Promise.all([
     kv.put(chaveInst, JSON.stringify(historico), { expirationTtl: 8 * 24 * 3600 }),
@@ -227,7 +231,7 @@ async function buscarLeadExistente(env, phoneNormalizado) {
 }
 
 async function processarLead(request, env) {
-  // 1. Verificar autenticação
+  // 1. Verificar autenticaÃ§Ã£o
   const authError = await verificarAutenticacao(request, env);
   if (authError) return authError;
 
@@ -239,13 +243,13 @@ async function processarLead(request, env) {
   const usados = await lerNumero(kv, chaveRateLimit);
   if (usados >= 10) return json({ erro: 'muitas_tentativas' }, 429);
 
-  // 3. Parse e validação do corpo
+  // 3. Parse e validaÃ§Ã£o do corpo
   let corpo;
   try { corpo = await request.json(); } catch { return json({ erro: 'corpo_invalido' }, 400); }
 
   const { name, phone, email, pain_point, source } = corpo ?? {};
   
-  // Validação obrigatória
+  // ValidaÃ§Ã£o obrigatÃ³ria
   if (!name || typeof name !== 'string' || name.trim().length === 0) {
     return json({ erro: 'nome_obrigatorio' }, 400);
   }
@@ -260,7 +264,7 @@ async function processarLead(request, env) {
   const phoneNormalizado = normalizarTelefoneBR(phone.trim());
   const agora = new Date().toISOString();
 
-  // 4. Deduplicação: verificar se já existe lead com esse telefone
+  // 4. DeduplicaÃ§Ã£o: verificar se jÃ¡ existe lead com esse telefone
   const leadIdExistente = await buscarLeadExistente(env, phoneNormalizado);
   if (leadIdExistente) {
     const baseUrl = env.APP_BASE_URL || APP_BASE_URL_DEFAULT;
@@ -339,7 +343,7 @@ async function processarWhatsAppInbound(request, env) {
       .update(body)
       .digest('hex');
     if (signature !== expected) {
-      console.warn('Assinatura de webhook inválida');
+      console.warn('Assinatura de webhook invÃ¡lida');
       return json({ erro: 'assinatura_invalida' }, 401);
     }
     // Re-parse body since we consumed it
@@ -354,7 +358,7 @@ async function processarWhatsAppInbound(request, env) {
   // Estrutura esperada do Baileys/webhook
   const { messages, phone, messageId, timestamp, type } = corpo ?? {};
 
-  // Se não tem messages array, assumir mensagem única
+  // Se nÃ£o tem messages array, assumir mensagem Ãºnica
   const mensagens = Array.isArray(messages) ? messages : 
     (corpo.text || corpo.body ? [{ text: corpo.text || corpo.body, id: messageId, from: phone, timestamp }] : []);
 
@@ -429,6 +433,7 @@ export default {
     return json({ erro: 'nao_encontrado' }, 404);
   },
 };
+
 
 
 
