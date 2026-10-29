@@ -373,3 +373,23 @@ describe('serial: fluxo do WhatsApp', () => {
     expect((await falar(env, 'SERIAL')).tipo).toBe('erro');
   });
 });
+
+describe('serial: script manual', () => {
+  teste('o serial gerado na mão ativa um aparelho e libera a IA; o banco só guarda o hash', async () => {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { montarSql } = require('../worker/scripts/serial-manual.cjs');
+    const { db, env } = ambiente();
+    const r = montarSql({ nome: 'Testadora Ficticia', dias: 30 });
+    for (const linha of r.sql.split('\n').filter(Boolean)) db.sql(linha);
+
+    expect(r.serialFormatado).toMatch(SERIAL_FORMATO);
+    expect(normalizarCodigo(r.serialFormatado)).toBe(r.serial);
+    expect(JSON.stringify(db.sql('SELECT * FROM activation_codes'))).not.toContain(r.serial);
+    expect(JSON.stringify(db.sql('SELECT * FROM accounts'))).not.toContain('Testadora');
+
+    const res = await ativar(env, r.serialFormatado, A);
+    expect(res.status).toBe(200);
+    const { licenca } = await res.json();
+    expect((await analisar(env, licenca, A)).status).toBe(200);
+  });
+});
