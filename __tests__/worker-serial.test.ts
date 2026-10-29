@@ -341,6 +341,7 @@ describe('serial: fluxo do WhatsApp', () => {
     await falar(env, '1'); // idioma: português (Brasil)
     await falar(env, '1'); // consentimento
     await falar(env, 'Maria Silva');
+    await falar(env, '2'); // e-mail: pular
     return falar(env, '3'); // objetivo
   }
 
@@ -473,7 +474,7 @@ describe('LEVI: idioma, conversa, consentimento e lembretes', () => {
       expect(r.resposta).toContain('cumprimento');
     }
     const ok = await falar(env, 'oi, sou a renata da silva');
-    expect(ok.tipo).toBe('pergunta_objetivo');
+    expect(ok.tipo).toBe('pergunta_email');
     expect(ok.resposta).toContain('Renata da Silva');
     expect(contar(db, 'leads')).toBe(0);
   });
@@ -484,12 +485,15 @@ describe('LEVI: idioma, conversa, consentimento e lembretes', () => {
     expect(nome.resposta).toContain('What should I call you');
     const saudacao = await falar(env, 'hello');
     expect(saudacao.resposta).toContain('greeting');
-    const objetivo = await falar(env, 'My name is john smith');
-    expect(objetivo.resposta).toContain('John Smith');
+    const email = await falar(env, 'My name is john smith');
+    expect(email.tipo).toBe('pergunta_email');
+    expect(email.resposta).toContain('John Smith');
+    expect(email.resposta).toContain("What's your email");
+    const objetivo = await falar(env, '2'); // pular o e-mail
     expect(objetivo.resposta).toContain('6️⃣ All of the above');
     const fim = await falar(env, '4');
     expect(fim.tipo).toBe('finalizado');
-    expect(fim.resposta).toContain('Done!');
+    expect(fim.resposta).toContain('Done, John Smith');
     expect(db.sql('SELECT name, pain_point FROM leads')[0]).toMatchObject({ name: 'John Smith', pain_point: 'Ganhar massa muscular' });
   });
 
@@ -497,6 +501,7 @@ describe('LEVI: idioma, conversa, consentimento e lembretes', () => {
     const { db, env } = ambiente();
     await ate_o_nome(env);
     await falar(env, 'Ana');
+    await falar(env, '2'); // e-mail: pular
     const invalido = await falar(env, 'sei lá');
     expect(invalido.tipo).toBe('objetivo_invalido');
     expect(invalido.resposta).toContain('Todos os acima');
@@ -578,6 +583,7 @@ describe('LEVI: idioma, conversa, consentimento e lembretes', () => {
     const { db, env } = ambiente();
     await ate_o_nome(env);
     await falar(env, 'Maria Silva');
+    await falar(env, '2'); // e-mail: pular
     const fim = await falar(env, '3');
     const serial = fim.resposta.match(/[A-HJ-NP-Z2-9]{4}(?:-[A-HJ-NP-Z2-9]{4}){3}/)![0];
     expect(contar(db, 'accounts')).toBe(1);
@@ -606,13 +612,100 @@ describe('LEVI: idioma, conversa, consentimento e lembretes', () => {
     await falar(env, '5', undefined, tel);
     await falar(env, '1', undefined, tel);
     await falar(env, 'Giulia', undefined, tel);
+    await falar(env, 'giulia@exemplo.it', undefined, tel);
     const fim = await falar(env, '2', undefined, tel);
-    expect(fim.resposta).toContain('Fatto!');
+    expect(fim.resposta).toContain('Fatto, Giulia');
     const outra = await falar(env, 'ciao', undefined, tel);
     expect(outra.tipo).toBe('ja_finalizado');
     expect(outra.resposta).toContain('Hai già completato');
     const novo = await falar(env, 'SERIAL', undefined, tel);
     expect(novo.resposta).toContain('nuovo seriale');
+  });
+
+  teste('o e-mail é pedido depois do nome: válido é guardado, inválido pede de novo, 2 pula', async () => {
+    const { db, env } = ambiente();
+    await ate_o_nome(env);
+    const pedido = await falar(env, 'Renata');
+    expect(pedido.tipo).toBe('pergunta_email');
+    expect(pedido.resposta).toContain('Renata');
+    expect(pedido.resposta).toContain('e-mail');
+    for (const ruim of ['renata', 'renata@', 'renata@exemplo', 'a b@c.com']) {
+      const r = await falar(env, ruim);
+      expect(r.tipo).toBe('email_invalido');
+    }
+    const ok = await falar(env, '  Renata.Silva@Exemplo.COM ');
+    expect(ok.tipo).toBe('pergunta_objetivo');
+    await falar(env, '1');
+    expect(db.sql('SELECT email FROM leads')[0]).toEqual({ email: 'renata.silva@exemplo.com' });
+
+    // quem pula fica sem e-mail
+    const outro = '5511912340000';
+    await falar(env, 'oi', undefined, outro);
+    await falar(env, '1', undefined, outro);
+    await falar(env, '1', undefined, outro);
+    await falar(env, 'Beto', undefined, outro);
+    await falar(env, 'pular', undefined, outro);
+    await falar(env, '2', undefined, outro);
+    expect(db.sql("SELECT email FROM leads WHERE name = 'Beto'")[0]).toEqual({ email: null });
+  });
+
+  teste('o serial vai em mensagens separadas: explicação, serial sozinho, como usar e vídeo', async () => {
+    const { env } = ambiente();
+    await ate_o_nome(env);
+    await falar(env, 'Maria Silva');
+    await falar(env, '2');
+    const r = await falar(env, '3');
+    expect(r.tipo).toBe('finalizado');
+    expect(r.respostas).toHaveLength(4);
+    expect(r.respostas[0]).toContain('Maria Silva');
+    expect(r.respostas[0]).toContain('próxima mensagem');
+    expect(r.respostas[0]).not.toMatch(/[A-HJ-NP-Z2-9]{4}-[A-HJ-NP-Z2-9]{4}/); // o serial NÃO vem junto
+    expect(r.respostas[1]).toMatch(/^[A-HJ-NP-Z2-9]{4}(-[A-HJ-NP-Z2-9]{4}){3}$/); // sozinho, sem formatação
+    expect(r.respostas[2]).toContain('/ativar');
+    expect(r.respostas[3]).toMatchObject({ midia: 'video' });
+    expect(r.respostas[3].texto).toContain('Maria Silva');
+    expect((await ativar(env, r.respostas[1], A)).status).toBe(200);
+
+    const novo = await falar(env, 'SERIAL');
+    expect(novo.respostas).toHaveLength(3);
+    expect(novo.respostas[1]).toMatch(/^[A-HJ-NP-Z2-9]{4}(-[A-HJ-NP-Z2-9]{4}){3}$/);
+  });
+
+  teste('os lembretes chamam a pessoa pelo nome e o do dia seguinte leva o vídeo, mas só depois do consentimento', async () => {
+    const { db, env } = ambiente();
+    const agora = Date.UTC(2026, 9, 29, 20, 0, 0);
+    // antes do consentimento: só texto, sem nome
+    await falar(env, 'oi', agora);
+    await falar(env, '1', agora + 1000);
+    const antes = pendentes(db);
+    expect(antes[2].texto.startsWith('{')).toBe(false);
+    expect(antes[1].texto).not.toContain('Renata');
+    // depois de consentir e dizer o nome
+    await falar(env, '1', agora + 2000);
+    await falar(env, 'Renata', agora + 3000); // agora a pergunta aberta é o e-mail
+    const depois = pendentes(db);
+    expect(depois[0].texto).toContain('Renata, ainda por aí');
+    expect(depois[1].texto).toContain('Renata, falta pouquinho');
+    const diaSeguinte = JSON.parse(depois[2].texto);
+    expect(diaSeguinte.midia).toBe('video');
+    expect(diaSeguinte.texto).toContain('Oi, Renata!');
+    expect(diaSeguinte.texto).toContain('PARAR');
+    expect(diaSeguinte.texto).toContain('e-mail'); // repete a pergunta pendente
+  });
+
+  teste('o gateway recebe a mídia do lembrete e o texto sem o JSON', async () => {
+    const { env } = ambiente();
+    const agora = Date.UTC(2026, 9, 29, 20, 0, 0);
+    await falar(env, 'oi', agora);
+    await falar(env, '1', agora);
+    await falar(env, '1', agora);
+    await falar(env, 'Renata', agora);
+    const entregues = await puxarVencidos(env, agora + 2 * 24 * 3600 * 1000);
+    const comVideo = entregues.find((m: any) => m.midia === 'video');
+    expect(comVideo).toBeTruthy();
+    expect(comVideo.texto).toContain('Renata');
+    expect(comVideo.texto.startsWith('{')).toBe(false);
+    expect(entregues.filter((m: any) => !m.midia)).toHaveLength(2);
   });
 
   teste('sem a tabela de lembretes (migration 0006 pendente) a conversa continua funcionando', async () => {

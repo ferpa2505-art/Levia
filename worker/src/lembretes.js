@@ -71,11 +71,24 @@ export async function agendarLembretes(env, phone, toques, agora = Date.now()) {
     [agora + SEGUNDO_TOQUE_MS, toques.segundo],
     [diaSeguinteAs19(agora, fuso), toques.diaSeguinte],
   ];
-  for (const [quando, texto] of itens) {
+  for (const [quando, toque] of itens) {
+    // com mídia o texto vira JSON ({ texto, midia }): evita uma coluna nova no banco
+    const texto = typeof toque === 'string' ? toque : JSON.stringify(toque);
     await tentar(() => env.LEVIA_DB.prepare(
       'INSERT INTO wa_outbox (id, phone, texto, enviar_em, criado_em) VALUES (?, ?, ?, ?, ?)',
     ).bind(crypto.randomUUID(), phone, texto, quando, agora).run());
   }
+}
+
+/** O texto gravado é puro ou um JSON { texto, midia }. */
+function lerToque(gravado) {
+  if (typeof gravado === 'string' && gravado.startsWith('{"')) {
+    try {
+      const { texto, midia } = JSON.parse(gravado);
+      if (typeof texto === 'string') return { texto, midia: typeof midia === 'string' ? midia : undefined };
+    } catch { /* texto que só parece JSON */ }
+  }
+  return { texto: gravado, midia: undefined };
 }
 
 /**
@@ -100,7 +113,10 @@ export async function puxarVencidos(env, agora = Date.now(), limite = 10) {
     const marcou = await tentar(() => env.LEVIA_DB.prepare(
       'UPDATE wa_outbox SET enviado_em = ? WHERE id = ? AND enviado_em IS NULL AND cancelado_em IS NULL',
     ).bind(agora, l.id).run());
-    if (marcou?.meta?.changes === 1) entregues.push({ id: l.id, telefone: l.phone.replace(/\D/g, ''), texto: l.texto });
+    if (marcou?.meta?.changes === 1) {
+      const { texto, midia } = lerToque(l.texto);
+      entregues.push({ id: l.id, telefone: l.phone.replace(/\D/g, ''), texto, midia });
+    }
   }
   if (Math.random() < 0.05) {
     await tentar(() => env.LEVIA_DB.prepare('DELETE FROM wa_outbox WHERE criado_em < ?').bind(agora - 14 * UM_DIA_MS).run());

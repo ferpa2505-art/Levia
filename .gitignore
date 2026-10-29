@@ -16,3 +16,4 @@ web-build/
 .gradle/
 build/
 serial-*.sql
+worker/baileys/media/

@@ -381,7 +381,7 @@ async function processarWhatsAppInbound(request, env) {
         resultados.push({ status: 'duplicado' });
         continue;
       }
-      resultados.push({ status: resultado.tipo, resposta: resultado.resposta, pwaLink: resultado.pwaLink, leadId: resultado.leadId });
+      resultados.push({ status: resultado.tipo, resposta: resultado.resposta, respostas: resultado.respostas, pwaLink: resultado.pwaLink, leadId: resultado.leadId });
     } catch (e) {
       console.error('Erro ao processar mensagem:', e?.message);
       resultados.push({ status: 'erro', erro: 'interno' });
