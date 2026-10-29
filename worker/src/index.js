@@ -1,4 +1,4 @@
-﻿﻿﻿﻿﻿﻿﻿﻿﻿import { iniciarTeste } from './licencas';
+﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿import { iniciarTeste } from './licencas';
 import { turnstileSitekey, validarTurnstile } from './turnstile';
 import { processarMensagemWhatsApp } from './fluxo';
 
@@ -189,7 +189,13 @@ async function analisarPrato(request, env) {
     kv.put(chaveDia, String(usadosDia + 1), { expirationTtl: 3 * 24 * 3600 }),
     kv.put(chaveIp, String(usadosIp + 1), { expirationTtl: 2 * 3600 }),
   ]);
-  let resultado;\r\n  try {\r\n    resultado = await perguntarAoGemini(env, imagem, idioma);\r\n  } catch (e) {\r\n    console.error('Erro inesperado em perguntarAoGemini:', e?.message);\r\n    resultado = { falha: 'exception ' + (e?.message || 'unknown') };\r\n  }
+  let resultado;
+  try {
+    resultado = await perguntarAoGemini(env, imagem, idioma);
+  } catch (e) {
+    console.error('Erro inesperado em perguntarAoGemini:', e?.message);
+    resultado = { falha: 'exception ' + (e?.message || 'unknown') };
+  }
   if (!resultado || resultado.falha) return json({ erro: 'falha_ia', motivo: resultado?.falha }, 502);
   return json({ ...resultado, restantes: Math.max(0, limite - historico.length) });
 }
@@ -423,7 +429,8 @@ export default {
     if (pathname === '/health') return json({ ok: true });
     return json({ erro: 'nao_encontrado' }, 404);
   },
-};\r\n
+};
+
 
 
 
