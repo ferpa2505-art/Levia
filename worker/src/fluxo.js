@@ -90,8 +90,8 @@ async function obterSessao(db, phone) {
     ).bind(phone).first();
     return row ? {
       phone: row.phone,
-      estado: row.estado,
-      data: JSON.parse(row.data || '{}'),
+      estado: row.stage,
+      data: JSON.parse(row.data_json || '{}'),
       updated_at: row.updated_at,
     } : null;
   } catch (e) {
@@ -105,11 +105,11 @@ async function salvarSessao(db, phone, estado, data) {
   try {
     const agora = new Date().toISOString();
     await db.prepare(
-      `INSERT INTO wa_sessions (phone, estado, data, updated_at) 
+      `INSERT INTO wa_sessions (phone, stage, data_json, updated_at) 
        VALUES (?, ?, ?, ?)
        ON CONFLICT(phone) DO UPDATE SET 
-         estado = excluded.estado,
-         data = excluded.data,
+         stage = excluded.stage,
+         data_json = excluded.data_json,
          updated_at = excluded.updated_at`
     ).bind(phone, estado, JSON.stringify(data), agora).run();
     return true;
@@ -133,7 +133,7 @@ async function limparSessao(db, phone) {
 async function verificarProcessado(db, messageId) {
   if (!db) return false;
   try {
-    const row = await db.prepare('SELECT 1 FROM wa_processed WHERE message_id = ?').bind(messageId).first();
+    const row = await db.prepare('SELECT 1 FROM wa_processed WHERE msg_id = ?').bind(messageId).first();
     return !!row;
   } catch (e) {
     console.error('Erro ao verificar processado:', e?.message);
@@ -146,7 +146,7 @@ async function marcarProcessado(db, messageId) {
   try {
     const agora = new Date().toISOString();
     await db.prepare(
-      'INSERT OR IGNORE INTO wa_processed (message_id, processed_at) VALUES (?, ?)'
+      'INSERT OR IGNORE INTO wa_processed (msg_id, created_at) VALUES (?, ?)'
     ).bind(messageId, agora).run();
     return true;
   } catch (e) {
@@ -350,3 +350,5 @@ async function buscarLeadPorTelefone(db, phone) {
     return null;
   }
 }
+
+
