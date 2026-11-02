@@ -7,7 +7,7 @@
  *   consentimento  → 1: pede o nome | 2: encerra sem guardar nada
  *   nome           → pede o e-mail (opcional: 2 pula)
  *   e-mail         → pede o objetivo (opções numeradas)
- *   objetivo       → cria o lead; manda o serial em mensagens separadas (explicação, serial sozinho, como usar) e o vídeo
+ *   objetivo       → cria o lead; manda o serial em mensagens separadas (explicação, serial sozinho, como usar)
  * Comandos em qualquer etapa: PARAR (não escrever mais), APAGAR (excluir tudo), SERIAL, MENU.
  * Quem para de responder recebe lembretes (ver lembretes.js). Os textos estão em textos.js.
  */
@@ -17,6 +17,7 @@ import { agendarLembretes, cancelarLembretes } from './lembretes';
 import {
   MENU_IDIOMA, OBJETIVOS_GRAVADOS, TEXTOS, TOQUE_IDIOMA, idiomaEscolhido, idiomaPeloTelefone,
 } from './textos';
+import { buscarResposta } from './faq';
 
 /** Nome da mídia que o gateway envia (vídeo de uso do app); sem o arquivo ele manda só o texto. */
 const MIDIA_VIDEO = 'video';
@@ -95,7 +96,7 @@ ${perguntaDaEtapa(estado, dados, env, idioma)}`;
   return {
     primeiro,
     segundo: T.toqueSegundo(nome),
-    diaSeguinte: dados.consentimento_em ? { texto, midia: MIDIA_VIDEO } : texto,
+    diaSeguinte: texto,
   };
 }
 
@@ -298,6 +299,17 @@ export async function processarMensagemWhatsApp(env, phone, texto, messageId, ag
   const idioma = dados.idioma || idiomaPeloTelefone(phoneFormatado);
   const T = TEXTOS[idioma];
 
+  // Inicializa contador de tentativas inválidas se não existir
+  const tentativasInvalidas = (dados.tentativasInvalidas || 0) + 1;
+
+  // FAQ lookup: intercepta mensagens antes da máquina de estados
+  // Só faz FAQ lookup se não for um comando conhecido
+  const ehComando = COMANDOS_PARAR.includes(comando) || COMANDOS_APAGAR.includes(comando) || COMANDOS_REINICIAR.includes(comando) || comando === 'serial';
+  let respostaFAQ = null;
+  if (!ehComando && estadoAtual && estadoAtual !== ESTADOS.CONFIRMAR_APAGAR) {
+    respostaFAQ = buscarResposta(texto, idioma);
+  }
+
   const perguntar = async (estado, novosDados, tipo, idiomaDaPergunta = novosDados.idioma || idioma) => {
     await salvarSessao(db, phoneFormatado, estado, novosDados);
     await agendarLembretes(env, phoneFormatado, toquesDaEtapa(estado, novosDados, env, idiomaDaPergunta), agora);
@@ -349,11 +361,33 @@ export async function processarMensagemWhatsApp(env, phone, texto, messageId, ag
     return perguntar(ESTADOS.AGUARDANDO_IDIOMA, {}, 'reiniciado', 'pt-BR');
   }
 
+  // Se encontrou resposta no FAQ, retorna a resposta do FAQ
+  if (respostaFAQ) {
+    const novosDados = { ...dados, tentativasInvalidas: 0 }; // Reseta contador ao encontrar FAQ
+    await salvarSessao(db, phoneFormatado, estadoAtual, novosDados);
+    await agendarLembretes(env, phoneFormatado, toquesDaEtapa(estadoAtual, novosDados, env, idioma), agora);
+    return { tipo: 'faq', resposta: respostaFAQ };
+  }
+
+  // Lógica de 3 tentativas: se não encontrou FAQ e não é comando válido
+  if (tentativasInvalidas >= 3) {
+    // 3ª tentativa inválida: handoff humano
+    await limparSessao(db, phoneFormatado);
+    return { 
+      tipo: 'handoff_humano', 
+      resposta: 'Vou transferir para um atendente humano. As respostas podem demorar um pouco, mas o esperado é que alguém te atenda em breve.' 
+    };
+  }
+
+  // Salva o contador de tentativas inválidas
+  const novosDadosComTentativas = { ...dados, tentativasInvalidas };
+  await salvarSessao(db, phoneFormatado, estadoAtual, novosDadosComTentativas);
+
   switch (estadoAtual) {
     case ESTADOS.AGUARDANDO_IDIOMA: {
       const escolhido = idiomaEscolhido(texto);
       if (!escolhido) return repetir(estadoAtual, MENU_IDIOMA, 'idioma_invalido');
-      return perguntar(ESTADOS.AGUARDANDO_CONSENTIMENTO, { idioma: escolhido }, 'pergunta_consentimento');
+      return perguntar(ESTADOS.AGUARDANDO_CONSENTIMENTO, { idioma: escolhido, tentativasInvalidas: 0 }, 'pergunta_consentimento');
     }
 
     case ESTADOS.AGUARDANDO_CONSENTIMENTO: {
@@ -366,22 +400,22 @@ export async function processarMensagemWhatsApp(env, phone, texto, messageId, ag
         // "oi", "ok?" etc.: repete a pergunta com o aviso, sem avançar
         return repetir(estadoAtual, `${T.naoEntendi}\n\n${perguntaDaEtapa(estadoAtual, dados, env, idioma)}`, 'consentimento_invalido');
       }
-      return perguntar(ESTADOS.AGUARDANDO_NOME, { idioma, consentimento_em: new Date(agora).toISOString() }, 'pergunta_nome');
+      return perguntar(ESTADOS.AGUARDANDO_NOME, { idioma, consentimento_em: new Date(agora).toISOString(), tentativasInvalidas: 0 }, 'pergunta_nome');
     }
 
     case ESTADOS.AGUARDANDO_NOME: {
       const r = extrairNome(texto);
       if (r.invalido) return repetir(estadoAtual, r.ehSaudacao ? T.nomeSaudacao : T.nomeInvalido, 'nome_invalido');
-      return perguntar(ESTADOS.AGUARDANDO_EMAIL, { ...dados, nome: r.nome }, 'pergunta_email');
+      return perguntar(ESTADOS.AGUARDANDO_EMAIL, { ...dados, nome: r.nome, tentativasInvalidas: 0 }, 'pergunta_email');
     }
 
     case ESTADOS.AGUARDANDO_EMAIL: {
       if (PULAR.includes(comando)) {
-        return perguntar(ESTADOS.AGUARDANDO_OBJETIVO, { ...dados, email: null }, 'pergunta_objetivo');
+        return perguntar(ESTADOS.AGUARDANDO_OBJETIVO, { ...dados, email: null, tentativasInvalidas: 0 }, 'pergunta_objetivo');
       }
       const email = texto.trim().toLowerCase();
       if (!EMAIL.test(email) || email.length > 120) return repetir(estadoAtual, T.emailInvalido, 'email_invalido');
-      return perguntar(ESTADOS.AGUARDANDO_OBJETIVO, { ...dados, email }, 'pergunta_objetivo');
+      return perguntar(ESTADOS.AGUARDANDO_OBJETIVO, { ...dados, email, tentativasInvalidas: 0 }, 'pergunta_objetivo');
     }
 
     case ESTADOS.AGUARDANDO_OBJETIVO: {
@@ -406,14 +440,13 @@ ${perguntaDaEtapa(estadoAtual, dados, env, idioma)}`, 'objetivo_invalido');
         // o lead já existe: quem digitar SERIAL depois tenta de novo
         return { tipo: 'finalizado_sem_serial', resposta: T.serialIndisponivel, leadId };
       }
-      // explicação → serial sozinho (fácil de copiar) → como usar → vídeo
+      // explicação → serial sozinho (fácil de copiar) → como usar
       return varias(
         'finalizado',
         [
           T.serialIntro(dados.nome),
           emissao.serial,
           T.serialUso(linkApp(env)),
-          { texto: T.videoLegenda(dados.nome), midia: MIDIA_VIDEO },
         ],
         { pwaLink: linkApp(env), leadId },
       );
