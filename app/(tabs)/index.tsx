@@ -1,9 +1,9 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { View, ScrollView, Pressable } from 'react-native';
 import { TelaRolavel } from '@components/TelaRolavel';
 import { useRouter } from 'expo-router';
 import Constants from 'expo-constants';
-import { Flame, Beef, Droplet, Zap, Feather, Target, Syringe, ChevronRight, TrendingDown, Wheat, Nut, Leaf } from 'lucide-react-native';
+import { Beef, Droplet, Zap, Feather, Target, Syringe, ChevronRight, TrendingDown, Wheat, Nut, Leaf, Dumbbell } from 'lucide-react-native';
 import { GraficoPesoTendencia } from '@components/GraficoPesoTendencia';
 import { Dica } from '@components/Dica';
 import { ThemedView } from '@components/ThemedView';
@@ -11,25 +11,55 @@ import { ThemedText } from '@components/ThemedText';
 import { Button } from '@components/Button';
 import { Input } from '@components/Input';
 import { LeviaPena } from '@components/LeviaPena';
+import { AnelKcal } from '@components/AnelKcal';
+import { BarrasKcal } from '@components/GraficoEvolucao';
 import { CartaoGlicemia } from '@components/diabetes/CartaoGlicemia';
 import { useProfile } from '@context/ProfileContext';
 import { useRecords } from '@context/RecordsContext';
 import { useDiabetes } from '@context/DiabetesContext';
 import { colors, spacing, radius } from '@constants/colors';
 import { useT } from '@context/PreferencesContext';
+import { calcularEvolucao } from '@utils/evolucao';
+import { diasSeguidos, partesDosMacros } from '@utils/constancia';
+import { dataDeHoje } from '@utils/recordsStorage';
+import { salvarPerfil } from '@utils/profileStorage';
 import { MensagemErro } from '@components/forms/MensagemErro';
 import { estilosTema } from '@theme/estilos';
 
 export default function HomeScreen() {
   const router = useRouter();
   const t = useT();
-  const { profile } = useProfile();
+  const { profile, updateProfile } = useProfile();
   const {
     kcalHoje, proteinaHojeG, carboidratoHojeG, gorduraHojeG, fibraHojeG,
-    aguaHojeMl, pesoAtualKg, pesos, adicionarPeso, kcalGastaHoje,
+    aguaHojeMl, pesoAtualKg, pesos, adicionarPeso, kcalGastaHoje, refeicoes,
   } = useRecords();
   const nome = profile.comoChamar || profile.nome || '';
   const temGlicemias = useDiabetes().glicemias.length > 0;
+
+  const hoje = dataDeHoje();
+  const sequencia = useMemo(() => diasSeguidos(refeicoes.map((r) => r.data), hoje), [refeicoes, hoje]);
+  const semana = useMemo(
+    () => calcularEvolucao(
+      { refeicoes, aguas: [], pesos: [], exercicios: [], glicemias: [], dosesGlp1: [], medicacoes: [], alvoGlicemia: { min: 70, max: 180 } },
+      'semana',
+      hoje,
+    ),
+    [refeicoes, hoje],
+  );
+  const partes = partesDosMacros(proteinaHojeG, carboidratoHojeG, gorduraHojeG);
+  const [editandoMeta, setEditandoMeta] = useState(false);
+  const [metaTexto, setMetaTexto] = useState('');
+  const metaNumero = parseInt(metaTexto.replace(/\D/g, ''), 10);
+  const erroMeta = metaTexto.trim() && !(metaNumero >= 800 && metaNumero <= 6000) ? t('home.erroMeta') : null;
+
+  async function handleSalvarMeta() {
+    if (!(metaNumero >= 800 && metaNumero <= 6000)) return;
+    updateProfile({ metaKcalDia: metaNumero });
+    await salvarPerfil({ ...profile, metaKcalDia: metaNumero });
+    setEditandoMeta(false);
+    setMetaTexto('');
+  }
 
   const [editandoPeso, setEditandoPeso] = useState(false);
   const [pesoTexto, setPesoTexto] = useState('');
@@ -70,17 +100,62 @@ export default function HomeScreen() {
         <Dica id="home.inicio" texto="dica.home" />
 
         <ThemedView variant="surface" style={[styles.card, styles.cardShadow]}>
-          <ThemedText variant="subheading" color="text">{t('home.resumo')}</ThemedText>
-          {/* kcal em destaque; os 4 nutrientes numa linha; água e gasto embaixo */}
-          <View style={[styles.statKcal, { backgroundColor: colors.primarySoft }]}>
-            <Flame size={22} color={colors.primary} strokeWidth={2.25} />
-            <ThemedText variant="title" color="primary" style={{ marginLeft: spacing.sm }}>{kcalHoje}</ThemedText>
-            <ThemedText variant="small" color="textSecondary" style={{ marginLeft: spacing.xs }}>{t('home.kcal')}</ThemedText>
+          <ThemedText variant="caption" color="textSecondary" style={styles.sobretitulo}>{t('home.seuDiaAteAqui')}</ThemedText>
+          <View style={styles.anelLinha}>
+            <AnelKcal kcal={kcalHoje} meta={profile.metaKcalDia} />
+            <View style={{ flex: 1, marginLeft: spacing.lg }}>
+              <ThemedText variant="subheading" color="text">{t('home.cadaEscolha')}</ThemedText>
+              <ThemedText variant="small" color="textSecondary">{t('home.noSeuRitmo')}</ThemedText>
+              <ThemedText variant="small" color="textSecondary" style={{ marginTop: spacing.xs }}>
+                {profile.metaKcalDia ? t('home.deMeta', { meta: profile.metaKcalDia }) : t('home.semMeta')}
+              </ThemedText>
+              {sequencia > 0 && (
+                <View style={[styles.chipCuidado, { backgroundColor: colors.primarySoft }]}>
+                  <ThemedText variant="caption" color="primary">
+                    ✧ {t(sequencia === 1 ? 'home.diaDeCuidado' : 'home.diasDeCuidado', { n: sequencia })}
+                  </ThemedText>
+                </View>
+              )}
+            </View>
+          </View>
+
+          {editandoMeta ? (
+            <View style={{ marginTop: spacing.md }}>
+              <ThemedText variant="small" color="textSecondary">{t('home.metaDiaria')}</ThemedText>
+              <Input
+                value={metaTexto}
+                onChangeText={setMetaTexto}
+                keyboardType="number-pad"
+                placeholder="0"
+                autoFocus
+                style={[styles.pesoInput, erroMeta && { borderColor: colors.error }]}
+              />
+              <MensagemErro texto={erroMeta} />
+              <ThemedText variant="caption" color="textSecondary" style={{ marginTop: spacing.xs }}>{t('home.metaAviso')}</ThemedText>
+              <View style={styles.editButtons}>
+                <Button label={t('comum.cancelar')} variant="outline" size="sm" onPress={() => setEditandoMeta(false)} style={{ marginRight: spacing.sm }} />
+                <Button label={t('comum.salvar')} variant="primary" size="sm" onPress={handleSalvarMeta} disabled={!(metaNumero >= 800 && metaNumero <= 6000)} />
+              </View>
+            </View>
+          ) : (
+            <Pressable
+              onPress={() => { setMetaTexto(profile.metaKcalDia ? String(profile.metaKcalDia) : ''); setEditandoMeta(true); }}
+              hitSlop={8}
+              style={{ marginTop: spacing.sm }}
+            >
+              <ThemedText variant="small" color="primary">
+                {profile.metaKcalDia ? t('home.alterarMeta') : t('home.definirMeta')}
+              </ThemedText>
+            </Pressable>
+          )}
+
+          <ThemedText variant="subheading" color="text" style={{ marginTop: spacing.lg }}>{t('home.nutrientes')}</ThemedText>
+          <View style={styles.statsGrid}>
+            <Stat icone={<Beef size={18} color={colors.secondary} strokeWidth={2.25} />} valor={proteinaHojeG} rotulo={t('home.proteina')} cor="secondary" fundo={colors.secondarySoft} pct={partes.proteina} />
+            <Stat icone={<Wheat size={18} color={colors.accent} strokeWidth={2.25} />} valor={carboidratoHojeG} rotulo={t('home.carbo')} cor="accent" fundo={colors.accentSoft} pct={partes.carboidrato} />
           </View>
           <View style={styles.statsGrid}>
-            <Stat icone={<Beef size={18} color={colors.secondary} strokeWidth={2.25} />} valor={proteinaHojeG} rotulo={t('home.proteina')} cor="secondary" fundo={colors.secondarySoft} />
-            <Stat icone={<Wheat size={18} color={colors.accent} strokeWidth={2.25} />} valor={carboidratoHojeG} rotulo={t('home.carbo')} cor="accent" fundo={colors.accentSoft} />
-            <Stat icone={<Nut size={18} color={colors.secondary} strokeWidth={2.25} />} valor={gorduraHojeG} rotulo={t('home.gordura')} cor="secondary" fundo={colors.secondarySoft} />
+            <Stat icone={<Nut size={18} color={colors.secondary} strokeWidth={2.25} />} valor={gorduraHojeG} rotulo={t('home.gordura')} cor="secondary" fundo={colors.secondarySoft} pct={partes.gordura} />
             <Stat icone={<Leaf size={18} color={colors.primary} strokeWidth={2.25} />} valor={fibraHojeG} rotulo={t('home.fibra')} cor="primary" fundo={colors.primarySoft} />
           </View>
           <View style={styles.statsGrid}>
@@ -162,6 +237,22 @@ export default function HomeScreen() {
           )}
         </ThemedView>
 
+        <ThemedView variant="surface" style={[styles.card, styles.cardShadow]}>
+          <ThemedText variant="caption" color="textSecondary" style={styles.sobretitulo}>{t('home.constanciaTitulo')}</ThemedText>
+          <ThemedText variant="title" color="primary" style={{ marginTop: spacing.xs }}>
+            {t('home.diasDeSete', { dias: semana.atual.diasComRefeicao })}
+          </ThemedText>
+          {semana.atual.diasComRefeicao > 0 && (
+            <ThemedText variant="small" color="textSecondary" style={{ marginBottom: spacing.md }}>{t('home.cuidouDeSi')}</ThemedText>
+          )}
+          <BarrasKcal barras={semana.barras} />
+          <Pressable onPress={() => router.push('/evolucao')} style={styles.verEvolucao} hitSlop={8}>
+            <TrendingDown size={14} color={colors.primary} strokeWidth={2} />
+            <ThemedText variant="small" color="primary" style={{ marginLeft: spacing.xs }}>{t('home.verEvolucao')}</ThemedText>
+            <ChevronRight size={14} color={colors.primary} strokeWidth={2} />
+          </Pressable>
+        </ThemedView>
+
         <Pressable onPress={() => router.push('/glp1')}>
           <ThemedView variant="surface" style={[styles.card, styles.cardShadow, styles.glp1Card]}>
             <View style={styles.glp1IconCircle}>
@@ -177,8 +268,36 @@ export default function HomeScreen() {
           </ThemedView>
         </Pressable>
 
+        <Pressable onPress={() => router.push('/exercises')}>
+          <ThemedView variant="surface" style={[styles.card, styles.cardShadow, styles.glp1Card]}>
+            <View style={styles.glp1IconCircle}>
+              <Dumbbell size={20} color={colors.primary} strokeWidth={2} />
+            </View>
+            <View style={{ flex: 1, marginLeft: spacing.md }}>
+              <ThemedText variant="subheading" color="text">{t('abas.exercicios')}</ThemedText>
+              <ThemedText variant="small" color="textSecondary">{t('home.exerciciosDesc')}</ThemedText>
+            </View>
+            <ChevronRight size={20} color={colors.textSecondary} strokeWidth={2} />
+          </ThemedView>
+        </Pressable>
+
         {(profile.tipoDiabetes !== 'nenhum' || temGlicemias) && (
           <CartaoGlicemia onAbrir={() => router.push('/diabetes')} />
+        )}
+
+        {!(profile.tipoDiabetes !== 'nenhum' || temGlicemias) && (
+          <Pressable onPress={() => router.push('/diabetes')}>
+            <ThemedView variant="surface" style={[styles.card, styles.cardShadow, styles.glp1Card]}>
+              <View style={styles.glp1IconCircle}>
+                <Droplet size={20} color={colors.primary} strokeWidth={2} />
+              </View>
+              <View style={{ flex: 1, marginLeft: spacing.md }}>
+                <ThemedText variant="subheading" color="text">{t('abas.diabetes')}</ThemedText>
+                <ThemedText variant="small" color="textSecondary">{t('home.diabetesDesc')}</ThemedText>
+              </View>
+              <ChevronRight size={20} color={colors.textSecondary} strokeWidth={2} />
+            </ThemedView>
+          </Pressable>
         )}
 
         <View style={styles.status}>
@@ -190,7 +309,7 @@ export default function HomeScreen() {
 }
 
 function Stat({
-  icone, valor, rotulo, cor, fundo, largo,
+  icone, valor, rotulo, cor, fundo, largo, pct,
 }: {
   icone: React.ReactNode;
   valor: number;
@@ -198,17 +317,33 @@ function Stat({
   cor: 'primary' | 'secondary' | 'accent';
   fundo: string;
   largo?: boolean;
+  /** parte das calorias dos macros (0–100); sem valor, não mostra a barra */
+  pct?: number;
 }) {
+  const t = useT();
   return (
     <View style={[styles.statChip, largo && styles.statLargo, { backgroundColor: fundo }]}>
       {icone}
       <ThemedText variant="subheading" color={cor} style={{ marginTop: 2 }}>{valor}</ThemedText>
       <ThemedText variant="caption" color="textSecondary" numberOfLines={1}>{rotulo}</ThemedText>
+      {pct !== undefined && (
+        <>
+          <View style={styles.barraFundo}>
+            <View style={[styles.barraCheia, { width: `${Math.max(0, Math.min(100, pct))}%`, backgroundColor: colors[cor] }]} />
+          </View>
+          <ThemedText variant="caption" color="textSecondary" numberOfLines={1}>{t('home.pctKcal', { pct })}</ThemedText>
+        </>
+      )}
     </View>
   );
 }
 
 const styles = estilosTema(() => ({
+  sobretitulo: { textTransform: 'uppercase', letterSpacing: 1 },
+  anelLinha: { flexDirection: 'row', alignItems: 'center', marginTop: spacing.md },
+  chipCuidado: { alignSelf: 'flex-start', marginTop: spacing.sm, paddingVertical: 2, paddingHorizontal: spacing.sm, borderRadius: radius.full },
+  barraFundo: { alignSelf: 'stretch', height: 4, borderRadius: 2, backgroundColor: colors.border, marginTop: spacing.xs, marginHorizontal: spacing.sm, overflow: 'hidden' },
+  barraCheia: { height: 4, borderRadius: 2 },
   verEvolucao: { flexDirection: 'row', alignItems: 'center', marginTop: spacing.md },
   container: { flex: 1 },
   greeting: { marginBottom: spacing['2xl'] },

@@ -15,6 +15,8 @@ export interface UserProfile {
   tipoDiabetes: TipoDiabetes;
   /** E-mail para receber os relatórios (fica só no aparelho) */
   email: string;
+  /** Meta diária de calorias, definida pela própria pessoa (ou com o médico/nutricionista); null = sem meta */
+  metaKcalDia: number | null;
   onboardingConcluido: boolean;
 }
 
@@ -29,5 +31,6 @@ export const perfilVazio: UserProfile = {
   metaPesoKg: null,
   tipoDiabetes: null,
   email: '',
+  metaKcalDia: null,
   onboardingConcluido: false,
 };
