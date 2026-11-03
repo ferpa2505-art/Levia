@@ -1,6 +1,6 @@
 import { Tabs } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Home, BookOpen, Dumbbell, Newspaper, HeartPulse, Droplet } from 'lucide-react-native';
+import { Home, BookOpen, Dumbbell, TrendingUp, HeartPulse, Droplet } from 'lucide-react-native';
 import { colors } from '@constants/colors';
 import { MenuOpcoes } from '@components/MenuOpcoes';
 import { useT } from '@context/PreferencesContext';
@@ -81,15 +81,17 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
-        name="news"
+        name="evolucao"
         options={{
-          title: t('abas.noticias'),
-          tabBarLabel: t('abas.noticias'),
+          title: t('abas.evolucao'),
+          tabBarLabel: t('abas.evolucao'),
           tabBarIcon: ({ color, focused, size }) => (
-            <Newspaper size={size} color={color} strokeWidth={focused ? 2.5 : 2} />
+            <TrendingUp size={size} color={color} strokeWidth={focused ? 2.5 : 2} />
           ),
         }}
       />
+      {/* Notícias fica guardada para uma próxima atualização: a tela continua no código, só sai da barra */}
+      <Tabs.Screen name="news" options={{ href: null }} />
       <Tabs.Screen
         name="profile"
         options={{
