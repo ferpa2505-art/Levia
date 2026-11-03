@@ -5,6 +5,7 @@ import { puxarVencidos } from './lembretes';
 import { reservarCotaFoto } from './cotas';
 import { ativarSerial, validarLicenca } from './serial';
 import { receberPostbackPayt } from './payt';
+import { receberWebhookHotmart } from './hotmart';
 
 /**
  * levia-ia-worker - analise de foto do prato para o app Leviã.
@@ -413,6 +414,10 @@ export default {
     if (pathname === '/v1/payt/webhook' && request.method === 'POST') {
       try { return await receberPostbackPayt(request, env); }
       catch (e) { console.error('erro payt', e?.message); return json({ erro: 'interno' }, 500); }
+    }
+    if (pathname === '/v1/hotmart/webhook' && request.method === 'POST') {
+      try { return await receberWebhookHotmart(request, env); }
+      catch (e) { console.error('erro hotmart', e?.message); return json({ erro: 'interno' }, 500); }
     }
     if (pathname === '/v1/analisar-prato' && request.method === 'POST') {
       try { return comCors(await analisarPrato(request, env), origem); }
