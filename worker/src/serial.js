@@ -42,7 +42,7 @@ export function normalizarCodigo(valor) {
   return SERIAL.test(limpo) ? limpo : null;
 }
 
-async function contaDoTelefone(env, telefone, agora) {
+export async function contaDoTelefone(env, telefone, agora) {
   const telefoneHash = await hmacHex(env.TYPEBOT_PHONE_HMAC_KEY, telefone);
   const buscar = () => env.LEVIA_DB.prepare('SELECT id, status FROM accounts WHERE phone_hash = ?').bind(telefoneHash).first();
   let conta = await buscar();
