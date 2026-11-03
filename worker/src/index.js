@@ -4,6 +4,7 @@ import { processarMensagemWhatsApp } from './fluxo';
 import { puxarVencidos } from './lembretes';
 import { reservarCotaFoto } from './cotas';
 import { ativarSerial, validarLicenca } from './serial';
+import { receberPostbackPayt } from './payt';
 
 /**
  * levia-ia-worker - analise de foto do prato para o app Leviã.
@@ -408,6 +409,10 @@ export default {
     if (pathname === '/v1/ativar' && request.method === 'POST') {
       try { return comCors(await ativarSerial(request, env), origem); }
       catch (e) { console.error('erro ativar', e?.message); return comCors(json({ erro: 'interno' }, 500), origem); }
+    }
+    if (pathname === '/v1/payt/webhook' && request.method === 'POST') {
+      try { return await receberPostbackPayt(request, env); }
+      catch (e) { console.error('erro payt', e?.message); return json({ erro: 'interno' }, 500); }
     }
     if (pathname === '/v1/analisar-prato' && request.method === 'POST') {
       try { return comCors(await analisarPrato(request, env), origem); }
