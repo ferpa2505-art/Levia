@@ -28,7 +28,16 @@ const evento = (event: string, extra: any = {}) => ({
 
 describe('webhook Hotmart', () => {
   teste('hottok errado é recusado', async () => {
-    expect((await hotmart(ambiente(), evento('PURCHASE_APPROVED'), 'errado')).status).toBe(401);
+    const r = await hotmart(ambiente(), evento('PURCHASE_APPROVED'), 'errado');
+    expect(r.status).toBe(401);
+    expect(await r.json()).toEqual({ erro: 'nao_autorizado', recebido: 6, esperado: 14 }); // só tamanhos
+  });
+
+  teste('espaço ou quebra de linha nas pontas do hottok não atrapalha', async () => {
+    const env = ambiente();
+    env.HOTMART_HOTTOK = '  hottok-secreto
+';
+    expect((await hotmart(env, evento('PURCHASE_BILLET_PRINTED'))).status).toBe(200);
   });
 
   teste('compra aprovada anual libera 365 dias e manda o serial', async () => {

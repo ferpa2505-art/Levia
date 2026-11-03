@@ -37,8 +37,13 @@ export async function receberWebhookHotmart(request, env, agora = Date.now()) {
   if (!corpo || typeof corpo !== 'object') return resposta({ erro: 'corpo_invalido' }, 400);
   const dados = extrair(corpo);
 
-  const hottok = request.headers.get('x-hotmart-hottok') || dados.hottok;
-  if (!iguais(hottok, env.HOTMART_HOTTOK)) return resposta({ erro: 'nao_autorizado' }, 401);
+  // espaços e quebras de linha nas pontas vêm da colagem do segredo; o valor em si não é comparado com eles
+  const hottok = (request.headers.get('x-hotmart-hottok') || dados.hottok || '').trim();
+  const esperado = String(env.HOTMART_HOTTOK).trim();
+  if (!iguais(hottok, esperado)) {
+    // só os tamanhos, nunca os valores: ajuda a ver se foi colado o código errado
+    return resposta({ erro: 'nao_autorizado', recebido: hottok.length, esperado: esperado.length }, 401);
+  }
   if (!dados.idEvento) return resposta({ erro: 'sem_id_da_compra' }, 400);
 
   const tipo = PAGO.has(dados.evento) ? 'paid' : REVERTIDO.has(dados.evento) ? 'reverted' : null;
