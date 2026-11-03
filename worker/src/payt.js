@@ -15,7 +15,7 @@ const PLANOS = { monthly: { dias: 30, rotulo: 'mensal' }, annual: { dias: 365, r
 const PAGO = new Set(['finished', 'paid', 'approved', 'completed', 'complete', 'confirmed', 'paga', 'pago', 'aprovado', 'aprovada', 'concluido']);
 const REVERTIDO = new Set(['refunded', 'refund', 'chargeback', 'charged_back', 'canceled', 'cancelled', 'reembolsado', 'estornado', 'cancelado']);
 
-function resposta(corpo, status = 200) {
+export function resposta(corpo, status = 200) {
   return new Response(JSON.stringify(corpo), {
     status,
     headers: { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' },
@@ -27,7 +27,7 @@ const normalizar = (v) => texto(v).toLowerCase().replace(/[\s-]+/g, '_');
 const lista = (v) => texto(v).split(',').map((s) => s.trim().toLowerCase()).filter(Boolean);
 
 /** Lê o corpo como JSON ou formulário (a[b]=1 vira { a: { b: 1 } }). */
-async function lerCorpo(request) {
+export async function lerCorpo(request) {
   const bruto = await request.text();
   if (bruto.length > 64_000) return null;
   try { return JSON.parse(bruto); } catch { /* tenta formulário */ }
@@ -85,17 +85,17 @@ function planoDaCompra(env, dados) {
 }
 
 // a chave do evento é compra + tipo: o pagamento e o estorno da mesma compra são avisos diferentes
-async function registrarEvento(db, idEvento, tipo, hash, iso) {
+async function registrarEvento(db, provedor, idEvento, tipo, hash, iso) {
   const r = await db.prepare(
     `INSERT OR IGNORE INTO payment_events (provider, event_id, event_type, payload_hash, signature_valid, created_at)
-     VALUES ('payt', ?1 || ':' || ?2, ?2, ?3, 1, ?4)`,
-  ).bind(idEvento, tipo, hash, iso).run();
+     VALUES (?5, ?1 || ':' || ?2, ?2, ?3, 1, ?4)`,
+  ).bind(idEvento, tipo, hash, iso, provedor).run();
   return r?.meta?.changes === 1;
 }
 
-const concluir = (db, idEvento, tipo, resultado, iso) => db.prepare(
-  "UPDATE payment_events SET processed_at = ?, processing_result = ? WHERE provider = 'payt' AND event_id = ? || ':' || ?",
-).bind(iso, resultado, idEvento, tipo).run();
+const concluir = (db, provedor, idEvento, tipo, resultado, iso) => db.prepare(
+  "UPDATE payment_events SET processed_at = ?, processing_result = ? WHERE provider = ? AND event_id = ? || ':' || ?",
+).bind(iso, resultado, provedor, idEvento, tipo).run();
 
 async function liberarAcesso(env, conta, plano, idEvento, agora) {
   const db = env.LEVIA_DB;
@@ -136,6 +136,62 @@ async function avisarNoWhatsApp(env, telefone, mensagens, agora) {
   }
 }
 
+/**
+ * Núcleo comum aos provedores de pagamento (PAYT, Hotmart). `tipo` = 'paid' | 'reverted';
+ * `dados` = { idEvento, telefone, produtos, valorCentavos }. O aviso repetido é ignorado e
+ * telefone ausente ou plano desconhecido ficam registrados em payment_events para conferência.
+ */
+export async function processarPagamento(env, provedor, tipo, dados, corpo, agora = Date.now()) {
+  const db = env.LEVIA_DB;
+  const iso = new Date(agora).toISOString();
+  const hash = await sha256(JSON.stringify(corpo));
+  // o provedor reenvia o mesmo aviso: só o primeiro de cada compra e tipo é processado
+  if (!(await registrarEvento(db, provedor, dados.idEvento, tipo, hash, iso))) return resposta({ ok: true, duplicado: true });
+
+  const telefone = telefoneDoComprador(dados.telefone);
+  if (!telefone) {
+    await concluir(db, provedor, dados.idEvento, tipo, 'sem_telefone', iso);
+    console.error(`${provedor}: compra sem telefone válido`, dados.idEvento);
+    return resposta({ ok: true, pendente: 'sem_telefone' });
+  }
+  const conta = await contaDoTelefone(env, telefone, agora);
+  if (!conta || conta.status !== 'active') {
+    await concluir(db, provedor, dados.idEvento, tipo, 'conta_indisponivel', iso);
+    return resposta({ ok: true, pendente: 'conta_indisponivel' });
+  }
+
+  if (tipo === 'reverted') {
+    await db.batch([
+      db.prepare(
+        "UPDATE entitlements SET status = 'revoked', updated_at = ?1 WHERE account_id = ?2 AND last_payment_id = ?3 AND status = 'active'",
+      ).bind(iso, conta.id, dados.idEvento),
+      db.prepare(
+        `UPDATE activation_codes SET invalidated_at = ?1 WHERE invalidated_at IS NULL
+         AND entitlement_id IN (SELECT id FROM entitlements WHERE account_id = ?2 AND last_payment_id = ?3)`,
+      ).bind(iso, conta.id, dados.idEvento),
+    ]);
+    await concluir(db, provedor, dados.idEvento, tipo, 'revogado', iso);
+    return resposta({ ok: true, revogado: true });
+  }
+
+  const plano = planoDaCompra(env, dados);
+  if (!plano) {
+    await concluir(db, provedor, dados.idEvento, tipo, 'plano_desconhecido', iso);
+    console.error(`${provedor}: plano não identificado`, dados.idEvento, dados.produtos, dados.valorCentavos);
+    return resposta({ ok: true, pendente: 'plano_desconhecido' });
+  }
+
+  const liberado = await liberarAcesso(env, conta, plano, dados.idEvento, agora);
+  const link = `${env.APP_BASE_URL || 'https://leviapp.org'}/ativar`;
+  try {
+    await avisarNoWhatsApp(env, telefone, [mensagemDeLiberacao(liberado, link), liberado.serial], agora);
+  } catch (e) {
+    console.error(`${provedor}: aviso no WhatsApp falhou`, e?.message); // o acesso já está liberado
+  }
+  await concluir(db, provedor, dados.idEvento, tipo, `liberado_${plano}`, iso);
+  return resposta({ ok: true, plano, acessoAte: liberado.fim });
+}
+
 /** POST /v1/payt/webhook — a PAYT chama quando a compra muda de status. */
 export async function receberPostbackPayt(request, env, agora = Date.now()) {
   if (!env.LEVIA_DB || !env.PAYT_INTEGRATION_KEY || !env.TYPEBOT_PHONE_HMAC_KEY || !env.EMAIL_HASH_KEY) {
@@ -152,53 +208,5 @@ export async function receberPostbackPayt(request, env, agora = Date.now()) {
 
   const tipo = PAGO.has(dados.status) ? 'paid' : REVERTIDO.has(dados.status) ? 'reverted' : null;
   if (!tipo) return resposta({ ok: true, ignorado: dados.status || 'sem_status' }); // aguardando pagamento etc.
-
-  const db = env.LEVIA_DB;
-  const iso = new Date(agora).toISOString();
-  const hash = await sha256(JSON.stringify(corpo));
-  // a PAYT reenvia o mesmo aviso: só o primeiro de cada compra e tipo é processado
-  if (!(await registrarEvento(db, dados.idEvento, tipo, hash, iso))) return resposta({ ok: true, duplicado: true });
-
-  const telefone = telefoneDoComprador(dados.telefone);
-  if (!telefone) {
-    await concluir(db, dados.idEvento, tipo, 'sem_telefone', iso);
-    console.error('payt: compra sem telefone válido', dados.idEvento);
-    return resposta({ ok: true, pendente: 'sem_telefone' });
-  }
-  const conta = await contaDoTelefone(env, telefone, agora);
-  if (!conta || conta.status !== 'active') {
-    await concluir(db, dados.idEvento, tipo, 'conta_indisponivel', iso);
-    return resposta({ ok: true, pendente: 'conta_indisponivel' });
-  }
-
-  if (tipo === 'reverted') {
-    await db.batch([
-      db.prepare(
-        "UPDATE entitlements SET status = 'revoked', updated_at = ?1 WHERE account_id = ?2 AND last_payment_id = ?3 AND status = 'active'",
-      ).bind(iso, conta.id, dados.idEvento),
-      db.prepare(
-        `UPDATE activation_codes SET invalidated_at = ?1 WHERE invalidated_at IS NULL
-         AND entitlement_id IN (SELECT id FROM entitlements WHERE account_id = ?2 AND last_payment_id = ?3)`,
-      ).bind(iso, conta.id, dados.idEvento),
-    ]);
-    await concluir(db, dados.idEvento, tipo, 'revogado', iso);
-    return resposta({ ok: true, revogado: true });
-  }
-
-  const plano = planoDaCompra(env, dados);
-  if (!plano) {
-    await concluir(db, dados.idEvento, tipo, 'plano_desconhecido', iso);
-    console.error('payt: plano não identificado', dados.idEvento, dados.produtos, dados.valorCentavos);
-    return resposta({ ok: true, pendente: 'plano_desconhecido' });
-  }
-
-  const liberado = await liberarAcesso(env, conta, plano, dados.idEvento, agora);
-  const link = `${env.APP_BASE_URL || 'https://leviapp.org'}/ativar`;
-  try {
-    await avisarNoWhatsApp(env, telefone, [mensagemDeLiberacao(liberado, link), liberado.serial], agora);
-  } catch (e) {
-    console.error('payt: aviso no WhatsApp falhou', e?.message); // o acesso já está liberado
-  }
-  await concluir(db, dados.idEvento, tipo, `liberado_${plano}`, iso);
-  return resposta({ ok: true, plano, acessoAte: liberado.fim });
+  return processarPagamento(env, 'payt', tipo, dados, corpo, agora);
 }

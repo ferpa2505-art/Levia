@@ -1,0 +1,57 @@
+import worker from '../worker/src/index';
+import { puxarVencidos } from '../worker/src/lembretes';
+import { criarD1, temSqlite } from '../test-utils/d1';
+
+const teste = temSqlite ? test : test.skip;
+
+function ambiente() {
+  return {
+    LEVIA_DB: criarD1(), LICENCA_TOKEN_KEY: 'k1', TYPEBOT_PHONE_HMAC_KEY: 'k2', EMAIL_HASH_KEY: 'k3',
+    HOTMART_HOTTOK: 'hottok-secreto', PAYT_PRODUTOS_ANUAL: '222', PAYT_PRODUTOS_MENSAL: '111',
+  } as any;
+}
+const hotmart = (env: any, corpo: any, hottok: string | null = 'hottok-secreto') =>
+  worker.fetch(new Request('https://w.test/v1/hotmart/webhook', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...(hottok ? { 'X-HOTMART-HOTTOK': hottok } : {}) },
+    body: JSON.stringify(corpo),
+  }), env);
+const evento = (event: string, extra: any = {}) => ({
+  event,
+  data: {
+    product: { id: 222 },
+    buyer: { checkout_phone: '11987654321' },
+    purchase: { transaction: 'HP1', price: { value: 191.71 } },
+    ...extra,
+  },
+});
+
+describe('webhook Hotmart', () => {
+  teste('hottok errado é recusado', async () => {
+    expect((await hotmart(ambiente(), evento('PURCHASE_APPROVED'), 'errado')).status).toBe(401);
+  });
+
+  teste('compra aprovada anual libera 365 dias e manda o serial', async () => {
+    const env = ambiente();
+    await env.LEVIA_DB.prepare('INSERT INTO wa_sessions (phone, stage, updated_at) VALUES (?, ?, ?)').bind('+5511987654321', 'x', 'agora').run();
+    const corpo = await (await hotmart(env, evento('PURCHASE_APPROVED'))).json();
+    expect(corpo.plano).toBe('annual');
+    expect(Math.round((Date.parse(corpo.acessoAte) - Date.now()) / 86400000)).toBe(365);
+    const msgs = await puxarVencidos(env, Date.now() + 1000);
+    expect(msgs[1].texto).toMatch(/^[A-HJ-NP-Z2-9]{4}(-[A-HJ-NP-Z2-9]{4}){3}$/);
+  });
+
+  teste('plano mensal pelo valor, repetição ignorada e reembolso revoga', async () => {
+    const env = ambiente();
+    const mensal = evento('PURCHASE_APPROVED', { product: {}, purchase: { transaction: 'HP2', price: { value: 19.97 } } });
+    expect((await (await hotmart(env, mensal)).json()).plano).toBe('monthly');
+    expect((await (await hotmart(env, mensal)).json()).duplicado).toBe(true);
+    await hotmart(env, evento('PURCHASE_REFUNDED', { product: {}, purchase: { transaction: 'HP2' } }));
+    expect((await env.LEVIA_DB.prepare('SELECT status FROM entitlements').first()).status).toBe('revoked');
+  });
+
+  teste('eventos sem efeito (boleto impresso, atraso) são ignorados', async () => {
+    const r = await hotmart(ambiente(), evento('PURCHASE_BILLET_PRINTED'));
+    expect((await r.json()).ignorado).toBe('PURCHASE_BILLET_PRINTED');
+  });
+});
