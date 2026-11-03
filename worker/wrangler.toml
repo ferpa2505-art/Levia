@@ -25,8 +25,8 @@ TURNSTILE_ALLOWED_HOSTNAMES = "leviapp.org,www.leviapp.org,levia-app.netlify.app
 
 # Hotmart (POST /v1/hotmart/webhook) e PAYT usam os mesmos códigos de produto (id do produto ou código da oferta)
 # PAYT: códigos dos produtos (separados por vírgula) que valem 30 e 365 dias; sem eles, o valor pago decide
-PAYT_PRODUTOS_MENSAL = ""
-PAYT_PRODUTOS_ANUAL = ""
+PAYT_PRODUTOS_MENSAL = "8875689"
+PAYT_PRODUTOS_ANUAL = "8876081"
 PAYT_VALOR_MENSAL_CENTAVOS = "1997"
 PAYT_VALOR_ANUAL_CENTAVOS = "19171"
 # fotos por 30 dias de quem pagou
