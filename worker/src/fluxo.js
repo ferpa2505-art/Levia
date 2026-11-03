@@ -7,7 +7,7 @@
  *   consentimento  → 1: pede o nome | 2: encerra sem guardar nada
  *   nome           → pede o e-mail (opcional: 2 pula)
  *   e-mail         → pede o objetivo (opções numeradas)
- *   objetivo       → cria o lead; manda o serial em mensagens separadas (explicação, serial sozinho, como usar)
+ *   objetivo       → cria o lead; manda o serial em mensagens separadas (explicação, serial sozinho, como usar) e o vídeo
  * Comandos em qualquer etapa: PARAR (não escrever mais), APAGAR (excluir tudo), SERIAL, MENU.
  * Quem para de responder recebe lembretes (ver lembretes.js). Os textos estão em textos.js.
  */
@@ -96,7 +96,7 @@ ${perguntaDaEtapa(estado, dados, env, idioma)}`;
   return {
     primeiro,
     segundo: T.toqueSegundo(nome),
-    diaSeguinte: texto,
+    diaSeguinte: dados.consentimento_em ? { texto, midia: MIDIA_VIDEO } : texto,
   };
 }
 
@@ -440,13 +440,14 @@ ${perguntaDaEtapa(estadoAtual, dados, env, idioma)}`, 'objetivo_invalido');
         // o lead já existe: quem digitar SERIAL depois tenta de novo
         return { tipo: 'finalizado_sem_serial', resposta: T.serialIndisponivel, leadId };
       }
-      // explicação → serial sozinho (fácil de copiar) → como usar
+      // explicação → serial sozinho (fácil de copiar) → como usar → vídeo
       return varias(
         'finalizado',
         [
           T.serialIntro(dados.nome),
           emissao.serial,
           T.serialUso(linkApp(env)),
+          { texto: T.videoLegenda(dados.nome), midia: MIDIA_VIDEO },
         ],
         { pwaLink: linkApp(env), leadId },
       );

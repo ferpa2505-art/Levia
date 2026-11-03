@@ -405,6 +405,8 @@ describe('LEVI: idioma, conversa, consentimento e lembretes', () => {
   const pendentes = (db: any, tel = '+' + TEL_BR) =>
     db.sql('SELECT texto, enviar_em FROM wa_outbox WHERE phone = ? AND enviado_em IS NULL AND cancelado_em IS NULL ORDER BY enviar_em', tel) as any[];
   const contar = (db: any, tabela: string) => (db.sql(`SELECT COUNT(*) AS n FROM ${tabela}`)[0] as any).n;
+  /** o 3º erro seguido passa para um atendente (handoff); testes que erram muitas vezes zeram o contador. */
+  const zerarTentativas = (db: any) => db.sql("UPDATE wa_sessions SET data_json = json_set(data_json, '$.tentativasInvalidas', 0)");
   /** oi → idioma → consentimento: deixa a conversa pronta para o nome. */
   const ate_o_nome = async (env: any, idioma = '1') => {
     await falar(env, 'oi');
@@ -469,14 +471,25 @@ describe('LEVI: idioma, conversa, consentimento e lembretes', () => {
     const { db, env } = ambiente();
     await ate_o_nome(env);
     for (const saudacao of ['Oi', 'olá', 'HELLO', 'hi', 'Bom dia', 'oiii!!', 'tudo bem?', 'ciao', 'buenos días']) {
+      zerarTentativas(db);
       const r = await falar(env, saudacao);
       expect(r.tipo).toBe('nome_invalido');
       expect(r.resposta).toContain('cumprimento');
     }
+    zerarTentativas(db);
     const ok = await falar(env, 'oi, sou a renata da silva');
     expect(ok.tipo).toBe('pergunta_email');
     expect(ok.resposta).toContain('Renata da Silva');
     expect(contar(db, 'leads')).toBe(0);
+  });
+
+  teste('a 3ª resposta inválida seguida passa para um atendente e encerra a conversa', async () => {
+    const { db, env } = ambiente();
+    await ate_o_nome(env);
+    expect((await falar(env, 'Oi')).tipo).toBe('nome_invalido');
+    expect((await falar(env, 'Oi')).tipo).toBe('nome_invalido');
+    expect((await falar(env, 'Oi')).tipo).toBe('handoff_humano');
+    expect(contar(db, 'wa_sessions')).toBe(0);
   });
 
   teste('em inglês as perguntas e o aviso do nome vêm em inglês e o objetivo grava em português', async () => {
@@ -630,9 +643,11 @@ describe('LEVI: idioma, conversa, consentimento e lembretes', () => {
     expect(pedido.resposta).toContain('Renata');
     expect(pedido.resposta).toContain('e-mail');
     for (const ruim of ['renata', 'renata@', 'renata@exemplo', 'a b@c.com']) {
+      zerarTentativas(db);
       const r = await falar(env, ruim);
       expect(r.tipo).toBe('email_invalido');
     }
+    zerarTentativas(db);
     const ok = await falar(env, '  Renata.Silva@Exemplo.COM ');
     expect(ok.tipo).toBe('pergunta_objetivo');
     await falar(env, '1');
