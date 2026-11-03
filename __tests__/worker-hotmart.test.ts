@@ -35,8 +35,7 @@ describe('webhook Hotmart', () => {
 
   teste('espaço ou quebra de linha nas pontas do hottok não atrapalha', async () => {
     const env = ambiente();
-    env.HOTMART_HOTTOK = '  hottok-secreto
-';
+    env.HOTMART_HOTTOK = '  hottok-secreto\n';
     expect((await hotmart(env, evento('PURCHASE_BILLET_PRINTED'))).status).toBe(200);
   });
 
