@@ -1,0 +1,67 @@
+name: Deploy Landing (www.leviapp.org)
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "site/landing/**"
+      - ".github/workflows/deploy-landing.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-levia-landing
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-26.04
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: site/landing/package-lock.json
+      - name: Instalar e compilar
+        working-directory: site/landing
+        run: |
+          npm ci
+          npm run build
+      - name: Conferir o resultado
+        working-directory: site/landing
+        run: test -f dist/index.html || { echo "dist/index.html não gerado"; exit 1; }
+
+  deploy:
+    needs: build
+    # disparo manual a partir de outro branch não publica em produção
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-26.04
+    environment:
+      name: production
+      url: https://www.leviapp.org
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: site/landing/package-lock.json
+      - name: Compilar
+        working-directory: site/landing
+        run: |
+          npm ci
+          npm run build
+      - name: Publicar levia-landing
+        uses: cloudflare/wrangler-action@v4
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          workingDirectory: site/landing
+          wranglerVersion: "4"
+          command: deploy
+      - name: Conferir o site
+        run: curl -fsS https://www.leviapp.org/ | grep -qi "<html"
