@@ -367,7 +367,7 @@ export async function processarMensagemWhatsApp(env, phone, texto, messageId, ag
   if (leadExistente) {
     if (comando === 'serial') {
       const emissao = await emitirSerial(env, { telefone: phoneFormatado });
-      if (emissao.ok) return varias('serial_novo', [T.serialNovoIntro, emissao.serial, T.serialNovoUso(linkApp(env))], { leadId: leadExistente });
+      if (emissao.ok) return varias('serial_novo', [T.serialNovoIntro, T.serialNovoUso(linkApp(env)), emissao.serial], { leadId: leadExistente });
       if (emissao.motivo === 'limite') return { tipo: 'serial_limite', resposta: T.serialLimite };
       return { tipo: 'erro', resposta: T.erro };
     }
@@ -441,16 +441,17 @@ ${perguntaDaEtapa(estadoAtual, dados, env, idioma)}`, 'objetivo_invalido');
         // o lead já existe: quem digitar SERIAL depois tenta de novo
         return { tipo: 'finalizado_sem_serial', resposta: T.serialIndisponivel, leadId };
       }
-      // explicação → serial sozinho (fácil de copiar) → como usar → vídeo
+      // "guardei seus dados" → vídeo (enquanto o serial é "preparado") → o que é o serial → como usar → o serial, por último
+      // (a última mensagem é o serial sozinho: fica fácil de copiar e é o que a pessoa vai usar logo em seguida)
+      const fotos = Number(env.FOTOS_GRATIS_7D || 2);
       return varias(
         'finalizado',
         [
+          T.prontoDados(dados.nome),
+          { texto: T.videoLegenda(dados.nome, fotos), midia: MIDIA_VIDEO },
           T.serialIntro(dados.nome),
+          `${T.serialUso(linkApp(env))}\n\n${T.siteLinha(linkSite(env))}`,
           emissao.serial,
-          `${T.serialUso(linkApp(env))}
-
-${T.siteLinha(linkSite(env))}`,
-          { texto: T.videoLegenda(dados.nome), midia: MIDIA_VIDEO },
         ],
         { pwaLink: linkApp(env), leadId },
       );
