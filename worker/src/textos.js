@@ -88,9 +88,9 @@ export const TEXTOS = {
   'pt-PT': {
     objetivos: ['Emagrecer', 'Controlar a diabetes', 'Acompanhar o tratamento com GLP-1', 'Ganhar massa muscular', 'Organizar a minha alimentação', 'Todos os anteriores'],
     consentimento: (pol) =>
-      `Olá! 👋 Eu sou o *LEVI*, assistente virtual do Leviã. Em 1 minuto liberto o seu acesso.\n\n` +
+      `Olá! 👋 Eu sou o *LEVI*, assistente virtual do Leviã. Em 1 minuto ativo o seu acesso.\n\n` +
       `Antes, preciso da sua autorização para guardar o seu *nome, telemóvel, e-mail (se o indicar) e objetivo* (que pode ser sobre saúde), ` +
-      `apenas para libertar o acesso e dar apoio. Os seus registos de saúde da app ficam no seu telemóvel.\n` +
+      `apenas para ativar o acesso e dar apoio. Os seus registos de saúde da app ficam no seu telemóvel.\n` +
       `Política: ${pol}\n\n` +
       `${NUMEROS[0]} ESCREVA *1* PARA *SIM, concordo e quero continuar*\n${NUMEROS[1]} ESCREVA *2* PARA *NÃO*`,
     consentimentoNegado: 'Sem problema! Não foi guardado nada. Se mudar de ideias, é só falar comigo. 👋',
@@ -108,7 +108,7 @@ export const TEXTOS = {
       `Perdeu o número de série? Escreva *SERIAL*. Para apagar os seus dados, escreva *APAGAR*. Os seus registos de saúde ficam só no seu telemóvel.`,
     serialNovoIntro: 'Aqui está o seu novo número de série (o anterior deixou de valer). Chega na *última mensagem*, sozinho, para ser fácil de copiar 👇',
     serialNovoUso: (link) => `Ative em ${link}. Os dispositivos já ativados continuam a funcionar.`,
-    prontoDados: (nome) => `Pronto, ${nome}! ✅ Guardei os seus dados apenas para libertar o seu acesso. 👇`,
+    prontoDados: (nome) => `Pronto, ${nome}! ✅ Guardei os seus dados apenas para ativar o seu acesso. 👇`,
     videoLegenda: (nome, fotos) => `${nome}, este vídeo de apresentação tem 20 segundos: veja enquanto preparo o seu número de série de acesso por 7 dias grátis 🎬\n\nLembro que, nesses 7 dias, também pode analisar ${fotos} fotos de pratos gratuitamente 📸`,
     serialIndisponivel: 'O seu registo foi feito, mas não consegui gerar o número de série agora. Escreva *SERIAL* daqui a uns minutos para tentar de novo.',
     serialLimite: 'Já pediu número de série 3 vezes hoje. Tente novamente amanhã.',
@@ -126,7 +126,7 @@ export const TEXTOS = {
     toqueEmail: (nome) => `${chamar(nome)}ainda por aí? 😊 Pode enviar o seu e-mail ou escrever *2* para saltar.`,
     toqueObjetivo: (nome) => `${chamar(nome)}ainda por aí? 😊 Responda só com o número, de 1 a 6.`,
     toqueSegundo: (nome) =>
-      `${chamar(nome)}falta pouco! ⏳ Em menos de 1 minuto liberta o seu acesso ao Leviã e começa o teste de 7 dias. ` +
+      `${chamar(nome)}falta pouco! ⏳ Em menos de 1 minuto ativa o seu acesso ao Leviã e começa o teste de 7 dias. ` +
       `Quer continuar? Basta responder aqui. Se preferir não receber mais mensagens, responda *PARAR*.`,
     toqueDiaSeguinte: (nome) =>
       `Olá${nome ? `, ${nome}` : ''}! 😊 Aqui é o *LEVI*, do Leviã. Ontem começou o seu registo e faltou só um bocadinho.\n\n` +
@@ -135,7 +135,7 @@ export const TEXTOS = {
   },
 
   en: {
-    objetivos: ['Lose weight', 'Manage diabetes', 'Follow GLP-1 treatment', 'Build muscle', 'Organize my eating', 'All of the above'],
+    objetivos: ['Lose weight', 'Manage diabetes', 'Track my GLP-1 treatment', 'Build muscle', 'Organize my eating', 'All of the above'],
     consentimento: (pol) =>
       `Hi! 👋 I'm *LEVI*, Leviã's virtual assistant. I'll set up your access in about a minute.\n\n` +
       `First, I need your permission to store your *name, phone number, email (if you give it) and goal* (which may relate to health), ` +
@@ -150,15 +150,15 @@ export const TEXTOS = {
     emailInvalido: "That email doesn't look valid 🤔 Check it and send it again, or type *2* to skip.",
     pedirObjetivo: (nome, opcoes) => `Almost there, ${nome}! What is your main goal?\n\n${lista(opcoes)}\n\nReply with the number only.`,
     serialIntro: (nome) =>
-      `The serial is your personal key to Leviã: it makes sure only people who went through here use the app, and it protects your data. ` +
+      `The serial is your personal key to Leviã: it makes sure only people who signed up here can use the app, and it protects your data. ` +
       `It works on 2 devices and shouldn't be shared.\n\nIt arrives in the *last message*, on its own, so it's easy to copy 👇`,
     serialUso: (link) =>
-      `To use it: open ${link}, tap "Activate" and paste the serial I'm about to send. The 7-day trial starts when you activate.\n\n` +
+      `To use it: open ${link}, tap "Activate" and paste the serial I'll send next. The 7-day trial starts when you activate.\n\n` +
       `Lost the serial? Type *SERIAL*. To delete your data, type *DELETE*. Your health records stay only on your device.`,
     serialNovoIntro: "Here is your new serial (the old one no longer works). It arrives in the *last message*, on its own, so it's easy to copy 👇",
     serialNovoUso: (link) => `Activate at ${link}. Devices you already activated keep working.`,
     prontoDados: (nome) => `Done, ${nome}! ✅ I saved your details only to set up your access. 👇`,
-    videoLegenda: (nome, fotos) => `${nome}, this intro video is 20 seconds long: watch it while I prepare your serial for 7 days free 🎬\n\nRemember: during these 7 days you can also analyze ${fotos} meal photos for free 📸`,
+    videoLegenda: (nome, fotos) => `${nome}, this intro video is 20 seconds long: watch it while I prepare your serial for the 7-day free trial 🎬\n\nRemember: during these 7 days you can also have ${fotos} meal photos analyzed for free 📸`,
     serialIndisponivel: "Your sign-up is done, but I couldn't generate the serial right now. Type *SERIAL* in a few minutes to try again.",
     serialLimite: "You've already asked for a serial 3 times today. Please try again tomorrow.",
     erro: 'Oops, something went wrong. Try again in a moment or type *MENU* to start over.',
@@ -170,7 +170,7 @@ export const TEXTOS = {
     naoEntendi: "I didn't get that 😅 Reply with the number only.",
     handoff: "I'll pass your chat to a person on the team. It may take a while, but someone will reply here. 🙏",
     siteLinha: (url) => `Want to see the plans or subscribe? Go to ${url} 💚`,
-    toqueConsentimento: 'Still there? 😊 Type *1* to continue or *2* for no.',
+    toqueConsentimento: 'Still there? 😊 Type *1* to continue or *2* to decline.',
     toqueNome: 'Still there? 😊 Just tell me what I should call you.',
     toqueEmail: (nome) => `${chamar(nome)}still there? 😊 You can send your email or type *2* to skip.`,
     toqueObjetivo: (nome) => `${chamar(nome)}still there? 😊 Reply with the number only, from 1 to 6.`,
@@ -199,21 +199,21 @@ export const TEXTOS = {
     emailInvalido: 'Ese correo no parece válido 🤔 Revísalo y envíalo de nuevo, o escribe *2* para omitir.',
     pedirObjetivo: (nome, opcoes) => `¡Casi listo, ${nome}! ¿Cuál es tu objetivo principal?\n\n${lista(opcoes)}\n\nResponde solo con el número.`,
     serialIntro: (nome) =>
-      `El serial es tu llave personal de acceso a Leviã: garantiza que solo quien pasó por aquí use la app y protege tus datos. ` +
+      `El número de serie es tu llave personal de acceso a Leviã: garantiza que solo quien pasó por aquí use la app y protege tus datos. ` +
       `Vale para 2 dispositivos y no debe compartirse.\n\nLlega en el *último mensaje*, solo, para que sea fácil de copiar 👇`,
     serialUso: (link) =>
-      `Para usarlo: abre ${link}, toca "Activar" y pega el serial que te enviaré a continuación. La prueba de 7 días empieza al activar.\n\n` +
-      `¿Perdiste el serial? Escribe *SERIAL*. Para borrar tus datos, escribe *BORRAR*. Tus registros de salud se quedan solo en tu dispositivo.`,
-    serialNovoIntro: 'Aquí tienes tu nuevo serial (el anterior dejó de valer). Llega en el *último mensaje*, solo, para que sea fácil de copiar 👇',
+      `Para usarlo: abre ${link}, toca "Activar" y pega el número de serie que te enviaré a continuación. La prueba de 7 días empieza al activar.\n\n` +
+      `¿Perdiste el número de serie? Escribe *SERIAL*. Para borrar tus datos, escribe *BORRAR*. Tus registros de salud se quedan solo en tu dispositivo.`,
+    serialNovoIntro: 'Aquí tienes tu nuevo número de serie (el anterior dejó de valer). Llega en el *último mensaje*, solo, para que sea fácil de copiar 👇',
     serialNovoUso: (link) => `Actívalo en ${link}. Los dispositivos que ya activaste siguen funcionando.`,
     prontoDados: (nome) => `¡Listo, ${nome}! ✅ Guardé tus datos solo para activar tu acceso. 👇`,
-    videoLegenda: (nome, fotos) => `${nome}, este video de presentación dura 20 segundos: míralo mientras preparo tu serial de acceso por 7 días gratis 🎬\n\nRecuerda que, durante esos 7 días, también puedes analizar ${fotos} fotos de comidas gratis 📸`,
-    serialIndisponivel: 'Tu registro está hecho, pero no pude generar el serial ahora. Escribe *SERIAL* en unos minutos para intentarlo de nuevo.',
-    serialLimite: 'Ya pediste serial 3 veces hoy. Inténtalo de nuevo mañana.',
+    videoLegenda: (nome, fotos) => `${nome}, este video de presentación dura 20 segundos: míralo mientras preparo tu número de serie de acceso para los 7 días de prueba gratis 🎬\n\nRecuerda que, durante esos 7 días, también puedes analizar ${fotos} fotos de comidas gratis 📸`,
+    serialIndisponivel: 'Tu registro está hecho, pero no pude generar el número de serie ahora. Escribe *SERIAL* en unos minutos para intentarlo de nuevo.',
+    serialLimite: 'Ya pediste un número de serie 3 veces hoy. Inténtalo de nuevo mañana.',
     erro: 'Ups, ocurrió un error. Inténtalo de nuevo en un momento o escribe *MENU* para empezar otra vez.',
-    jaFinalizado: '¡Ya completaste el registro! 🎉\n\nPara un nuevo serial, escribe *SERIAL*. Para borrar tus datos, escribe *BORRAR*.',
+    jaFinalizado: '¡Ya completaste el registro! 🎉\n\nPara un nuevo número de serie, escribe *SERIAL*. Para borrar tus datos, escribe *BORRAR*.',
     parar: '¡De acuerdo! No te escribiré más. Si quieres volver, solo manda un hola. 👋',
-    confirmarApagar: `¿Seguro? Voy a borrar tu registro y tus datos, y el serial y los dispositivos activados dejarán de valer.\n\n${NUMEROS[0]} ESCRIBE *1* PARA *BORRAR TODO*\n${NUMEROS[1]} ESCRIBE *2* PARA *CANCELAR*`,
+    confirmarApagar: `¿Seguro? Voy a borrar tu registro y tus datos, y el número de serie y los dispositivos activados dejarán de valer.\n\n${NUMEROS[0]} ESCRIBE *1* PARA *BORRAR TODO*\n${NUMEROS[1]} ESCRIBE *2* PARA *CANCELAR*`,
     apagado: '¡Listo! Borré tu registro y los datos que tenía sobre ti. Si quieres volver, solo manda un hola. 👋',
     apagarCancelado: 'Todo bien, no borré nada. 🙂',
     naoEntendi: 'No entendí 😅 Responde solo con el número.',
@@ -243,7 +243,7 @@ export const TEXTOS = {
     consentimentoNegado: 'Nessun problema! Non è stato salvato nulla. Se cambi idea, scrivimi. 👋',
     pedirNome: 'Perfetto! Come posso chiamarti?',
     nomeSaudacao: 'Sembra un saluto 😊 Come ti chiami?',
-    nomeInvalido: 'Non sono riuscito a capire il nome. Puoi scrivere solo come preferisci essere chiamato/a?',
+    nomeInvalido: 'Non ho capito il nome. Puoi scrivere solo come preferisci essere chiamato/a?',
     pedirEmail: (nome) => `Piacere, ${nome}! 😊 Qual è la tua e-mail? Serve solo per recuperare il tuo accesso e avvisarti di qualcosa di importante.\n\nSe preferisci non indicarla, scrivi *2*.`,
     emailInvalido: 'Questa e-mail non sembra valida 🤔 Controllala e reinviala, oppure scrivi *2* per saltare.',
     pedirObjetivo: (nome, opcoes) => `Quasi fatto, ${nome}! Qual è il tuo obiettivo principale?\n\n${lista(opcoes)}\n\nRispondi solo con il numero.`,
