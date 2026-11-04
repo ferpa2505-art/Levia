@@ -106,21 +106,57 @@ function responder(jid, item) {
 
 // Espera ESPERA_RESPOSTA_MS (5 s) sem novas mensagens da mesma pessoa e junta o que ela escreveu
 // em uma só: "Maria" + "Silva" chega ao Worker como "Maria Silva" e gera uma única resposta.
+// O WhatsApp identifica quem escreve por "@lid"; a conversa só abre no endereço em que ela começou.
+// Os lembretes saem horas depois, então o endereço de cada telefone fica guardado (no volume, sobrevive a reinício).
+// Mandar para "telefone@s.whatsapp.net" faz o celular da pessoa mostrar "Aguardando mensagem" e nunca entregar.
+const ARQUIVO_CONTATOS = path.join(process.cwd(), 'auth', 'contatos.json');
+const jidDoTelefone = new Map();
+try {
+  for (const [tel, jid] of Object.entries(JSON.parse(fs.readFileSync(ARQUIVO_CONTATOS, 'utf8')))) jidDoTelefone.set(tel, jid);
+} catch { /* primeira execução: ainda não existe */ }
+let salvandoContatos = null;
+function lembrarContato(telefone, jid) {
+  if (jidDoTelefone.get(telefone) === jid) return;
+  jidDoTelefone.set(telefone, jid);
+  clearTimeout(salvandoContatos);
+  salvandoContatos = setTimeout(() => {
+    try { fs.writeFileSync(ARQUIVO_CONTATOS, JSON.stringify(Object.fromEntries(jidDoTelefone))); } catch (e) { logger.warn({ err: e?.message }, 'Não consegui guardar os contatos'); }
+  }, 2000);
+}
+
+// Uma fila só para processar: uma opção numérica ("1") nunca espera nem se mistura com o texto anterior.
+let cadeiaDeProcessamento = Promise.resolve();
+const ehOpcao = (texto) => /^\s*[1-6]\s*$/.test(texto);
+
 const emEspera = new Map(); // telefone → { jid, textos, ids, timer }
+/** Fecha o grupo que está esperando e o coloca na fila de processamento (cada grupo vai inteiro, na ordem). */
+function fechar(telefone) {
+  const grupo = emEspera.get(telefone);
+  if (!grupo) return;
+  clearTimeout(grupo.timer);
+  emEspera.delete(telefone);
+  cadeiaDeProcessamento = cadeiaDeProcessamento.then(() => processarGrupo(telefone, grupo));
+}
+
 function aguardarEProcessar(msg) {
+  if (ehOpcao(msg.body)) {
+    // "1" é resposta a uma pergunta de opções: fecha o que estava esperando e vai sozinha, sem os 5 s
+    // (juntar "1" com o texto seguinte transformava uma resposta certa em "Não entendi")
+    fechar(msg.from);
+    emEspera.set(msg.from, { jid: msg.jid, textos: [msg.body], ids: [msg.id], timer: null });
+    fechar(msg.from);
+    return;
+  }
   const atual = emEspera.get(msg.from) ?? { jid: msg.jid, textos: [], ids: [] };
   atual.jid = msg.jid;
   atual.textos.push(msg.body);
   atual.ids.push(msg.id);
   clearTimeout(atual.timer);
-  atual.timer = setTimeout(() => processarGrupo(msg.from), ESPERA_RESPOSTA_MS);
+  atual.timer = setTimeout(() => fechar(msg.from), ESPERA_RESPOSTA_MS);
   emEspera.set(msg.from, atual);
 }
 
-async function processarGrupo(telefone) {
-  const grupo = emEspera.get(telefone);
-  emEspera.delete(telefone);
-  if (!grupo) return;
+async function processarGrupo(telefone, grupo) {
   try {
     const retorno = await sendToWorker([{
       from: telefone,
@@ -147,7 +183,7 @@ async function enviarLembretesVencidos() {
   try {
     const { data } = await postAssinado('/api/wa/outbox/pull', {});
     for (const m of data?.mensagens ?? []) {
-      if (m?.telefone && m?.texto) await responder(`${m.telefone}@s.whatsapp.net`, { texto: m.texto, midia: m.midia });
+      if (m?.telefone && m?.texto) await responder(jidDoTelefone.get(m.telefone) ?? `${m.telefone}@s.whatsapp.net`, { texto: m.texto, midia: m.midia });
     }
     if (data?.mensagens?.length) logger.info({ enviados: data.mensagens.length }, 'Lembretes enviados');
   } catch (e) {
@@ -247,6 +283,7 @@ async function connect() {
       }
       const body = m.message.conversation || m.message.extendedTextMessage?.text || '';
       if (!body) continue;
+      lembrarContato(from, jid);
       aguardarEProcessar({ jid, id: m.key.id, from, body });
     }
   });

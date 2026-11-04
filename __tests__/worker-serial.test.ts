@@ -2,6 +2,8 @@ import { createHmac } from 'node:crypto';
 import worker from '../worker/src/index';
 import { acessoDaConta, emitirSerial, normalizarCodigo } from '../worker/src/serial';
 import { processarMensagemWhatsApp } from '../worker/src/fluxo';
+import { FAQ } from '../worker/src/faq';
+import { TEXTOS } from '../worker/src/textos';
 import { diaSeguinteAs19, fusoDoTelefone, puxarVencidos } from '../worker/src/lembretes';
 import { sha256 } from '../worker/src/cripto';
 import { criarD1, temSqlite } from '../test-utils/d1';
@@ -721,6 +723,76 @@ describe('LEVI: idioma, conversa, consentimento e lembretes', () => {
     expect(comVideo.texto).toContain('Renata');
     expect(comVideo.texto.startsWith('{')).toBe(false);
     expect(entregues.filter((m: any) => !m.midia)).toHaveLength(2);
+  });
+
+  teste('uma resposta certa nunca dispara a transferência, mesmo sendo a 3ª mensagem da etapa', async () => {
+    const { db, env } = ambiente();
+    await ate_o_nome(env);
+    await falar(env, 'Fernando');
+    await falar(env, 'fernando@exemplo.com'); // agora a pergunta aberta é o objetivo
+    expect((await falar(env, 'Parou de me responder')).tipo).toBe('objetivo_invalido');
+    expect((await falar(env, 'Sabe me dizer o que eu faço')).tipo).toBe('objetivo_invalido');
+    const certa = await falar(env, '1'); // era aqui que o handoff disparava antes da correção
+    expect(certa.tipo).toBe('finalizado');
+    expect(contar(db, 'leads')).toBe(1);
+  });
+
+  teste('o contador de respostas inválidas zera quando a conversa avança de etapa', async () => {
+    const { env } = ambiente();
+    await ate_o_nome(env);
+    expect((await falar(env, 'Oi')).tipo).toBe('nome_invalido');
+    expect((await falar(env, 'Oi')).tipo).toBe('nome_invalido');
+    expect((await falar(env, 'Fernando')).tipo).toBe('pergunta_email'); // avançou: zera
+    expect((await falar(env, 'não é e-mail')).tipo).toBe('email_invalido');
+    expect((await falar(env, 'também não')).tipo).toBe('email_invalido');
+    expect((await falar(env, 'fernando@exemplo.com')).tipo).toBe('pergunta_objetivo');
+  });
+
+  teste('dúvida de verdade é respondida pelo FAQ e a pergunta em aberto volta; não conta como erro', async () => {
+    const { env } = ambiente();
+    await ate_o_nome(env);
+    await falar(env, 'Fernando');
+    await falar(env, '2'); // e-mail: pular
+    for (let i = 0; i < 4; i++) {
+      const r = await falar(env, 'Quanto custa o plano?');
+      expect(r.tipo).toBe('faq');
+      expect(r.respostas[0]).toContain('www.leviapp.org');
+      expect(r.respostas[1]).toContain('principal objetivo'); // volta para a pergunta em aberto
+    }
+    expect((await falar(env, '3')).tipo).toBe('finalizado'); // 4 dúvidas seguidas não viraram handoff
+  });
+
+  teste('nome, e-mail e número nunca viram resposta de FAQ', async () => {
+    const { env } = ambiente();
+    await ate_o_nome(env);
+    expect((await falar(env, 'Ana')).tipo).toBe('pergunta_email');
+    expect((await falar(env, 'ana@exemplo.com')).tipo).toBe('pergunta_objetivo');
+    expect((await falar(env, '3')).tipo).toBe('finalizado');
+  });
+
+  teste('o FAQ não promete o que o produto não faz: sem preço, sem criptografia e sem telefone inventado', () => {
+    for (const [idioma, respostas] of Object.entries(FAQ as Record<string, Record<string, string>>)) {
+      for (const [assunto, texto] of Object.entries(respostas)) {
+        expect({ idioma, assunto, ok: !/R\$|€|\$\s?\d|\d+[,.]\d{2}|criptograf|encrypt|cifrad|cifrar|crittograf|99999|suporte@|Configurações|Settings|Configuración|Impostazioni/i.test(texto) }).toEqual({ idioma, assunto, ok: true });
+      }
+    }
+  });
+
+  teste('o fim da conversa leva ao site (planos e assinatura) além de ativar o teste', async () => {
+    const { env } = ambiente();
+    await ate_o_nome(env);
+    await falar(env, 'Fernando');
+    await falar(env, '2');
+    const fim = await falar(env, '3');
+    expect(fim.respostas[2]).toContain('/ativar');
+    expect(fim.respostas[2]).toContain('https://www.leviapp.org');
+  });
+
+  teste('o handoff e o fechamento existem nos cinco idiomas', () => {
+    for (const idioma of ['pt-BR', 'pt-PT', 'en', 'es', 'it']) {
+      expect(typeof (TEXTOS as any)[idioma].handoff).toBe('string');
+      expect((TEXTOS as any)[idioma].siteLinha('https://www.leviapp.org')).toContain('https://www.leviapp.org');
+    }
   });
 
   teste('sem a tabela de lembretes (migration 0006 pendente) a conversa continua funcionando', async () => {
