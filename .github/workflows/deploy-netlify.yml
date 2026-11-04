@@ -1,16 +1,8 @@
 name: Deploy PWA (Netlify)
 
+# DESATIVADO no push: a conta do Netlify estourou os créditos (deploys bloqueados) e o app passou a ser
+# publicado pela Cloudflare (deploy-app-cloudflare.yml). Fica só como disparo manual.
 on:
-  push:
-    branches:
-      - main
-    paths-ignore:
-      - "worker/**"
-      - "site/**"
-      - "docs/**"
-      - "screenshots/**"
-      - "**/*.md"
-      - ".github/workflows/deploy-cloudflare-worker.yml"
   workflow_dispatch:
 
 permissions:
