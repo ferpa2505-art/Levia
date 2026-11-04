@@ -21,7 +21,7 @@ MAX_FOTOS_DIA = "300"
 # por endereço IP, por hora
 MAX_FOTOS_IP_HORA = "20"
 # Hostnames que podem concluir o desafio Turnstile (sitekey e secret são configurados no Worker)
-TURNSTILE_ALLOWED_HOSTNAMES = "leviapp.org,www.leviapp.org,levia-app.netlify.app,localhost"
+TURNSTILE_ALLOWED_HOSTNAMES = "leviapp.org,www.leviapp.org,localhost"
 
 # Hotmart (POST /v1/hotmart/webhook) e PAYT usam os mesmos códigos de produto (id do produto ou código da oferta)
 # PAYT: códigos dos produtos (separados por vírgula) que valem 30 e 365 dias; sem eles, o valor pago decide

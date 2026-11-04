@@ -14,7 +14,7 @@ import { receberWebhookHotmart } from './hotmart';
 const TAMANHO_MAX_BASE64 = 2_000_000;
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const IDIOMAS = { pt: 'português do Brasil', en: 'English', es: 'español', fr: 'français', it: 'italiano' };
-const ORIGENS_WEB = ['https://leviapp.org', 'https://www.leviapp.org', 'https://levia-app.netlify.app', 'http://localhost:8081', 'https://typebot.com', 'https://app.typebot.io'];
+const ORIGENS_WEB = ['https://leviapp.org', 'https://www.leviapp.org', 'http://localhost:8081', 'https://typebot.com', 'https://app.typebot.io'];
 const APP_BASE_URL_DEFAULT = 'https://leviapp.org';
 
 function cabecalhosCors(origem) {

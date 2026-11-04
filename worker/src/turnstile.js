@@ -39,7 +39,7 @@ export async function validarTurnstile(request, env, token) {
     return { ok: false, response: json({ erro: 'desafio_indisponivel' }, 503) };
   }
 
-  const allowed = String(env.TURNSTILE_ALLOWED_HOSTNAMES || 'leviapp.org,www.leviapp.org,levia-app.netlify.app,localhost')
+  const allowed = String(env.TURNSTILE_ALLOWED_HOSTNAMES || 'leviapp.org,www.leviapp.org,localhost')
     .split(',')
     .map((host) => host.trim().toLowerCase())
     .filter(Boolean);
