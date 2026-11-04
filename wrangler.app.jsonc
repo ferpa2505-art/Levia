@@ -9,8 +9,8 @@
     "directory": "./dist",
     // rotas do expo-router (ex.: /ativar) caem no index.html; arquivos que existem (sw.js, ícones, _expo/*) são servidos normalmente
     "not_found_handling": "single-page-application"
-  }
-  // Domínio próprio (leviapp.org): só depois de testar em levia-app.ferpa2505.workers.dev e de remover o
-  // registro DNS antigo do Netlify. Então acrescente:
-  // "routes": [{ "pattern": "leviapp.org", "custom_domain": true }]
+  },
+  // Domínio do app (o DNS do Netlify foi removido e o domínio foi ligado a este Worker em 2026-11-04).
+  // O www.leviapp.org é a landing (Worker levia-landing).
+  "routes": [{ "pattern": "leviapp.org", "custom_domain": true }]
 }
