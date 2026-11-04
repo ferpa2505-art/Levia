@@ -1,6 +1,6 @@
 # Termos de Serviço — Leviã
 
-**Última atualização:** 29 de outubro de 2026
+**Última atualização:** 4 de novembro de 2026
 
 ## 1. Aceitação
 
@@ -21,7 +21,7 @@ Em emergência (hipoglicemia grave, confusão, desmaio, dor no peito, falta de a
 - O acesso é liberado por um **serial pessoal**, enviado pelo atendimento no WhatsApp. Não o compartilhe nem o revenda.
 - Cada serial vale para até **2 aparelhos**. O **teste de 7 dias** começa na primeira ativação, com limite de uso da IA informado no app.
 - Podemos limitar, suspender ou revogar acessos em caso de abuso, fraude, tentativa de burlar limites ou violação destes termos. Você pode pedir um novo serial a qualquer momento pelo próprio WhatsApp (o anterior deixa de valer).
-- **Assinatura:** quando a cobrança for ativada, preço, renovação, cancelamento e reembolso serão informados **antes** da contratação, respeitando o Código de Defesa do Consumidor (inclusive o direito de arrependimento de 7 dias em compras online), e estes termos serão atualizados.
+- **Assinatura:** os planos mensal e anual e seus preços ficam em **www.leviapp.org**, com pagamento pela **Hotmart**. Preço, renovação, cancelamento e reembolso são informados **antes** da contratação, respeitando o Código de Defesa do Consumidor (inclusive o direito de arrependimento de 7 dias em compras online). Cancelamentos e reembolsos são feitos na própria Hotmart ou pelo contato do site.
 
 ## 5. Uso adequado
 

@@ -1,6 +1,6 @@
 # Política de Privacidade — Leviã
 
-**Última atualização:** 29 de outubro de 2026
+**Última atualização:** 4 de novembro de 2026
 
 > **Resumo:** os registros de saúde que você anota no Leviã ficam no seu aparelho; o Leviã não recebe cópia deles. Para liberar o acesso, o atendimento pelo WhatsApp guarda seu nome, telefone e objetivo em nosso servidor, e a análise opcional de foto por IA envia a foto do prato para o Google. Não vendemos dados, não exibimos anúncios e não usamos rastreamento.
 
@@ -26,13 +26,19 @@ Parte disso são **dados pessoais sensíveis de saúde** (LGPD, art. 5º, II). O
 
 ### 4.1 Atendimento pelo WhatsApp e acesso ao app
 
-O acesso ao Leviã é liberado por um **serial** enviado pelo WhatsApp. Na conversa, pedimos seu **nome**, seu **objetivo ou dificuldade** (texto livre; pode citar saúde, como "tenho diabetes") e seu **consentimento**. Guardamos no servidor:
+O acesso ao Leviã é liberado por um **serial** enviado pelo WhatsApp. O atendimento é feito pelo **LEVI, um assistente virtual** (não é uma pessoa), em português (Brasil ou Portugal), inglês, espanhol ou italiano, à sua escolha. Primeiro pedimos o seu **consentimento**; só depois perguntamos seu **nome**, seu **e-mail** (opcional) e seu **objetivo**, que você escolhe em uma lista (por exemplo, emagrecer ou controlar diabetes, o que pode revelar uma condição de saúde). Guardamos no servidor:
 
-- nome, número de telefone, objetivo informado, data e canal do consentimento;
+- nome, número de telefone, e-mail (se informado), objetivo escolhido, data e canal do consentimento;
 - a etapa da conversa e identificadores de mensagens, para não repetir respostas;
 - uma conta com marcas irreversíveis (hash) do telefone e do e-mail, sem o serial em texto: do serial guardamos apenas o hash;
 - os aparelhos ativados (um código aleatório por instalação, no máximo 2 por serial), as datas de uso e o período de teste ou assinatura;
 - contadores técnicos para limitar abuso, que incluem o endereço IP e são apagados automaticamente depois de cerca de 31 dias.
+
+**Lembretes:** se você parar de responder, o LEVI pode enviar até 3 mensagens (30 segundos, 3 minutos e, no dia seguinte às 19h no fuso do país do seu número); quem já consentiu também pode receber um vídeo de apresentação. Responda **PARAR** e não escrevemos mais.
+
+**Atendimento humano:** se o LEVI não conseguir ajudar, a conversa pode ser passada a uma pessoa da equipe, que poderá ler as mensagens trocadas.
+
+**Exclusão:** responda **APAGAR** para excluir seu cadastro, sua conta e o serial.
 
 Usamos esses dados para criar seu acesso, enviar e reemitir o serial, limitar o uso, prestar suporte e prevenir fraude. As mensagens trafegam pelo WhatsApp e seguem as regras da Meta.
 
@@ -48,7 +54,7 @@ Fotografe apenas o prato; evite rostos, documentos e outras informações pessoa
 
 ### 4.3 Pagamentos
 
-A cobrança ainda não está ativa. Quando for ativada, o pagamento será processado por um provedor externo (previsto: Mercado Pago), e o Leviã não receberá nem guardará número de cartão. Trataremos apenas identificador da compra, plano, valor, status e datas. Esta política será atualizada antes disso.
+A assinatura é vendida pela **Hotmart**, que processa o pagamento: o Leviã não recebe nem guarda número de cartão. Da Hotmart recebemos o identificador da compra, o plano, o valor, o status, as datas e os dados do comprador informados no checkout (nome, e-mail e telefone/WhatsApp), para liberar, renovar ou revogar o seu acesso e enviar o serial do plano. A Hotmart também trata os seus dados conforme a política dela.
 
 ## 5. Base legal
 
@@ -59,7 +65,7 @@ A cobrança ainda não está ativa. Quando for ativada, o pagamento será proces
 
 ## 6. Com quem compartilhamos e transferência internacional
 
-Usamos prestadores para operar o serviço: **Cloudflare** (hospedagem do servidor e do banco de dados), **Google** (análise da foto, apenas se você pedir), **Meta/WhatsApp** (canal de conversa) e, quando usado, um serviço de envio de e-mail. Também recebemos atualizações de aplicativo pela **Expo** e baixamos notícias públicas de sites de saúde; nenhum registro seu vai nessas requisições.
+Usamos prestadores para operar o serviço: **Cloudflare** (hospedagem do servidor e do banco de dados), **Hetzner** (servidor, na Finlândia, que mantém a conexão com o WhatsApp), **Google** (análise da foto, apenas se você pedir), **Meta/WhatsApp** (canal de conversa), **Hotmart** (pagamentos) e, quando usado, um serviço de envio de e-mail. Também recebemos atualizações de aplicativo pela **Expo** e baixamos notícias públicas de sites de saúde; nenhum registro seu vai nessas requisições.
 
 Alguns desses prestadores processam dados fora do Brasil. Fazemos isso para prestar o serviço, com o mínimo de dados necessário, conforme o art. 33 da LGPD. Não vendemos nem alugamos dados e não os usamos para publicidade.
 
@@ -70,7 +76,7 @@ O arquivo de backup ou relatório é criado no seu aparelho e só sai dele para 
 ## 8. Por quanto tempo guardamos
 
 - **No aparelho:** até você apagar, desinstalar o app ou limpar os dados.
-- **No servidor:** nome, telefone e objetivo ficam enquanto sua conta existir ou até você pedir a exclusão; contadores técnicos, cerca de 31 dias; dados de cobrança, quando houver, pelo prazo legal.
+- **No servidor:** nome, telefone e objetivo ficam enquanto sua conta existir ou até você pedir a exclusão; conversas não concluídas, cerca de 3 dias; contadores técnicos, cerca de 31 dias; dados de cobrança, quando houver, pelo prazo legal.
 - **Foto enviada à IA:** o Leviã não a guarda; a retenção pelo Google segue os termos dele.
 
 ## 9. Seus direitos
