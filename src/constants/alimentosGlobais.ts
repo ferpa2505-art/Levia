@@ -22,7 +22,8 @@ export type CategoriaAlimento =
   | 'graos' | 'paes' | 'massas' | 'frutas' | 'vegetais' | 'tuberculos' | 'leguminosas'
   | 'carnes' | 'aves' | 'embutidos' | 'peixes' | 'ovos' | 'laticinios' | 'queijos'
   | 'oleaginosas' | 'gorduras' | 'doces' | 'bebidas' | 'alcoolicas' | 'molhos' | 'snacks'
-  | 'pratos' | 'sopas' | 'fastfood' | 'cafe_manha' | 'suplementos' | 'combinacoes';
+  | 'pratos' | 'sopas' | 'fastfood' | 'cafe_manha' | 'suplementos' | 'combinacoes'
+  | 'processados'; // só no banco estendido (produtos de marca sem categoria clara)
 
 export interface AlimentoGlobal extends Ingrediente {
   id: string;
@@ -38,7 +39,7 @@ type Linha = [string, CategoriaAlimento, number, number, number, number, number,
 interface BancoAlimentos {
   versao: number;
   idiomas: IdiomaAlimentos[];
-  categorias: Record<CategoriaAlimento, [string, string, string, string, string]>;
+  categorias: Partial<Record<CategoriaAlimento, [string, string, string, string, string]>>;
   fontes: Record<string, string>;
   itens: Linha[];
 }
@@ -46,6 +47,49 @@ interface BancoAlimentos {
 // require (e não import) para o TypeScript não inferir o tipo de 4 mil linhas
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const banco: BancoAlimentos = require('../data/alimentosGlobais.json');
+
+/**
+ * Banco ESTENDIDO: produtos industrializados mais populares de cada país (Open Food Facts, ODbL 1.0),
+ * gerado por scripts/alimentos/off_estendido.py. Fica em arquivo separado por causa da licença
+ * (crédito + o arquivo derivado continua ODbL) e é carregado só na primeira busca que precisar dele.
+ * Linha: [id "O"+código de barras, categoria, kcal, proteína, carboidrato, gordura, fibra, porçãoG, nome, país]
+ */
+type LinhaEstendida = [string, CategoriaAlimento, number, number, number, number, number, number, string, string];
+interface BancoEstendido { itens: LinhaEstendida[] }
+
+let estendido: AlimentoGlobal[] | null = null;
+let indiceEstendido: Indexado[] | null = null;
+
+function itensEstendidos(): AlimentoGlobal[] {
+  if (estendido) return estendido;
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const b: BancoEstendido = require('../data/alimentosEstendidos.json');
+    estendido = b.itens.map((l): AlimentoGlobal => ({
+      id: l[0], categoria: l[1], nome: l[8],
+      kcalPor100g: l[2], proteinaGPor100g: l[3], carboidratoGPor100g: l[4], gorduraGPor100g: l[5], fibraGPor100g: l[6],
+      gramaPadrao: l[7], unidadeComum: `${l[7]} g`,
+    }));
+  } catch {
+    estendido = []; // sem o arquivo estendido o app segue só com o banco curado
+  }
+  return estendido;
+}
+
+function indiceDoEstendido(): Indexado[] {
+  if (indiceEstendido) return indiceEstendido;
+  // depois de TODO o banco curado no desempate (ordem alta)
+  indiceEstendido = itensEstendidos().map((item, i) => {
+    const nome = normalizarTexto(item.nome);
+    return { item, ordem: 9_000_000 + i, nome, palavras: separarPalavras(nome) };
+  });
+  return indiceEstendido;
+}
+
+// pratos prontos estimados pelo Levia (scripts/alimentos/pratos_extras.py), mesmo formato de linha
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const pratos: { itens: Linha[] } = require('../data/alimentosPratos.json');
+const itensBase: Linha[] = [...banco.itens, ...pratos.itens];
 
 const POSICAO: Record<IdiomaAlimentos, number> = { pt: 0, en: 1, es: 2, fr: 3, it: 4 };
 
@@ -70,13 +114,13 @@ interface Indexado {
   palavras: string[];
 }
 
-// prefixo do id: T = TACO, C = CIQUAL, U = USDA, E = TempoLife, P/B/V/S/W = pratos montados
+// prefixo do id: T = TACO, C = CIQUAL, U = USDA, E = TempoLife, P/B/V/S/W = pratos montados, D = pratos prontos estimados
 const PRIORIDADE_FONTE: Record<IdiomaAlimentos, string> = {
-  pt: 'TPBVSWCEU',
-  en: 'UEPBVSWCT',
-  es: 'CPBVSWUET',
-  fr: 'CPBVSWUET',
-  it: 'CPBVSWUET',
+  pt: 'TPBVSWDCEU',
+  en: 'UEPBVSWDCT',
+  es: 'CPBVSWDUET',
+  fr: 'CPBVSWDUET',
+  it: 'CPBVSWDUET',
 };
 
 const cacheLista: Partial<Record<IdiomaAlimentos, AlimentoGlobal[]>> = {};
@@ -91,7 +135,7 @@ export function alimentosGlobais(idioma: IdiomaAlimentos = idiomaAtualDosAliment
   const pronto = cacheLista[idioma];
   if (pronto) return pronto;
   const col = 8 + POSICAO[idioma];
-  const lista = banco.itens.map((l): AlimentoGlobal => ({
+  const lista = itensBase.map((l): AlimentoGlobal => ({
     id: l[0],
     categoria: l[1],
     nome: l[col] as string,
@@ -157,6 +201,11 @@ export function buscarAlimentosGlobais(
     const p = pontuar(x, t, palavrasTermo);
     if (p !== null) candidatos.push({ x, p });
   }
+  for (const x of indiceDoEstendido()) {
+    if (nomesExtras.has(x.nome)) continue;
+    const p = pontuar(x, t, palavrasTermo);
+    if (p !== null) candidatos.push({ x, p });
+  }
   return candidatos
     .sort((a, b) => a.p - b.p || a.x.ordem - b.x.ordem || a.x.nome.length - b.x.nome.length)
     .slice(0, limite)
@@ -164,10 +213,16 @@ export function buscarAlimentosGlobais(
 }
 
 export function buscarAlimentoPorId(id: string, idioma: IdiomaAlimentos = idiomaAtualDosAlimentos()): AlimentoGlobal | undefined {
+  if (id.startsWith('O')) return itensEstendidos().find((a) => a.id === id);
   return alimentosGlobais(idioma).find((a) => a.id === id);
 }
 
+const NOME_PROCESSADOS: Record<IdiomaAlimentos, string> = {
+  pt: 'Industrializados', en: 'Packaged foods', es: 'Productos envasados', fr: 'Produits industriels', it: 'Prodotti confezionati',
+};
+
 export function nomeCategoria(categoria: CategoriaAlimento, idioma: IdiomaAlimentos = idiomaAtualDosAlimentos()): string {
+  if (categoria === 'processados') return NOME_PROCESSADOS[idioma];
   return banco.categorias[categoria]?.[POSICAO[idioma]] ?? categoria;
 }
 
@@ -178,6 +233,7 @@ export function alimentosPorCategoria(categoria: CategoriaAlimento, idioma: Idio
 /** Texto de crédito das fontes (exigido pelas licenças CC-BY e Etalab). */
 export const CREDITO_FONTES_ALIMENTOS =
   'TACO (NEPA/UNICAMP) · ANSES-CIQUAL/CALNUT (Licence Ouverte Etalab) · USDA FoodData Central · ' +
-  'Food nutrition data from TempoLife (tempolife.app), CC-BY-4.0.';
+  'Food nutrition data from TempoLife (tempolife.app), CC-BY-4.0. · ' +
+  'Contains information from Open Food Facts (openfoodfacts.org), available under the Open Database License (ODbL).';
 
-export const TOTAL_ALIMENTOS_GLOBAIS = banco.itens.length;
+export const TOTAL_ALIMENTOS_GLOBAIS = itensBase.length;
