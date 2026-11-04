@@ -570,6 +570,8 @@ const traducoes: Traducoes = {
   "ativar.ativando": "Activating…",
   "ativar.ok": "Done! Your access is active until {data}.",
   "ativar.ativoAte": "Access active until {data}.",
+  "ativar.okSemFim": "Done! Your access is active, with no end date.",
+  "ativar.ativoSemFim": "Access active, with no end date.",
   "ativar.continuar": "Continue",
   "ativar.semSerial": "Don't have a serial yet? Message us on WhatsApp.",
   "ativar.erro.invalido": "Invalid or expired serial. Check the code, or type SERIAL on WhatsApp to get a new one.",

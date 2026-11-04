@@ -24,7 +24,10 @@ export default function Ativar() {
   useEffect(() => { lerLicenca().then(setLicenca); }, []);
 
   const data = (iso: string) => {
-    try { return new Date(iso).toLocaleDateString(idioma, { day: '2-digit', month: '2-digit', year: 'numeric' }); } catch { return ''; }
+    // acesso vitalício vem sem data de fim: new Date('') daria "Invalid Date"
+    const d = new Date(iso);
+    if (!iso || Number.isNaN(d.getTime())) return '';
+    try { return d.toLocaleDateString(idioma, { day: '2-digit', month: '2-digit', year: 'numeric' }); } catch { return ''; }
   };
 
   async function ativar() {
@@ -52,7 +55,7 @@ export default function Ativar() {
       <ThemedView style={styles.container}>
         {licenca && (
           <ThemedText variant="body" color="primary" style={{ marginBottom: spacing.md }}>
-            {recemAtivado ? t('ativar.ok', { data: data(licenca.acessoAte) }) : t('ativar.ativoAte', { data: data(licenca.acessoAte) })}
+            {data(licenca.acessoAte) ? (recemAtivado ? t('ativar.ok', { data: data(licenca.acessoAte) }) : t('ativar.ativoAte', { data: data(licenca.acessoAte) })) : (recemAtivado ? t('ativar.okSemFim') : t('ativar.ativoSemFim'))}
           </ThemedText>
         )}
 
