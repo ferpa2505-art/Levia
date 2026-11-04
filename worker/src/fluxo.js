@@ -14,6 +14,7 @@
 
 import { apagarContaPorTelefone, emitirSerial } from './serial';
 import { agendarLembretes, cancelarLembretes } from './lembretes';
+import { avisarEquipe, pedeAtendente } from './avisos';
 import {
   MENU_IDIOMA, OBJETIVOS_GRAVADOS, TEXTOS, TOQUE_IDIOMA, idiomaEscolhido, idiomaPeloTelefone,
 } from './textos';
@@ -57,6 +58,7 @@ const varias = (tipo, itens, extra = {}) => ({
   ...extra,
 });
 
+const linkSite = (env) => env.SITE_URL || 'https://www.leviapp.org';
 const linkApp = (env) => `${env.APP_BASE_URL || 'https://leviapp.org'}/ativar`;
 const linkPolitica = (env) => env.POLITICA_URL || POLITICA_URL;
 
@@ -299,9 +301,6 @@ export async function processarMensagemWhatsApp(env, phone, texto, messageId, ag
   const idioma = dados.idioma || idiomaPeloTelefone(phoneFormatado);
   const T = TEXTOS[idioma];
 
-  // Inicializa contador de tentativas inválidas se não existir
-  const tentativasInvalidas = (dados.tentativasInvalidas || 0) + 1;
-
   // FAQ lookup: intercepta mensagens antes da máquina de estados
   // Só faz FAQ lookup se não for um comando conhecido
   const ehComando = COMANDOS_PARAR.includes(comando) || COMANDOS_APAGAR.includes(comando) || COMANDOS_REINICIAR.includes(comando) || comando === 'serial';
@@ -315,7 +314,22 @@ export async function processarMensagemWhatsApp(env, phone, texto, messageId, ag
     await agendarLembretes(env, phoneFormatado, toquesDaEtapa(estado, novosDados, env, idiomaDaPergunta), agora);
     return { tipo, resposta: perguntaDaEtapa(estado, novosDados, env, idiomaDaPergunta) };
   };
+  // passa a conversa para uma pessoa E avisa a equipe (WhatsApp + e-mail); falha no aviso nunca derruba a resposta ao cliente
+  const passarParaPessoa = async (motivo, estado) => {
+    await limparSessao(db, phoneFormatado);
+    try {
+      await avisarEquipe(env, { telefone: phoneFormatado, nome: dados.nome, etapa: estado, idioma, motivo, agora });
+    } catch (e) {
+      console.error('aviso à equipe falhou:', e?.message);
+    }
+    return { tipo: 'handoff_humano', resposta: T.handoff };
+  };
+  // resposta inválida: repete a pergunta; na 3ª seguida a conversa passa para uma pessoa.
+  // (Só respostas inválidas contam: uma resposta certa nunca dispara a transferência.)
   const repetir = async (estado, resposta, tipo) => {
+    const tentativas = (dados.tentativasInvalidas || 0) + 1;
+    if (tentativas >= 3) return passarParaPessoa('respostas_invalidas', estado);
+    await salvarSessao(db, phoneFormatado, estado, { ...dados, tentativasInvalidas: tentativas });
     await agendarLembretes(env, phoneFormatado, toquesDaEtapa(estado, dados, env, idioma), agora);
     return { tipo, resposta };
   };
@@ -345,6 +359,9 @@ export async function processarMensagemWhatsApp(env, phone, texto, messageId, ag
     return { tipo: 'parou', resposta: T.parar };
   }
 
+  // pediu para falar com uma pessoa: passa na hora e avisa a equipe (vale até para quem já se cadastrou)
+  if (!ehComando && pedeAtendente(texto)) return passarParaPessoa('pediu_atendente', estadoAtual);
+
   // quem já se cadastrou: o pedido possível é um novo serial
   const leadExistente = await buscarLeadPorTelefone(db, phoneFormatado);
   if (leadExistente) {
@@ -361,27 +378,11 @@ export async function processarMensagemWhatsApp(env, phone, texto, messageId, ag
     return perguntar(ESTADOS.AGUARDANDO_IDIOMA, {}, 'reiniciado', 'pt-BR');
   }
 
-  // Se encontrou resposta no FAQ, retorna a resposta do FAQ
+  // dúvida respondida pelo FAQ: responde e repete a pergunta em aberto (não conta como erro)
   if (respostaFAQ) {
-    const novosDados = { ...dados, tentativasInvalidas: 0 }; // Reseta contador ao encontrar FAQ
-    await salvarSessao(db, phoneFormatado, estadoAtual, novosDados);
-    await agendarLembretes(env, phoneFormatado, toquesDaEtapa(estadoAtual, novosDados, env, idioma), agora);
-    return { tipo: 'faq', resposta: respostaFAQ };
+    await agendarLembretes(env, phoneFormatado, toquesDaEtapa(estadoAtual, dados, env, idioma), agora);
+    return varias('faq', [respostaFAQ, perguntaDaEtapa(estadoAtual, dados, env, idioma)]);
   }
-
-  // Lógica de 3 tentativas: se não encontrou FAQ e não é comando válido
-  if (tentativasInvalidas >= 3) {
-    // 3ª tentativa inválida: handoff humano
-    await limparSessao(db, phoneFormatado);
-    return { 
-      tipo: 'handoff_humano', 
-      resposta: 'Vou transferir para um atendente humano. As respostas podem demorar um pouco, mas o esperado é que alguém te atenda em breve.' 
-    };
-  }
-
-  // Salva o contador de tentativas inválidas
-  const novosDadosComTentativas = { ...dados, tentativasInvalidas };
-  await salvarSessao(db, phoneFormatado, estadoAtual, novosDadosComTentativas);
 
   switch (estadoAtual) {
     case ESTADOS.AGUARDANDO_IDIOMA: {
@@ -446,7 +447,9 @@ ${perguntaDaEtapa(estadoAtual, dados, env, idioma)}`, 'objetivo_invalido');
         [
           T.serialIntro(dados.nome),
           emissao.serial,
-          T.serialUso(linkApp(env)),
+          `${T.serialUso(linkApp(env))}
+
+${T.siteLinha(linkSite(env))}`,
           { texto: T.videoLegenda(dados.nome), midia: MIDIA_VIDEO },
         ],
         { pwaLink: linkApp(env), leadId },

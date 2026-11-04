@@ -31,6 +31,9 @@ PAYT_VALOR_MENSAL_CENTAVOS = "1997"
 PAYT_VALOR_ANUAL_CENTAVOS = "19171"
 # fotos por 30 dias de quem pagou
 FOTOS_ASSINANTE_30D = "100"
+# Avisos quando o LEVI passa uma conversa para uma pessoa (ver src/avisos.js):
+ALERTA_WHATSAPP = "+35699506350"
+ALERTA_EMAILS = "contatoapplevia@gmail.com"
 
 [[kv_namespaces]]
 binding = "LEVIA_COTAS"

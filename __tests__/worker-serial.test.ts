@@ -2,6 +2,8 @@ import { createHmac } from 'node:crypto';
 import worker from '../worker/src/index';
 import { acessoDaConta, emitirSerial, normalizarCodigo } from '../worker/src/serial';
 import { processarMensagemWhatsApp } from '../worker/src/fluxo';
+import { FAQ } from '../worker/src/faq';
+import { TEXTOS } from '../worker/src/textos';
 import { diaSeguinteAs19, fusoDoTelefone, puxarVencidos } from '../worker/src/lembretes';
 import { sha256 } from '../worker/src/cripto';
 import { criarD1, temSqlite } from '../test-utils/d1';
@@ -723,6 +725,76 @@ describe('LEVI: idioma, conversa, consentimento e lembretes', () => {
     expect(entregues.filter((m: any) => !m.midia)).toHaveLength(2);
   });
 
+  teste('uma resposta certa nunca dispara a transferência, mesmo sendo a 3ª mensagem da etapa', async () => {
+    const { db, env } = ambiente();
+    await ate_o_nome(env);
+    await falar(env, 'Fernando');
+    await falar(env, 'fernando@exemplo.com'); // agora a pergunta aberta é o objetivo
+    expect((await falar(env, 'Parou de me responder')).tipo).toBe('objetivo_invalido');
+    expect((await falar(env, 'Sabe me dizer o que eu faço')).tipo).toBe('objetivo_invalido');
+    const certa = await falar(env, '1'); // era aqui que o handoff disparava antes da correção
+    expect(certa.tipo).toBe('finalizado');
+    expect(contar(db, 'leads')).toBe(1);
+  });
+
+  teste('o contador de respostas inválidas zera quando a conversa avança de etapa', async () => {
+    const { env } = ambiente();
+    await ate_o_nome(env);
+    expect((await falar(env, 'Oi')).tipo).toBe('nome_invalido');
+    expect((await falar(env, 'Oi')).tipo).toBe('nome_invalido');
+    expect((await falar(env, 'Fernando')).tipo).toBe('pergunta_email'); // avançou: zera
+    expect((await falar(env, 'não é e-mail')).tipo).toBe('email_invalido');
+    expect((await falar(env, 'também não')).tipo).toBe('email_invalido');
+    expect((await falar(env, 'fernando@exemplo.com')).tipo).toBe('pergunta_objetivo');
+  });
+
+  teste('dúvida de verdade é respondida pelo FAQ e a pergunta em aberto volta; não conta como erro', async () => {
+    const { env } = ambiente();
+    await ate_o_nome(env);
+    await falar(env, 'Fernando');
+    await falar(env, '2'); // e-mail: pular
+    for (let i = 0; i < 4; i++) {
+      const r = await falar(env, 'Quanto custa o plano?');
+      expect(r.tipo).toBe('faq');
+      expect(r.respostas[0]).toContain('www.leviapp.org');
+      expect(r.respostas[1]).toContain('principal objetivo'); // volta para a pergunta em aberto
+    }
+    expect((await falar(env, '3')).tipo).toBe('finalizado'); // 4 dúvidas seguidas não viraram handoff
+  });
+
+  teste('nome, e-mail e número nunca viram resposta de FAQ', async () => {
+    const { env } = ambiente();
+    await ate_o_nome(env);
+    expect((await falar(env, 'Ana')).tipo).toBe('pergunta_email');
+    expect((await falar(env, 'ana@exemplo.com')).tipo).toBe('pergunta_objetivo');
+    expect((await falar(env, '3')).tipo).toBe('finalizado');
+  });
+
+  teste('o FAQ não promete o que o produto não faz: sem preço, sem criptografia e sem telefone inventado', () => {
+    for (const [idioma, respostas] of Object.entries(FAQ as Record<string, Record<string, string>>)) {
+      for (const [assunto, texto] of Object.entries(respostas)) {
+        expect({ idioma, assunto, ok: !/R\$|€|\$\s?\d|\d+[,.]\d{2}|criptograf|encrypt|cifrad|cifrar|crittograf|99999|suporte@|Configurações|Settings|Configuración|Impostazioni/i.test(texto) }).toEqual({ idioma, assunto, ok: true });
+      }
+    }
+  });
+
+  teste('o fim da conversa leva ao site (planos e assinatura) além de ativar o teste', async () => {
+    const { env } = ambiente();
+    await ate_o_nome(env);
+    await falar(env, 'Fernando');
+    await falar(env, '2');
+    const fim = await falar(env, '3');
+    expect(fim.respostas[2]).toContain('/ativar');
+    expect(fim.respostas[2]).toContain('https://www.leviapp.org');
+  });
+
+  teste('o handoff e o fechamento existem nos cinco idiomas', () => {
+    for (const idioma of ['pt-BR', 'pt-PT', 'en', 'es', 'it']) {
+      expect(typeof (TEXTOS as any)[idioma].handoff).toBe('string');
+      expect((TEXTOS as any)[idioma].siteLinha('https://www.leviapp.org')).toContain('https://www.leviapp.org');
+    }
+  });
+
   teste('sem a tabela de lembretes (migration 0006 pendente) a conversa continua funcionando', async () => {
     const { db, env } = ambiente();
     db.sql('DROP TABLE wa_outbox');
@@ -770,5 +842,158 @@ describe('serial: seriais vitalícios (script manual)', () => {
     const lote = montarLote({ nome: 'Teste', quantidade: 1 });
     expect(lote.sql).not.toContain('entitlements');
     expect(lote.itens[0].nome).toBe('Teste');
+  });
+});
+
+describe('LEVI: aviso à equipe quando a conversa passa para uma pessoa', () => {
+  let n = 0;
+  const CLIENTE = '5511987654321';
+  const ADMIN = '+35699506350';
+  const HORA = 3600 * 1000;
+  const falar = (env: any, texto: string, agora?: number, tel = CLIENTE) =>
+    processarMensagemWhatsApp(env, tel, texto, `av-${++n}`, agora) as Promise<any>;
+  const contar = (db: any, sql: string, ...args: any[]) => (db.sql(sql, ...args)[0] as any).n;
+  const avisos = (db: any) => db.sql("SELECT phone, texto FROM wa_outbox WHERE id LIKE 'aviso-%' ORDER BY criado_em") as any[];
+
+  function configurado(extra: Record<string, unknown> = {}) {
+    return ambiente({
+      ALERTA_WHATSAPP: ADMIN, ALERTA_EMAILS: 'contatoapplevia@gmail.com, contato@leviapp.org',
+      RESEND_API_KEY: 'chave-resend', EMAIL_FROM: 'LEVI <levi@exemplo.org>', ...extra,
+    });
+  }
+  /** conversa até o nome, depois 3 respostas inválidas seguidas */
+  async function ateOHandoff(env: any, agora?: number) {
+    await falar(env, 'oi', agora);
+    await falar(env, '1', agora);
+    await falar(env, '1', agora);
+    await falar(env, 'Oi', agora);
+    await falar(env, 'Oi', agora);
+    return falar(env, 'Oi', agora);
+  }
+
+  let fetchSpy: jest.SpyInstance;
+  beforeEach(() => {
+    fetchSpy = jest.spyOn(global, 'fetch').mockResolvedValue(new Response('{}', { status: 200 }));
+  });
+  afterEach(() => { fetchSpy.mockRestore(); jest.restoreAllMocks(); });
+
+  teste('o handoff avisa o dono por WhatsApp (fila) e por e-mail, sem o texto das mensagens do cliente', async () => {
+    const { db, env } = configurado();
+    const r = await ateOHandoff(env);
+    expect(r.tipo).toBe('handoff_humano');
+
+    const fila = avisos(db);
+    expect(fila).toHaveLength(1);
+    expect(fila[0].phone).toBe(ADMIN);
+    expect(fila[0].texto).toContain('+5511987654321');
+    expect(fila[0].texto).toContain('precisa de ajuda');
+    expect(fila[0].texto).toContain('3 vezes seguidas');
+    expect(fila[0].texto).toContain('https://wa.me/5511987654321');
+    expect(fila[0].texto).not.toContain('Oi'); // nada do que o cliente escreveu
+
+    const resend = fetchSpy.mock.calls.filter((c) => String(c[0]).includes('api.resend.com'));
+    expect(resend).toHaveLength(1);
+    const corpo = JSON.parse(resend[0][1].body);
+    expect(corpo.to).toEqual(['contatoapplevia@gmail.com', 'contato@leviapp.org']);
+    expect(corpo.from).toBe('LEVI <levi@exemplo.org>');
+    expect(corpo.subject).toContain('+5511987654321');
+    expect(resend[0][1].headers.Authorization).toBe('Bearer chave-resend');
+  });
+
+  teste('o aviso sai para o gateway mesmo sem conversa aberta com o dono, e só uma vez', async () => {
+    const { env } = configurado();
+    const agora = Date.UTC(2026, 10, 4, 15, 0, 0);
+    await ateOHandoff(env, agora);
+    const entregues = await puxarVencidos(env, agora + 5000);
+    const aviso = entregues.find((m: any) => m.texto.includes('precisa de ajuda'));
+    expect(aviso).toMatchObject({ telefone: '35699506350' });
+    const depois = await puxarVencidos(env, agora + 6000);
+    expect(depois.find((m: any) => m.texto.includes('precisa de ajuda'))).toBeUndefined();
+  });
+
+  teste('uma mensagem do dono ao bot não cancela o aviso pendente (nem os lembretes dele valem mais)', async () => {
+    const { env } = configurado();
+    const agora = Date.UTC(2026, 10, 4, 15, 0, 0);
+    await ateOHandoff(env, agora);
+    await falar(env, 'oi', agora + 1000, '35699506350');     // o dono escreve: cancela os lembretes DELE
+    await falar(env, 'parar', agora + 2000, '35699506350');  // e encerra a conversa dele: nenhuma sessão aberta
+    const entregues = await puxarVencidos(env, agora + 5000);
+    expect(entregues.find((m: any) => m.texto.includes('precisa de ajuda'))).toMatchObject({ telefone: '35699506350' });
+  });
+
+  teste('o mesmo cliente não gera aviso repetido em 6 h, mas gera depois disso', async () => {
+    const { db, env } = configurado();
+    const agora = Date.UTC(2026, 10, 4, 12, 0, 0);
+    await ateOHandoff(env, agora);
+    await ateOHandoff(env, agora + 2 * HORA);
+    expect(avisos(db)).toHaveLength(1);
+    expect(fetchSpy.mock.calls.filter((c) => String(c[0]).includes('resend'))).toHaveLength(1);
+    await ateOHandoff(env, agora + 7 * HORA);
+    expect(avisos(db)).toHaveLength(2);
+  });
+
+  teste('pedir um atendente passa na hora e avisa, em qualquer idioma, inclusive para quem já se cadastrou', async () => {
+    const { db, env } = configurado();
+    await falar(env, 'oi');
+    await falar(env, '3'); // inglês
+    const r = await falar(env, 'I want to talk to a real person');
+    expect(r.tipo).toBe('handoff_humano');
+    expect(r.resposta).toContain('pass your chat to a person');
+    expect(avisos(db)).toHaveLength(1);
+    expect(avisos(db)[0].texto).toContain('pediu para falar com uma pessoa');
+    expect(contar(db, 'SELECT COUNT(*) AS n FROM wa_sessions')).toBe(0);
+
+    // quem já concluiu o cadastro também consegue
+    const outro = '5511912345678';
+    await falar(env, 'oi', undefined, outro);
+    await falar(env, '1', undefined, outro);
+    await falar(env, '1', undefined, outro);
+    await falar(env, 'Beto', undefined, outro);
+    await falar(env, '2', undefined, outro);
+    await falar(env, '3', undefined, outro);
+    const pedido = await falar(env, 'quero falar com um atendente', undefined, outro);
+    expect(pedido.tipo).toBe('handoff_humano');
+    expect(avisos(db)).toHaveLength(2);
+  });
+
+  teste('o nome do cliente vai no aviso quando já foi informado', async () => {
+    const { db, env } = configurado();
+    await falar(env, 'oi');
+    await falar(env, '1');
+    await falar(env, '1');
+    await falar(env, 'Fernando');
+    await falar(env, 'quero falar com um humano');
+    expect(avisos(db)[0].texto).toContain('(Fernando)');
+  });
+
+  teste('falha no e-mail ou no WhatsApp não derruba a resposta ao cliente', async () => {
+    jest.spyOn(console, 'error').mockImplementation(() => {});
+    fetchSpy.mockRejectedValue(new Error('rede fora'));
+    const { db, env } = configurado();
+    const r = await ateOHandoff(env);
+    expect(r.tipo).toBe('handoff_humano');
+    expect(r.resposta).toContain('pessoa');
+    expect(avisos(db)).toHaveLength(1); // o WhatsApp saiu mesmo com o e-mail fora
+
+    const sem = ambiente({ ALERTA_WHATSAPP: ADMIN, RESEND_API_KEY: 'k' });
+    sem.db.sql('DROP TABLE wa_outbox'); // fila indisponível (migration pendente) e e-mail com erro
+    expect((await ateOHandoff(sem.env)).tipo).toBe('handoff_humano');
+  });
+
+  teste('sem nenhum canal configurado o handoff continua funcionando', async () => {
+    jest.spyOn(console, 'error').mockImplementation(() => {});
+    const { db, env } = ambiente();
+    const r = await ateOHandoff(env);
+    expect(r.tipo).toBe('handoff_humano');
+    expect(avisos(db)).toHaveLength(0);
+    expect(fetchSpy.mock.calls.filter((c) => String(c[0]).includes('resend'))).toHaveLength(0);
+  });
+
+  teste('e-mail do aviso usa o remetente de teste do Resend quando não há EMAIL_FROM e ignora endereço inválido', async () => {
+    const { env } = ambiente({ RESEND_API_KEY: 'k', ALERTA_EMAILS: 'nao-e-email, contatoapplevia@gmail.com' });
+    await ateOHandoff(env);
+    const corpo = JSON.parse(fetchSpy.mock.calls.find((c) => String(c[0]).includes('resend'))![1].body);
+    expect(corpo.from).toBe('LEVI <onboarding@resend.dev>');
+    expect(corpo.to).toEqual(['contatoapplevia@gmail.com']);
   });
 });
