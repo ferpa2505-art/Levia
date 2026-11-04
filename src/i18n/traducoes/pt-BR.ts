@@ -569,6 +569,8 @@ const ptBR = {
   "ativar.ativando": "Ativando…",
   "ativar.ok": "Pronto! Seu acesso está ativo até {data}.",
   "ativar.ativoAte": "Acesso ativo até {data}.",
+  "ativar.okSemFim": "Done! Your access is active, with no end date.",
+  "ativar.ativoSemFim": "Access active, with no end date.",
   "ativar.continuar": "Continuar",
   "ativar.semSerial": "Ainda não tem serial? Fale com a gente no WhatsApp.",
   "ativar.erro.invalido": "Serial inválido ou vencido. Confira o código ou digite SERIAL no WhatsApp para receber outro.",
