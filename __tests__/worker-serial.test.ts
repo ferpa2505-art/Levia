@@ -1,6 +1,6 @@
 import { createHmac } from 'node:crypto';
 import worker from '../worker/src/index';
-import { emitirSerial, normalizarCodigo } from '../worker/src/serial';
+import { acessoDaConta, emitirSerial, normalizarCodigo } from '../worker/src/serial';
 import { processarMensagemWhatsApp } from '../worker/src/fluxo';
 import { diaSeguinteAs19, fusoDoTelefone, puxarVencidos } from '../worker/src/lembretes';
 import { sha256 } from '../worker/src/cripto';
@@ -730,5 +730,45 @@ describe('LEVI: idioma, conversa, consentimento e lembretes', () => {
     const r = await falar(env, 'oi');
     expect(r.resposta).toContain('LEVI');
     expect((await falar(env, '1')).tipo).toBe('pergunta_consentimento');
+  });
+});
+
+describe('serial: seriais vitalícios (script manual)', () => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { montarLote } = require('../worker/scripts/serial-manual.cjs');
+  const DIA = 24 * 3600 * 1000;
+  const rodar = (db: any, sql: string) => sql.split('\n').filter(Boolean).forEach((linha) => db.sql(linha));
+
+  teste('um lote gera contas, códigos e acessos sem fim; cada serial ativa e vale como assinatura', async () => {
+    const { db, env } = ambiente();
+    const lote = montarLote({ nome: 'Parceiro', quantidade: 3, vitalicio: true, fotos: 50 });
+    expect(lote.itens).toHaveLength(3);
+    expect(new Set(lote.itens.map((i: any) => i.serial)).size).toBe(3);
+    rodar(db, lote.sql);
+
+    expect((db.sql('SELECT COUNT(*) AS n FROM accounts')[0] as any).n).toBe(3);
+    expect((db.sql("SELECT COUNT(*) AS n FROM entitlements WHERE provider_subscription_id = 'vitalicio-manual' AND current_period_end IS NULL")[0] as any).n).toBe(3);
+    // só o hash fica no banco
+    expect(JSON.stringify(db.sql('SELECT * FROM activation_codes'))).not.toContain(lote.itens[0].serial);
+    // o serial pode ser digitado de novo por ~10 anos (a licença do app vale 365 dias)
+    const expira = new Date((db.sql('SELECT expires_at FROM activation_codes')[0] as any).expires_at).getTime();
+    expect(expira - Date.now()).toBeGreaterThan(3000 * DIA);
+
+    const res = await ativar(env, lote.itens[0].serialFormatado, A);
+    expect(res.status).toBe(200);
+    const corpo = await res.json();
+    expect(corpo).toMatchObject({ ok: true, plano: 'assinatura', acessoAte: null, fotos: 50 });
+    expect((await analisar(env, corpo.licenca, A)).status).toBe(200);
+
+    // sem data de fim: nem o teste vencido nem 10 anos depois tiram o acesso
+    const conta = (db.sql('SELECT account_id FROM installations')[0] as any).account_id;
+    const futuro = await acessoDaConta(env, conta, Date.now() + 3650 * DIA);
+    expect(futuro).toMatchObject({ plano: 'assinatura', fim: null });
+  });
+
+  teste('sem --vitalicio continua gerando só o serial de teste (sem entitlement)', () => {
+    const lote = montarLote({ nome: 'Teste', quantidade: 1 });
+    expect(lote.sql).not.toContain('entitlements');
+    expect(lote.itens[0].nome).toBe('Teste');
   });
 });
