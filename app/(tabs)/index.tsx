@@ -6,6 +6,7 @@ import Constants from 'expo-constants';
 import { Beef, Droplet, Zap, Feather, Target, Syringe, ChevronRight, TrendingDown, Wheat, Nut, Leaf, Dumbbell } from 'lucide-react-native';
 import { GraficoPesoTendencia } from '@components/GraficoPesoTendencia';
 import { Dica } from '@components/Dica';
+import { FaixaTeste } from '@components/FaixaTeste';
 import { ThemedView } from '@components/ThemedView';
 import { ThemedText } from '@components/ThemedText';
 import { Button } from '@components/Button';
@@ -96,6 +97,8 @@ export default function HomeScreen() {
             {t('home.subtitulo')}
           </ThemedText>
         </View>
+
+        <FaixaTeste />
 
         <Dica id="home.inicio" texto="dica.home" />
 

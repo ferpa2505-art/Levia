@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Linking } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { TelaRolavel } from '@components/TelaRolavel';
 import { ThemedView } from '@components/ThemedView';
@@ -7,6 +8,7 @@ import { Button } from '@components/Button';
 import { Input } from '@components/Input';
 import { usePreferences } from '@context/PreferencesContext';
 import { ativarSerial, lerLicenca, Licenca } from '@utils/licenca';
+import { URL_PLANOS } from '@utils/teste';
 import { spacing } from '@constants/colors';
 import { estilosTema } from '@theme/estilos';
 
@@ -20,6 +22,7 @@ export default function Ativar() {
   const [erro, setErro] = useState('');
   const [licenca, setLicenca] = useState<Licenca | null>(null);
   const [recemAtivado, setRecemAtivado] = useState(false);
+  const [expirado, setExpirado] = useState(false);
 
   useEffect(() => { lerLicenca().then(setLicenca); }, []);
 
@@ -34,10 +37,12 @@ export default function Ativar() {
     if (ativando || serial.trim().length === 0) return;
     setAtivando(true);
     setErro('');
+    setExpirado(false);
     const r = await ativarSerial(serial);
     setAtivando(false);
     if (!r.ok) {
       setErro(t(`ativar.erro.${r.motivo}` as never));
+      setExpirado(r.motivo === 'expirado');
       return;
     }
     setSerial('');
@@ -80,6 +85,14 @@ export default function Ativar() {
             />
             {erro !== '' && (
               <ThemedText variant="small" color="accent" style={{ marginTop: spacing.sm }}>{erro}</ThemedText>
+            )}
+            {expirado && (
+              <Button
+                label={t('teste.verPlanos')}
+                variant="outline"
+                onPress={() => { Linking.openURL(URL_PLANOS).catch(() => {}); }}
+                style={{ marginTop: spacing.md }}
+              />
             )}
             <Button
               label={ativando ? t('ativar.ativando') : t('ativar.botao')}
