@@ -22,6 +22,14 @@ import { buscarResposta } from './faq';
 
 /** Nome da mídia que o gateway envia (vídeo de uso do app); sem o arquivo ele manda só o texto. */
 const MIDIA_VIDEO = 'video';
+// criativos (criativo-1..4.jpg no gateway) só existem em português do Brasil; sem preço, só chamada para o site
+const IDIOMA_CRIATIVOS = 'pt-BR';
+const TOTAL_CRIATIVOS = 4;
+/** Um dos criativos, escolhido pelo último dígito do telefone (cada pessoa vê sempre o mesmo; o conjunto fica variado). */
+export function criativoDoTelefone(telefone) {
+  const d = String(telefone ?? '').replace(/\D/g, '');
+  return `criativo-${(d ? Number(d.slice(-1)) % TOTAL_CRIATIVOS : 0) + 1}`;
+}
 const EMAIL = /^[^\s@]{1,64}@[^\s@]{1,190}\.[^\s@]{2,}$/;
 const PULAR = ['2', 'pular', 'pula', 'skip', 'saltar', 'salta', 'omitir', 'saltare', 'nao', 'no'];
 
@@ -73,7 +81,7 @@ function perguntaDaEtapa(estado, dados, env, idioma) {
   return T.confirmarApagar;
 }
 
-function toquesDaEtapa(estado, dados, env, idioma) {
+function toquesDaEtapa(estado, dados, env, idioma, telefone) {
   const T = TEXTOS[idioma];
   if (estado === ESTADOS.AGUARDANDO_IDIOMA) {
     return {
@@ -95,9 +103,13 @@ ${MENU_IDIOMA}`,
   const texto = `${T.toqueDiaSeguinte(nome)}
 
 ${perguntaDaEtapa(estado, dados, env, idioma)}`;
+  // como o vídeo do dia seguinte, o criativo só vai para quem já autorizou o contato e fala português do Brasil
+  const segundo = dados.consentimento_em && idioma === IDIOMA_CRIATIVOS
+    ? { texto: T.toqueSegundo(nome), midia: criativoDoTelefone(telefone) }
+    : T.toqueSegundo(nome);
   return {
     primeiro,
-    segundo: T.toqueSegundo(nome),
+    segundo,
     diaSeguinte: dados.consentimento_em ? { texto, midia: MIDIA_VIDEO } : texto,
   };
 }
@@ -311,7 +323,7 @@ export async function processarMensagemWhatsApp(env, phone, texto, messageId, ag
 
   const perguntar = async (estado, novosDados, tipo, idiomaDaPergunta = novosDados.idioma || idioma) => {
     await salvarSessao(db, phoneFormatado, estado, novosDados);
-    await agendarLembretes(env, phoneFormatado, toquesDaEtapa(estado, novosDados, env, idiomaDaPergunta), agora);
+    await agendarLembretes(env, phoneFormatado, toquesDaEtapa(estado, novosDados, env, idiomaDaPergunta, phoneFormatado), agora);
     return { tipo, resposta: perguntaDaEtapa(estado, novosDados, env, idiomaDaPergunta) };
   };
   // passa a conversa para uma pessoa E avisa a equipe (WhatsApp + e-mail); falha no aviso nunca derruba a resposta ao cliente
@@ -330,7 +342,7 @@ export async function processarMensagemWhatsApp(env, phone, texto, messageId, ag
     const tentativas = (dados.tentativasInvalidas || 0) + 1;
     if (tentativas >= 3) return passarParaPessoa('respostas_invalidas', estado);
     await salvarSessao(db, phoneFormatado, estado, { ...dados, tentativasInvalidas: tentativas });
-    await agendarLembretes(env, phoneFormatado, toquesDaEtapa(estado, dados, env, idioma), agora);
+    await agendarLembretes(env, phoneFormatado, toquesDaEtapa(estado, dados, env, idioma, phoneFormatado), agora);
     return { tipo, resposta };
   };
 
@@ -380,7 +392,7 @@ export async function processarMensagemWhatsApp(env, phone, texto, messageId, ag
 
   // dúvida respondida pelo FAQ: responde e repete a pergunta em aberto (não conta como erro)
   if (respostaFAQ) {
-    await agendarLembretes(env, phoneFormatado, toquesDaEtapa(estadoAtual, dados, env, idioma), agora);
+    await agendarLembretes(env, phoneFormatado, toquesDaEtapa(estadoAtual, dados, env, idioma, phoneFormatado), agora);
     return varias('faq', [respostaFAQ, perguntaDaEtapa(estadoAtual, dados, env, idioma)]);
   }
 
