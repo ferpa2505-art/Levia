@@ -14,6 +14,7 @@
 
 import { apagarContaPorTelefone, emitirSerial } from './serial';
 import { agendarLembretes, cancelarLembretes } from './lembretes';
+import { avisarEquipe, pedeAtendente } from './avisos';
 import {
   MENU_IDIOMA, OBJETIVOS_GRAVADOS, TEXTOS, TOQUE_IDIOMA, idiomaEscolhido, idiomaPeloTelefone,
 } from './textos';
@@ -313,14 +314,21 @@ export async function processarMensagemWhatsApp(env, phone, texto, messageId, ag
     await agendarLembretes(env, phoneFormatado, toquesDaEtapa(estado, novosDados, env, idiomaDaPergunta), agora);
     return { tipo, resposta: perguntaDaEtapa(estado, novosDados, env, idiomaDaPergunta) };
   };
+  // passa a conversa para uma pessoa E avisa a equipe (WhatsApp + e-mail); falha no aviso nunca derruba a resposta ao cliente
+  const passarParaPessoa = async (motivo, estado) => {
+    await limparSessao(db, phoneFormatado);
+    try {
+      await avisarEquipe(env, { telefone: phoneFormatado, nome: dados.nome, etapa: estado, idioma, motivo, agora });
+    } catch (e) {
+      console.error('aviso à equipe falhou:', e?.message);
+    }
+    return { tipo: 'handoff_humano', resposta: T.handoff };
+  };
   // resposta inválida: repete a pergunta; na 3ª seguida a conversa passa para uma pessoa.
   // (Só respostas inválidas contam: uma resposta certa nunca dispara a transferência.)
   const repetir = async (estado, resposta, tipo) => {
     const tentativas = (dados.tentativasInvalidas || 0) + 1;
-    if (tentativas >= 3) {
-      await limparSessao(db, phoneFormatado);
-      return { tipo: 'handoff_humano', resposta: T.handoff };
-    }
+    if (tentativas >= 3) return passarParaPessoa('respostas_invalidas', estado);
     await salvarSessao(db, phoneFormatado, estado, { ...dados, tentativasInvalidas: tentativas });
     await agendarLembretes(env, phoneFormatado, toquesDaEtapa(estado, dados, env, idioma), agora);
     return { tipo, resposta };
@@ -350,6 +358,9 @@ export async function processarMensagemWhatsApp(env, phone, texto, messageId, ag
     await limparSessao(db, phoneFormatado);
     return { tipo: 'parou', resposta: T.parar };
   }
+
+  // pediu para falar com uma pessoa: passa na hora e avisa a equipe (vale até para quem já se cadastrou)
+  if (!ehComando && pedeAtendente(texto)) return passarParaPessoa('pediu_atendente', estadoAtual);
 
   // quem já se cadastrou: o pedido possível é um novo serial
   const leadExistente = await buscarLeadPorTelefone(db, phoneFormatado);
