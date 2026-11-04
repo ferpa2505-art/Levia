@@ -29,7 +29,7 @@ jobs:
     runs-on: ubuntu-26.04
     environment:
       name: production
-      url: https://levia-app.ferpa2505.workers.dev
+      url: https://leviapp.org
     steps:
       - uses: actions/checkout@v7
 
@@ -64,7 +64,7 @@ jobs:
 
       - name: Conferir o site no ar
         run: |
-          curl -fsS https://levia-app.ferpa2505.workers.dev/ | grep -q '<title>Leviã</title>'
-          curl -fsS https://levia-app.ferpa2505.workers.dev/manifest.webmanifest | grep -q '"short_name"'
-          curl -fsS https://levia-app.ferpa2505.workers.dev/sw.js | grep -q 'levia-v'
-          curl -fsS https://levia-app.ferpa2505.workers.dev/ativar | grep -q '<title>Leviã</title>'
+          curl -fsSA "Mozilla/5.0" https://leviapp.org/ | grep -q '<title>Leviã</title>'
+          curl -fsSA "Mozilla/5.0" https://leviapp.org/manifest.webmanifest | grep -q '"short_name"'
+          curl -fsSA "Mozilla/5.0" https://leviapp.org/sw.js | grep -q 'levia-v'
+          curl -fsSA "Mozilla/5.0" https://leviapp.org/ativar | grep -q '<title>Leviã</title>'
