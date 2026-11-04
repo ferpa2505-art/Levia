@@ -3,7 +3,7 @@ import worker from '../worker/src/index';
 const GEMINI_API_KEY = 'synthetic-gemini-key';
 const INSTALLATION_ID = '00000000-0000-4000-8000-000000000000';
 const SYNTHETIC_IMAGE_BASE64 = `/9j/${'A'.repeat(1392)}/9k=`;
-const ALLOWED_ORIGIN = 'https://levia-app.netlify.app';
+const ALLOWED_ORIGIN = 'https://leviapp.org';
 const SITEKEY = 'synthetic-sitekey';
 const SECRET = 'synthetic-turnstile-secret';
 
@@ -27,7 +27,7 @@ function createEnv(overrides: Record<string, unknown> = {}) {
     LEVIA_DB: {},
     TURNSTILE_SITE_KEY: SITEKEY,
     TURNSTILE_SECRET_KEY: SECRET,
-    TURNSTILE_ALLOWED_HOSTNAMES: 'levia-app.netlify.app,localhost',
+    TURNSTILE_ALLOWED_HOSTNAMES: 'leviapp.org,localhost',
     LEVIA_COTAS: createKv(),
     ...overrides,
   };

@@ -50,7 +50,7 @@ async function incrementarLimite(kv, chave, limite, ttl) {
 }
 
 async function enviarLink(env, email, token) {
-  const url = `${env.APP_BASE_URL || 'https://levia-app.netlify.app'}/ativar?token=${encodeURIComponent(token)}`;
+  const url = `${env.APP_BASE_URL || 'https://leviapp.org'}/ativar?token=${encodeURIComponent(token)}`;
   const response = await fetch('https://api.resend.com/emails', {
     method: 'POST',
     headers: { Authorization: `Bearer ${env.RESEND_API_KEY}`, 'Content-Type': 'application/json' },
