@@ -52,15 +52,15 @@ export const TEXTOS = {
     emailInvalido: 'Esse e-mail não parece válido 🤔 Confira e envie de novo, ou digite *2* para pular.',
     pedirObjetivo: (nome, opcoes) => `Quase lá, ${nome}! Qual é o seu principal objetivo?\n\n${lista(opcoes)}\n\nResponda só com o número.`,
     serialIntro: (nome) =>
-      `Pronto, ${nome}! ✅ Guardei seus dados só para liberar o seu acesso.\n\n` +
-      `Agora vou te mandar o seu *serial*: é a sua chave pessoal de acesso ao Leviã. Ele garante que só quem passou por aqui usa o app e protege os seus dados. ` +
-      `Vale para 2 aparelhos e não deve ser compartilhado.\n\nVou enviar o serial na *próxima mensagem*, sozinho, para ficar fácil de copiar 👇`,
+      `O serial é a sua chave pessoal de acesso ao Leviã: ele garante que só quem passou por aqui usa o app e protege os seus dados. ` +
+      `Vale para 2 aparelhos e não deve ser compartilhado.\n\nEle chega na *última mensagem*, sozinho, para ficar fácil de copiar 👇`,
     serialUso: (link) =>
-      `Para usar: abra ${link}, toque em "Ativar" e cole o serial acima. O teste de 7 dias começa na ativação.\n\n` +
+      `Para usar: abra ${link}, toque em "Ativar" e cole o serial que vou te mandar a seguir. O teste de 7 dias começa na ativação.\n\n` +
       `Perdeu o serial? Digite *SERIAL*. Para apagar seus dados, digite *APAGAR*. Seus registros de saúde ficam só no seu aparelho.`,
-    serialNovoIntro: 'Aqui está o seu novo serial (o anterior deixou de valer). Vou mandar sozinho na próxima mensagem, para ficar fácil de copiar 👇',
+    serialNovoIntro: 'Aqui está o seu novo serial (o anterior deixou de valer). Ele chega na *última mensagem*, sozinho, para ficar fácil de copiar 👇',
     serialNovoUso: (link) => `Ative em ${link}. Os aparelhos que você já ativou continuam funcionando.`,
-    videoLegenda: (nome) => `${chamar(nome)}conheça o Leviã em 20 segundos 👇`,
+    prontoDados: (nome) => `Pronto, ${nome}! ✅ Guardei seus dados só para liberar o seu acesso. 👇`,
+    videoLegenda: (nome, fotos) => `${nome}, este vídeo de apresentação tem 20 segundos: assista enquanto eu preparo o seu serial de acesso por 7 dias grátis 🎬\n\nLembrando que, nesses 7 dias, você também pode analisar ${fotos} fotos de pratos de graça 📸`,
     serialIndisponivel: 'Seu cadastro foi feito, mas não consegui gerar o serial agora. Digite *SERIAL* em alguns minutos para tentar de novo.',
     serialLimite: 'Você já pediu serial 3 vezes hoje. Tente de novo amanhã.',
     erro: 'Ops, ocorreu um erro. Tente de novo em instantes ou digite *MENU* para recomeçar.',
@@ -101,15 +101,15 @@ export const TEXTOS = {
     emailInvalido: 'Esse e-mail não parece válido 🤔 Confirme e envie de novo, ou escreva *2* para saltar.',
     pedirObjetivo: (nome, opcoes) => `Quase lá, ${nome}! Qual é o seu principal objetivo?\n\n${lista(opcoes)}\n\nResponda só com o número.`,
     serialIntro: (nome) =>
-      `Pronto, ${nome}! ✅ Guardei os seus dados apenas para libertar o seu acesso.\n\n` +
-      `Agora vou enviar-lhe o seu *número de série*: é a sua chave pessoal de acesso ao Leviã. Garante que só quem passou por aqui usa a app e protege os seus dados. ` +
-      `Vale para 2 dispositivos e não deve ser partilhado.\n\nVou enviá-lo na *próxima mensagem*, sozinho, para ser fácil de copiar 👇`,
+      `O número de série é a sua chave pessoal de acesso ao Leviã: garante que só quem passou por aqui usa a app e protege os seus dados. ` +
+      `Vale para 2 dispositivos e não deve ser partilhado.\n\nChega na *última mensagem*, sozinho, para ser fácil de copiar 👇`,
     serialUso: (link) =>
-      `Para usar: abra ${link}, toque em "Ativar" e cole o número de série acima. O teste de 7 dias começa na ativação.\n\n` +
+      `Para usar: abra ${link}, toque em "Ativar" e cole o número de série que lhe vou enviar a seguir. O teste de 7 dias começa na ativação.\n\n` +
       `Perdeu o número de série? Escreva *SERIAL*. Para apagar os seus dados, escreva *APAGAR*. Os seus registos de saúde ficam só no seu telemóvel.`,
-    serialNovoIntro: 'Aqui está o seu novo número de série (o anterior deixou de valer). Vou enviá-lo sozinho na próxima mensagem, para ser fácil de copiar 👇',
+    serialNovoIntro: 'Aqui está o seu novo número de série (o anterior deixou de valer). Chega na *última mensagem*, sozinho, para ser fácil de copiar 👇',
     serialNovoUso: (link) => `Ative em ${link}. Os dispositivos já ativados continuam a funcionar.`,
-    videoLegenda: (nome) => `${chamar(nome)}conheça o Leviã em 20 segundos 👇`,
+    prontoDados: (nome) => `Pronto, ${nome}! ✅ Guardei os seus dados apenas para libertar o seu acesso. 👇`,
+    videoLegenda: (nome, fotos) => `${nome}, este vídeo de apresentação tem 20 segundos: veja enquanto preparo o seu número de série de acesso por 7 dias grátis 🎬\n\nLembro que, nesses 7 dias, também pode analisar ${fotos} fotos de pratos gratuitamente 📸`,
     serialIndisponivel: 'O seu registo foi feito, mas não consegui gerar o número de série agora. Escreva *SERIAL* daqui a uns minutos para tentar de novo.',
     serialLimite: 'Já pediu número de série 3 vezes hoje. Tente novamente amanhã.',
     erro: 'Ups, ocorreu um erro. Tente de novo daqui a pouco ou escreva *MENU* para recomeçar.',
@@ -150,15 +150,15 @@ export const TEXTOS = {
     emailInvalido: "That email doesn't look valid 🤔 Check it and send it again, or type *2* to skip.",
     pedirObjetivo: (nome, opcoes) => `Almost there, ${nome}! What is your main goal?\n\n${lista(opcoes)}\n\nReply with the number only.`,
     serialIntro: (nome) =>
-      `Done, ${nome}! ✅ I saved your details only to set up your access.\n\n` +
-      `Now I'll send you your *serial code*: it's your personal key to Leviã. It makes sure only people who went through here use the app, and it protects your data. ` +
-      `It works on 2 devices and shouldn't be shared.\n\nI'll send the serial in the *next message*, on its own, so it's easy to copy 👇`,
+      `The serial is your personal key to Leviã: it makes sure only people who went through here use the app, and it protects your data. ` +
+      `It works on 2 devices and shouldn't be shared.\n\nIt arrives in the *last message*, on its own, so it's easy to copy 👇`,
     serialUso: (link) =>
-      `To use it: open ${link}, tap "Activate" and paste the serial above. The 7-day trial starts when you activate.\n\n` +
+      `To use it: open ${link}, tap "Activate" and paste the serial I'm about to send. The 7-day trial starts when you activate.\n\n` +
       `Lost the serial? Type *SERIAL*. To delete your data, type *DELETE*. Your health records stay only on your device.`,
-    serialNovoIntro: "Here is your new serial (the old one no longer works). I'll send it on its own in the next message, so it's easy to copy 👇",
+    serialNovoIntro: "Here is your new serial (the old one no longer works). It arrives in the *last message*, on its own, so it's easy to copy 👇",
     serialNovoUso: (link) => `Activate at ${link}. Devices you already activated keep working.`,
-    videoLegenda: (nome) => `${chamar(nome)}meet Leviã in 20 seconds 👇`,
+    prontoDados: (nome) => `Done, ${nome}! ✅ I saved your details only to set up your access. 👇`,
+    videoLegenda: (nome, fotos) => `${nome}, this intro video is 20 seconds long: watch it while I prepare your serial for 7 days free 🎬\n\nRemember: during these 7 days you can also analyze ${fotos} meal photos for free 📸`,
     serialIndisponivel: "Your sign-up is done, but I couldn't generate the serial right now. Type *SERIAL* in a few minutes to try again.",
     serialLimite: "You've already asked for a serial 3 times today. Please try again tomorrow.",
     erro: 'Oops, something went wrong. Try again in a moment or type *MENU* to start over.',
@@ -199,15 +199,15 @@ export const TEXTOS = {
     emailInvalido: 'Ese correo no parece válido 🤔 Revísalo y envíalo de nuevo, o escribe *2* para omitir.',
     pedirObjetivo: (nome, opcoes) => `¡Casi listo, ${nome}! ¿Cuál es tu objetivo principal?\n\n${lista(opcoes)}\n\nResponde solo con el número.`,
     serialIntro: (nome) =>
-      `¡Listo, ${nome}! ✅ Guardé tus datos solo para activar tu acceso.\n\n` +
-      `Ahora te voy a enviar tu *serial*: es tu llave personal de acceso a Leviã. Garantiza que solo quien pasó por aquí use la app y protege tus datos. ` +
-      `Vale para 2 dispositivos y no debe compartirse.\n\nTe envío el serial en el *próximo mensaje*, solo, para que sea fácil de copiar 👇`,
+      `El serial es tu llave personal de acceso a Leviã: garantiza que solo quien pasó por aquí use la app y protege tus datos. ` +
+      `Vale para 2 dispositivos y no debe compartirse.\n\nLlega en el *último mensaje*, solo, para que sea fácil de copiar 👇`,
     serialUso: (link) =>
-      `Para usarlo: abre ${link}, toca "Activar" y pega el serial de arriba. La prueba de 7 días empieza al activar.\n\n` +
+      `Para usarlo: abre ${link}, toca "Activar" y pega el serial que te enviaré a continuación. La prueba de 7 días empieza al activar.\n\n` +
       `¿Perdiste el serial? Escribe *SERIAL*. Para borrar tus datos, escribe *BORRAR*. Tus registros de salud se quedan solo en tu dispositivo.`,
-    serialNovoIntro: 'Aquí tienes tu nuevo serial (el anterior dejó de valer). Te lo envío solo en el próximo mensaje, para que sea fácil de copiar 👇',
+    serialNovoIntro: 'Aquí tienes tu nuevo serial (el anterior dejó de valer). Llega en el *último mensaje*, solo, para que sea fácil de copiar 👇',
     serialNovoUso: (link) => `Actívalo en ${link}. Los dispositivos que ya activaste siguen funcionando.`,
-    videoLegenda: (nome) => `${chamar(nome)}conoce Leviã en 20 segundos 👇`,
+    prontoDados: (nome) => `¡Listo, ${nome}! ✅ Guardé tus datos solo para activar tu acceso. 👇`,
+    videoLegenda: (nome, fotos) => `${nome}, este video de presentación dura 20 segundos: míralo mientras preparo tu serial de acceso por 7 días gratis 🎬\n\nRecuerda que, durante esos 7 días, también puedes analizar ${fotos} fotos de comidas gratis 📸`,
     serialIndisponivel: 'Tu registro está hecho, pero no pude generar el serial ahora. Escribe *SERIAL* en unos minutos para intentarlo de nuevo.',
     serialLimite: 'Ya pediste serial 3 veces hoy. Inténtalo de nuevo mañana.',
     erro: 'Ups, ocurrió un error. Inténtalo de nuevo en un momento o escribe *MENU* para empezar otra vez.',
@@ -248,15 +248,15 @@ export const TEXTOS = {
     emailInvalido: 'Questa e-mail non sembra valida 🤔 Controllala e reinviala, oppure scrivi *2* per saltare.',
     pedirObjetivo: (nome, opcoes) => `Quasi fatto, ${nome}! Qual è il tuo obiettivo principale?\n\n${lista(opcoes)}\n\nRispondi solo con il numero.`,
     serialIntro: (nome) =>
-      `Fatto, ${nome}! ✅ Ho salvato i tuoi dati solo per attivare il tuo accesso.\n\n` +
-      `Ora ti mando il tuo *seriale*: è la tua chiave personale di accesso a Leviã. Garantisce che solo chi è passato da qui usi l'app e protegge i tuoi dati. ` +
-      `Vale per 2 dispositivi e non va condiviso.\n\nTi mando il seriale nel *prossimo messaggio*, da solo, così è facile da copiare 👇`,
+      `Il seriale è la tua chiave personale di accesso a Leviã: garantisce che solo chi è passato da qui usi l'app e protegge i tuoi dati. ` +
+      `Vale per 2 dispositivi e non va condiviso.\n\nArriva nell'*ultimo messaggio*, da solo, così è facile da copiare 👇`,
     serialUso: (link) =>
-      `Per usarlo: apri ${link}, tocca "Attiva" e incolla il seriale qui sopra. La prova di 7 giorni inizia con l'attivazione.\n\n` +
+      `Per usarlo: apri ${link}, tocca "Attiva" e incolla il seriale che ti mando subito dopo. La prova di 7 giorni inizia con l'attivazione.\n\n` +
       `Hai perso il seriale? Scrivi *SERIAL*. Per cancellare i tuoi dati, scrivi *CANCELLA*. I tuoi dati sanitari restano solo sul tuo dispositivo.`,
-    serialNovoIntro: 'Ecco il tuo nuovo seriale (quello vecchio non vale più). Te lo mando da solo nel prossimo messaggio, così è facile da copiare 👇',
+    serialNovoIntro: "Ecco il tuo nuovo seriale (quello vecchio non vale più). Arriva nell'*ultimo messaggio*, da solo, così è facile da copiare 👇",
     serialNovoUso: (link) => `Attivalo su ${link}. I dispositivi già attivati continuano a funzionare.`,
-    videoLegenda: (nome) => `${chamar(nome)}scopri Leviã in 20 secondi 👇`,
+    prontoDados: (nome) => `Fatto, ${nome}! ✅ Ho salvato i tuoi dati solo per attivare il tuo accesso. 👇`,
+    videoLegenda: (nome, fotos) => `${nome}, questo video di presentazione dura 20 secondi: guardalo mentre preparo il tuo seriale di accesso per 7 giorni gratis 🎬\n\nRicorda che, in questi 7 giorni, puoi anche analizzare ${fotos} foto di pasti gratis 📸`,
     serialIndisponivel: 'La tua registrazione è completa, ma ora non riesco a generare il seriale. Scrivi *SERIAL* tra qualche minuto per riprovare.',
     serialLimite: 'Hai già richiesto il seriale 3 volte oggi. Riprova domani.',
     erro: 'Ops, si è verificato un errore. Riprova tra poco o scrivi *MENU* per ricominciare.',

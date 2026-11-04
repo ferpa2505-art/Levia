@@ -666,26 +666,66 @@ describe('LEVI: idioma, conversa, consentimento e lembretes', () => {
     expect(db.sql("SELECT email FROM leads WHERE name = 'Beto'")[0]).toEqual({ email: null });
   });
 
-  teste('o serial vai em mensagens separadas: explicação, serial sozinho, como usar e vídeo', async () => {
+  teste('o fim da conversa: guardei seus dados, vídeo, o que é o serial, como usar e, por último, o serial sozinho', async () => {
     const { env } = ambiente();
     await ate_o_nome(env);
     await falar(env, 'Maria Silva');
     await falar(env, '2');
     const r = await falar(env, '3');
     expect(r.tipo).toBe('finalizado');
-    expect(r.respostas).toHaveLength(4);
-    expect(r.respostas[0]).toContain('Maria Silva');
-    expect(r.respostas[0]).toContain('próxima mensagem');
-    expect(r.respostas[0]).not.toMatch(/[A-HJ-NP-Z2-9]{4}-[A-HJ-NP-Z2-9]{4}/); // o serial NÃO vem junto
-    expect(r.respostas[1]).toMatch(/^[A-HJ-NP-Z2-9]{4}(-[A-HJ-NP-Z2-9]{4}){3}$/); // sozinho, sem formatação
-    expect(r.respostas[2]).toContain('/ativar');
-    expect(r.respostas[3]).toMatchObject({ midia: 'video' });
-    expect(r.respostas[3].texto).toContain('Maria Silva');
-    expect((await ativar(env, r.respostas[1], A)).status).toBe(200);
+    expect(r.respostas).toHaveLength(5);
 
+    expect(r.respostas[0]).toContain('Pronto, Maria Silva!');
+    expect(r.respostas[0]).toContain('Guardei seus dados');
+
+    expect(r.respostas[1]).toMatchObject({ midia: 'video' });
+    expect(r.respostas[1].texto).toContain('Maria Silva, este vídeo de apresentação tem 20 segundos');
+    expect(r.respostas[1].texto).toContain('enquanto eu preparo o seu serial de acesso por 7 dias grátis');
+    expect(r.respostas[1].texto).toContain('2 fotos'); // o mesmo FOTOS_GRATIS_7D que vale na análise
+
+    expect(r.respostas[2]).toContain('chave pessoal');
+    expect(r.respostas[2]).toContain('última mensagem');
+    expect(r.respostas[3]).toContain('/ativar');
+    expect(r.respostas[3]).toContain('serial que vou te mandar a seguir');
+    expect(r.respostas[3]).toContain('https://www.leviapp.org');
+
+    // o serial é a ÚLTIMA mensagem e só ele: nenhuma das anteriores o contém
+    for (const antes of [r.respostas[0], r.respostas[1].texto, r.respostas[2], r.respostas[3]]) {
+      expect(antes).not.toMatch(/[A-HJ-NP-Z2-9]{4}-[A-HJ-NP-Z2-9]{4}/);
+    }
+    expect(r.respostas[4]).toMatch(/^[A-HJ-NP-Z2-9]{4}(-[A-HJ-NP-Z2-9]{4}){3}$/);
+    expect((await ativar(env, r.respostas[4], A)).status).toBe(200);
+
+    // reemissão (SERIAL): explicação, como ativar e o serial por último
     const novo = await falar(env, 'SERIAL');
     expect(novo.respostas).toHaveLength(3);
-    expect(novo.respostas[1]).toMatch(/^[A-HJ-NP-Z2-9]{4}(-[A-HJ-NP-Z2-9]{4}){3}$/);
+    expect(novo.respostas[0]).not.toMatch(/[A-HJ-NP-Z2-9]{4}-[A-HJ-NP-Z2-9]{4}/);
+    expect(novo.respostas[1]).not.toMatch(/[A-HJ-NP-Z2-9]{4}-[A-HJ-NP-Z2-9]{4}/);
+    expect(novo.respostas[2]).toMatch(/^[A-HJ-NP-Z2-9]{4}(-[A-HJ-NP-Z2-9]{4}){3}$/);
+  });
+
+  teste('o número de fotos grátis do vídeo acompanha a configuração (FOTOS_GRATIS_7D)', async () => {
+    const { env } = ambiente({ FOTOS_GRATIS_7D: '5' });
+    await ate_o_nome(env);
+    await falar(env, 'Ana');
+    await falar(env, '2');
+    const r = await falar(env, '3');
+    expect(r.respostas[1].texto).toContain('5 fotos');
+  });
+
+  teste('a nova ordem existe nos cinco idiomas: nome no vídeo, 20 segundos, fotos grátis e serial anunciado para o fim', () => {
+    for (const idioma of ['pt-BR', 'pt-PT', 'en', 'es', 'it']) {
+      const T = (TEXTOS as any)[idioma];
+      expect(T.prontoDados('Maria')).toContain('Maria');
+      const video = T.videoLegenda('Maria', 3);
+      expect(video).toContain('Maria');
+      expect(video).toContain('20');
+      expect(video).toContain('3');
+      expect(video).toContain('7');
+      expect(T.serialIntro('Maria')).toMatch(/\*(última mensagem|last message|último mensaje|ultimo messaggio|ultimo mensaje)\*|\*[^*]+\*/);
+      expect(T.serialUso('https://leviapp.org/ativar')).toContain('https://leviapp.org/ativar');
+      expect(typeof T.serialNovoIntro).toBe('string');
+    }
   });
 
   teste('os lembretes chamam a pessoa pelo nome e o do dia seguinte leva o vídeo, mas só depois do consentimento', async () => {
@@ -784,8 +824,8 @@ describe('LEVI: idioma, conversa, consentimento e lembretes', () => {
     await falar(env, 'Fernando');
     await falar(env, '2');
     const fim = await falar(env, '3');
-    expect(fim.respostas[2]).toContain('/ativar');
-    expect(fim.respostas[2]).toContain('https://www.leviapp.org');
+    expect(fim.respostas[3]).toContain('/ativar');
+    expect(fim.respostas[3]).toContain('https://www.leviapp.org');
   });
 
   teste('o handoff e o fechamento existem nos cinco idiomas', () => {
