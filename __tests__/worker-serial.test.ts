@@ -1,7 +1,7 @@
 import { createHmac } from 'node:crypto';
 import worker from '../worker/src/index';
 import { acessoDaConta, emitirSerial, normalizarCodigo } from '../worker/src/serial';
-import { processarMensagemWhatsApp } from '../worker/src/fluxo';
+import { criativoDoTelefone, processarMensagemWhatsApp } from '../worker/src/fluxo';
 import { FAQ } from '../worker/src/faq';
 import { TEXTOS } from '../worker/src/textos';
 import { diaSeguinteAs19, fusoDoTelefone, puxarVencidos } from '../worker/src/lembretes';
@@ -742,7 +742,9 @@ describe('LEVI: idioma, conversa, consentimento e lembretes', () => {
     await falar(env, 'Renata', agora + 3000); // agora a pergunta aberta é o e-mail
     const depois = pendentes(db);
     expect(depois[0].texto).toContain('Renata, ainda por aí');
-    expect(depois[1].texto).toContain('Renata, falta pouquinho');
+    const segundo = JSON.parse(depois[1].texto);
+    expect(segundo.texto).toContain('Renata, falta pouquinho');
+    expect(segundo.midia).toMatch(/^criativo-[1-4]$/); // pt-BR + consentimento: leva um criativo
     const diaSeguinte = JSON.parse(depois[2].texto);
     expect(diaSeguinte.midia).toBe('video');
     expect(diaSeguinte.texto).toContain('Oi, Renata!');
@@ -762,7 +764,39 @@ describe('LEVI: idioma, conversa, consentimento e lembretes', () => {
     expect(comVideo).toBeTruthy();
     expect(comVideo.texto).toContain('Renata');
     expect(comVideo.texto.startsWith('{')).toBe(false);
-    expect(entregues.filter((m: any) => !m.midia)).toHaveLength(2);
+    expect(entregues.filter((m: any) => !m.midia)).toHaveLength(1); // só o 1º toque é texto puro
+    expect(entregues.filter((m: any) => /^criativo-[1-4]$/.test(m.midia ?? ''))).toHaveLength(1);
+  });
+
+  teste('o criativo é escolhido pelo último dígito do telefone, sempre o mesmo para a mesma pessoa, e cobre os 4', () => {
+    const vistos = new Set<string>();
+    for (let d = 0; d <= 9; d++) vistos.add(criativoDoTelefone(`+55119999999${d}`));
+    expect([...vistos].sort()).toEqual(['criativo-1', 'criativo-2', 'criativo-3', 'criativo-4']);
+    expect(criativoDoTelefone('+5511987654321')).toBe(criativoDoTelefone('5511987654321'));
+    expect(criativoDoTelefone('')).toBe('criativo-1');
+    expect(criativoDoTelefone(undefined)).toBe('criativo-1');
+  });
+
+  teste('criativos só para quem consentiu e fala português do Brasil: antes do consentimento e em outros idiomas o 2º toque é texto', async () => {
+    const { db, env } = ambiente();
+    const agora = Date.UTC(2026, 9, 29, 20, 0, 0);
+    await falar(env, 'oi', agora);
+    await falar(env, '1', agora + 1000); // idioma escolhido, consentimento ainda não dado
+    expect(pendentes(db)[1].texto.startsWith('{')).toBe(false);
+
+    const ingles = ambiente();
+    await falar(ingles.env, 'oi', agora, '5511900000001');
+    await falar(ingles.env, '3', agora, '5511900000001'); // inglês
+    await falar(ingles.env, '1', agora, '5511900000001'); // consentiu
+    await falar(ingles.env, 'Mary', agora, '5511900000001');
+    const textos = pendentes(ingles.db, '+5511900000001').map((p: any) => p.texto);
+    expect(textos.some((t: string) => t.includes('criativo-'))).toBe(false);
+  });
+
+  teste('os textos do bot não citam medicamento de marca (usamos GLP-1)', () => {
+    const fs = require('fs');
+    const fonte = fs.readFileSync('worker/src/fluxo.js', 'utf8') + fs.readFileSync('worker/src/textos.js', 'utf8');
+    expect(fonte).not.toMatch(/ozempic|wegovy|mounjaro/i);
   });
 
   teste('uma resposta certa nunca dispara a transferência, mesmo sendo a 3ª mensagem da etapa', async () => {
