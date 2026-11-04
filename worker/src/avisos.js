@@ -1,6 +1,7 @@
 /**
  * Avisos para a equipe: quando o LEVI passa uma conversa para uma pessoa (3 respostas inválidas seguidas
- * ou pedido de atendente), o dono é avisado por WhatsApp (pela fila do gateway) e por e-mail (Resend).
+ * ou pedido de atendente), o dono é avisado por WhatsApp (pela fila do gateway). E-mail (Resend) é opcional e
+ * fica DESLIGADO por padrão: só envia se ALERTA_EMAILS estiver definido.
  *
  * O aviso leva só o necessário para agir (telefone, nome se já informado, etapa, idioma e o motivo):
  * nunca o texto das mensagens do cliente, que pode ter dado de saúde. Nada aqui pode derrubar a
@@ -8,11 +9,10 @@
  *
  * Configuração (wrangler.toml [vars]):
  *   ALERTA_WHATSAPP  número que recebe o aviso (ex.: "+35699506350")
- *   ALERTA_EMAILS    e-mails separados por vírgula (padrão: contatoapplevia@gmail.com)
+ *   ALERTA_EMAILS    (opcional) e-mails separados por vírgula; sem isso, nenhum e-mail é enviado
  * E-mail: usa RESEND_API_KEY e EMAIL_FROM (um remetente de domínio verificado no Resend).
  */
 const SEIS_HORAS_MS = 6 * 3600 * 1000;
-const EMAIL_PADRAO = 'contatoapplevia@gmail.com';
 // sem remetente próprio o Resend só entrega para o e-mail dono da conta Resend (serve para teste)
 const REMETENTE_PADRAO = 'LEVI <onboarding@resend.dev>';
 const EMAIL_VALIDO = /^[^\s@]{1,64}@[^\s@]{1,190}\.[^\s@]{2,}$/;
@@ -55,7 +55,7 @@ async function avisarPorWhatsapp(env, digitos, texto, agora) {
 
 async function avisarPorEmail(env, digitos, texto) {
   if (!env.RESEND_API_KEY) return false;
-  const para = String(env.ALERTA_EMAILS || EMAIL_PADRAO).split(',').map((e) => e.trim()).filter((e) => EMAIL_VALIDO.test(e));
+  const para = String(env.ALERTA_EMAILS ?? '').split(',').map((e) => e.trim()).filter((e) => EMAIL_VALIDO.test(e));
   if (para.length === 0) return false;
   const r = await tentar(() => fetch('https://api.resend.com/emails', {
     method: 'POST',

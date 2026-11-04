@@ -1036,4 +1036,11 @@ describe('LEVI: aviso à equipe quando a conversa passa para uma pessoa', () => 
     expect(corpo.from).toBe('LEVI <onboarding@resend.dev>');
     expect(corpo.to).toEqual(['contatoapplevia@gmail.com']);
   });
+
+  teste('e-mail é opcional: sem ALERTA_EMAILS nada é enviado por e-mail, mesmo com a chave do Resend', async () => {
+    const { db, env } = ambiente({ ALERTA_WHATSAPP: ADMIN, RESEND_API_KEY: 'k' });
+    await ateOHandoff(env);
+    expect(fetchSpy.mock.calls.filter((c) => String(c[0]).includes('resend'))).toHaveLength(0);
+    expect(avisos(db)).toHaveLength(1); // o WhatsApp continua avisando
+  });
 });
