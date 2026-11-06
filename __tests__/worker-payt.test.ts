@@ -48,6 +48,26 @@ describe('webhook PAYT', () => {
     expect(n.n).toBe(1);
   });
 
+  teste('falha antes de liberar não trava o reenvio: o segundo aviso libera o acesso', async () => {
+    const env = ambiente();
+    const original = env.LEVIA_DB.batch.bind(env.LEVIA_DB);
+    let falhar = true;
+    env.LEVIA_DB.batch = async (stmts: any) => {
+      if (falhar) { falhar = false; throw new Error('D1 indisponível'); }
+      return original(stmts);
+    };
+    const r1 = await payt(env, compra());
+    expect(r1.status).toBeGreaterThanOrEqual(500);
+    const r2 = await payt(env, compra());
+    const corpo = await r2.json();
+    expect(corpo.duplicado).toBeUndefined();
+    expect(corpo.plano).toBe('annual');
+    const n = await env.LEVIA_DB.prepare('SELECT COUNT(*) AS n FROM entitlements').first();
+    expect(n.n).toBe(1);
+    const r3 = await payt(env, compra());
+    expect((await r3.json()).duplicado).toBe(true);
+  });
+
   teste('plano mensal por valor pago, e estorno revoga', async () => {
     const env = ambiente();
     const r = await payt(env, compra({ product: {}, transaction: { total_price: '19,97' } }));

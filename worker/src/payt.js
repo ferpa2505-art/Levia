@@ -148,6 +148,27 @@ export async function processarPagamento(env, provedor, tipo, dados, corpo, agor
   // o provedor reenvia o mesmo aviso: só o primeiro de cada compra e tipo é processado
   if (!(await registrarEvento(db, provedor, dados.idEvento, tipo, hash, iso))) return resposta({ ok: true, duplicado: true });
 
+  // Se algo falhar ANTES de o acesso mudar, o registro do evento é desfeito: assim o reenvio
+  // do provedor (que vem depois do 500) processa de novo em vez de cair em "duplicado" e deixar
+  // uma compra paga sem acesso. Depois que o acesso mudou, o registro fica, para não liberar duas vezes.
+  const estado = { acessoAlterado: false };
+  try {
+    return await processarEventoRegistrado(env, db, provedor, tipo, dados, iso, agora, estado);
+  } catch (e) {
+    if (!estado.acessoAlterado) {
+      try {
+        await db.prepare('DELETE FROM payment_events WHERE provider = ? AND event_id = ? || \':\' || ?')
+          .bind(provedor, dados.idEvento, tipo).run();
+      } catch (e2) {
+        console.error(`${provedor}: não consegui desfazer o registro do evento`, dados.idEvento, e2?.message);
+      }
+    }
+    console.error(`${provedor}: falha ao processar`, dados.idEvento, e?.message);
+    throw e;
+  }
+}
+
+async function processarEventoRegistrado(env, db, provedor, tipo, dados, iso, agora, estado) {
   const telefone = telefoneDoComprador(dados.telefone);
   if (!telefone) {
     await concluir(db, provedor, dados.idEvento, tipo, 'sem_telefone', iso);
@@ -170,6 +191,7 @@ export async function processarPagamento(env, provedor, tipo, dados, corpo, agor
          AND entitlement_id IN (SELECT id FROM entitlements WHERE account_id = ?2 AND last_payment_id = ?3)`,
       ).bind(iso, conta.id, dados.idEvento),
     ]);
+    estado.acessoAlterado = true;
     await concluir(db, provedor, dados.idEvento, tipo, 'revogado', iso);
     return resposta({ ok: true, revogado: true });
   }
@@ -182,6 +204,7 @@ export async function processarPagamento(env, provedor, tipo, dados, corpo, agor
   }
 
   const liberado = await liberarAcesso(env, conta, plano, dados.idEvento, agora);
+  estado.acessoAlterado = true;
   const link = `${env.APP_BASE_URL || 'https://leviapp.org'}/ativar`;
   try {
     await avisarNoWhatsApp(env, telefone, [mensagemDeLiberacao(liberado, link), liberado.serial], agora);

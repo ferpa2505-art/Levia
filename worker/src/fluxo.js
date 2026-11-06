@@ -267,8 +267,9 @@ async function criarLeadCompleto(env, { phone, name, email, dor, consent_at }) {
     }
   }
   try {
+    // reserva quando o D1 falha: a chave é o telefone para que "apagar" consiga achar e remover
     await env.LEVIA_COTAS.put(
-      `lead:${leadId}`,
+      chaveLeadKV(phone),
       JSON.stringify({ id: leadId, name, phone, email, pain_point: dor, source: 'whatsapp', consent_at, channel: 'whatsapp', created_at: agora, updated_at: agora }),
       { expirationTtl: 30 * 24 * 3600 },
     );
@@ -279,7 +280,10 @@ async function criarLeadCompleto(env, { phone, name, email, dor, consent_at }) {
   }
 }
 
+const chaveLeadKV = (phone) => `lead:tel:${phone}`;
+
 async function apagarTudoDe(env, phone) {
+  try { await env.LEVIA_COTAS?.delete(chaveLeadKV(phone)); } catch (e) { console.error('apagar KV:', e?.message); }
   if (env.LEVIA_DB) {
     for (const sql of [
       'DELETE FROM leads WHERE phone = ?',

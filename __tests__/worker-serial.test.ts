@@ -620,6 +620,31 @@ describe('LEVI: idioma, conversa, consentimento e lembretes', () => {
     expect((await ativar(env, serial, A)).status).toBe(403); // o serial deixou de valer
   });
 
+  teste('APAGAR também remove o cadastro guardado no KV quando o D1 falhou', async () => {
+    const kv = new Map<string, string>();
+    const LEVIA_COTAS = {
+      put: async (k: string, v: string) => { kv.set(k, v); },
+      get: async (k: string) => kv.get(k) ?? null,
+      delete: async (k: string) => { kv.delete(k); },
+    };
+    const { db, env } = ambiente({ LEVIA_COTAS });
+    const prepare = db.prepare.bind(db);
+    db.prepare = (sql: string) => {
+      if (/INSERT INTO leads/.test(sql)) throw new Error('D1 indisponível');
+      return prepare(sql);
+    };
+    await ate_o_nome(env);
+    await falar(env, 'Maria Silva');
+    await falar(env, '2');
+    await falar(env, '3');
+    expect(contar(db, 'leads')).toBe(0);
+    expect([...kv.keys()].filter((k) => k.startsWith('lead:'))).toHaveLength(1);
+
+    await falar(env, 'APAGAR');
+    expect((await falar(env, '1')).tipo).toBe('apagado');
+    expect([...kv.keys()].filter((k) => k.startsWith('lead:'))).toHaveLength(0);
+  });
+
   teste('quem já se cadastrou é atendido no idioma do país do número (Itália → italiano)', async () => {
     const { env } = ambiente();
     const tel = '393331234567';
