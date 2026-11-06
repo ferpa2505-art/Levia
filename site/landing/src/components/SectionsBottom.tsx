@@ -311,8 +311,8 @@ export function Faq() {
 export function Privacidade() {
   const flow = [
     ["Você no Leviã", "No controle da sua jornada."],
-    ["Coleta mínima", "Quiz, refeições, doses, fotos e glicemia, só no app."],
-    ["Processamento seguro", "Criptografia e isolamento por usuário."],
+    ["Coleta mínima", "Refeições, doses e glicemia ficam no seu aparelho; o servidor guarda só o necessário para o acesso."],
+    ["Sem surpresas", "Sem anúncios e sem venda de dados. A foto só vai para a IA quando você pede."],
     ["Devolutiva", "Relatórios e evolução."],
   ];
   return (
