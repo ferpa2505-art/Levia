@@ -96,9 +96,9 @@ FOTOS_ASSINANTE_30D = "100"
 ALERTA_WHATSAPP = "+35699506350"
 
 [[env.test.kv_namespaces]]
-# KV separado é recomendado; até lá, o de produção (só contadores e reservas com validade curta)
+# KV próprio do teste (levia-cotas-test) — não toca no de produção
 binding = "LEVIA_COTAS"
-id = "7cb6991665974b96b3d7ce447f067a9a"
+id = "1fdff4f56aa94132adaab206206f9166"
 
 [[env.test.d1_databases]]
 binding = "LEVIA_DB"
