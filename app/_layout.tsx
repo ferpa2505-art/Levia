@@ -13,6 +13,7 @@ import { DiabetesProvider } from '@context/DiabetesContext';
 import { MedicacoesProvider } from '@context/MedicacoesContext';
 import { SegurancaProvider, useSeguranca } from '@context/SegurancaContext';
 import { PortaoSeguranca } from '@components/seguranca/PortaoSeguranca';
+import { AvisoNovaVersao } from '@components/AvisoNovaVersao';
 import { useVerificarAtualizacao } from '@hooks/useVerificarAtualizacao';
 import { PreferencesProvider, usePreferences } from '@context/PreferencesContext';
 import { aoMudarLicenca, lerLicenca } from '@utils/licenca';
@@ -77,6 +78,7 @@ function RootNavigation() {
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
       <Stack.Screen name="onboarding" options={{ headerShown: false }} />
       <Stack.Screen name="ativar" options={{ headerShown: true, title: t('ativar.titulo') }} />
+      <Stack.Screen name="planos" options={{ headerShown: true, title: t('planos.titulo') }} />
       <Stack.Screen name="recipe-builder" options={{ headerShown: true, title: t('titulos.receitas') }} />
       <Stack.Screen name="glp1" options={{ headerShown: true, title: t('titulos.glp1') }} />
       <Stack.Screen name="diabetes" options={{ headerShown: true, title: t('titulos.diabetes') }} />
@@ -85,6 +87,7 @@ function RootNavigation() {
       <Stack.Screen name="refeicao" options={{ headerShown: true, title: t('ref.titulo') }} />
       <Stack.Screen name="apetite" options={{ headerShown: true, title: t('titulos.apetite') }} />
     </Stack>
+    <AvisoNovaVersao ativo={!loading} />
     <PortaoSeguranca />
     </>
   );

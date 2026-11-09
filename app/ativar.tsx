@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-import { Linking } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { TelaRolavel } from '@components/TelaRolavel';
 import { ThemedView } from '@components/ThemedView';
@@ -8,7 +7,6 @@ import { Button } from '@components/Button';
 import { Input } from '@components/Input';
 import { usePreferences } from '@context/PreferencesContext';
 import { ativarSerial, lerLicenca, Licenca } from '@utils/licenca';
-import { URL_PLANOS } from '@utils/teste';
 import { spacing } from '@constants/colors';
 import { estilosTema } from '@theme/estilos';
 
@@ -90,7 +88,7 @@ export default function Ativar() {
               <Button
                 label={t('teste.verPlanos')}
                 variant="outline"
-                onPress={() => { Linking.openURL(URL_PLANOS).catch(() => {}); }}
+                onPress={() => router.push('/planos')}
                 style={{ marginTop: spacing.md }}
               />
             )}

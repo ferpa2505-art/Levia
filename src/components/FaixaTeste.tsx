@@ -1,12 +1,13 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Linking, Pressable, View } from 'react-native';
+import { Pressable, View } from 'react-native';
+import { useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ThemedText } from '@components/ThemedText';
 import { Button } from '@components/Button';
 import { useT } from '@context/PreferencesContext';
 import { colors, radius, spacing } from '@constants/colors';
 import { aoMudarLicenca, lerLicenca, Licenca } from '@utils/licenca';
-import { conviteDispensadoHoje, estadoDoTeste, URL_PLANOS } from '@utils/teste';
+import { conviteDispensadoHoje, estadoDoTeste } from '@utils/teste';
 import { dataDeHoje } from '@utils/recordsStorage';
 import { estilosTema } from '@theme/estilos';
 
@@ -20,6 +21,7 @@ const CHAVE_DISPENSA = 'levia:conviteTesteDispensadoEm';
  */
 export function FaixaTeste() {
   const t = useT();
+  const router = useRouter();
   const [licenca, setLicenca] = useState<Licenca | null>(null);
   const [dispensadoEm, setDispensadoEm] = useState<string | null>(null);
 
@@ -36,7 +38,7 @@ export function FaixaTeste() {
   const { estado, dias } = estadoDoTeste(licenca);
   if (estado === 'nenhum') return null;
 
-  const abrirPlanos = () => { Linking.openURL(URL_PLANOS).catch(() => {}); };
+  const abrirPlanos = () => { router.push('/planos'); };
   const dispensar = () => {
     const hoje = dataDeHoje();
     setDispensadoEm(hoje);

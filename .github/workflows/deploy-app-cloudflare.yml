@@ -50,6 +50,9 @@ jobs:
           for f in index.html manifest.webmanifest sw.js _headers icons/icon-192.png icons/icon-512.png; do
             test -f "dist/$f" || { echo "Faltando dist/$f"; exit 1; }
           done
+          # carimba o cache do service worker com o commit: sw.js muda a cada publicação e os aparelhos com o app instalado atualizam
+          sed -i "s/const CACHE = 'levia-v2';/const CACHE = 'levia-v2-${GITHUB_SHA::7}';/" dist/sw.js
+          grep -q "levia-v2-${GITHUB_SHA::7}" dist/sw.js || { echo "cache do sw.js não foi carimbado"; exit 1; }
           node --check dist/sw.js
           # a regra "/* /index.html 200" é do Netlify; na Cloudflare quem faz isso é o not_found_handling do wrangler.app.jsonc
           rm -f dist/_redirects
