@@ -10,9 +10,9 @@
  *  Hoje usa o número que já estava no site antigo — CONFIRMAR se é o número do bot. */
 export const LINK_WHATSAPP_DO_BOT = "https://wa.me/5516996034777";
 
-/** Checkouts Hotmart (aguardando aprovação dos produtos 8875689 e 8876081). */
-export const LINK_CHECKOUT_MENSAL = "[LINK_CHECKOUT_MENSAL]";
-export const LINK_CHECKOUT_ANUAL = "[LINK_CHECKOUT_ANUAL]";
+/** Checkouts Hotmart (produtos aprovados: 8875689 Mensal e 8876081 Anual). Links simples; o modo popup (?checkoutMode=2) exige o widget da Hotmart. */
+export const LINK_CHECKOUT_MENSAL = "https://pay.hotmart.com/M108322229J";
+export const LINK_CHECKOUT_ANUAL = "https://pay.hotmart.com/T108322944O";
 
 /** Endereço de ativação do serial (ajustar se o app for para app.leviapp.org). */
 export const LINK_ATIVAR = "https://leviapp.org/ativar";
