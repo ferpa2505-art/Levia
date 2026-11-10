@@ -93,7 +93,8 @@ function RootNavigation() {
       <Stack.Screen name="apetite" options={{ headerShown: true, title: t('titulos.apetite') }} />
     </Stack>
     <AvisoNovaVersao ativo={!loading} />
-    <PortaoSeguranca />
+    {/* Termos de Serviço é página pública: o portão de senha não deve cobrir o documento */}
+    {segments[0] !== 'termos' ? <PortaoSeguranca /> : null}
     </>
   );
 }
