@@ -25,6 +25,16 @@ function extrair(corpo) {
     produtos: [d.product?.id, d.product?.ucode, compra.offer?.code, d.product?.name]
       .map((v) => texto(v).toLowerCase()).filter(Boolean),
     valorCentavos: Math.round(valor * 100) || 0,
+    // resumo sem dados pessoais, guardado em payment_events para diagnosticar plano não reconhecido
+    resumo: {
+      evento: texto(corpo.event).toUpperCase(),
+      produto: { id: d.product?.id ?? null, ucode: d.product?.ucode ?? null, nome: d.product?.name ?? null },
+      oferta: compra.offer?.code ?? null,
+      preco: compra.price?.value ?? null,
+      moeda: compra.price?.currency?.code ?? compra.price?.currency ?? null,
+      status: compra.status ?? null,
+      tipoPagamento: compra.payment?.type ?? null,
+    },
   };
 }
 

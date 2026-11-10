@@ -6,7 +6,7 @@ import path from 'node:path';
  * Devolve null quando o Node não tem node:sqlite (os testes que dependem dele são pulados).
  * 0003_add_lead_columns fica de fora de propósito: as colunas já nascem na 0002.
  */
-const MIGRATIONS = ['0001_initial', '0002_leads', '0004_whatsapp_tables', '0005_cotas_uso', '0006_wa_outbox'];
+const MIGRATIONS = ['0001_initial', '0002_leads', '0004_whatsapp_tables', '0005_cotas_uso', '0006_wa_outbox', '0007_payment_payload'];
 
 type Argumentos = unknown[];
 

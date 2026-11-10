@@ -25,6 +25,17 @@ export function resposta(corpo, status = 200) {
 const texto = (v) => (typeof v === 'string' || typeof v === 'number' ? String(v).trim() : '');
 const normalizar = (v) => texto(v).toLowerCase().replace(/[\s-]+/g, '_');
 const lista = (v) => texto(v).split(',').map((s) => s.trim().toLowerCase()).filter(Boolean);
+const semAcento = (v) => texto(v).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+const chave = (v) => semAcento(v).replace(/[^a-z0-9]/g, '');
+const palavras = (v) => semAcento(v).split(/[^a-z0-9]+/).filter(Boolean);
+
+/** O nome do produto/oferta pode dizer o plano mesmo quando o código é novo (ex.: "Leviã Anual"). */
+function planoPorTexto(produtos) {
+  const termos = produtos.flatMap(palavras);
+  if (termos.some((p) => ['anual', 'annual', 'yearly'].includes(p))) return 'annual';
+  if (termos.some((p) => ['mensal', 'monthly'].includes(p))) return 'monthly';
+  return null;
+}
 
 /** Lê o corpo como JSON ou formulário (a[b]=1 vira { a: { b: 1 } }). */
 export async function lerCorpo(request) {
@@ -71,25 +82,43 @@ function extrair(corpo) {
   };
 }
 
-/** Mensal ou anual: pelo código do produto configurado, ou pelo valor pago como último recurso. */
+/**
+ * Mensal ou anual, na ordem: código do produto/oferta configurado (ignorando espaços e pontuação),
+ * nome do produto/oferta, plano declarado e, por último, o valor pago com tolerância para promoções.
+ * Fora dessas faixas a compra fica registrada para conferência, em vez de liberar o plano errado.
+ */
 function planoDaCompra(env, dados) {
-  const mensais = lista(env.PAYT_PRODUTOS_MENSAL);
-  const anuais = lista(env.PAYT_PRODUTOS_ANUAL);
-  if (dados.produtos.some((p) => anuais.includes(p))) return 'annual';
-  if (dados.produtos.some((p) => mensais.includes(p))) return 'monthly';
+  const mensais = lista(env.PAYT_PRODUTOS_MENSAL).map(chave);
+  const anuais = lista(env.PAYT_PRODUTOS_ANUAL).map(chave);
+  const codigos = (dados.produtos ?? []).map(chave).filter(Boolean);
+  if (codigos.some((p) => anuais.includes(p))) return 'annual';
+  if (codigos.some((p) => mensais.includes(p))) return 'monthly';
+
+  const porNome = planoPorTexto(dados.produtos ?? []);
+  if (porNome) return porNome;
+
+  const declarado = normalizar(dados.plano);
+  if (['annual', 'anual', 'yearly'].includes(declarado)) return 'annual';
+  if (['monthly', 'mensal'].includes(declarado)) return 'monthly';
+
   const mensal = Number(env.PAYT_VALOR_MENSAL_CENTAVOS || 1997);
   const anual = Number(env.PAYT_VALOR_ANUAL_CENTAVOS || 19171);
-  if (dados.valorCentavos === anual) return 'annual';
-  if (dados.valorCentavos === mensal) return 'monthly';
+  const valor = Number(dados.valorCentavos) || 0;
+  if (valor > 0) {
+    const distMensal = mensal > 0 ? Math.abs(valor - mensal) / mensal : Infinity;
+    const distAnual = anual > 0 ? Math.abs(valor - anual) / anual : Infinity;
+    // aceita cupom/desconto de até ~55%; abaixo disso o preço não decide, para não liberar por engano
+    if (Math.min(distMensal, distAnual) <= 0.55) return distAnual <= distMensal ? 'annual' : 'monthly';
+  }
   return null;
 }
 
 // a chave do evento é compra + tipo: o pagamento e o estorno da mesma compra são avisos diferentes
-async function registrarEvento(db, provedor, idEvento, tipo, hash, iso) {
+async function registrarEvento(db, provedor, idEvento, tipo, hash, resumo, iso) {
   const r = await db.prepare(
-    `INSERT OR IGNORE INTO payment_events (provider, event_id, event_type, payload_hash, signature_valid, created_at)
-     VALUES (?5, ?1 || ':' || ?2, ?2, ?3, 1, ?4)`,
-  ).bind(idEvento, tipo, hash, iso, provedor).run();
+    `INSERT OR IGNORE INTO payment_events (provider, event_id, event_type, payload_hash, signature_valid, payload, created_at)
+     VALUES (?6, ?1 || ':' || ?2, ?2, ?3, 1, ?4, ?5)`,
+  ).bind(idEvento, tipo, hash, resumo, iso, provedor).run();
   return r?.meta?.changes === 1;
 }
 
@@ -147,8 +176,14 @@ export async function processarPagamento(env, provedor, tipo, dados, corpo, agor
   const db = env.LEVIA_DB;
   const iso = new Date(agora).toISOString();
   const hash = await sha256(JSON.stringify(corpo));
+  // resumo sem telefone, nome ou e-mail: só o suficiente para entender por que um plano não foi reconhecido
+  const resumo = JSON.stringify({
+    produtos: dados.produtos ?? [],
+    valorCentavos: dados.valorCentavos ?? 0,
+    ...(dados.resumo && typeof dados.resumo === 'object' ? dados.resumo : {}),
+  }).slice(0, 4000);
   // o provedor reenvia o mesmo aviso: só o primeiro de cada compra e tipo é processado
-  if (!(await registrarEvento(db, provedor, dados.idEvento, tipo, hash, iso))) return resposta({ ok: true, duplicado: true });
+  if (!(await registrarEvento(db, provedor, dados.idEvento, tipo, hash, resumo, iso))) return resposta({ ok: true, duplicado: true });
 
   // Se algo falhar ANTES de o acesso mudar, o registro do evento é desfeito: assim o reenvio
   // do provedor (que vem depois do 500) processa de novo em vez de cair em "duplicado" e deixar
@@ -177,6 +212,18 @@ async function processarEventoRegistrado(env, db, provedor, tipo, dados, iso, ag
     console.error(`${provedor}: compra sem telefone válido`, dados.idEvento);
     return resposta({ ok: true, pendente: 'sem_telefone' });
   }
+  // o plano é resolvido antes de criar a conta: aviso de produto desconhecido não gera cadastro
+  const plano = tipo === 'paid' ? planoDaCompra(env, dados) : null;
+  if (tipo === 'paid' && !plano) {
+    await concluir(db, provedor, dados.idEvento, tipo, 'plano_desconhecido', iso);
+    console.error(
+      `${provedor}: plano não identificado`,
+      dados.idEvento,
+      JSON.stringify({ produtos: dados.produtos, valorCentavos: dados.valorCentavos }),
+    );
+    return resposta({ ok: true, pendente: 'plano_desconhecido' });
+  }
+
   const conta = await contaDoTelefone(env, telefone, agora);
   if (!conta || conta.status !== 'active') {
     await concluir(db, provedor, dados.idEvento, tipo, 'conta_indisponivel', iso);
@@ -196,13 +243,6 @@ async function processarEventoRegistrado(env, db, provedor, tipo, dados, iso, ag
     estado.acessoAlterado = true;
     await concluir(db, provedor, dados.idEvento, tipo, 'revogado', iso);
     return resposta({ ok: true, revogado: true });
-  }
-
-  const plano = planoDaCompra(env, dados);
-  if (!plano) {
-    await concluir(db, provedor, dados.idEvento, tipo, 'plano_desconhecido', iso);
-    console.error(`${provedor}: plano não identificado`, dados.idEvento, dados.produtos, dados.valorCentavos);
-    return resposta({ ok: true, pendente: 'plano_desconhecido' });
   }
 
   const liberado = await liberarAcesso(env, conta, plano, dados.idEvento, agora);

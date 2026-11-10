@@ -67,6 +67,40 @@ describe('webhook Hotmart', () => {
     expect(msgs[1].texto).toMatch(/^[A-HJ-NP-Z2-9]{4}(-[A-HJ-NP-Z2-9]{4}){3}$/);
   });
 
+  teste('reconhece o plano pelo nome do produto mesmo com código novo', async () => {
+    const env = ambiente();
+    const corpo = await (await hotmart(env, evento('PURCHASE_APPROVED', {
+      product: { id: 999, name: 'Leviã Anual' },
+      purchase: { transaction: 'HP9', price: { value: 0 } },
+    }))).json();
+    expect(corpo.plano).toBe('annual');
+  });
+
+  teste('reconhece o mensal por preço promocional', async () => {
+    const env = ambiente();
+    const corpo = await (await hotmart(env, evento('PURCHASE_APPROVED', {
+      product: {},
+      purchase: { transaction: 'HP10', price: { value: 9.97 } },
+    }))).json();
+    expect(corpo.plano).toBe('monthly');
+  });
+
+  teste('plano desconhecido não cria conta e guarda o resumo do aviso', async () => {
+    const env = ambiente();
+    const corpo = await (await hotmart(env, evento('PURCHASE_APPROVED', {
+      product: { id: 999, name: 'Curso de bolo' },
+      purchase: { transaction: 'HP11', price: { value: 5 } },
+    }))).json();
+    expect(corpo.pendente).toBe('plano_desconhecido');
+    const contas = await env.LEVIA_DB.prepare('SELECT COUNT(*) AS n FROM accounts').first();
+    expect(contas.n).toBe(0);
+    const linha = await env.LEVIA_DB.prepare("SELECT payload FROM payment_events WHERE event_type = 'paid'").first();
+    const resumo = JSON.parse(linha.payload);
+    expect(resumo.produto.id).toBe(999);
+    expect(resumo.preco).toBe(5);
+    expect(linha.payload).not.toContain('11987654321');
+  });
+
   teste('eventos sem efeito (boleto impresso, atraso) são ignorados', async () => {
     const r = await hotmart(ambiente(), evento('PURCHASE_BILLET_PRINTED'));
     expect((await r.json()).ignorado).toBe('PURCHASE_BILLET_PRINTED');
