@@ -142,6 +142,33 @@ describe('webhook Hotmart', () => {
     expect(alerta.texto).toContain('sem telefone');
   });
 
+  teste('alerta de pagamento também sai por e-mail sem dados pessoais', async () => {
+    const env = ambiente();
+    env.RESEND_API_KEY = 're_teste';
+    env.ALERTA_EMAILS = 'dono@exemplo.com, invalido, outro@exemplo.com';
+    const chamadas: { url: string; init: { body: string } }[] = [];
+    const original = global.fetch;
+    (global as unknown as { fetch: unknown }).fetch = jest.fn(async (url: string, init: { body: string }) => {
+      chamadas.push({ url, init });
+      return { ok: true, status: 200 };
+    });
+    try {
+      await hotmart(env, evento('PURCHASE_APPROVED', {
+        product: { id: 999, name: 'Curso de bolo' },
+        purchase: { transaction: 'HP15', price: { value: 5 } },
+      }));
+    } finally {
+      (global as unknown as { fetch: unknown }).fetch = original;
+    }
+    expect(chamadas).toHaveLength(1);
+    expect(chamadas[0].url).toBe('https://api.resend.com/emails');
+    const corpo = JSON.parse(chamadas[0].init.body);
+    expect(corpo.to).toEqual(['dono@exemplo.com', 'outro@exemplo.com']);
+    expect(corpo.subject).toContain('HP15');
+    expect(corpo.text).toContain('plano não identificado');
+    expect(corpo.text).not.toContain('11987654321');
+  });
+
   teste('eventos sem efeito (boleto impresso, atraso) são ignorados', async () => {
     const r = await hotmart(ambiente(), evento('PURCHASE_BILLET_PRINTED'));
     expect((await r.json()).ignorado).toBe('PURCHASE_BILLET_PRINTED');
