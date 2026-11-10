@@ -49,7 +49,7 @@ Dentro do que a lei permite, não respondemos por decisões de saúde tomadas co
 
 ## 11. Lei aplicável e contato
 
-Estes termos seguem as leis do Brasil; fica eleito o foro do domicílio do consumidor. Dúvidas, pedidos de privacidade e suporte: **contatoapplevia@gmail.com**.
+Estes termos seguem as leis do Brasil; fica eleito o foro do domicílio do consumidor. Dúvidas, pedidos de privacidade e suporte: **contato@leviapp.org**.
 
 ## 12. Alterações
 

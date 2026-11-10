@@ -7,7 +7,7 @@ import { spacing } from '@constants/colors';
 import { estilosTema } from '@theme/estilos';
 
 const URL_PRIVACIDADE = 'https://ferpa2505-art.github.io/levia-policies/privacidade.html';
-const EMAIL_CONTATO = 'contatoapplevia@gmail.com';
+const EMAIL_CONTATO = 'contato@leviapp.org';
 
 /**
  * Termos de Serviço publicados em https://leviapp.org/termos (fonte: TERMOS_SERVICO.md).
