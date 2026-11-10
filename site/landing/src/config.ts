@@ -19,6 +19,8 @@ export const LINK_ATIVAR = "https://leviapp.org/ativar";
 export const LINK_ATIVAR_LABEL = "leviapp.org/ativar";
 
 export const LINK_PRIVACIDADE = "https://ferpa2505-art.github.io/levia-policies/privacidade.html";
+/** Termos de Serviço publicados no próprio app (rota /termos do leviapp.org). */
+export const LINK_TERMOS = "https://leviapp.org/termos";
 export const EMAIL_CONTATO = "contato@leviapp.org";
 
 export const YOUTUBE_ID = "AtZ6cEqgnMc";

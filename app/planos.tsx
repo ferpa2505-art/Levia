@@ -1,4 +1,5 @@
 import { Linking, Pressable, View } from 'react-native';
+import { useRouter } from 'expo-router';
 import { TelaRolavel } from '@components/TelaRolavel';
 import { ThemedView } from '@components/ThemedView';
 import { ThemedText } from '@components/ThemedText';
@@ -14,6 +15,7 @@ import { estilosTema } from '@theme/estilos';
  */
 export default function Planos() {
   const t = useT();
+  const router = useRouter();
   const abrir = (plano: PlanoPago) => { Linking.openURL(linkDoPlano(plano)).catch(() => {}); };
 
   return (
@@ -46,6 +48,10 @@ export default function Planos() {
 
         <ThemedText variant="caption" color="textSecondary" style={{ marginTop: spacing.sm }}>{t('planos.nota')}</ThemedText>
         <ThemedText variant="caption" color="textSecondary" style={{ marginTop: spacing.xs }}>{t('planos.moeda')}</ThemedText>
+
+        <Pressable onPress={() => router.push('/termos')} accessibilityRole="link" hitSlop={8} style={{ marginTop: spacing.md }}>
+          <ThemedText variant="small" color="primary" style={styles.link}>{t('paywall.termosServico')}</ThemedText>
+        </Pressable>
 
         <Pressable onPress={() => Linking.openURL('https://www.leviapp.org/#planos').catch(() => {})} accessibilityRole="link" hitSlop={8} style={{ marginTop: spacing.lg }}>
           <ThemedText variant="small" color="primary" style={styles.link}>{t('planos.maisDetalhes')}</ThemedText>

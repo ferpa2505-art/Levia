@@ -8,6 +8,7 @@ import {
   LINK_ATIVAR,
   LINK_ATIVAR_LABEL,
   LINK_PRIVACIDADE,
+  LINK_TERMOS,
   EMAIL_CONTATO,
   YOUTUBE_ID,
   isPending,
@@ -186,6 +187,11 @@ export function Planos() {
         </div>
         <p className="mx-auto mt-8 max-w-2xl text-center text-sm leading-relaxed text-carvao/75">
           Pague a qualquer momento durante o teste. Após a confirmação do pagamento, você recebe no WhatsApp o serial do seu plano: 30 dias (mensal) ou 365 dias (anual).
+        </p>
+        <p className="mt-3 text-center text-xs text-carvao/60">
+          Ao assinar, você concorda com os{" "}
+          <a href={LINK_TERMOS} target="_blank" rel="noopener noreferrer" className="font-semibold text-salvia-700 underline underline-offset-2">Termos de Serviço</a>
+          .
         </p>
         <p className="mt-3 text-center text-xs text-carvao/55">
           O Leviã funciona no navegador (PWA). Não está na App Store nem na Play Store.
@@ -431,6 +437,7 @@ export function Footer() {
         </nav>
         <div className="space-y-2 text-sm">
           <p className="mb-3 text-xs font-semibold uppercase tracking-widest text-pessego-300">Cuidado</p>
+          <a href={LINK_TERMOS} target="_blank" rel="noopener noreferrer" className="block text-marfim/80 hover:text-marfim">Termos de Serviço</a>
           <a href={LINK_PRIVACIDADE} target="_blank" rel="noopener noreferrer" className="block text-marfim/80 hover:text-marfim">Política de privacidade</a>
           <a href={`mailto:${EMAIL_CONTATO}`} className="block text-marfim/80 hover:text-marfim">{EMAIL_CONTATO}</a>
         </div>

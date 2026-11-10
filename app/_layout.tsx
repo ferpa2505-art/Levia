@@ -79,6 +79,7 @@ function RootNavigation() {
       <Stack.Screen name="onboarding" options={{ headerShown: false }} />
       <Stack.Screen name="ativar" options={{ headerShown: true, title: t('ativar.titulo') }} />
       <Stack.Screen name="planos" options={{ headerShown: true, title: t('planos.titulo') }} />
+      <Stack.Screen name="termos" options={{ headerShown: true, title: t('paywall.termosServico') }} />
       <Stack.Screen name="recipe-builder" options={{ headerShown: true, title: t('titulos.receitas') }} />
       <Stack.Screen name="glp1" options={{ headerShown: true, title: t('titulos.glp1') }} />
       <Stack.Screen name="diabetes" options={{ headerShown: true, title: t('titulos.diabetes') }} />
