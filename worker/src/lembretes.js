@@ -54,8 +54,9 @@ async function tentar(fn) {
 export async function cancelarLembretes(env, phone, agora = Date.now()) {
   if (!env.LEVIA_DB) return;
   await tentar(() => env.LEVIA_DB.prepare(
-    // os avisos para a equipe (id 'aviso-…') não são lembretes de cliente: nunca se cancelam por mensagem recebida
-    "UPDATE wa_outbox SET cancelado_em = ? WHERE phone = ? AND enviado_em IS NULL AND cancelado_em IS NULL AND id NOT LIKE 'aviso-%' AND id NOT LIKE 'alerta-%'",
+    // os avisos para a equipe (id 'aviso-…' e 'alerta-…') e o serial de uma compra (id 'pgto-…') não são lembretes de
+    // cliente: nunca se cancelam por mensagem recebida (quem acabou de pagar costuma escrever ao bot na hora)
+    "UPDATE wa_outbox SET cancelado_em = ? WHERE phone = ? AND enviado_em IS NULL AND cancelado_em IS NULL AND id NOT LIKE 'aviso-%' AND id NOT LIKE 'alerta-%' AND id NOT LIKE 'pgto-%'",
   ).bind(agora, phone).run());
 }
 
