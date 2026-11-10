@@ -102,7 +102,7 @@ export async function puxarVencidos(env, agora = Date.now(), limite = 10) {
     const r = await env.LEVIA_DB.prepare(
       `SELECT o.id, o.phone, o.texto FROM wa_outbox o
        WHERE o.enviado_em IS NULL AND o.cancelado_em IS NULL AND o.enviar_em <= ?1
-         AND (o.id LIKE 'aviso-%' OR EXISTS (SELECT 1 FROM wa_sessions s WHERE s.phone = o.phone))
+         AND (o.id LIKE 'aviso-%' OR o.id LIKE 'pgto-%' OR EXISTS (SELECT 1 FROM wa_sessions s WHERE s.phone = o.phone))
        ORDER BY o.enviar_em LIMIT ?2`,
     ).bind(agora, limite).all();
     return r.results ?? [];

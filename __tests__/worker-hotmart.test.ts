@@ -58,6 +58,15 @@ describe('webhook Hotmart', () => {
     expect((await env.LEVIA_DB.prepare('SELECT status FROM entitlements').first()).status).toBe('revoked');
   });
 
+  teste('compra de quem nunca falou com o bot entrega o serial mesmo assim', async () => {
+    const env = ambiente();
+    expect((await (await hotmart(env, evento('PURCHASE_APPROVED'))).json()).plano).toBe('annual');
+    const msgs = await puxarVencidos(env, Date.now() + 1000);
+    expect(msgs).toHaveLength(2);
+    expect(msgs[0].texto).toContain('Pagamento confirmado');
+    expect(msgs[1].texto).toMatch(/^[A-HJ-NP-Z2-9]{4}(-[A-HJ-NP-Z2-9]{4}){3}$/);
+  });
+
   teste('eventos sem efeito (boleto impresso, atraso) são ignorados', async () => {
     const r = await hotmart(ambiente(), evento('PURCHASE_BILLET_PRINTED'));
     expect((await r.json()).ignorado).toBe('PURCHASE_BILLET_PRINTED');

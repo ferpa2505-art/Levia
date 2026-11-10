@@ -130,9 +130,11 @@ function mensagemDeLiberacao({ serial, fim, rotulo }, link) {
 
 async function avisarNoWhatsApp(env, telefone, mensagens, agora) {
   for (const msg of mensagens) {
+    // prefixo "pgto-": mensagem transacional de compra, entregue mesmo sem sessão aberta
+    // (quem pagou pela landing pode nunca ter falado com o bot e precisa receber o serial)
     await env.LEVIA_DB.prepare(
       'INSERT INTO wa_outbox (id, phone, texto, enviar_em, criado_em) VALUES (?, ?, ?, ?, ?)',
-    ).bind(crypto.randomUUID(), telefone, msg, agora, agora).run();
+    ).bind(`pgto-${crypto.randomUUID()}`, telefone, msg, agora, agora).run();
   }
 }
 
