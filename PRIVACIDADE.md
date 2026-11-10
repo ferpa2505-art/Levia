@@ -94,3 +94,7 @@ O Leviã não é destinado a menores de 18 anos. É uma ferramenta de registro e
 ## 12. Mudanças nesta política
 
 Se passarmos a tratar outros dados ou usar outros serviços, atualizaremos esta política antes de o recurso entrar no ar, com a data no topo.
+
+---
+
+Leia também os [Termos de Serviço](https://leviapp.org/termos).
