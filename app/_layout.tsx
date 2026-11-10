@@ -48,13 +48,17 @@ function RootNavigation() {
 
     SplashScreen.hideAsync();
 
+    // Termos de Serviço são página pública (link da landing e exigência da Hotmart):
+    // abrem sem serial e sem passar pelo onboarding.
+    const paginaPublica = segments[0] === 'termos';
+
     if (EXIGIR_SERIAL && !temLicenca) {
-      if (segments[0] !== 'ativar') router.replace('/ativar');
+      if (segments[0] !== 'ativar' && !paginaPublica) router.replace('/ativar');
       return;
     }
 
     const emOnboarding = segments[0] === 'onboarding';
-    if (!profile.onboardingConcluido && !emOnboarding) {
+    if (!profile.onboardingConcluido && !emOnboarding && !paginaPublica) {
       router.replace('/onboarding');
     }
   }, [loading, temLicenca, profile.onboardingConcluido, segments]);
