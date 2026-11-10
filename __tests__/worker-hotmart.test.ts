@@ -1,5 +1,6 @@
 import worker from '../worker/src/index';
 import { puxarVencidos } from '../worker/src/lembretes';
+import { processarMensagemWhatsApp } from '../worker/src/fluxo';
 import { criarD1, temSqlite } from '../test-utils/d1';
 
 const teste = temSqlite ? test : test.skip;
@@ -66,6 +67,18 @@ describe('webhook Hotmart', () => {
     expect(msgs).toHaveLength(2);
     expect(msgs[0].texto).toContain('Pagamento confirmado');
     expect(msgs[1].texto).toMatch(/^[A-HJ-NP-Z2-9]{4}(-[A-HJ-NP-Z2-9]{4}){3}$/);
+  });
+
+  teste('quem acabou de pagar e escreve ao bot antes da entrega ainda recebe o serial (a mensagem do comprador não cancela o envio)', async () => {
+    const env = ambiente();
+    const agora = Date.now();
+    const corpo = await (await hotmart(env, evento('PURCHASE_APPROVED'))).json();
+    expect(corpo.plano).toBe('annual');
+    // o comprador manda "oi" ao bot logo depois do pagamento, antes de o gateway buscar a fila
+    await processarMensagemWhatsApp(env, '5511987654321', 'oi', 'msg-apos-compra', agora + 500);
+    const entregues = await puxarVencidos(env, agora + 5000);
+    const serial = entregues.find((m: any) => /^[A-HJ-NP-Z2-9]{4}(-[A-HJ-NP-Z2-9]{4}){3}$/.test(m.texto));
+    expect(serial).toBeTruthy();
   });
 
   teste('reconhece o plano pelo nome do produto mesmo com código novo', async () => {
