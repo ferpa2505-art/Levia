@@ -6,7 +6,7 @@
 
 ## 1. Quem é o responsável
 
-O Leviã é um aplicativo (Android e web/PWA) de registro pessoal de peso, alimentação, tratamento com medicamentos GLP-1 e diabetes. O responsável pelo tratamento dos dados descritos nesta política (controlador, na LGPD) é **Luis Fernando Paulino, da FP Tech & Art**, Brasil. Contato para privacidade e para exercer seus direitos (encarregado): **contatoapplevia@gmail.com**.
+O Leviã é um aplicativo (Android e web/PWA) de registro pessoal de peso, alimentação, tratamento com medicamentos GLP-1 e diabetes. O responsável pelo tratamento dos dados descritos nesta política (controlador, na LGPD) é **Luis Fernando Paulino, da FP Tech & Art**, Brasil. Contato para privacidade e para exercer seus direitos (encarregado): **contato@leviapp.org**.
 
 ## 2. Dados em dois lugares
 
@@ -81,7 +81,7 @@ O arquivo de backup ou relatório é criado no seu aparelho e só sai dele para 
 
 ## 9. Seus direitos
 
-Pelo art. 18 da LGPD você pode pedir confirmação do tratamento, acesso, correção, anonimização ou exclusão, portabilidade, informação sobre compartilhamento e a **revogação do consentimento**. Escreva para **contatoapplevia@gmail.com** informando o telefone usado no WhatsApp; podemos pedir uma confirmação de identidade para proteger sua conta. Respondemos em até 15 dias. Ao excluir sua conta, o serial e os aparelhos ativados deixam de valer. Você também pode reclamar à Autoridade Nacional de Proteção de Dados (ANPD).
+Pelo art. 18 da LGPD você pode pedir confirmação do tratamento, acesso, correção, anonimização ou exclusão, portabilidade, informação sobre compartilhamento e a **revogação do consentimento**. Escreva para **contato@leviapp.org** informando o telefone usado no WhatsApp; podemos pedir uma confirmação de identidade para proteger sua conta. Respondemos em até 15 dias. Ao excluir sua conta, o serial e os aparelhos ativados deixam de valer. Você também pode reclamar à Autoridade Nacional de Proteção de Dados (ANPD).
 
 ## 10. Segurança
 
