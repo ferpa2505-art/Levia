@@ -4,9 +4,13 @@ import path from 'node:path';
 /**
  * D1 de teste: SQLite de verdade (node:sqlite, Node 22.13+) com as migrations do Worker.
  * Devolve null quando o Node não tem node:sqlite (os testes que dependem dele são pulados).
- * 0003_add_lead_columns fica de fora de propósito: as colunas já nascem na 0002.
+ * A ordem é a mesma do wrangler (lexicográfica): as duas 0003 entram, e a 0003_add_lead_columns
+ * é um no-op porque a 0002 já cria as colunas.
  */
-const MIGRATIONS = ['0001_initial', '0002_leads', '0004_whatsapp_tables', '0005_cotas_uso', '0006_wa_outbox', '0007_payment_payload'];
+const MIGRATIONS = [
+  '0001_initial', '0002_leads', '0003_add_lead_columns', '0003_whatsapp',
+  '0004_whatsapp_tables', '0005_cotas_uso', '0006_wa_outbox', '0007_payment_payload',
+];
 
 type Argumentos = unknown[];
 
