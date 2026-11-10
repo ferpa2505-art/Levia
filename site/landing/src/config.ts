@@ -23,6 +23,9 @@ export const LINK_PRIVACIDADE = "https://ferpa2505-art.github.io/levia-policies/
 export const LINK_TERMOS = "https://leviapp.org/termos";
 export const EMAIL_CONTATO = "contato@leviapp.org";
 
+/** ID público do Meta Pixel (só números). Vazio = pixel desligado e aviso de cookies escondido. */
+export const META_PIXEL_ID = (import.meta.env.VITE_META_PIXEL_ID ?? "").trim();
+
 export const YOUTUBE_ID = "AtZ6cEqgnMc";
 
 export const isPending = (url: string) => !url || url.trim().startsWith("[");
