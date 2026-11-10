@@ -1,3 +1,4 @@
+import { avisarPagamentoNaoReconhecido } from './avisos';
 import { iguais, sha256 } from './cripto';
 import { contaDoTelefone, formatarSerial, gerarSerial } from './serial';
 
@@ -210,6 +211,12 @@ async function processarEventoRegistrado(env, db, provedor, tipo, dados, iso, ag
   if (!telefone) {
     await concluir(db, provedor, dados.idEvento, tipo, 'sem_telefone', iso);
     console.error(`${provedor}: compra sem telefone válido`, dados.idEvento);
+    if (tipo === 'paid') {
+      await avisarPagamentoNaoReconhecido(env, {
+        provedor, idEvento: dados.idEvento, resultado: 'sem_telefone',
+        produtos: dados.produtos, valorCentavos: dados.valorCentavos, agora,
+      });
+    }
     return resposta({ ok: true, pendente: 'sem_telefone' });
   }
   // o plano é resolvido antes de criar a conta: aviso de produto desconhecido não gera cadastro
@@ -221,12 +228,22 @@ async function processarEventoRegistrado(env, db, provedor, tipo, dados, iso, ag
       dados.idEvento,
       JSON.stringify({ produtos: dados.produtos, valorCentavos: dados.valorCentavos }),
     );
+    await avisarPagamentoNaoReconhecido(env, {
+      provedor, idEvento: dados.idEvento, resultado: 'plano_desconhecido',
+      produtos: dados.produtos, valorCentavos: dados.valorCentavos, agora,
+    });
     return resposta({ ok: true, pendente: 'plano_desconhecido' });
   }
 
   const conta = await contaDoTelefone(env, telefone, agora);
   if (!conta || conta.status !== 'active') {
     await concluir(db, provedor, dados.idEvento, tipo, 'conta_indisponivel', iso);
+    if (tipo === 'paid') {
+      await avisarPagamentoNaoReconhecido(env, {
+        provedor, idEvento: dados.idEvento, resultado: 'conta_indisponivel',
+        produtos: dados.produtos, valorCentavos: dados.valorCentavos, agora,
+      });
+    }
     return resposta({ ok: true, pendente: 'conta_indisponivel' });
   }
 

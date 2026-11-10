@@ -84,6 +84,44 @@ export async function avisarEquipe(env, { telefone, nome, etapa, idioma, motivo,
   return { whatsapp, email };
 }
 
+const RESULTADOS_PAGAMENTO = {
+  plano_desconhecido: 'plano não identificado',
+  sem_telefone: 'compra sem telefone válido',
+  conta_indisponivel: 'conta do comprador indisponível',
+};
+
+function textoPagamentoNaoLiberado({ provedor, idEvento, resultado, produtos, valorCentavos }) {
+  const linhas = [
+    '⚠️ Pagamento não liberado',
+    `Provedor: ${provedor}`,
+    `Compra: ${idEvento}`,
+    `Motivo: ${RESULTADOS_PAGAMENTO[resultado] ?? resultado}`,
+  ];
+  const itens = (produtos ?? []).filter(Boolean);
+  if (itens.length) linhas.push(`Produtos/oferta: ${itens.join(', ')}`);
+  if (Number(valorCentavos) > 0) linhas.push(`Valor: R$ ${(Number(valorCentavos) / 100).toFixed(2).replace('.', ',')}`);
+  linhas.push('Nenhum acesso foi liberado. Confira a compra na Hotmart.');
+  return linhas.join('\n');
+}
+
+/**
+ * Avisa a equipe quando um pagamento aprovado não pôde ser liberado. Leva só o necessário para
+ * agir (provedor, compra, motivo, produtos e valor), nunca telefone, nome ou e-mail do comprador.
+ * O id fixo por evento evita alerta repetido quando o provedor reenvia o mesmo aviso.
+ */
+export async function avisarPagamentoNaoReconhecido(env, {
+  provedor, idEvento, resultado, produtos = [], valorCentavos = 0, agora = Date.now(),
+}) {
+  const destino = String(env.ALERTA_WHATSAPP ?? '').replace(/\D/g, '');
+  if (!destino || !env.LEVIA_DB) return false;
+  const id = `alerta-pgto-${provedor}-${idEvento}-${resultado}`.slice(0, 200);
+  const texto = textoPagamentoNaoLiberado({ provedor, idEvento, resultado, produtos, valorCentavos });
+  const r = await tentar(() => env.LEVIA_DB.prepare(
+    'INSERT OR IGNORE INTO wa_outbox (id, phone, texto, enviar_em, criado_em) VALUES (?, ?, ?, ?, ?)',
+  ).bind(id, `+${destino}`, texto, agora, agora).run(), 'alerta de pagamento');
+  return r?.meta?.changes === 1;
+}
+
 /** Pedidos de falar com uma pessoa, nos 5 idiomas do atendimento. */
 const PEDIDOS = [
   'atendente', 'falar com uma pessoa', 'falar com alguem', 'falar com humano', 'pessoa de verdade', 'humano',

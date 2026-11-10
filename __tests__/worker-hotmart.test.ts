@@ -8,6 +8,7 @@ function ambiente() {
   return {
     LEVIA_DB: criarD1(), LICENCA_TOKEN_KEY: 'k1', TYPEBOT_PHONE_HMAC_KEY: 'k2', EMAIL_HASH_KEY: 'k3',
     HOTMART_HOTTOK: 'hottok-secreto', PAYT_PRODUTOS_ANUAL: '222', PAYT_PRODUTOS_MENSAL: '111',
+    ALERTA_WHATSAPP: '+35699506350',
   } as any;
 }
 const hotmart = (env: any, corpo: any, hottok: string | null = 'hottok-secreto') =>
@@ -99,6 +100,46 @@ describe('webhook Hotmart', () => {
     expect(resumo.produto.id).toBe(999);
     expect(resumo.preco).toBe(5);
     expect(linha.payload).not.toContain('11987654321');
+  });
+
+  teste('alerta de pagamento não reconhecido sai no WhatsApp sem dados pessoais', async () => {
+    const env = ambiente();
+    await hotmart(env, evento('PURCHASE_APPROVED', {
+      product: { id: 999, name: 'Curso de bolo' },
+      purchase: { transaction: 'HP12', price: { value: 5 } },
+    }));
+    const alerta = await env.LEVIA_DB.prepare("SELECT phone, texto FROM wa_outbox WHERE id LIKE 'alerta-pgto-%'").first();
+    expect(alerta.phone).toBe('+35699506350');
+    expect(alerta.texto).toContain('HP12');
+    expect(alerta.texto).toContain('plano não identificado');
+    expect(alerta.texto).toContain('R$ 5,00');
+    expect(alerta.texto).not.toContain('11987654321');
+    // o gateway filtra por prefixo: o alerta precisa passar pelo mesmo filtro dos avisos
+    const entregues = await puxarVencidos(env, Date.now() + 1000, 50);
+    expect(entregues.some((m: { id: string }) => m.id.startsWith('alerta-pgto-'))).toBe(true);
+  });
+
+  teste('o mesmo aviso não gera alerta repetido', async () => {
+    const env = ambiente();
+    const corpo = evento('PURCHASE_APPROVED', {
+      product: { id: 999, name: 'Curso de bolo' },
+      purchase: { transaction: 'HP13', price: { value: 5 } },
+    });
+    await hotmart(env, corpo);
+    await hotmart(env, corpo);
+    const n = await env.LEVIA_DB.prepare("SELECT COUNT(*) AS n FROM wa_outbox WHERE id LIKE 'alerta-pgto-%'").first();
+    expect(n.n).toBe(1);
+  });
+
+  teste('compra sem telefone também avisa a equipe', async () => {
+    const env = ambiente();
+    const r = await (await hotmart(env, evento('PURCHASE_APPROVED', {
+      buyer: {},
+      purchase: { transaction: 'HP14', price: { value: 191.71 } },
+    }))).json();
+    expect(r.pendente).toBe('sem_telefone');
+    const alerta = await env.LEVIA_DB.prepare("SELECT texto FROM wa_outbox WHERE id LIKE 'alerta-pgto-%'").first();
+    expect(alerta.texto).toContain('sem telefone');
   });
 
   teste('eventos sem efeito (boleto impresso, atraso) são ignorados', async () => {
