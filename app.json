@@ -58,7 +58,8 @@
         {
           "faceIDPermission": "O Leviã usa o reconhecimento facial para desbloquear o app com segurança."
         }
-      ]
+      ],
+      "expo-status-bar"
     ],
     "scheme": "levia",
     "extra": {

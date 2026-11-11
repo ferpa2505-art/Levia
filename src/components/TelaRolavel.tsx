@@ -5,6 +5,7 @@ import {
   Keyboard,
   KeyboardEvent,
   ScrollView,
+  ScrollViewInstance,
   StyleProp,
   TextInput,
   ViewStyle,
@@ -29,7 +30,7 @@ interface TelaRolavelProps {
  * até o campo focado sempre que o teclado abre ou o foco muda.
  */
 export function TelaRolavel({ children, contentContainerStyle }: TelaRolavelProps) {
-  const scrollRef = useRef<ScrollView>(null);
+  const scrollRef = useRef<ScrollViewInstance>(null);
   const scrollY = useRef(0);
   const topoTeclado = useRef<number | null>(null);
   const [alturaTeclado, setAlturaTeclado] = useState(0);
