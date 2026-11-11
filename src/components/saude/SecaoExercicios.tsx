@@ -21,7 +21,7 @@ import { MensagemErro } from '@components/forms/MensagemErro';
 import { estilosTema } from '@theme/estilos';
 import { usePreferences } from '@context/PreferencesContext';
 
-export default function ExercisesScreen() {
+export function SecaoExercicios() {
   const { t, tc } = usePreferences();
   const { exerciciosHoje, kcalGastaHoje, adicionarExercicio, removerExercicio } = useRecords();
 

@@ -661,6 +661,7 @@ const traducoes: Traducoes = {
   "home.maisModulos": "और मॉड्यूल",
   "home.exerciciosDesc": "वर्कआउट, अवधि और खर्च हुई कैलोरी",
   "home.adicionar": "भोजन जोड़ें",
+  "saude.perfilPeso": "प्रोफ़ाइल और वज़न",
 };
 
 export default traducoes;

@@ -661,6 +661,7 @@ const traducoes: Traducoes = {
   "home.maisModulos": "更多模块",
   "home.exerciciosDesc": "训练、时长和消耗的热量",
   "home.adicionar": "添加餐食",
+  "saude.perfilPeso": "个人资料与体重",
 };
 
 export default traducoes;

@@ -661,6 +661,7 @@ const traducoes: Traducoes = {
   "home.maisModulos": "Thêm mô-đun",
   "home.exerciciosDesc": "Bài tập, thời lượng và calo đã đốt",
   "home.adicionar": "Thêm bữa ăn",
+  "saude.perfilPeso": "Hồ sơ & cân nặng",
 };
 
 export default traducoes;

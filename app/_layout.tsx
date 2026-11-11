@@ -11,6 +11,7 @@ import { NewsProvider } from '@context/NewsContext';
 import { Glp1Provider } from '@context/Glp1Context';
 import { DiabetesProvider } from '@context/DiabetesContext';
 import { MedicacoesProvider } from '@context/MedicacoesContext';
+import { FitnessProvider } from '@context/FitnessContext';
 import { SegurancaProvider, useSeguranca } from '@context/SegurancaContext';
 import { PortaoSeguranca } from '@components/seguranca/PortaoSeguranca';
 import { AvisoNovaVersao } from '@components/AvisoNovaVersao';
@@ -85,12 +86,11 @@ function RootNavigation() {
       <Stack.Screen name="planos" options={{ headerShown: true, title: t('planos.titulo') }} />
       <Stack.Screen name="termos" options={{ headerShown: true, title: t('paywall.termosServico') }} />
       <Stack.Screen name="recipe-builder" options={{ headerShown: true, title: t('titulos.receitas') }} />
-      <Stack.Screen name="glp1" options={{ headerShown: true, title: t('titulos.glp1') }} />
-      <Stack.Screen name="diabetes" options={{ headerShown: true, title: t('titulos.diabetes') }} />
       <Stack.Screen name="peso" options={{ headerShown: true, title: t('titulos.peso') }} />
       <Stack.Screen name="medicacao" options={{ headerShown: true, title: t('med.tituloTela') }} />
       <Stack.Screen name="refeicao" options={{ headerShown: true, title: t('ref.titulo') }} />
       <Stack.Screen name="apetite" options={{ headerShown: true, title: t('titulos.apetite') }} />
+      <Stack.Screen name="fitness" options={{ headerShown: false }} />
     </Stack>
     <AvisoNovaVersao ativo={!loading} />
     {/* Termos de Serviço é página pública: o portão de senha não deve cobrir o documento */}
@@ -124,7 +124,9 @@ export default function RootLayout() {
               <Glp1Provider>
                 <DiabetesProvider>
                   <MedicacoesProvider>
-                    <NavegacaoComTema />
+                    <FitnessProvider>
+                      <NavegacaoComTema />
+                    </FitnessProvider>
                   </MedicacoesProvider>
                 </DiabetesProvider>
               </Glp1Provider>

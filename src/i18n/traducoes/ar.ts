@@ -661,6 +661,7 @@ const traducoes: Traducoes = {
   "home.maisModulos": "المزيد من الأقسام",
   "home.exerciciosDesc": "التمارين والمدة والسعرات المحروقة",
   "home.adicionar": "إضافة وجبة",
+  "saude.perfilPeso": "الملف الشخصي والوزن",
 };
 
 export default traducoes;

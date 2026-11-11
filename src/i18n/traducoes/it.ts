@@ -661,6 +661,7 @@ const traducoes: Traducoes = {
   "home.maisModulos": "Altri moduli",
   "home.exerciciosDesc": "Allenamenti, durata e calorie bruciate",
   "home.adicionar": "Aggiungi un pasto",
+  "saude.perfilPeso": "Profilo e peso",
 };
 
 export default traducoes;

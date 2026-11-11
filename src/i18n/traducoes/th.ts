@@ -661,6 +661,7 @@ const traducoes: Traducoes = {
   "home.maisModulos": "โมดูลเพิ่มเติม",
   "home.exerciciosDesc": "การออกกำลังกาย ระยะเวลา และแคลอรีที่เผาผลาญ",
   "home.adicionar": "เพิ่มมื้ออาหาร",
+  "saude.perfilPeso": "โปรไฟล์และน้ำหนัก",
 };
 
 export default traducoes;

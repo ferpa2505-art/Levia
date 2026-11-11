@@ -661,6 +661,7 @@ const traducoes: Traducoes = {
   "home.maisModulos": "Mais módulos",
   "home.exerciciosDesc": "Treinos, duração e calorias gastas",
   "home.adicionar": "Adicionar refeição",
+  "saude.perfilPeso": "Perfil e peso",
 };
 
 export default traducoes;

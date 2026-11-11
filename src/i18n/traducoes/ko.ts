@@ -661,6 +661,7 @@ const traducoes: Traducoes = {
   "home.maisModulos": "더 많은 기능",
   "home.exerciciosDesc": "운동, 시간, 소모 칼로리",
   "home.adicionar": "식사 추가",
+  "saude.perfilPeso": "프로필 & 체중",
 };
 
 export default traducoes;

@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { View, ScrollView, TouchableOpacity, Pressable } from 'react-native';
 import { TelaRolavel } from '@components/TelaRolavel';
 import { Target, Pencil, Crown, ChevronRight } from 'lucide-react-native';
-import { useRouter } from 'expo-router';
 import { ThemedView } from '@components/ThemedView';
 import { ThemedText } from '@components/ThemedText';
 import { Button } from '@components/Button';
@@ -13,12 +12,10 @@ import { colors, spacing, radius } from '@constants/colors';
 import { useT } from '@context/PreferencesContext';
 import { MensagemErro } from '@components/forms/MensagemErro';
 import { estilosTema } from '@theme/estilos';
-import { ListaMedicacoes } from '@components/ListaMedicacoes';
 import { CartaoMeusDados } from '@components/CartaoMeusDados';
 import { CartaoSeguranca } from '@components/seguranca/CartaoSeguranca';
 
-export default function ProfileScreen() {
-  const router = useRouter();
+export function SecaoPerfil() {
   const t = useT();
   const { profile, updateProfile, salvarAlteracoes } = useProfile();
   const { pesoAtualKg } = useRecords();
@@ -51,7 +48,6 @@ export default function ProfileScreen() {
           </ThemedText>
         </View>
 
-        <ListaMedicacoes />
 
         <ThemedView variant="surface" style={[styles.card, styles.cardShadow]}>
           <ThemedText variant="subheading" color="text" style={{ marginBottom: spacing.md }}>

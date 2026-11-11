@@ -661,6 +661,7 @@ const traducoes: Traducoes = {
   "home.maisModulos": "Daha fazla modül",
   "home.exerciciosDesc": "Antrenmanlar, süre ve yakılan kalori",
   "home.adicionar": "Öğün ekle",
+  "saude.perfilPeso": "Profil ve kilo",
 };
 
 export default traducoes;

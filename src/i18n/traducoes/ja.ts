@@ -661,6 +661,7 @@ const traducoes: Traducoes = {
   "home.maisModulos": "その他のモジュール",
   "home.exerciciosDesc": "トレーニング、時間、消費カロリー",
   "home.adicionar": "食事を追加",
+  "saude.perfilPeso": "プロフィールと体重",
 };
 
 export default traducoes;

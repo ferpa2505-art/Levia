@@ -661,6 +661,7 @@ const traducoes: Traducoes = {
   "home.maisModulos": "Modul lainnya",
   "home.exerciciosDesc": "Latihan, durasi, dan kalori terbakar",
   "home.adicionar": "Tambah makanan",
+  "saude.perfilPeso": "Profil & Berat",
 };
 
 export default traducoes;

@@ -661,6 +661,7 @@ const traducoes: Traducoes = {
   "home.maisModulos": "Другие разделы",
   "home.exerciciosDesc": "Тренировки, длительность и сожжённые калории",
   "home.adicionar": "Добавить приём пищи",
+  "saude.perfilPeso": "Профиль и вес",
 };
 
 export default traducoes;
