@@ -26,6 +26,12 @@ describe('webhook PAYT', () => {
     expect(r.status).toBe(401);
   });
 
+  teste('chave enviada na URL (?chave=) não é aceita: segredo não vai para logs de acesso', async () => {
+    const semChaveNoCorpo = { ...compra(), integration_key: undefined };
+    const r = await payt(ambiente(), semChaveNoCorpo, 'https://w.test/v1/payt/webhook?chave=chave-payt');
+    expect(r.status).toBe(401);
+  });
+
   teste('compra anual libera 365 dias, grava serial e avisa no WhatsApp', async () => {
     const env = ambiente();
     await env.LEVIA_DB.prepare('INSERT INTO wa_sessions (phone, stage, updated_at) VALUES (?, ?, ?)').bind(TEL, 'x', 'agora').run();
