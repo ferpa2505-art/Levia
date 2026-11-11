@@ -65,23 +65,26 @@ export function BonecoMuscular({
   const altura = (largura * 93) / w;
   const centro = x + w / 2;
   // feminino: figura um pouco mais estreita, mantendo a mesma altura
-  const transformacao = sexo === 'feminino'
-    ? `translate(${centro} 0) scale(0.92 1) translate(${-centro} 0)`
-    : undefined;
+  // feminino: largura ajustada por altura de cada músculo (ombro e cintura mais finos, quadril mais largo)
+  const transformaPara = (d: string): string | undefined => {
+    if (sexo !== 'feminino') return undefined;
+    const f = fatorFemininoPorAltura(centroYDoCaminho(d));
+    return `translate(${centro} 0) scale(${f.toFixed(3)} 1) translate(${-centro} 0)`;
+  };
 
   return (
     <Svg width={largura} height={altura} viewBox={`${x} 0 ${w} 93`}>
-      <G transform={transformacao}>
+      <G>
         {/* silhueta: todos os músculos em cinza claro, formando o contorno */}
         {musculos.map((m) => (
-          <Path key={`base-${m.id}`} d={m.d} fill={colors.border} stroke={colors.textSecondary} strokeOpacity={0.35} strokeWidth={0.12} />
+          <Path key={`base-${m.id}`} d={m.d} transform={transformaPara(m.d)} fill={colors.border} stroke={colors.textSecondary} strokeOpacity={0.35} strokeWidth={0.12} />
         ))}
         {/* músculos treinados na semana, pintados pelo grupo */}
         {musculos.map((m) => {
           const grupo = grupoDoMusculo(m.id);
           const f = grupo ? intensidade[grupo] ?? 0 : 0;
           if (f <= 0) return null;
-          return <Path key={`cor-${m.id}`} d={m.d} fill={colors.primary} fillOpacity={0.25 + 0.75 * f} />;
+          return <Path key={`cor-${m.id}`} d={m.d} transform={transformaPara(m.d)} fill={colors.primary} fillOpacity={0.25 + 0.75 * f} />;
         })}
       </G>
     </Svg>
@@ -135,3 +138,51 @@ const styles = StyleSheet.create({
   item: { flexDirection: 'row', alignItems: 'center', gap: 4, borderWidth: 1, borderColor: colors.border, borderRadius: 12, paddingHorizontal: 8, paddingVertical: 2 },
   cor: { width: 10, height: 10, borderRadius: 5 },
 });
+
+/** Centro vertical aproximado de um caminho SVG (média dos pontos e controles). */
+export function centroYDoCaminho(d: string): number {
+  const tokens = d.match(/[a-zA-Z]|-?\d*\.?\d+(?:e-?\d+)?/g) ?? [];
+  const aridade: Record<string, number> = { M: 2, L: 2, H: 1, V: 1, C: 6, S: 4, Q: 4, T: 2, A: 7, Z: 0 };
+  let cmd = '';
+  let x = 0;
+  let y = 0;
+  const ys: number[] = [];
+  let i = 0;
+  while (i < tokens.length) {
+    if (/[a-zA-Z]/.test(tokens[i])) {
+      cmd = tokens[i++];
+      if (cmd === 'Z' || cmd === 'z') continue;
+    }
+    const up = cmd.toUpperCase();
+    const rel = cmd !== up;
+    const n = aridade[up] ?? 0;
+    if (n === 0 || i + n > tokens.length) break;
+    const args = tokens.slice(i, i + n).map(Number);
+    i += n;
+    if (up === 'H') { x = (rel ? x : 0) + args[0]; ys.push(y); continue; }
+    if (up === 'V') { y = (rel ? y : 0) + args[0]; ys.push(y); continue; }
+    for (let k = 0; k < args.length; k += 2) {
+      const ax = rel ? x + args[k] : args[k];
+      const ay = rel ? y + args[k + 1] : args[k + 1];
+      if (up !== 'A' || k === args.length - 2) {
+        ys.push(ay);
+        x = ax;
+        y = ay;
+      } else {
+        ys.push(ay);
+      }
+    }
+  }
+  return ys.length ? ys.reduce((s, v) => s + v, 0) / ys.length : 0;
+}
+
+/** Fator de largura para o corpo feminino, por altura: ombro/cintura mais estreitos e quadril mais largo. */
+export function fatorFemininoPorAltura(cy: number): number {
+  const pontos: [number, number][] = [[0, 0.92], [14, 0.9], [32, 0.86], [42, 1.1], [52, 1.1], [60, 1.02], [93, 1]];
+  for (let k = 1; k < pontos.length; k++) {
+    const [y0, f0] = pontos[k - 1];
+    const [y1, f1] = pontos[k];
+    if (cy <= y1) return f0 + ((f1 - f0) * (cy - y0)) / (y1 - y0);
+  }
+  return 1;
+}

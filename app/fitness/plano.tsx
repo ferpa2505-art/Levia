@@ -71,7 +71,7 @@ export default function PlanoSemanal() {
                     {nomeDiaSemana(indice, idioma, 'long')}
                   </ThemedText>
                   <ThemedText variant="small" color={rotina ? 'primary' : 'textSecondary'} style={{ flex: 1 }}>
-                    {rotina ? rotina.nome : t('fitness.descanso')}
+                    {rotina ? rotina.nome : t('fitness.diaDescanso')}
                   </ThemedText>
                 </Pressable>
                 {trocando === null && (
@@ -87,7 +87,7 @@ export default function PlanoSemanal() {
                       </Pressable>
                     ))}
                     <Pressable onPress={() => { void definirDia(indice, null); setDiaEscolhido(null); }} style={styles.opcao}>
-                      <ThemedText variant="body" color="textSecondary">{t('fitness.descanso')}</ThemedText>
+                      <ThemedText variant="body" color="textSecondary">{t('fitness.diaDescanso')}</ThemedText>
                     </Pressable>
                   </View>
                 )}
