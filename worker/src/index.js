@@ -184,7 +184,11 @@ async function analisarPrato(request, env) {
     console.error('Erro inesperado em perguntarAoGemini:', e?.message);
     resultado = { falha: 'exception ' + (e?.message || 'unknown') };
   }
-  if (!resultado || resultado.falha) return json({ erro: 'falha_ia', motivo: resultado?.falha }, 502);
+  // o detalhe técnico da falha fica no log do Worker, não na resposta
+  if (!resultado || resultado.falha) {
+    if (resultado?.falha) console.error('falha_ia:', String(resultado.falha).slice(0, 200));
+    return json({ erro: 'falha_ia' }, 502);
+  }
   return json({ ...resultado, restantes: reserva.restantes });
 }
 

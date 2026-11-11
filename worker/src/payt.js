@@ -283,8 +283,9 @@ export async function receberPostbackPayt(request, env, agora = Date.now()) {
   if (!corpo || typeof corpo !== 'object') return resposta({ erro: 'corpo_invalido' }, 400);
   const dados = extrair(corpo);
 
-  // a "Chave Única" da PAYT vem no corpo; também aceitamos em ?chave= para quem a coloca na URL
-  const chave = dados.chave || new URL(request.url).searchParams.get('chave') || '';
+  // a "Chave Única" da PAYT vem no corpo. Não aceitamos mais na URL: segredo em query string
+  // fica registrado em logs e histórico de acesso.
+  const chave = dados.chave || '';
   if (!iguais(chave, env.PAYT_INTEGRATION_KEY)) return resposta({ erro: 'nao_autorizado' }, 401);
   if (!dados.idEvento) return resposta({ erro: 'sem_id_da_compra' }, 400);
 
