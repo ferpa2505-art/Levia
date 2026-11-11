@@ -1,10 +1,9 @@
 import worker from '../worker/src/index';
 
 const GEMINI_API_KEY = 'synthetic-gemini-key';
-const TURNSTILE_TOKEN = 'synthetic-turnstile-token-unique';
 const INSTALLATION_ID = '00000000-0000-4000-8000-000000000000';
 const SYNTHETIC_IMAGE_BASE64 = `/9j/${'A'.repeat(1392)}/9k=`;
-const ALLOWED_ORIGIN = 'https://levia-app.netlify.app';
+const ALLOWED_ORIGIN = 'https://leviapp.org';
 const SITEKEY = 'synthetic-sitekey';
 const SECRET = 'synthetic-turnstile-secret';
 
@@ -24,9 +23,11 @@ function createKv() {
 function createEnv(overrides: Record<string, unknown> = {}) {
   return {
     GEMINI_API_KEY,
+    LICENCA_TOKEN_KEY: 'synthetic-license-key',
+    LEVIA_DB: {},
     TURNSTILE_SITE_KEY: SITEKEY,
     TURNSTILE_SECRET_KEY: SECRET,
-    TURNSTILE_ALLOWED_HOSTNAMES: 'levia-app.netlify.app,localhost',
+    TURNSTILE_ALLOWED_HOSTNAMES: 'leviapp.org,localhost',
     LEVIA_COTAS: createKv(),
     ...overrides,
   };
@@ -54,20 +55,9 @@ async function expectJson(response: Response, status: number, body: unknown) {
   await expect(response.json()).resolves.toEqual(body);
 }
 
-function turnstileSuccess(hostname = 'levia-app.netlify.app') {
-  fetchMock.mockResolvedValueOnce(new Response(JSON.stringify({ success: true, hostname, action: 'levia_analisar_prato' }), {
-    status: 200, headers: { 'Content-Type': 'application/json' },
-  }));
-}
-
-function geminiSuccess(body: unknown = { ehComida: true, itens: [] }) {
-  fetchMock.mockResolvedValueOnce(new Response(JSON.stringify({
-    candidates: [{ content: { parts: [{ text: JSON.stringify(body) }] } }],
-  }), { status: 200, headers: { 'Content-Type': 'application/json' } }));
-}
-
 let fetchMock: jest.Mock;
 
+// Os cenários com banco de verdade (licença válida, cota, aparelhos) estão em worker-serial.test.ts.
 describe('Cloudflare Worker API (synthetic, offline)', () => {
   const originalFetch = global.fetch;
   beforeEach(() => { fetchMock = jest.fn(); global.fetch = fetchMock as typeof fetch; });
@@ -100,14 +90,27 @@ describe('Cloudflare Worker API (synthetic, offline)', () => {
     expect(response.headers.get('Vary')).toBe('Origin');
   });
 
+  test('OPTIONS activation allows the PWA origin', async () => {
+    const response = await send(makeRequest('/v1/ativar', { method: 'OPTIONS', headers: { Origin: 'https://leviapp.org' } }));
+    expect(response.status).toBe(204);
+    expect(response.headers.get('Access-Control-Allow-Origin')).toBe('https://leviapp.org');
+  });
+
   test('old public app token cannot authorize photo analysis', async () => {
     await expectJson(await send(makeAnalysis({
-      imagem: SYNTHETIC_IMAGE_BASE64, instalacao: INSTALLATION_ID, turnstileToken: '',
-    }, { 'x-levia-app': 'old-public-client-token' })), 403, { erro: 'desafio_obrigatorio' });
+      imagem: SYNTHETIC_IMAGE_BASE64, instalacao: INSTALLATION_ID,
+    }, { 'x-levia-app': 'old-public-client-token' })), 401, { erro: 'licenca_obrigatoria' });
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
-  test('validates input JSON before contacting Turnstile', async () => {
+  test('a Turnstile token alone no longer authorizes photo analysis', async () => {
+    await expectJson(await send(makeAnalysis({
+      imagem: SYNTHETIC_IMAGE_BASE64, instalacao: INSTALLATION_ID, turnstileToken: 'synthetic-turnstile-token-unique',
+    })), 401, { erro: 'licenca_obrigatoria' });
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  test('validates input JSON before anything else', async () => {
     await expectJson(await send(makeRequest('/v1/analisar-prato', {
       method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{',
     })), 400, { erro: 'corpo_invalido' });
@@ -115,63 +118,26 @@ describe('Cloudflare Worker API (synthetic, offline)', () => {
   });
 
   test('rejects an invalid installation UUID', async () => {
-    await expectJson(await send(makeAnalysis({ instalacao: 'not-a-uuid', imagem: SYNTHETIC_IMAGE_BASE64, turnstileToken: TURNSTILE_TOKEN })), 400, { erro: 'instalacao_invalida' });
+    await expectJson(await send(makeAnalysis({ instalacao: 'not-a-uuid', imagem: SYNTHETIC_IMAGE_BASE64, licenca: 'x' })), 400, { erro: 'instalacao_invalida' });
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
   test('rejects non-JPEG or malformed base64 before upstream calls', async () => {
-    await expectJson(await send(makeAnalysis({ instalacao: INSTALLATION_ID, imagem: 'A'.repeat(1200), turnstileToken: TURNSTILE_TOKEN })), 400, { erro: 'imagem_invalida' });
+    await expectJson(await send(makeAnalysis({ instalacao: INSTALLATION_ID, imagem: 'A'.repeat(1200), licenca: 'x' })), 400, { erro: 'imagem_invalida' });
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
-  test('requires a configured Turnstile secret and Gemini key', async () => {
-    await expectJson(await send(makeAnalysis({ instalacao: INSTALLATION_ID, imagem: SYNTHETIC_IMAGE_BASE64, turnstileToken: TURNSTILE_TOKEN }), createEnv({ TURNSTILE_SECRET_KEY: undefined })), 503, { erro: 'protecao_nao_configurada' });
+  test('fails closed without the Gemini key or the licence signing key', async () => {
+    const corpo = { instalacao: INSTALLATION_ID, imagem: SYNTHETIC_IMAGE_BASE64, licenca: 'x' };
+    await expectJson(await send(makeAnalysis(corpo), createEnv({ GEMINI_API_KEY: undefined })), 503, { erro: 'nao_configurado' });
+    await expectJson(await send(makeAnalysis(corpo), createEnv({ LICENCA_TOKEN_KEY: undefined })), 503, { erro: 'nao_configurado' });
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
-  test('rejects failed, wrong-host, or wrong-action Turnstile verification', async () => {
-    fetchMock.mockResolvedValueOnce(new Response(JSON.stringify({ success: true, hostname: 'evil.example', action: 'levia_analisar_prato' }), { status: 200 }));
-    await expectJson(await send(makeAnalysis({ instalacao: INSTALLATION_ID, imagem: SYNTHETIC_IMAGE_BASE64, turnstileToken: TURNSTILE_TOKEN })), 403, { erro: 'desafio_invalido' });
-    expect(fetchMock).toHaveBeenCalledTimes(1);
-  });
-
-  test('valid Turnstile token allows normalized synthetic response and keeps image off logs', async () => {
-    const item = { nome: 'Alimento fictício', nomeIngles: 'Synthetic food', unidades: 88, gramas: 3000, confianca: 1.7,
-      por100g: { kcal: 100.7, proteina: 105, carboidrato: 10, gordura: -5, fibra: 0.4 } };
-    turnstileSuccess();
-    geminiSuccess({ ehComida: true, itens: [item] });
-    const response = await send(makeAnalysis({ imagem: SYNTHETIC_IMAGE_BASE64, instalacao: INSTALLATION_ID, idioma: 'pt', turnstileToken: TURNSTILE_TOKEN }, { Origin: ALLOWED_ORIGIN }));
-    await expectJson(response, 200, { ehComida: true, itens: [{ nome: 'Alimento fictício', nomeIngles: 'Synthetic food', unidades: 50, gramas: 2000, confianca: 1,
-      por100g: { kcal: 101, proteina: 100, carboidrato: 10, gordura: 0, fibra: 0.4 } }], restantes: 1 });
-    expect(response.headers.get('Access-Control-Allow-Origin')).toBe(ALLOWED_ORIGIN);
-    const [verifyUrl, verifyOptions] = fetchMock.mock.calls[0] as [string, RequestInit];
-    expect(verifyUrl).toBe('https://challenges.cloudflare.com/turnstile/v0/siteverify');
-    expect(String(verifyOptions.body)).toContain(`secret=${SECRET}`);
-    const [geminiUrl, geminiOptions] = fetchMock.mock.calls[1] as [string, RequestInit];
-    expect(geminiUrl).toContain('generativelanguage.googleapis.com');
-    expect(new Headers(geminiOptions.headers).get('x-goog-api-key')).toBe(GEMINI_API_KEY);
-    const geminiBody = JSON.parse(geminiOptions.body as string);
-    expect(geminiBody.contents[0].parts[0].inline_data).toEqual({ mime_type: 'image/jpeg', data: SYNTHETIC_IMAGE_BASE64 });
-    expect(JSON.stringify(geminiBody)).not.toMatch(/Fulano|glicemia|medicamentos|perfil/i);
-  });
-
-  test('a failed Gemini request still reserves photo quota', async () => {
-    const env = createEnv();
-    turnstileSuccess();
-    fetchMock.mockResolvedValueOnce(new Response(JSON.stringify({ error: { status: 'SYNTHETIC_FAILURE' } }), { status: 500 }));
-    await expectJson(await send(makeAnalysis({ instalacao: INSTALLATION_ID, imagem: SYNTHETIC_IMAGE_BASE64, turnstileToken: TURNSTILE_TOKEN }), env), 502, { erro: 'falha_ia', motivo: '500 SYNTHETIC_FAILURE' });
-    expect(env.LEVIA_COTAS.put).toHaveBeenCalledWith(`inst:${INSTALLATION_ID}`, expect.any(String), { expirationTtl: 8 * 24 * 3600 });
-  });
-
-  test('installation receives 402 after its configured quota is exhausted', async () => {
-    const env = createEnv({ FOTOS_GRATIS_7D: 2 });
-    fetchMock.mockImplementation(async (input: string) => {
-      if (input.includes('siteverify')) return new Response(JSON.stringify({ success: true, hostname: 'levia-app.netlify.app', action: 'levia_analisar_prato' }), { status: 200 });
-      return new Response(JSON.stringify({ candidates: [{ content: { parts: [{ text: JSON.stringify({ ehComida: false, itens: [] }) }] } }] }), { status: 200 });
-    });
-    const req = () => makeAnalysis({ instalacao: INSTALLATION_ID, imagem: SYNTHETIC_IMAGE_BASE64, turnstileToken: TURNSTILE_TOKEN });
-    await send(req(), env);
-    await send(req(), env);
-    await expectJson(await send(req(), env), 402, expect.objectContaining({ erro: 'cota_esgotada', limite: 2 }));
+  test('a malformed licence is rejected before any upstream call', async () => {
+    for (const licenca of ['lixo', 'v1.a.b', 'v2.a.b.c', 'v1..']) {
+      await expectJson(await send(makeAnalysis({ instalacao: INSTALLATION_ID, imagem: SYNTHETIC_IMAGE_BASE64, licenca })), 403, { erro: 'licenca_invalida' });
+    }
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 });

@@ -1,0 +1,16 @@
+{
+  // App web (PWA) do Leviã servido como arquivos estáticos pela Cloudflare (substitui o Netlify).
+  // Gerar antes: npx expo export --platform web --output-dir dist
+  // Publicar:    npx wrangler deploy --config wrangler.app.jsonc
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "levia-app",
+  "compatibility_date": "2026-09-21",
+  "assets": {
+    "directory": "./dist",
+    // rotas do expo-router (ex.: /ativar) caem no index.html; arquivos que existem (sw.js, ícones, _expo/*) são servidos normalmente
+    "not_found_handling": "single-page-application"
+  },
+  // Domínio do app (o DNS do Netlify foi removido e o domínio foi ligado a este Worker em 2026-11-04).
+  // O www.leviapp.org é a landing (Worker levia-landing).
+  "routes": [{ "pattern": "leviapp.org", "custom_domain": true }]
+}

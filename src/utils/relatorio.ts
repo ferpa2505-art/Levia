@@ -1,4 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { cofre } from '@utils/cofre';
 import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
 import { traduzirAtual as t, obterIdiomaAtual } from '@/i18n';
@@ -66,7 +67,7 @@ export async function montarHtmlRelatorio(dias: number): Promise<string> {
     carregarRegistros(),
     carregarDiabetes(),
     carregarGlp1(),
-    AsyncStorage.getItem('levia:medicacoes'),
+    cofre.lerDado('levia:medicacoes'),
   ]);
   const meds: Medicacao[] = medsRaw ? ((JSON.parse(medsRaw) as MedicacoesData).medicacoes ?? []) : [];
   const idioma = obterIdiomaAtual();

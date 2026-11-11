@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useState, ReactNode, useRef } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { cofre } from '@utils/cofre';
 import type { Medicacao, MedicacoesData, UsoMedicacao } from '@models/medicacoes';
 import { medicacoesVazias, UNIDADES_DOSE } from '@models/medicacoes';
 import type { RegistroMedicacao } from '@models/diabetes';
@@ -83,14 +84,14 @@ export function MedicacoesProvider({ children }: { children: ReactNode }) {
   async function persistir(novo: MedicacoesData) {
     dadosRef.current = novo;
     setDados(novo);
-    await AsyncStorage.setItem(CHAVE, JSON.stringify(novo)).catch(() => {});
+    await cofre.gravarDado(CHAVE, JSON.stringify(novo)).catch(() => {});
   }
 
   useEffect(() => {
     (async () => {
       let salvo = medicacoesVazias;
       try {
-        const raw = await AsyncStorage.getItem(CHAVE);
+        const raw = await cofre.lerDado(CHAVE);
         if (raw) salvo = { ...medicacoesVazias, ...JSON.parse(raw) };
       } catch {
         // mantém vazio
@@ -104,7 +105,7 @@ export function MedicacoesProvider({ children }: { children: ReactNode }) {
           agendadas.push({ ...m, notificationIds: await agendarNotificacoes(m, t('med.notifTitulo'), idioma) });
         }
         salvo = { medicacoes: [...salvo.medicacoes, ...agendadas], migradoDoDiabetes: true };
-        await AsyncStorage.setItem(CHAVE, JSON.stringify(salvo)).catch(() => {});
+        await cofre.gravarDado(CHAVE, JSON.stringify(salvo)).catch(() => {});
       }
       // depois de restaurar um backup: agenda de novo os lembretes neste aparelho
       if ((await AsyncStorage.getItem(CHAVE_REAGENDAR)) === '1') {
@@ -113,7 +114,7 @@ export function MedicacoesProvider({ children }: { children: ReactNode }) {
           reagendadas.push({ ...m, notificationIds: await agendarNotificacoes(m, t('med.notifTitulo'), idioma), calendarEventIds: [] });
         }
         salvo = { ...salvo, medicacoes: reagendadas };
-        await AsyncStorage.setItem(CHAVE, JSON.stringify(salvo)).catch(() => {});
+        await cofre.gravarDado(CHAVE, JSON.stringify(salvo)).catch(() => {});
         await AsyncStorage.removeItem(CHAVE_REAGENDAR).catch(() => {});
       }
       dadosRef.current = salvo;

@@ -1,6 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { randomUUID } from 'expo-crypto';
 import { ImageManipulator, SaveFormat } from 'expo-image-manipulator';
+import { idDaInstalacao, lerLicenca, limparLicenca } from '@utils/licenca';
 import { buscarAlimentosGlobais, buscarAlimentoPorId, AlimentoGlobal, IdiomaAlimentos } from '@constants/alimentosGlobais';
 import { ingredientes } from '@constants/ingredients';
 import { AlimentoPor100g, Ingrediente } from '@models/ingredients';
@@ -12,8 +12,9 @@ import { normalizarTexto } from '@utils/buscaAlimentos';
  * do app. Quando o banco não tem o alimento, usa a estimativa da IA (marcada).
  */
 const URL_IA = 'https://levia-ia-worker.ferpa2505.workers.dev/v1/analisar-prato';
-const CHAVE_INSTALACAO = 'levia:instalacao';
 const CHAVE_CONSENTIMENTO = 'levia:consentimentoIA';
+
+export { idDaInstalacao };
 
 export interface ItemIA {
   nome: string;
@@ -36,15 +37,7 @@ export interface SugestaoIA {
 
 export type ResultadoIA =
   | { ok: true; sugestoes: SugestaoIA[]; restantes: number }
-  | { ok: false; motivo: 'naoComida' | 'cota' | 'limite' | 'rede' | 'servidor'; liberaEm?: string };
-
-export async function idDaInstalacao(): Promise<string> {
-  const salvo = await AsyncStorage.getItem(CHAVE_INSTALACAO);
-  if (salvo) return salvo;
-  const novo = randomUUID();
-  await AsyncStorage.setItem(CHAVE_INSTALACAO, novo);
-  return novo;
-}
+  | { ok: false; motivo: 'naoComida' | 'cota' | 'limite' | 'licenca' | 'expirado' | 'rede' | 'servidor'; liberaEm?: string };
 
 export async function temConsentimentoIA(): Promise<boolean> {
   return (await AsyncStorage.getItem(CHAVE_CONSENTIMENTO)) === '1';
@@ -117,20 +110,28 @@ export function ligarAoBanco(item: ItemIA, idioma: IdiomaAlimentos): SugestaoIA 
   };
 }
 
-export async function analisarFotoDoPrato(uri: string, idioma: IdiomaAlimentos, turnstileToken: string): Promise<ResultadoIA> {
+export async function analisarFotoDoPrato(uri: string, idioma: IdiomaAlimentos): Promise<ResultadoIA> {
+  const licenca = await lerLicenca();
+  if (!licenca) return { ok: false, motivo: 'licenca' };
   let resposta: Response;
   try {
     const [imagem, instalacao] = await Promise.all([fotoReduzidaBase64(uri), idDaInstalacao()]);
     resposta = await fetch(URL_IA, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ imagem, instalacao, idioma, turnstileToken }),
+      body: JSON.stringify({ imagem, instalacao, idioma, licenca: licenca.licenca }),
     });
   } catch {
     return { ok: false, motivo: 'rede' };
   }
   let dados: { erro?: string; liberaEm?: string; ehComida?: boolean; itens?: ItemIA[]; restantes?: number } = {};
   try { dados = await resposta.json(); } catch { return { ok: false, motivo: 'servidor' }; }
+  // o servidor não reconhece mais a licença (revogada, adulterada, aparelho trocado): pede o serial de novo
+  if (resposta.status === 401 || resposta.status === 403) {
+    await limparLicenca();
+    return { ok: false, motivo: 'licenca' };
+  }
+  if (resposta.status === 402 && dados.erro === 'acesso_expirado') return { ok: false, motivo: 'expirado' };
   if (resposta.status === 402) return { ok: false, motivo: 'cota', liberaEm: dados.liberaEm };
   if (resposta.status === 429) return { ok: false, motivo: 'limite' };
   if (!resposta.ok) return { ok: false, motivo: 'servidor' };

@@ -5,11 +5,7 @@
 -- This migration should be run once. If columns already exist, it will fail gracefully
 -- in production but that's acceptable for this use case.
 
-ALTER TABLE leads ADD COLUMN consent_at TEXT;
-ALTER TABLE leads ADD COLUMN channel TEXT NOT NULL DEFAULT 'whatsapp';
-ALTER TABLE leads ADD COLUMN updated_at TEXT NOT NULL DEFAULT (datetime('now'));
-
--- Update existing rows to have updated_at = created_at
-UPDATE leads SET updated_at = created_at WHERE updated_at IS NULL OR updated_at = '';
-
-CREATE INDEX IF NOT EXISTS idx_leads_channel ON leads(channel);
+-- No-op: a 0002 já cria a tabela leads com consent_at, channel e updated_at.
+-- Esta migration foi aplicada em produção antes de a 0002 passar a criar as colunas; em banco
+-- novo os ALTER TABLE falhavam com "duplicate column name". O nome é mantido porque já consta
+-- em d1_migrations na produção, e renomear criaria uma migration pendente.

@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   baileys-gateway:
     build:
@@ -15,12 +13,15 @@ services:
     volumes:
       - baileys-auth:/app/auth
       - ./logs:/app/logs
+      # vídeo e criativos enviados pelo LEVI (levia-uso.mp4, criativo-1.jpg…); fora do Git de propósito
+      - ./media:/app/media:ro
     healthcheck:
-      test: ["CMD", "node", "-e", "console.log('ok')"]
+      # confere a conexão real com o WhatsApp (endpoint /health, só dentro do container)
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3001/health').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))"]
       interval: 60s
       timeout: 10s
       retries: 3
-      start_period: 30s
+      start_period: 60s
 
 volumes:
   baileys-auth:

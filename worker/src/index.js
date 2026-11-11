@@ -1,21 +1,20 @@
-﻿import { iniciarTeste } from './licencas';
-<<<<<<< HEAD
-ï»¿ï»¿ï»¿ï»¿ï»¿ï»¿ï»¿ï»¿ï»¿ï»¿ï»¿ï»¿import { iniciarTeste } from './licencas';
-=======
-ï»¿ï»¿ï»¿ï»¿ï»¿ï»¿ï»¿ï»¿ï»¿ï»¿import { iniciarTeste } from './licencas';
->>>>>>> origin/main
-import { turnstileSitekey, validarTurnstile } from './turnstile';
+import { iniciarTeste } from './licencas';
+import { turnstileSitekey } from './turnstile';
 import { processarMensagemWhatsApp } from './fluxo';
+import { puxarVencidos } from './lembretes';
+import { limparVencidos } from './retencao';
+import { reservarCotaFoto } from './cotas';
+import { ativarSerial, validarLicenca } from './serial';
+import { receberWebhookHotmart } from './hotmart';
 
 /**
- * levia-ia-worker - analise de foto do prato para o app LeviÃ£.
+ * levia-ia-worker - analise de foto do prato para o app Leviã.
  * A imagem nao e persistida nem registrada em logs.
  */
 const TAMANHO_MAX_BASE64 = 2_000_000;
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-const SETE_DIAS_MS = 7 * 24 * 3600 * 1000;
-const IDIOMAS = { pt: 'portuguÃªs do Brasil', en: 'English', es: 'espaÃ±ol', fr: 'franÃ§ais', it: 'italiano' };
-const ORIGENS_WEB = ['https://levia-app.netlify.app', 'http://localhost:8081', 'https://typebot.com', 'https://app.typebot.io'];
+const IDIOMAS = { pt: 'português do Brasil', en: 'English', es: 'español', fr: 'français', it: 'italiano' };
+const ORIGENS_WEB = ['https://leviapp.org', 'https://www.leviapp.org', 'http://localhost:8081', 'https://typebot.com', 'https://app.typebot.io'];
 const APP_BASE_URL_DEFAULT = 'https://leviapp.org';
 
 function cabecalhosCors(origem) {
@@ -44,7 +43,13 @@ function comCors(resposta, origem) {
   return new Response(resposta.body, { status: resposta.status, headers: h });
 }
 
-const hojeUTC = () => new Date().toISOString().slice(0, 10);
+function iguais(a, b) {
+  if (typeof a !== 'string' || typeof b !== 'string' || a.length !== b.length) return false;
+  let dif = 0;
+  for (let i = 0; i < a.length; i++) dif |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  return dif === 0;
+}
+
 async function lerNumero(kv, chave) { return Number((await kv.get(chave)) ?? 0); }
 
 function imagemJpegValida(valor) {
@@ -84,18 +89,18 @@ function normalizarTelefoneBR(phone) {
 
 function prompt(idioma) {
   const lingua = IDIOMAS[idioma] ?? IDIOMAS.pt;
-  return `VocÃª Ã© um nutricionista analisando a foto de uma refeiÃ§Ã£o.
-Liste cada alimento visÃ­vel no prato e estime o peso em gramas da porÃ§Ã£o como servida (cozida/pronta, parte comestÃ­vel).
+  return `Você é um nutricionista analisando a foto de uma refeição.
+Liste cada alimento visível no prato e estime o peso em gramas da porção como servida (cozida/pronta, parte comestível).
 Regras:
-- "nome": nome simples e genÃ©rico do alimento em ${lingua}, com o preparo quando der para ver.
-- "nomeIngles": o mesmo nome em inglÃªs.
-- Separe os componentes do prato. Molhos e Ã³leos visÃ­veis contam como item prÃ³prio.
+- "nome": nome simples e genérico do alimento em ${lingua}, com o preparo quando der para ver.
+- "nomeIngles": o mesmo nome em inglês.
+- Separe os componentes do prato. Molhos e óleos visíveis contam como item próprio.
 - "unidades": quantas unidades daquele alimento aparecem; para alimentos sem unidade, use 1.
 - "gramas": peso TOTAL de todas as unidades daquele alimento no prato.
-- "por100g": estimativa de kcal, proteÃ­na, carboidrato, gordura e fibra por 100 g.
-- "confianca": de 0 a 1, confianÃ§a na identificaÃ§Ã£o e no peso.
-- Se nÃ£o for comida, devolva "ehComida": false e lista vazia.
-- No mÃ¡ximo 12 itens. NÃ£o invente alimentos que nÃ£o aparecem.`;
+- "por100g": estimativa de kcal, proteína, carboidrato, gordura e fibra por 100 g.
+- "confianca": de 0 a 1, confiança na identificação e no peso.
+- Se não for comida, devolva "ehComida": false e lista vazia.
+- No máximo 12 itens. Não invente alimentos que não aparecem.`;
 }
 
 const ESQUEMA = {
@@ -151,49 +156,27 @@ async function perguntarAoGemini(env, imagemBase64, idioma) {
     return { ehComida: res.ehComida !== false && itens.length > 0, itens };
   } catch {
     const fim = dados?.candidates?.[0]?.finishReason ?? dados?.promptFeedback?.blockReason ?? 'sem_texto';
-    console.error('gemini: resposta sem JSON vÃ¡lido', fim);
+    console.error('gemini: resposta sem JSON válido', fim);
     return { falha: `json ${fim} ${typeof texto === 'string' ? texto.length : 0}` };
   }
 }
 
 async function analisarPrato(request, env) {
   if (!env.GEMINI_API_KEY) return json({ erro: 'nao_configurado' }, 503);
-  if (!env.TURNSTILE_SECRET_KEY || !env.TURNSTILE_SITE_KEY) return json({ erro: 'protecao_nao_configurada' }, 503);
+  if (Number(request.headers.get('content-length') ?? 0) > 3_000_000) return json({ erro: 'imagem_invalida' }, 413);
   let corpo;
   try { corpo = await request.json(); } catch { return json({ erro: 'corpo_invalido' }, 400); }
-  const { imagem, instalacao, idioma, turnstileToken } = corpo ?? {};
+  const { imagem, instalacao, idioma, licenca } = corpo ?? {};
   if (typeof instalacao !== 'string' || !UUID.test(instalacao)) return json({ erro: 'instalacao_invalida' }, 400);
   if (!imagemJpegValida(imagem)) return json({ erro: 'imagem_invalida' }, 400);
 
-  const verificacao = await validarTurnstile(request, env, turnstileToken);
-  if (!verificacao.ok) return verificacao.response;
+  // Só quem ativou um serial usa a IA: a licença é assinada pelo Worker e presa a esta instalação.
+  const acesso = await validarLicenca(env, licenca, instalacao);
+  if (!acesso.ok) return json(acesso.corpo, acesso.status);
 
-  const kv = env.LEVIA_COTAS;
-  const agora = Date.now();
-  const dia = hojeUTC();
-  const ip = request.headers.get('cf-connecting-ip') ?? 'sem-ip';
-  const hora = new Date().toISOString().slice(0, 13);
-  const chaveDia = `dia:${dia}`;
-  const usadosDia = await lerNumero(kv, chaveDia);
-  if (usadosDia >= Number(env.MAX_FOTOS_DIA || 300)) return json({ erro: 'limite_servico' }, 429);
-  const chaveIp = `ip:${ip}:${hora}`;
-  const usadosIp = await lerNumero(kv, chaveIp);
-  if (usadosIp >= Number(env.MAX_FOTOS_IP_HORA || 20)) return json({ erro: 'muitas_tentativas' }, 429);
-  const chaveInst = `inst:${instalacao}`;
-  const historico = ((await kv.get(chaveInst, 'json')) ?? []).filter((t) => agora - t < SETE_DIAS_MS);
-  const limite = Number(env.FOTOS_GRATIS_7D || 2);
-  if (historico.length >= limite) {
-    const liberaEm = new Date(Math.min(...historico) + SETE_DIAS_MS).toISOString();
-    return json({ erro: 'cota_esgotada', limite, liberaEm }, 402);
-  }
-
-  // Reserva cota antes da chamada externa para que falhas do Gemini tambÃ©m contem.
-  historico.push(agora);
-  await Promise.all([
-    kv.put(chaveInst, JSON.stringify(historico), { expirationTtl: 8 * 24 * 3600 }),
-    kv.put(chaveDia, String(usadosDia + 1), { expirationTtl: 3 * 24 * 3600 }),
-    kv.put(chaveIp, String(usadosIp + 1), { expirationTtl: 2 * 3600 }),
-  ]);
+  // Reserva a cota ANTES da chamada externa (falhas do Gemini também contam) e de forma atômica.
+  const reserva = await reservarCotaFoto(env, { instalacao, conta: acesso.conta, ip: request.headers.get('cf-connecting-ip') ?? 'sem-ip' });
+  if (!reserva.ok) return json(reserva.corpo, reserva.status);
   let resultado;
   try {
     resultado = await perguntarAoGemini(env, imagem, idioma);
@@ -201,8 +184,12 @@ async function analisarPrato(request, env) {
     console.error('Erro inesperado em perguntarAoGemini:', e?.message);
     resultado = { falha: 'exception ' + (e?.message || 'unknown') };
   }
-  if (!resultado || resultado.falha) return json({ erro: 'falha_ia', motivo: resultado?.falha }, 502);
-  return json({ ...resultado, restantes: Math.max(0, limite - historico.length) });
+  // o detalhe técnico da falha fica no log do Worker, não na resposta
+  if (!resultado || resultado.falha) {
+    if (resultado?.falha) console.error('falha_ia:', String(resultado.falha).slice(0, 200));
+    return json({ erro: 'falha_ia' }, 502);
+  }
+  return json({ ...resultado, restantes: reserva.restantes });
 }
 
 async function verificarAutenticacao(request, env) {
@@ -212,7 +199,7 @@ async function verificarAutenticacao(request, env) {
   }
   const token = authHeader.slice(7).trim();
   const expected = env.GATEWAY_TOKEN;
-  if (!expected || token !== expected) {
+  if (!expected || !iguais(token, expected)) {
     return json({ erro: 'token_invalido' }, 401);
   }
   return null; // OK
@@ -232,7 +219,7 @@ async function buscarLeadExistente(env, phoneNormalizado) {
 }
 
 async function processarLead(request, env) {
-  // 1. Verificar autenticaÃ§Ã£o
+  // 1. Verificar autenticação
   const authError = await verificarAutenticacao(request, env);
   if (authError) return authError;
 
@@ -244,18 +231,22 @@ async function processarLead(request, env) {
   const usados = await lerNumero(kv, chaveRateLimit);
   if (usados >= 10) return json({ erro: 'muitas_tentativas' }, 429);
 
-  // 3. Parse e validaÃ§Ã£o do corpo
+  // 3. Parse e validação do corpo
   let corpo;
   try { corpo = await request.json(); } catch { return json({ erro: 'corpo_invalido' }, 400); }
 
   const { name, phone, email, pain_point, source } = corpo ?? {};
   
-  // ValidaÃ§Ã£o obrigatÃ³ria
+  // Validação obrigatória
   if (!name || typeof name !== 'string' || name.trim().length === 0) {
     return json({ erro: 'nome_obrigatorio' }, 400);
   }
   if (!phone || typeof phone !== 'string' || phone.trim().length === 0) {
     return json({ erro: 'telefone_obrigatorio' }, 400);
+  }
+  // Autorização explícita: sem o aceite da pessoa nada é gravado (nem a data de consentimento é inventada)
+  if (corpo?.consentimento !== true) {
+    return json({ erro: 'consentimento_obrigatorio' }, 400);
   }
 
   // Increment rate limit counter
@@ -265,7 +256,7 @@ async function processarLead(request, env) {
   const phoneNormalizado = normalizarTelefoneBR(phone.trim());
   const agora = new Date().toISOString();
 
-  // 4. DeduplicaÃ§Ã£o: verificar se jÃ¡ existe lead com esse telefone
+  // 4. Deduplicação: verificar se já existe lead com esse telefone
   const leadIdExistente = await buscarLeadExistente(env, phoneNormalizado);
   if (leadIdExistente) {
     const baseUrl = env.APP_BASE_URL || APP_BASE_URL_DEFAULT;
@@ -315,7 +306,8 @@ async function processarLead(request, env) {
         created_at: agora,
         updated_at: agora
       };
-      await kv.put(`lead:${leadId}`, JSON.stringify(leadData), { expirationTtl: 30 * 24 * 3600 });
+      // mesma chave por telefone que "apagar" (WhatsApp) procura: assim a exclusão alcança este cadastro
+      await kv.put(`lead:tel:${phoneNormalizado}`, JSON.stringify(leadData), { expirationTtl: 30 * 24 * 3600 });
     } catch (e) {
       console.error('Erro ao salvar lead no KV:', e?.message);
       return json({ erro: 'falha_armazenamento' }, 503);
@@ -327,77 +319,83 @@ async function processarLead(request, env) {
 }
 
 
+const JANELA_ASSINATURA_MS = 5 * 60 * 1000;
+
+async function hmacHex(segredo, texto) {
+  const chave = await crypto.subtle.importKey('raw', new TextEncoder().encode(segredo), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
+  const assinatura = await crypto.subtle.sign('HMAC', chave, new TextEncoder().encode(texto));
+  return [...new Uint8Array(assinatura)].map((b) => b.toString(16).padStart(2, '0')).join('');
+}
+
+/**
+ * O gateway assina `${x-timestamp}.${corpo}` com HMAC-SHA256 (header x-signature).
+ * Sem segredo configurado a rota fica fechada; o timestamp (janela de 5 min) impede reenvio de mensagens antigas.
+ */
+/** Confere a assinatura do gateway (HMAC de `${carimbo}.${corpo}`). Devolve { bruto } ou { resposta } com o erro. */
+async function lerCorpoAssinadoDoGateway(request, env) {
+  const segredo = env.WHATSAPP_WEBHOOK_SECRET;
+  if (!segredo) return { resposta: json({ erro: 'nao_configurado' }, 503) };
+
+  const bruto = await request.text();
+  if (bruto.length > 100_000) return { resposta: json({ erro: 'corpo_grande' }, 413) };
+
+  const assinatura = request.headers.get('x-signature') ?? '';
+  const carimbo = request.headers.get('x-timestamp') ?? '';
+  const instante = Number(carimbo);
+  if (!Number.isFinite(instante) || Math.abs(Date.now() - instante) > JANELA_ASSINATURA_MS) {
+    return { resposta: json({ erro: 'assinatura_invalida' }, 401) };
+  }
+  const esperado = await hmacHex(segredo, `${carimbo}.${bruto}`);
+  if (!iguais(assinatura, esperado)) return { resposta: json({ erro: 'assinatura_invalida' }, 401) };
+  return { bruto };
+}
+
+/** O gateway busca aqui os lembretes que já venceram e os envia (cada um sai no máximo uma vez). */
+async function entregarLembretesAoGateway(request, env) {
+  const lido = await lerCorpoAssinadoDoGateway(request, env);
+  if (lido.resposta) return lido.resposta;
+  return json({ mensagens: await puxarVencidos(env) });
+}
+
 async function processarWhatsAppInbound(request, env) {
-  // Verificar assinatura do webhook (se configurado)
-  const signature = request.headers.get('x-webhook-signature');
-  
-  // DEBUG: Log incoming request details
-  console.log('DEBUG: signature header:', signature);
-  console.log('DEBUG: WHATSAPP_WEBHOOK_SECRET:', env.WHATSAPP_WEBHOOK_SECRET ? 'set' : 'not set');
-  
+  const lido = await lerCorpoAssinadoDoGateway(request, env);
+  if (lido.resposta) return lido.resposta;
+  const bruto = lido.bruto;
+
   let corpo;
-  if (env.WHATSAPP_WEBHOOK_SECRET && signature) {
-    const crypto = require('crypto');
-    const body = await request.text();
-    console.log('DEBUG: raw body (signature branch):', body);
-    const expected = crypto.createHmac('sha256', env.WHATSAPP_WEBHOOK_SECRET)
-      .update(body)
-      .digest('hex');
-    if (signature !== expected) {
-      console.warn('Assinatura de webhook invÃ¡lida');
-      return json({ erro: 'assinatura_invalida' }, 401);
-    }
-    // Re-parse body since we consumed it
-    try { corpo = JSON.parse(body) } catch { return json({ erro: 'corpo_invalido' }, 400) }
-  } else {
-    // Use request.text() + JSON.parse() instead of request.json() to avoid Cloudflare Workers parsing issues
-    const rawBody = await request.text();
-    console.log('DEBUG: raw body (else branch):', rawBody);
-    try { corpo = JSON.parse(rawBody) } catch { return json({ erro: 'corpo_invalido' }, 400) }
-  }
+  try { corpo = JSON.parse(bruto); } catch { return json({ erro: 'corpo_invalido' }, 400); }
 
-  // Estrutura esperada do Baileys/webhook
-  const { messages, phone, messageId, timestamp, type } = corpo ?? {};
+  const { messages, phone, messageId, timestamp } = corpo ?? {};
+  const mensagens = Array.isArray(messages)
+    ? messages
+    : corpo?.text || corpo?.body
+      ? [{ text: corpo.text || corpo.body, id: messageId, from: phone, timestamp }]
+      : [];
 
-  // Se nÃ£o tem messages array, assumir mensagem Ãºnica
-  const mensagens = Array.isArray(messages) ? messages : 
-    (corpo.text || corpo.body ? [{ text: corpo.text || corpo.body, id: messageId, from: phone, timestamp }] : []);
-
-  if (mensagens.length === 0) {
-    return json({ erro: 'nenhuma_mensagem' }, 400);
-  }
+  if (mensagens.length === 0) return json({ erro: 'nenhuma_mensagem' }, 400);
+  if (mensagens.length > 20) return json({ erro: 'mensagens_demais' }, 413);
 
   const resultados = [];
-
   for (const msg of mensagens) {
-    const texto = (msg.text || msg.body || '').trim();
+    const texto = String(msg.text || msg.body || '').trim().slice(0, 1000);
     const msgPhone = msg.from || msg.phone || phone;
-    const msgId = msg.id || messageId || `${msgPhone}-${Date.now()}`;
-    const msgTimestamp = msg.timestamp || timestamp || Math.floor(Date.now() / 1000);
+    const msgId = msg.id || msg.message_id || messageId;
 
-    if (!msgPhone || !texto) {
-      resultados.push({ phone: msgPhone, status: 'ignorado', motivo: 'dados_incompletos' });
+    if (!msgPhone || !texto || !msgId) {
+      resultados.push({ status: 'ignorado', motivo: 'dados_incompletos' });
       continue;
     }
 
     try {
-      const resultado = await processarMensagemWhatsApp(env, msgPhone, texto, msgId);
-      
+      const resultado = await processarMensagemWhatsApp(env, msgPhone, texto, String(msgId));
       if (resultado.tipo === 'duplicado') {
-        resultados.push({ phone: msgPhone, status: 'duplicado' });
+        resultados.push({ status: 'duplicado' });
         continue;
       }
-
-      resultados.push({
-        phone: msgPhone,
-        status: resultado.tipo,
-        resposta: resultado.resposta,
-        pwaLink: resultado.pwaLink,
-        leadId: resultado.leadId,
-      });
+      resultados.push({ status: resultado.tipo, resposta: resultado.resposta, respostas: resultado.respostas, pwaLink: resultado.pwaLink, leadId: resultado.leadId });
     } catch (e) {
       console.error('Erro ao processar mensagem:', e?.message);
-      resultados.push({ phone: msgPhone, status: 'erro', erro: e?.message });
+      resultados.push({ status: 'erro', erro: 'interno' });
     }
   }
 
@@ -405,18 +403,30 @@ async function processarWhatsAppInbound(request, env) {
 }
 
 export default {
+  // cron diário (wrangler.toml [triggers]): apaga o que passou do prazo de retenção
+  async scheduled(_evento, env, ctx) {
+    ctx.waitUntil(limparVencidos(env));
+  },
   async fetch(request, env) {
     const { pathname } = new URL(request.url);
     const origem = request.headers.get('Origin');
-    if ((pathname === '/v1/analisar-prato' || pathname === '/v1/turnstile/sitekey' || pathname === '/api/lead') && request.method === 'OPTIONS') {
+    if ((pathname === '/v1/analisar-prato' || pathname === '/v1/ativar' || pathname === '/v1/turnstile/sitekey' || pathname === '/api/lead') && request.method === 'OPTIONS') {
       return new Response(null, { status: 204, headers: cabecalhosCors(origem) });
     }
     if (pathname === '/v1/turnstile/sitekey' && request.method === 'GET') {
       return comCors(turnstileSitekey(env), origem);
     }
     if (pathname === '/v1/teste/iniciar' && request.method === 'POST') {
-      try { return iniciarTeste(request, env); }
+      try { return await iniciarTeste(request, env); }
       catch (e) { console.error('erro teste', e?.message); return json({ erro: 'interno' }, 500); }
+    }
+    if (pathname === '/v1/ativar' && request.method === 'POST') {
+      try { return comCors(await ativarSerial(request, env), origem); }
+      catch (e) { console.error('erro ativar', e?.message); return comCors(json({ erro: 'interno' }, 500), origem); }
+    }
+    if (pathname === '/v1/hotmart/webhook' && request.method === 'POST') {
+      try { return await receberWebhookHotmart(request, env); }
+      catch (e) { console.error('erro hotmart', e?.message); return json({ erro: 'interno' }, 500); }
     }
     if (pathname === '/v1/analisar-prato' && request.method === 'POST') {
       try { return comCors(await analisarPrato(request, env), origem); }
@@ -426,6 +436,10 @@ export default {
       try { return comCors(await processarLead(request, env), origem); }
       catch (e) { console.error('erro lead', e?.message); return comCors(json({ erro: 'interno' }, 500), origem); }
     }
+    if (pathname === '/api/wa/outbox/pull' && request.method === 'POST') {
+      try { return await entregarLembretesAoGateway(request, env); }
+      catch (e) { console.error('erro wa outbox', e?.message); return json({ erro: 'interno' }, 500); }
+    }
     if (pathname === '/api/wa/inbound' && request.method === 'POST') {
       try { return comCors(await processarWhatsAppInbound(request, env), origem); }
       catch (e) { console.error('erro wa inbound', e?.message); return comCors(json({ erro: 'interno' }, 500), origem); }
@@ -434,13 +448,3 @@ export default {
     return json({ erro: 'nao_encontrado' }, 404);
   },
 };
-
-
-
-
-
-
-
-
-
-

@@ -22,7 +22,8 @@
       },
       "blockedPermissions": [
         "com.google.android.gms.permission.AD_ID"
-      ]
+      ],
+      "allowBackup": false
     },
     "plugins": [
       "expo-router",
@@ -57,7 +58,8 @@
         {
           "faceIDPermission": "O Leviã usa o reconhecimento facial para desbloquear o app com segurança."
         }
-      ]
+      ],
+      "expo-status-bar"
     ],
     "scheme": "levia",
     "extra": {

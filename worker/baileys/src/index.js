@@ -5,9 +5,12 @@
 
 import { default as makeWASocket, useMultiFileAuthState, DisconnectReason, fetchLatestBaileysVersion, makeCacheableSignalKeyStore } from '@whiskeysockets/baileys';
 import pino from 'pino';
-import fs from 'fs';
+import crypto from 'node:crypto';
 import path from 'path';
 import axios from 'axios';
+import fs from 'node:fs';
+import qrcode from 'qrcode-terminal';
+import http from 'node:http';
 
 const logger = pino({ level: 'info' }, pino.destination({ dest: process.stdout.fd, sync: false }));
 
@@ -17,65 +20,198 @@ const {
   WHATSAPP_WEBHOOK_SECRET,
   HEARTBEAT_INTERVAL_MS = '30000',
   RECONNECT_DELAY_MS = '5000',
+  ESPERA_RESPOSTA_MS: ESPERA_RESPOSTA = '5000',
+  LEMBRETES_INTERVALO_MS = '5000',
+  MEDIA_DIR = '/app/media',
   SESSION_NAME = 'levia-gateway'
 } = process.env;
 
 const heartbeatInterval = parseInt(HEARTBEAT_INTERVAL_MS, 10);
 const reconnectDelay = parseInt(RECONNECT_DELAY_MS, 10);
+const ESPERA_RESPOSTA_MS = parseInt(ESPERA_RESPOSTA, 10);
+const INTERVALO_LEMBRETES_MS = parseInt(LEMBRETES_INTERVALO_MS, 10);
 
 let sock = null;
 let isConnected = false;
 let heartbeatTimer = null;
+let abertaDesde = null;
 
-function generateHMAC(payload) {
-  if (!WHATSAPP_WEBHOOK_SECRET) return null;
-  const crypto = require('crypto');
-  return crypto.createHmac('sha256', WHATSAPP_WEBHOOK_SECRET)
-    .update(JSON.stringify(payload))
-    .digest('hex');
+// Endpoint de saúde: só dentro do container (o healthcheck do Docker consulta).
+// 200 = conectado ao WhatsApp; 503 = desconectado ou reconectando.
+const PORTA_SAUDE = Number(process.env.PORTA_SAUDE ?? 3001);
+http.createServer((req, res) => {
+  if (req.url !== '/health') { res.writeHead(404).end(); return; }
+  res.writeHead(isConnected ? 200 : 503, { 'Content-Type': 'application/json' });
+  res.end(JSON.stringify({ conectado: isConnected, desde: abertaDesde }));
+}).on('error', (e) => logger.warn({ err: e?.message }, 'Endpoint de saúde indisponível')).listen(PORTA_SAUDE, '127.0.0.1');
+
+if (!WHATSAPP_WEBHOOK_SECRET) {
+  logger.fatal('WHATSAPP_WEBHOOK_SECRET ausente: o Worker recusa mensagens sem assinatura');
+  process.exit(1);
+}
+
+/** POST assinado ao Worker: HMAC-SHA256 de `${timestamp}.${corpo}` (o Worker confere os dois headers). */
+async function postAssinado(caminho, objeto) {
+  const corpo = JSON.stringify(objeto);
+  const carimbo = String(Date.now());
+  const assinatura = crypto.createHmac('sha256', WHATSAPP_WEBHOOK_SECRET).update(`${carimbo}.${corpo}`).digest('hex');
+  return axios.post(`${WORKER_URL}${caminho}`, corpo, {
+    headers: { 'Content-Type': 'application/json', 'X-Timestamp': carimbo, 'X-Signature': assinatura },
+    timeout: 10000,
+    transformRequest: [(d) => d], // envia exatamente os bytes assinados
+  });
 }
 
 async function sendToWorker(messages) {
   try {
-    const payload = { messages };
-    const headers = { 'Content-Type': 'application/json' };
-    
-    const signature = generateHMAC(payload);
-    if (signature) {
-      headers['X-Signature'] = signature;
-    }
-
-    const response = await axios.post(`${WORKER_URL}/api/wa/inbound`, payload, {
-      headers,
-      timeout: 10000
-    });
-
-    logger.info({ results: response.data }, 'Mensagens encaminhadas para Worker');
+    const response = await postAssinado('/api/wa/inbound', { messages });
+    // sem telefone nem texto das mensagens nos logs (dado de saúde / LGPD)
+    logger.info({ processados: response.data?.processados }, 'Mensagens encaminhadas para Worker');
     return response.data;
   } catch (error) {
-    logger.error({ err: error.message, payload: messages }, 'Erro ao enviar para Worker');
+    logger.error({ err: error.message, status: error.response?.status, quantidade: messages.length }, 'Erro ao enviar para Worker');
     throw error;
   }
 }
 
+const dormir = (ms) => new Promise((r) => setTimeout(r, ms));
+
+/** Arquivo de cada mídia que o Worker pede pelo nome. Sem o arquivo no servidor, só o texto é enviado. */
+function arquivoDaMidia(nome) {
+  if (typeof nome !== 'string') return null;
+  const arquivo = nome === 'video' ? 'levia-uso.mp4' : /^criativo-\d{1,2}$/.test(nome) ? `${nome}.jpg` : null;
+  if (!arquivo) return null;
+  const caminho = `${MEDIA_DIR}/${arquivo}`;
+  return fs.existsSync(caminho) ? { caminho, video: arquivo.endsWith('.mp4') } : null;
+}
+
+/** Conteúdo de uma mensagem: texto puro ou { texto, midia } (a mídia vai com o texto como legenda). */
+function montarConteudo(item) {
+  const texto = typeof item === 'string' ? item : item?.texto ?? '';
+  const midia = typeof item === 'object' ? arquivoDaMidia(item?.midia) : null;
+  if (!midia) return { text: texto };
+  const arquivo = fs.readFileSync(midia.caminho);
+  return midia.video
+    ? { video: arquivo, caption: texto, mimetype: 'video/mp4' }
+    : { image: arquivo, caption: texto };
+}
+
+// Todo envio passa por uma fila só: uma mensagem por vez, com intervalo e "digitando…" (ritmo humano
+// reduz o risco de bloqueio do número).
+let filaDeEnvio = Promise.resolve();
+function responder(jid, item) {
+  filaDeEnvio = filaDeEnvio.then(async () => {
+    try {
+      const texto = typeof item === 'string' ? item : item?.texto ?? '';
+      await sock.sendPresenceUpdate('composing', jid);
+      await dormir(Math.min(4000, 1200 + texto.length * 12));
+      await sock.sendMessage(jid, montarConteudo(item));
+      await sock.sendPresenceUpdate('paused', jid);
+      await dormir(1500);
+    } catch (e) {
+      logger.error({ err: e?.message }, 'Falha ao enviar mensagem');
+    }
+  });
+  return filaDeEnvio;
+}
+
+// Espera ESPERA_RESPOSTA_MS (5 s) sem novas mensagens da mesma pessoa e junta o que ela escreveu
+// em uma só: "Maria" + "Silva" chega ao Worker como "Maria Silva" e gera uma única resposta.
+// O WhatsApp identifica quem escreve por "@lid"; a conversa só abre no endereço em que ela começou.
+// Os lembretes saem horas depois, então o endereço de cada telefone fica guardado (no volume, sobrevive a reinício).
+// Mandar para "telefone@s.whatsapp.net" faz o celular da pessoa mostrar "Aguardando mensagem" e nunca entregar.
+const ARQUIVO_CONTATOS = path.join(process.cwd(), 'auth', 'contatos.json');
+const jidDoTelefone = new Map();
+try {
+  for (const [tel, jid] of Object.entries(JSON.parse(fs.readFileSync(ARQUIVO_CONTATOS, 'utf8')))) jidDoTelefone.set(tel, jid);
+} catch { /* primeira execução: ainda não existe */ }
+let salvandoContatos = null;
+function lembrarContato(telefone, jid) {
+  if (jidDoTelefone.get(telefone) === jid) return;
+  jidDoTelefone.set(telefone, jid);
+  clearTimeout(salvandoContatos);
+  salvandoContatos = setTimeout(() => {
+    try { fs.writeFileSync(ARQUIVO_CONTATOS, JSON.stringify(Object.fromEntries(jidDoTelefone))); } catch (e) { logger.warn({ err: e?.message }, 'Não consegui guardar os contatos'); }
+  }, 2000);
+}
+
+// Uma fila só para processar: uma opção numérica ("1") nunca espera nem se mistura com o texto anterior.
+let cadeiaDeProcessamento = Promise.resolve();
+const ehOpcao = (texto) => /^\s*[1-6]\s*$/.test(texto);
+
+const emEspera = new Map(); // telefone → { jid, textos, ids, timer }
+/** Fecha o grupo que está esperando e o coloca na fila de processamento (cada grupo vai inteiro, na ordem). */
+function fechar(telefone) {
+  const grupo = emEspera.get(telefone);
+  if (!grupo) return;
+  clearTimeout(grupo.timer);
+  emEspera.delete(telefone);
+  cadeiaDeProcessamento = cadeiaDeProcessamento.then(() => processarGrupo(telefone, grupo));
+}
+
+function aguardarEProcessar(msg) {
+  if (ehOpcao(msg.body)) {
+    // "1" é resposta a uma pergunta de opções: fecha o que estava esperando e vai sozinha, sem os 5 s
+    // (juntar "1" com o texto seguinte transformava uma resposta certa em "Não entendi")
+    fechar(msg.from);
+    emEspera.set(msg.from, { jid: msg.jid, textos: [msg.body], ids: [msg.id], timer: null });
+    fechar(msg.from);
+    return;
+  }
+  const atual = emEspera.get(msg.from) ?? { jid: msg.jid, textos: [], ids: [] };
+  atual.jid = msg.jid;
+  atual.textos.push(msg.body);
+  atual.ids.push(msg.id);
+  clearTimeout(atual.timer);
+  atual.timer = setTimeout(() => fechar(msg.from), ESPERA_RESPOSTA_MS);
+  emEspera.set(msg.from, atual);
+}
+
+async function processarGrupo(telefone, grupo) {
+  try {
+    const retorno = await sendToWorker([{
+      from: telefone,
+      id: grupo.ids.join('+'),
+      body: grupo.textos.join(' '),
+      timestamp: Math.floor(Date.now() / 1000),
+    }]);
+    const resultado = retorno?.resultados?.[0];
+    // o Worker pode responder com várias mensagens (ex.: explicação, serial sozinho, como usar, vídeo)
+    const itens = Array.isArray(resultado?.respostas) && resultado.respostas.length
+      ? resultado.respostas
+      : [resultado?.resposta].filter((r) => typeof r === 'string' && r);
+    for (const item of itens) await responder(grupo.jid, item);
+  } catch {
+    // já registrado em sendToWorker; a mensagem não é respondida
+  }
+}
+
+// Lembretes: quem agenda é o Worker; o gateway busca o que já venceu e envia (cada um sai uma vez).
+let buscandoLembretes = false;
+async function enviarLembretesVencidos() {
+  if (buscandoLembretes || !isConnected) return;
+  buscandoLembretes = true;
+  try {
+    const { data } = await postAssinado('/api/wa/outbox/pull', {});
+    for (const m of data?.mensagens ?? []) {
+      if (m?.telefone && m?.texto) await responder(jidDoTelefone.get(m.telefone) ?? `${m.telefone}@s.whatsapp.net`, { texto: m.texto, midia: m.midia });
+    }
+    if (data?.mensagens?.length) logger.info({ enviados: data.mensagens.length }, 'Lembretes enviados');
+  } catch (e) {
+    logger.warn({ err: e?.message, status: e?.response?.status }, 'Não consegui buscar lembretes');
+  } finally {
+    buscandoLembretes = false;
+  }
+}
+setInterval(enviarLembretesVencidos, INTERVALO_LEMBRETES_MS);
+
+// O keep-alive é do próprio Baileys (keepAliveIntervalMs): um IQ de ping montado à mão
+// nunca recebe resposta do WhatsApp e só gerava "Timed Out" a cada ciclo.
 function startHeartbeat() {
   if (heartbeatTimer) clearInterval(heartbeatTimer);
-  
-  heartbeatTimer = setInterval(async () => {
-    if (sock && isConnected) {
-      try {
-        // Ping simples para manter conexão viva
-        await sock.query({
-          tag: 'iq',
-          attrs: { type: 'get', to: 's.whatsapp.net', id: `ping_${Date.now()}` },
-          content: [{ tag: 'ping', attrs: {} }]
-        });
-        logger.debug('Heartbeat enviado');
-      } catch (error) {
-        logger.warn({ err: error.message }, 'Heartbeat falhou');
-      }
-    }
-  }, heartbeatInterval);
+  heartbeatTimer = setInterval(() => {
+    logger.info({ conectado: isConnected }, 'Gateway ativo');
+  }, heartbeatInterval * 20); // a cada ~10 min, só para os logs mostrarem que o processo está vivo
 }
 
 function stopHeartbeat() {
@@ -94,13 +230,14 @@ async function connect() {
   sock = makeWASocket({
     version,
     logger: logger.child({ module: 'baileys' }),
-    printQRInTerminal: true,
     auth: {
       creds: state.creds,
       keys: makeCacheableSignalKeyStore(state.keys, logger)
     },
     syncFullHistory: false,
-    markOnlineOnConnect: true
+    keepAliveIntervalMs: heartbeatInterval,
+    // false: o gateway não marca "online" e o celular do número continua recebendo as notificações
+    markOnlineOnConnect: false
   });
 
   sock.ev.on('connection.update', (update) => {
@@ -108,14 +245,18 @@ async function connect() {
     
     if (qr) {
       logger.info('QR Code gerado - escaneie com WhatsApp');
+      // o Baileys não imprime mais o QR sozinho; ele só vale por alguns segundos e troca sempre
+      qrcode.generate(qr, { small: true });
     }
     
     if (connection === 'open') {
       isConnected = true;
+      abertaDesde = new Date().toISOString();
       logger.info('Conectado ao WhatsApp!');
       startHeartbeat();
     } else if (connection === 'close') {
       isConnected = false;
+      abertaDesde = null;
       stopHeartbeat();
       const reason = lastDisconnect?.error?.output?.statusCode;
       logger.warn({ reason }, 'Desconectado do WhatsApp');
@@ -132,33 +273,43 @@ async function connect() {
 
   sock.ev.on('creds.update', saveCreds);
 
-  sock.ev.on('messages.upsert', async ({ messages, type }) => {
+  sock.ev.on('messages.upsert', ({ messages, type }) => {
     if (type !== 'notify') return;
 
-    const formattedMessages = messages
-      .filter(m => m.message && !m.key.fromMe)
-      .map(m => ({
-        message_id: m.key.id,
-        from: m.key.remoteJid.replace('@s.whatsapp.net', '').replace('@g.us', ''),
-        body: m.message.conversation || m.message.extendedTextMessage?.text || '',
-        timestamp: m.messageTimestamp,
-        pushName: m.pushName
-      }))
-      .filter(m => m.body);
-
-    if (formattedMessages.length > 0) {
-      logger.info({ count: formattedMessages.length }, 'Novas mensagens recebidas');
-      await sendToWorker(formattedMessages);
+    // só conversas diretas: grupos, status e canais ficam de fora.
+    // Hoje o WhatsApp identifica quem escreve por "@lid"; o telefone vem em senderPn/participantPn.
+    const soDigitos = (jid) => (jid ?? '').split('@')[0].split(':')[0].replace(/\D/g, '');
+    const telefoneDe = (m) => {
+      const jid = m.key?.remoteJid ?? '';
+      if (jid.endsWith('@s.whatsapp.net')) return soDigitos(jid);
+      if (jid.endsWith('@lid')) return soDigitos(m.key.senderPn || m.key.participantPn);
+      return '';
+    };
+    for (const m of messages) {
+      if (!m.message || m.key?.fromMe) continue;
+      const jid = m.key?.remoteJid ?? '';
+      if (!jid.endsWith('@s.whatsapp.net') && !jid.endsWith('@lid')) continue;
+      const from = telefoneDe(m);
+      if (!from) {
+        logger.warn('Mensagem direta sem telefone identificável: ignorada');
+        continue;
+      }
+      const body = m.message.conversation || m.message.extendedTextMessage?.text || '';
+      if (!body) continue;
+      lembrarContato(from, jid);
+      aguardarEProcessar({ jid, id: m.key.id, from, body });
     }
   });
 
-  // Manter processo vivo
-  process.on('SIGINT', async () => {
+  // Encerrar sem sair da conta: logout() desvincularia o aparelho e exigiria novo QR Code
+  const encerrar = () => {
     logger.info('Encerrando...');
     stopHeartbeat();
-    if (sock) await sock.logout();
+    sock?.end(undefined);
     process.exit(0);
-  });
+  };
+  process.once('SIGINT', encerrar);
+  process.once('SIGTERM', encerrar);
 }
 
 logger.info('Iniciando Baileys Gateway...');
