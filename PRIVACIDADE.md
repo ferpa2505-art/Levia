@@ -1,6 +1,6 @@
 # Política de Privacidade — Leviã
 
-**Última atualização:** 10 de novembro de 2026
+**Última atualização:** 11 de novembro de 2026
 
 > **Resumo:** os registros de saúde que você anota no Leviã ficam no seu aparelho; o Leviã não recebe cópia deles. Para liberar o acesso, o atendimento pelo WhatsApp guarda seu nome, telefone e objetivo em nosso servidor, e a análise opcional de foto por IA envia a foto do prato para o Google. Não vendemos dados e não exibimos anúncios. O pixel da Meta na página de vendas só funciona com o seu consentimento (seção 4.4).
 
@@ -20,7 +20,12 @@ O Leviã é um aplicativo (Android e web/PWA) de registro pessoal de peso, alime
 - **Fotos de pratos:** no Android, uma cópia reduzida fica em arquivo no aparelho. No PWA, a foto reduzida é guardada como texto junto da refeição, no armazenamento do navegador.
 - **Preferências:** idioma, tema, e-mail para relatórios (se informado), senha e biometria do app.
 
-Parte disso são **dados pessoais sensíveis de saúde** (LGPD, art. 5º, II). O Leviã não recebe cópia desses registros. Eles **não são criptografados** no aparelho: quem tiver acesso ao aparelho desbloqueado ou ao navegador pode lê-los. A senha do app e a biometria funcionam como trava de tela do aplicativo, não como criptografia dos dados.
+Parte disso são **dados pessoais sensíveis de saúde** (LGPD, art. 5º, II). O Leviã não recebe cópia desses registros. Depois que você cria a senha do app, eles são **cifrados no aparelho** (AES-256-GCM). A chave é derivada da sua senha e não é guardada em texto. Sem a senha, ninguém consegue ler esses registros, nem nós. Antes de você criar a senha, durante o cadastro, os registros ficam em texto no aparelho até essa etapa.
+
+- **Senha esquecida, sem biometria ativada:** os dados ficam inacessíveis e não conseguimos recuperá-los. A única forma de restaurar é um backup feito antes.
+- **Biometria ativada (celular):** a chave fica protegida pelo sistema do aparelho. Você consegue trocar a senha sem perder os dados.
+- A criptografia protege contra quem tem acesso ao armazenamento do aparelho ou do navegador, mas não contra quem tem o aparelho desbloqueado e a senha.
+- Seu e-mail e a informação de que o cadastro foi concluído ficam guardados sem cifra, no armazenamento do app, para que o app saiba se deve pedir o cadastro.
 
 ## 4. Dados que ficam no servidor do Leviã
 
