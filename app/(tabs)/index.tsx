@@ -22,6 +22,8 @@ import { useT } from '@context/PreferencesContext';
 import { calcularEvolucao } from '@utils/evolucao';
 import { diasSeguidos, partesDosMacros } from '@utils/constancia';
 import { dataDeHoje } from '@utils/recordsStorage';
+import { useFitness } from '@context/FitnessContext';
+import { kcalDaSessao } from '@utils/fitnessLogica';
 import { salvarPerfil } from '@utils/profileStorage';
 import { MensagemErro } from '@components/forms/MensagemErro';
 import { estilosTema } from '@theme/estilos';
@@ -37,6 +39,11 @@ export default function HomeScreen() {
   const nome = profile.comoChamar || profile.nome || '';
 
   const hoje = dataDeHoje();
+  // gasto de hoje = exercícios registrados + treinos do Guia (estimativa MET); o saldo desconta do que foi ingerido
+  const { sessoes: sessoesGuia } = useFitness();
+  const gastoGuiaHoje = sessoesGuia.filter((s) => s.data === hoje).reduce((soma, s) => soma + kcalDaSessao(s, profile.pesoAtualKg ?? 70), 0);
+  const gastoHoje = kcalGastaHoje + gastoGuiaHoje;
+  const saldoHoje = kcalHoje - gastoHoje;
   const sequencia = useMemo(() => diasSeguidos(refeicoes.map((r) => r.data), hoje), [refeicoes, hoje]);
   const semana = useMemo(
     () => calcularEvolucao(
@@ -103,12 +110,15 @@ export default function HomeScreen() {
         <ThemedView variant="surface" style={[styles.card, styles.cardShadow]}>
           <ThemedText variant="caption" color="textSecondary" style={styles.sobretitulo}>{t('home.seuDiaAteAqui')}</ThemedText>
           <View style={styles.anelLinha}>
-            <AnelKcal kcal={kcalHoje} meta={profile.metaKcalDia} />
+            <AnelKcal kcal={saldoHoje} meta={profile.metaKcalDia} />
             <View style={{ flex: 1, marginLeft: spacing.lg }}>
               <ThemedText variant="subheading" color="text">{t('home.cadaEscolha')}</ThemedText>
               <ThemedText variant="small" color="textSecondary">{t('home.noSeuRitmo')}</ThemedText>
               <ThemedText variant="small" color="textSecondary" style={{ marginTop: spacing.xs }}>
                 {profile.metaKcalDia ? t('home.deMeta', { meta: profile.metaKcalDia }) : t('home.semMeta')}
+              </ThemedText>
+              <ThemedText variant="small" color="textSecondary">
+                {t('home.saldoDetalhe', { ingeridas: kcalHoje, gastas: gastoHoje })}
               </ThemedText>
               {sequencia > 0 && (
                 <View style={[styles.chipCuidado, { backgroundColor: colors.primarySoft }]}>
@@ -161,7 +171,7 @@ export default function HomeScreen() {
           </View>
           <View style={styles.statsGrid}>
             <Stat largo icone={<Droplet size={18} color={colors.accent} strokeWidth={2.25} />} valor={aguaHojeMl} rotulo={t('home.agua')} cor="accent" fundo={colors.accentSoft} />
-            <Stat largo icone={<Zap size={18} color={colors.secondary} strokeWidth={2.25} />} valor={kcalGastaHoje} rotulo={t('home.kcalGastas')} cor="secondary" fundo={colors.secondarySoft} />
+            <Stat largo icone={<Zap size={18} color={colors.secondary} strokeWidth={2.25} />} valor={gastoHoje} rotulo={t('home.kcalGastas')} cor="secondary" fundo={colors.secondarySoft} />
           </View>
         </ThemedView>
 

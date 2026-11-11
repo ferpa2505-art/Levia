@@ -19,6 +19,8 @@ export interface DadosEvolucao {
   dosesGlp1: RegistroDoseGLP1[];
   medicacoes: RegistroMedicacao[];
   alvoGlicemia: { min: number; max: number };
+  /** treinos do Guia de Treinos já convertidos em kcal estimadas (opcional) */
+  treinosGuia?: { data: string; kcal: number; minutos: number }[];
 }
 
 export interface ResumoGlicemia {
@@ -38,6 +40,10 @@ export interface ResumoPeriodo {
   refeicoes: number;
   /** médias por dia COM registro (dia sem registro não puxa a média para baixo) */
   kcalMediaDia: number | null;
+  /** gasto médio por dia com atividade (exercícios + treinos do Guia) */
+  kcalGastaMediaDia: number | null;
+  /** saldo médio por dia com atividade: kcal ingeridas − kcal gastas */
+  kcalSaldoMediaDia: number | null;
   proteinaMediaDiaG: number | null;
   carboidratoMediaDiaG: number | null;
   gorduraMediaDiaG: number | null;
@@ -129,11 +135,21 @@ function resumir(dados: DadosEvolucao, d0: number, d1: number): ResumoPeriodo {
 
   let exercicioMin = 0;
   let exercicioKcal = 0;
+  const gastoPorDia = new Map<string, number>();
   for (const e of dados.exercicios) {
     if (!dentro(e.data)) continue;
     exercicioMin += n0(e.duracaoMin);
     exercicioKcal += n0(e.kcalGasto);
+    gastoPorDia.set(e.data, (gastoPorDia.get(e.data) ?? 0) + n0(e.kcalGasto));
   }
+  for (const t of dados.treinosGuia ?? []) {
+    if (!dentro(t.data)) continue;
+    exercicioMin += n0(t.minutos);
+    exercicioKcal += n0(t.kcal);
+    gastoPorDia.set(t.data, (gastoPorDia.get(t.data) ?? 0) + n0(t.kcal));
+  }
+  const gastoTotal = [...gastoPorDia.values()].reduce((s, v) => s + v, 0);
+  const diasComAtividade = new Set([...porDia.keys(), ...gastoPorDia.keys()]).size;
 
   const pesos = dados.pesos
     .filter((p) => dentro(p.data))
@@ -156,6 +172,8 @@ function resumir(dados: DadosEvolucao, d0: number, d1: number): ResumoPeriodo {
     diasComRefeicao: nDias,
     refeicoes,
     kcalMediaDia: mediaOuNull(soma.kcal, nDias),
+    kcalGastaMediaDia: mediaOuNull(gastoTotal, diasComAtividade),
+    kcalSaldoMediaDia: mediaOuNull(soma.kcal - gastoTotal, diasComAtividade),
     proteinaMediaDiaG: mediaOuNull(soma.p, nDias, 1),
     carboidratoMediaDiaG: mediaOuNull(soma.c, nDias, 1),
     gorduraMediaDiaG: mediaOuNull(soma.g, nDias, 1),
@@ -185,8 +203,9 @@ function montarBarras(dados: DadosEvolucao, d0: number, d1: number, tamanho: num
   const barras: Barra[] = [];
   for (let ini = d0; ini <= d1; ini += tamanho) {
     const fim = Math.min(ini + tamanho - 1, d1);
-    const r = resumir({ ...dados, pesos: [], exercicios: [], glicemias: [], dosesGlp1: [], medicacoes: [], aguas: [] }, ini, fim);
-    barras.push({ de: iso(ini), ate: iso(fim), kcal: r.kcalMediaDia ?? 0, proteinaG: r.proteinaMediaDiaG ?? 0 });
+    const r = resumir({ ...dados, pesos: [], glicemias: [], dosesGlp1: [], medicacoes: [], aguas: [] }, ini, fim);
+    // a barra mostra o saldo (ingeridas − gastas); saldo negativo aparece como 0 no gráfico
+    barras.push({ de: iso(ini), ate: iso(fim), kcal: Math.max(0, r.kcalSaldoMediaDia ?? 0), proteinaG: r.proteinaMediaDiaG ?? 0 });
   }
   return barras;
 }

@@ -7,6 +7,9 @@ import { useRecords } from '@context/RecordsContext';
 import { useDiabetes } from '@context/DiabetesContext';
 import { useGlp1 } from '@context/Glp1Context';
 import { usePreferences } from '@context/PreferencesContext';
+import { useFitness } from '@context/FitnessContext';
+import { useProfile } from '@context/ProfileContext';
+import { kcalDaSessao } from '@utils/fitnessLogica';
 import { calcularEvolucao, diferenca, PeriodoEvolucao, ResumoPeriodo } from '@utils/evolucao';
 import { dataDeHoje } from '@utils/recordsStorage';
 import { colors, spacing, radius } from '@constants/colors';
@@ -60,6 +63,17 @@ export default function EvolucaoScreen() {
   const { refeicoes, aguas, pesos, exercicios } = useRecords();
   const { glicemias, medicacoes, config } = useDiabetes();
   const { doses } = useGlp1();
+  const { sessoes: sessoesGuia } = useFitness();
+  const { profile } = useProfile();
+  const pesoPerfil = profile.pesoAtualKg ?? 70;
+  const treinosGuia = useMemo(
+    () => sessoesGuia.map((s) => ({
+      data: s.data,
+      kcal: kcalDaSessao(s, pesoPerfil),
+      minutos: Math.max(0, Math.round((new Date(s.fim).getTime() - new Date(s.inicio).getTime()) / 60000)),
+    })),
+    [sessoesGuia, pesoPerfil],
+  );
   const [periodo, setPeriodo] = useState<PeriodoEvolucao>('semana');
 
   const evo = useMemo(
@@ -67,12 +81,13 @@ export default function EvolucaoScreen() {
       {
         refeicoes, aguas, pesos, exercicios, glicemias, medicacoes,
         dosesGlp1: doses,
+        treinosGuia,
         alvoGlicemia: { min: config.alvoMinMgDl, max: config.alvoMaxMgDl },
       },
       periodo,
       dataDeHoje(),
     ),
-    [refeicoes, aguas, pesos, exercicios, glicemias, medicacoes, doses, config, periodo],
+    [refeicoes, aguas, pesos, exercicios, glicemias, medicacoes, doses, config, periodo, treinosGuia],
   );
   const a: ResumoPeriodo = evo.atual;
   const p = evo.anterior;
@@ -119,6 +134,18 @@ export default function EvolucaoScreen() {
               valor={a.kcalMediaDia}
               unidade="kcal"
               variacao={<Variacao ativo={!!p} valor={dif(a.kcalMediaDia, p?.kcalMediaDia)} unidade="kcal" />}
+            />
+            <Linha
+              rotulo={t('evo.kcalGastaMedia')}
+              valor={a.kcalGastaMediaDia}
+              unidade="kcal"
+              variacao={<Variacao ativo={!!p} valor={dif(a.kcalGastaMediaDia, p?.kcalGastaMediaDia)} unidade="kcal" />}
+            />
+            <Linha
+              rotulo={t('evo.kcalSaldoMedia')}
+              valor={a.kcalSaldoMediaDia}
+              unidade="kcal"
+              variacao={<Variacao ativo={!!p} valor={dif(a.kcalSaldoMediaDia, p?.kcalSaldoMediaDia)} unidade="kcal" />}
             />
             {evo.barras.length > 0 && <BarrasKcal barras={evo.barras} />}
             <Linha rotulo={t('evo.proteina')} valor={a.proteinaMediaDiaG} unidade="g"
