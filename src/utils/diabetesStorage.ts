@@ -1,11 +1,12 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { cofre } from '@utils/cofre';
 import { DiabetesData, diabetesDadosVazios } from '@models/diabetes';
 
 const STORAGE_KEY = 'levia:diabetes';
 
 export async function carregarDiabetes(): Promise<DiabetesData> {
   try {
-    const raw = await AsyncStorage.getItem(STORAGE_KEY);
+    const raw = await cofre.lerDado(STORAGE_KEY);
     if (!raw) return diabetesDadosVazios;
     const dados = JSON.parse(raw);
     return {
@@ -19,5 +20,5 @@ export async function carregarDiabetes(): Promise<DiabetesData> {
 }
 
 export async function salvarDiabetes(dados: DiabetesData): Promise<void> {
-  await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(dados));
+  await cofre.gravarDado(STORAGE_KEY, JSON.stringify(dados));
 }

@@ -1,4 +1,5 @@
 /* Service worker do Leviã: deixa o app abrir mesmo sem internet. */
+// O deploy troca este nome a cada publicação (levia-v2-<commit>): o navegador baixa o service worker novo e apaga o cache velho.
 const CACHE = 'levia-v2';
 
 self.addEventListener('install', (event) => {
@@ -43,6 +44,10 @@ self.addEventListener('notificationclick', (event) => {
 self.addEventListener('fetch', (event) => {
   const req = event.request;
   if (req.method !== 'GET' || new URL(req.url).origin !== self.location.origin) return;
+
+  // Pedidos que pedem a versão mais nova de propósito (a conferência de atualização do app) vão direto à internet,
+  // sem passar pelo que está guardado.
+  if (req.cache === 'no-store' || req.cache === 'reload') return;
 
   // Páginas: tenta a internet primeiro (pega versão nova); sem internet, usa a guardada.
   if (req.mode === 'navigate') {

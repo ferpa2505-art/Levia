@@ -93,7 +93,7 @@ function NoticiasConteudo() {
           </ThemedText>
         ) : (
           noticias.map((item) => (
-            <Pressable key={item.id} onPress={() => Linking.openURL(item.link)}>
+            <Pressable key={item.id} onPress={() => { if (/^https:\/\//i.test(item.link)) Linking.openURL(item.link); }}>
               <ThemedView variant="surface" style={[styles.card, styles.cardShadow]}>
                 <ThemedText variant="subheading" color="text">{item.titulo}</ThemedText>
                 {item.resumo ? (

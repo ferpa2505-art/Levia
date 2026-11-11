@@ -27,8 +27,6 @@ interface RecordsContextValue {
   refeicoesHoje: Refeicao[];
   aguasHoje: RegistroAgua[];
   aguaHojeMl: number;
-  /** Toda a água registrada (gráficos e relatórios) */
-  aguas: RegistroAgua[];
   kcalHoje: number;
   proteinaHojeG: number;
   pesoAtualKg: number | null;
@@ -43,6 +41,9 @@ interface RecordsContextValue {
   nutrientesDoDia: (data: string) => ReturnType<typeof somarNutrientes> & { refeicoes: number };
   /** Todas as refeições (para navegar por outros dias) */
   refeicoes: Refeicao[];
+  /** Todos os registros de água e de exercício (usados na aba Evolução) */
+  aguas: RegistroAgua[];
+  exercicios: RegistroExercicio[];
   adicionarRefeicao: (nome: string, nutrientes: Nutrientes) => Promise<void>;
   /** Cria (sem id) ou atualiza (com id) uma refeição completa */
   salvarRefeicao: (refeicao: Omit<Refeicao, 'id'> & { id?: string }, lembreteHoras?: number | null) => Promise<{ lembreteAgendado: boolean }>;
@@ -240,7 +241,6 @@ export function RecordsProvider({ children }: { children: ReactNode }) {
         refeicoesHoje,
         aguasHoje,
         aguaHojeMl,
-        aguas: dados.aguas,
         kcalHoje,
         proteinaHojeG,
         pesoAtualKg,
@@ -250,6 +250,8 @@ export function RecordsProvider({ children }: { children: ReactNode }) {
         adicionarRefeicao,
         salvarRefeicao,
         refeicoes: dados.refeicoes,
+        aguas: dados.aguas,
+        exercicios: dados.exercicios,
         carboidratoHojeG,
         gorduraHojeG,
         fibraHojeG,

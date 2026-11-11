@@ -1,6 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { randomUUID } from 'expo-crypto';
 import { ImageManipulator, SaveFormat } from 'expo-image-manipulator';
+import { idDaInstalacao, lerLicenca, limparLicenca } from '@utils/licenca';
 import { buscarAlimentosGlobais, buscarAlimentoPorId, AlimentoGlobal, IdiomaAlimentos } from '@constants/alimentosGlobais';
 import { ingredientes } from '@constants/ingredients';
 import { AlimentoPor100g, Ingrediente } from '@models/ingredients';
@@ -11,14 +11,10 @@ import { normalizarTexto } from '@utils/buscaAlimentos';
  * A IA só diz QUAIS alimentos e QUANTOS GRAMAS; os nutrientes vêm do banco
  * do app. Quando o banco não tem o alimento, usa a estimativa da IA (marcada).
  */
-
 const URL_IA = 'https://levia-ia-worker.ferpa2505.workers.dev/v1/analisar-prato';
-// Freio contra uso do endereço fora do app. Não é segredo forte (vai dentro do app);
-// a proteção real são as cotas no servidor.
-const TOKEN_APP = '6tFv9bY2eNq9CiP4oFzCO83a5eXZuitvW8FwRAs0AyM';
-
-const CHAVE_INSTALACAO = 'levia:instalacao';
 const CHAVE_CONSENTIMENTO = 'levia:consentimentoIA';
+
+export { idDaInstalacao };
 
 export interface ItemIA {
   nome: string;
@@ -41,15 +37,7 @@ export interface SugestaoIA {
 
 export type ResultadoIA =
   | { ok: true; sugestoes: SugestaoIA[]; restantes: number }
-  | { ok: false; motivo: 'naoComida' | 'cota' | 'limite' | 'rede' | 'servidor'; liberaEm?: string };
-
-export async function idDaInstalacao(): Promise<string> {
-  const salvo = await AsyncStorage.getItem(CHAVE_INSTALACAO);
-  if (salvo) return salvo;
-  const novo = randomUUID();
-  await AsyncStorage.setItem(CHAVE_INSTALACAO, novo);
-  return novo;
-}
+  | { ok: false; motivo: 'naoComida' | 'cota' | 'limite' | 'licenca' | 'expirado' | 'rede' | 'servidor'; liberaEm?: string };
 
 export async function temConsentimentoIA(): Promise<boolean> {
   return (await AsyncStorage.getItem(CHAVE_CONSENTIMENTO)) === '1';
@@ -90,32 +78,24 @@ function melhorCandidato(nome: string, candidatos: Ingrediente[]): Ingrediente |
     const id = (c as { id?: string }).id ?? '';
     const ehPrato = /^[PBVSW]\d/.test(id) || /\b(com|with|con|avec)\b|,/.test(n);
     const sobra = palavras(c.nome).filter((w) => !pAlvo.some((a) => w.startsWith(a) || a.startsWith(w))).length;
-    // prato montado quando a IA viu um alimento só: melhor usar a estimativa da IA
     if (ehPrato && !combinacao) continue;
     const nota = (n === alvo ? -100 : 0) + sobra * 10;
-    if (nota < melhorNota) {
-      melhorNota = nota;
-      melhor = c;
-    }
+    if (nota < melhorNota) { melhorNota = nota; melhor = c; }
   }
   return melhor;
 }
 
-/** Liga o nome dado pela IA a um alimento do banco (lista curada primeiro), ou usa a estimativa da IA */
+/** Liga o nome dado pela IA a um alimento do banco, ou usa a estimativa da IA */
 export function ligarAoBanco(item: ItemIA, idioma: IdiomaAlimentos): SugestaoIA {
   const base = { nomeIA: item.nome, gramas: item.gramas, unidades: item.unidades, confianca: item.confianca };
-  // muitos candidatos: os pratos montados ("Batata cozida com …") vêm antes na busca por prefixo
   const peloNome = melhorCandidato(item.nome, buscarAlimentosGlobais(item.nome, 300, idioma, idioma === 'pt' ? ingredientes : []));
   const peloIngles = (): Ingrediente | undefined => {
     if (!item.nomeIngles) return undefined;
     const c = melhorCandidato(item.nomeIngles, buscarAlimentosGlobais(item.nomeIngles, 300, 'en')) as AlimentoGlobal | undefined;
-    // achou em inglês: mostra o nome no idioma do app
     return c ? (buscarAlimentoPorId(c.id, idioma) ?? c) : undefined;
   };
   const achado = peloNome ?? peloIngles();
-  if (achado) {
-    return { ...base, alimento: { ...achado, porcaoPadraoG: achado.gramaPadrao }, origem: 'banco' };
-  }
+  if (achado) return { ...base, alimento: { ...achado, porcaoPadraoG: achado.gramaPadrao }, origem: 'banco' };
   return {
     ...base,
     origem: 'ia',
@@ -131,30 +111,30 @@ export function ligarAoBanco(item: ItemIA, idioma: IdiomaAlimentos): SugestaoIA 
 }
 
 export async function analisarFotoDoPrato(uri: string, idioma: IdiomaAlimentos): Promise<ResultadoIA> {
+  const licenca = await lerLicenca();
+  if (!licenca) return { ok: false, motivo: 'licenca' };
   let resposta: Response;
   try {
     const [imagem, instalacao] = await Promise.all([fotoReduzidaBase64(uri), idDaInstalacao()]);
     resposta = await fetch(URL_IA, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'x-levia-app': TOKEN_APP },
-      body: JSON.stringify({ imagem, instalacao, idioma }),
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ imagem, instalacao, idioma, licenca: licenca.licenca }),
     });
   } catch {
     return { ok: false, motivo: 'rede' };
   }
   let dados: { erro?: string; liberaEm?: string; ehComida?: boolean; itens?: ItemIA[]; restantes?: number } = {};
-  try {
-    dados = await resposta.json();
-  } catch {
-    return { ok: false, motivo: 'servidor' };
+  try { dados = await resposta.json(); } catch { return { ok: false, motivo: 'servidor' }; }
+  // o servidor não reconhece mais a licença (revogada, adulterada, aparelho trocado): pede o serial de novo
+  if (resposta.status === 401 || resposta.status === 403) {
+    await limparLicenca();
+    return { ok: false, motivo: 'licenca' };
   }
+  if (resposta.status === 402 && dados.erro === 'acesso_expirado') return { ok: false, motivo: 'expirado' };
   if (resposta.status === 402) return { ok: false, motivo: 'cota', liberaEm: dados.liberaEm };
   if (resposta.status === 429) return { ok: false, motivo: 'limite' };
   if (!resposta.ok) return { ok: false, motivo: 'servidor' };
   if (!dados.ehComida || !dados.itens?.length) return { ok: false, motivo: 'naoComida' };
-  return {
-    ok: true,
-    restantes: dados.restantes ?? 0,
-    sugestoes: dados.itens.map((i) => ligarAoBanco(i, idioma)),
-  };
+  return { ok: true, restantes: dados.restantes ?? 0, sugestoes: dados.itens.map((i) => ligarAoBanco(i, idioma)) };
 }

@@ -1,105 +1,58 @@
-# Termos de Uso — Leviã
+# Termos de Serviço — Leviã
 
-**Versão:** 0.5.0 (rascunho para revisão jurídica)
-**Última atualização:** 21 de outubro de 2026
+**Última atualização:** 4 de novembro de 2026
 
-> Itens entre colchetes, como [RAZÃO SOCIAL], precisam ser preenchidos antes da publicação.
+## 1. Aceitação
 
-## 1. Quem oferece o Leviã
-
-O Leviã é oferecido por [RAZÃO SOCIAL OU NOME DO RESPONSÁVEL], inscrito no [CNPJ/CPF] sob o nº [NÚMERO], com endereço em [ENDEREÇO]. Canal único de atendimento, dúvidas sobre estes Termos e pedidos sobre dados pessoais: **contatoapplevia@gmail.com**.
+Ao ativar e usar o Leviã (aplicativo Android e web/PWA) você concorda com estes termos e com a [Política de Privacidade](PRIVACIDADE.md). Se não concordar, não use o serviço.
 
 ## 2. O que é o Leviã
 
-O Leviã é um aplicativo de organização pessoal, usado no navegador (PWA) e, quando disponível, no Android. Ele permite registrar e acompanhar:
-
-- refeições, alimentos, bebidas, água e exercícios;
-- peso e metas;
-- glicemias, medicações e tratamento com GLP-1;
-- relatórios e gráficos feitos a partir desses registros.
-
-Os registros de saúde ficam guardados no seu aparelho, como explica a Política de Privacidade.
+Uma ferramenta de **registro e organização pessoal** de peso, alimentação, água, exercícios, tratamento com medicamentos GLP-1, glicemia e medicações, com lembretes, relatórios, backup e, opcionalmente, **análise de foto de prato por inteligência artificial**.
 
 ## 3. Aviso de saúde
 
-O Leviã não é um dispositivo médico, não faz diagnóstico, não prescreve tratamento, não calcula dose de insulina ou de qualquer medicamento e não substitui médico, nutricionista ou outro profissional de saúde.
+O Leviã **não é dispositivo médico** e não faz diagnóstico, não prescreve tratamento nem ajusta doses. Não substitui médico, nutricionista ou outro profissional de saúde. Seus valores de calorias e nutrientes, inclusive os estimados pela IA, são **aproximados e podem estar errados**: confira sempre antes de salvar e não tome decisões de tratamento, de insulina ou de medicação com base só neles.
 
-Gráficos e comparações do app mostram apenas o que variou junto nos seus registros. Eles não provam causa e não devem ser usados, sozinhos, para mudar um tratamento.
+Em emergência (hipoglicemia grave, confusão, desmaio, dor no peito, falta de ar), ligue **192 (SAMU)** ou o serviço de emergência local. O Leviã **não é um sistema de alerta**: lembretes dependem do seu aparelho e podem falhar.
 
-Em caso de sintomas de hipoglicemia grave, confusão, desmaio, dor no peito, falta de ar ou qualquer emergência, ligue imediatamente para o **SAMU (192)** ou para o serviço de emergência local. O Leviã não é um sistema de alerta de emergência.
+## 4. Acesso, serial e teste
 
-## 4. Quem pode usar
+- O acesso é liberado por um **serial pessoal**, enviado pelo atendimento no WhatsApp. Não o compartilhe nem o revenda.
+- Cada serial vale para até **2 aparelhos**. O **teste de 7 dias** começa na primeira ativação, com limite de uso da IA informado no app.
+- Podemos limitar, suspender ou revogar acessos em caso de abuso, fraude, tentativa de burlar limites ou violação destes termos. Você pode pedir um novo serial a qualquer momento pelo próprio WhatsApp (o anterior deixa de valer).
+- **Assinatura:** os planos mensal e anual e seus preços ficam em **www.leviapp.org**, com pagamento pela **Hotmart**. Preço, renovação, cancelamento e reembolso são informados **antes** da contratação, respeitando o Código de Defesa do Consumidor (inclusive o direito de arrependimento de 7 dias em compras online). Cancelamentos e reembolsos são feitos na própria Hotmart ou pelo contato do site.
 
-O Leviã é destinado a pessoas com 18 anos ou mais.
+## 5. Uso adequado
 
-## 5. Teste gratuito, planos e pagamento
+Você concorda em usar o Leviã para fins pessoais, informar dados verdadeiros, ter 18 anos ou mais e proteger o acesso ao seu aparelho. Você concorda em **não**: usá-lo para tratar ou diagnosticar outras pessoas, tentar invadir, sobrecarregar ou contornar os limites do serviço, extrair o código ou os dados do servidor, enviar fotos de terceiros, rostos ou documentos para a análise de IA, nem copiar, revender ou distribuir o app.
 
-### 5.1 Teste gratuito
-Quem inicia o teste pelo atendimento no WhatsApp recebe **7 dias de uso gratuito**, com direito a **2 análises de foto por IA**. O teste é concedido uma vez por pessoa (e-mail e telefone). Ao fim do teste, nenhuma cobrança é feita automaticamente.
+## 6. Seus dados
 
-### 5.2 Planos
-Depois do teste, o uso pode continuar com um plano:
+Os registros de saúde ficam no seu aparelho; o servidor guarda apenas o necessário para liberar o acesso (nome, telefone, objetivo informado no WhatsApp, aparelhos e uso). Detalhes, base legal, prestadores e seus direitos estão na Política de Privacidade. Você é responsável pela exatidão do que registra e por guardar seus backups.
 
-- **Mensal:** [VALOR] por 30 dias;
-- **Anual:** [VALOR] por 12 meses.
+Alimentos e bebidas digitados por você podem ficar salvos no aparelho para reutilização, e as preferências do gráfico ficam armazenadas nele. Se você optar por sugerir um alimento à equipe, o app abre seu aplicativo de e-mail com os dados do alimento; você revisa e confirma o envio.
 
-O preço, o que cada plano inclui (por exemplo, a quantidade de análises de foto por IA) e a forma de pagamento são informados antes da contratação.
+## 7. Análise por IA
 
-### 5.3 Contratação e renovação
-A contratação é feita pelo atendimento no WhatsApp e pago pelo meio informado no fechamento (por exemplo, PIX ou cartão). [ESCOLHER UMA DAS OPÇÕES E APAGAR A OUTRA:]
+É opcional e depende do seu consentimento a cada uso. A foto é enviada ao Google Gemini por meio do nosso servidor, conforme a Política de Privacidade. A IA pode errar o alimento e a quantidade; o resultado é apenas uma sugestão que você confere e salva.
 
-- **Sem renovação automática:** cada período é pago à parte. Antes do vencimento, você recebe um aviso e decide se quer renovar.
-- **Com renovação automática:** o plano é renovado e cobrado ao fim de cada período até você cancelar. Você recebe um aviso antes de cada cobrança e pode cancelar a qualquer momento, sem multa, pelo e-mail ou pelo WhatsApp de atendimento; o acesso continua até o fim do período já pago.
+## 8. Disponibilidade e mudanças
 
-### 5.4 Direito de arrependimento
-Você pode desistir da contratação em até **7 dias** a partir do pagamento, com devolução integral do valor pago, conforme o art. 49 do Código de Defesa do Consumidor. Basta pedir pelo e-mail ou pelo WhatsApp de atendimento.
+O serviço é oferecido "no estado em que se encontra", sem garantia de funcionamento ininterrupto. Podemos mudar, suspender ou encerrar recursos; se o serviço for descontinuado, avisaremos com antecedência razoável e você poderá exportar seus dados pelo backup.
 
-### 5.5 Fim do plano
-Se o plano não for renovado, os recursos pagos deixam de funcionar, mas seus registros continuam no seu aparelho e podem ser exportados pelo backup do app.
+## 9. Propriedade intelectual
 
-## 6. Análise de foto por IA
+O Leviã, sua marca e seu design pertencem a Luis Fernando Paulino (FP Tech & Art). Você recebe uma licença pessoal, não exclusiva e revogável, para usar o app. Os registros que você cria continuam sendo seus.
 
-A análise de foto é opcional e só acontece quando você pede. A IA sugere alimentos e quantidades, que podem estar errados: confira e corrija antes de salvar. As fotos são processadas e descartadas, como descrito na Política de Privacidade.
+## 10. Responsabilidade
 
-## 7. Alimentos que você cadastra
+Dentro do que a lei permite, não respondemos por decisões de saúde tomadas com base no app, por perda de dados causada por falta de backup, por falhas de terceiros (WhatsApp, Google, Cloudflare, lojas de aplicativos) nem por danos indiretos. Nada nestes termos exclui responsabilidade que a lei não permita excluir, em especial a prevista no Código de Defesa do Consumidor. Havendo responsabilidade, ela se limita ao valor que você pagou pelo serviço nos 12 meses anteriores ao fato, no que a lei permitir.
 
-Alimentos e bebidas que você digita ficam salvos no seu aparelho para os próximos registros. Se você autorizar, o app abre um e-mail para **contatoapplevia@gmail.com** com o nome do alimento e os valores que você informou. Você confirma o envio no seu app de e-mail. Ao enviar, você autoriza o uso gratuito dessa sugestão para revisar e melhorar o banco de alimentos do Leviã.
+## 11. Lei aplicável e contato
 
-## 8. Uso adequado
+Estes termos seguem as leis do Brasil; fica eleito o foro do domicílio do consumidor. Dúvidas, pedidos de privacidade e suporte: **contato@leviapp.org**.
 
-Você concorda em usar o Leviã para fins pessoais, em não tentar invadir, copiar ou sobrecarregar o serviço e em não usar o app para acompanhar outra pessoa sem o consentimento dela.
+## 12. Alterações
 
-Você é responsável pelos dados que registra. O Leviã não verifica se as leituras, doses ou valores informados estão corretos.
-
-## 9. Disponibilidade e responsabilidade
-
-Trabalhamos para manter o Leviã funcionando e corrigir falhas, mas o serviço pode ter interrupções, erros ou falhas de funcionamento. Como os registros ficam no seu aparelho, recomendamos fazer backups periódicos pelo próprio app.
-
-Respondemos pelos danos que causarmos nos termos da lei, inclusive do Código de Defesa do Consumidor. Não respondemos por decisões de saúde tomadas apenas com base no app, sem orientação profissional, nem por perda de dados causada por limpeza do navegador, desinstalação ou falha do aparelho sem backup. Nada nestes Termos limita direitos que a lei garante ao consumidor.
-
-## 10. Propriedade intelectual
-
-O nome Leviã, a marca, o design e o código pertencem a [RAZÃO SOCIAL OU NOME DO RESPONSÁVEL]. O uso do app não transfere esses direitos. As bases de alimentos de terceiros são usadas conforme suas licenças, com os créditos exibidos no app.
-
-## 11. Privacidade
-
-O tratamento de dados pessoais está descrito na Política de Privacidade do Leviã, que faz parte destes Termos.
-
-## 12. Mudanças
-
-Podemos atualizar estes Termos. Mudanças relevantes, principalmente de preço ou de cobrança, serão avisadas com antecedência pelo app, por e-mail ou pelo WhatsApp. Mudança de preço não vale para um período já pago.
-
-## 13. Lei e foro
-
-Estes Termos seguem as leis do Brasil. Fica eleito o foro do domicílio do consumidor.
-
-## 14. Contato
-
-**E-mail:** contatoapplevia@gmail.com
-**Responsável:** [RAZÃO SOCIAL OU NOME DO RESPONSÁVEL]
-
-Respondemos em até 7 dias úteis.
-
-**Histórico:**
-- 0.5.0 — 21/10/2026 — teste de 7 dias, planos mensal e anual, alimentos salvos, revisão das cláusulas de responsabilidade.
-- 1.0 — 29/09/2026 — primeira versão.
+Podemos atualizar estes termos. Mudanças relevantes serão avisadas no app ou pelo WhatsApp antes de valerem; o uso continuado depois do aviso indica concordância. A data no topo mostra a última alteração.

@@ -34,3 +34,18 @@ Gera `src/data/alimentosGlobais.json`: **4.458 itens** (3.526 alimentos e pratos
 # baixar fontes (ver build.py): taco_composicao.csv, calnut0.csv, tempo-food-db (npm)
 python3 build.py   # gera out/alimentosGlobais.json e out/alimentosGlobais_revisao.csv
 ```
+
+## Banco estendido (produtos industrializados) e pratos extras
+
+- `off_estendido.py` → `src/data/alimentosEstendidos.json` (~50 mil produtos). Fonte: export global do
+  **Open Food Facts** (ODbL 1.0; crédito obrigatório e o arquivo derivado continua ODbL, por isso fica
+  separado do banco curado e o crédito está em `CREDITO_FONTES_ALIMENTOS`). O CSV bruto (~1,5 GB,
+  https://static.openfoodfacts.org/data/en.openfoodfacts.org.products.csv.gz) **não entra no Git**.
+  Filtros: kcal/gordura/carboidrato/proteína presentes e plausíveis (0–100 g, kcal ≤ 905, kJ nunca
+  confundido com kcal, kcal coerente com 4/4/9 em ±25%), nome legível, código de barras válido,
+  sem duplicados; vagas por país (BR 10 mil, FR 6 mil, ES/IT/DE/GB/US 5 mil, PT 4 mil, MX 3 mil…) escolhidas
+  pelos produtos mais escaneados. Nomes ficam na língua do produto (não são traduzidos).
+- `pratos_extras.py` → `src/data/alimentosPratos.json`: 66 pratos prontos brasileiros e do mundo, em 5 idiomas,
+  com macros típicos estimados pelo Levia (kcal calculada por Atwater). São estimativas, não medições.
+- No app o estendido só é carregado na primeira busca (`src/constants/alimentosGlobais.ts`) e vem depois do
+  banco curado no desempate.

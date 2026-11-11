@@ -1,0 +1,4 @@
+-- Histórico: as tabelas wa_sessions e wa_processed são criadas pela 0004_whatsapp_tables.
+-- Esta migration tinha exatamente o mesmo conteúdo da 0004 e foi aplicada em produção antes dela;
+-- em banco novo, rodar as duas era redundante (embora idempotente). Mantida como no-op para
+-- preservar o nome registrado em d1_migrations na produção.

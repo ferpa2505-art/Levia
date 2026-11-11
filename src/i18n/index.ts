@@ -1,4 +1,4 @@
-import ptBR, { ChaveTraducao, TraducoesParciais } from './traducoes/pt-BR';
+import ptBR, { ChaveTraducao, Traducoes } from './traducoes/pt-BR';
 import ptPT from './traducoes/pt-PT';
 import es from './traducoes/es';
 import enUS from './traducoes/en-US';
@@ -49,7 +49,7 @@ export const IDIOMAS: { codigo: CodigoIdioma; nome: string; bandeira: string }[]
   { codigo: 'ar', nome: 'العربية', bandeira: '🇸🇦' },
 ];
 
-const TRADUCOES: Record<CodigoIdioma, TraducoesParciais> = {
+const TRADUCOES: Record<CodigoIdioma, Traducoes> = {
   'pt-BR': ptBR, 'pt-PT': ptPT, es, 'en-US': enUS, 'en-GB': enGB, it, fr, de, nl, pl,
   tr, ru, ja, ko, 'zh-CN': zhCN, id, vi, th, hi, ar,
 };

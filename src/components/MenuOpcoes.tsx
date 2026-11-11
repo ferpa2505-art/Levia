@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { Linking, Modal, Pressable, ScrollView, Switch, View, useWindowDimensions } from 'react-native';
 import Constants from 'expo-constants';
+import { useRouter } from 'expo-router';
 import {
   MoreVertical, Palette, Globe, ChevronRight, ChevronLeft, Check, ShieldCheck, ExternalLink, RefreshCw,
-  Download, Upload, Lightbulb, BookOpen, HardDrive,
+  Download, Upload, Lightbulb, BookOpen, HardDrive, FileText,
 } from 'lucide-react-native';
 import { useBackupDados } from '@components/BackupDados';
 import { CREDITO_FONTES_ALIMENTOS, TOTAL_ALIMENTOS_GLOBAIS } from '@constants/alimentosGlobais';
@@ -36,6 +37,7 @@ const CHAVE_NOME_TEMA = {
 /** Botão ⋮ do cabeçalho: tema, idioma, dicas, backup, atualizações, fontes e privacidade. */
 export function MenuOpcoes() {
   const { tema, idioma, mudarTema, mudarIdioma, dicas, mudarDicas, t } = usePreferences();
+  const router = useRouter();
   const bkp = useBackupDados();
   const [aberto, setAberto] = useState(false);
   const [tela, setTela] = useState<Tela>('principal');
@@ -141,6 +143,14 @@ export function MenuOpcoes() {
                     <ThemedText variant="body" color="text">{t('menu.privacidade')}</ThemedText>
                   </View>
                   <ExternalLink size={18} color={colors.textSecondary} strokeWidth={2} />
+                </Pressable>
+
+                <Pressable style={styles.item} onPress={() => depoisDeFechar(() => router.push('/termos'))}>
+                  <FileText size={20} color={colors.primary} strokeWidth={2} />
+                  <View style={styles.itemTextos}>
+                    <ThemedText variant="body" color="text">{t('paywall.termosServico')}</ThemedText>
+                  </View>
+                  <ChevronRight size={20} color={colors.textSecondary} strokeWidth={2} />
                 </Pressable>
 
                 <Pressable style={styles.item} onPress={() => setTela('fontes')}>

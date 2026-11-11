@@ -9,7 +9,9 @@ import {
   salvarSenha,
   conferirSenha,
   biometriaDisponivel,
-  autenticarBiometria,
+  guardarChaveBiometria,
+  lerChaveBiometria,
+  apagarChaveBiometria,
   TipoBiometria,
   MAX_TENTATIVAS,
   ESPERA_BLOQUEIO_MS,
@@ -19,6 +21,7 @@ import { getNotifications } from '@utils/glp1Notifications';
 import { useProfile } from '@context/ProfileContext';
 import { suspenderBloqueio, consumirSuspensao, bloqueioEstaSuspenso } from '@utils/bloqueioSuspenso';
 import { traduzirAtual as t } from '@/i18n';
+import { cofre } from '@utils/cofre';
 
 export { suspenderBloqueio } from '@utils/bloqueioSuspenso';
 
@@ -80,6 +83,11 @@ export function SegurancaProvider({ children }: { children: ReactNode }) {
     })();
   }, []);
 
+  // com o app bloqueado, a chave dos dados sai da memória
+  useEffect(() => {
+    if (bloqueado) cofre.bloquear();
+  }, [bloqueado]);
+
   // bloquear ao voltar para o app depois do tempo escolhido
   useEffect(() => {
     const sub = AppState.addEventListener('change', (estado) => {
@@ -138,6 +146,12 @@ export function SegurancaProvider({ children }: { children: ReactNode }) {
     if (Date.now() < esperaAte) return false;
     const ok = await conferirSenha(pin);
     if (ok) {
+      try {
+        await cofre.desbloquear(pin);
+      } catch {
+        return false;
+      }
+      if (configRef.current.biometria) await guardarChaveBiometria(cofre.obterChave()).catch(() => {});
       tentativas.current = 0;
       setBloqueado(false);
       return true;
@@ -151,21 +165,33 @@ export function SegurancaProvider({ children }: { children: ReactNode }) {
     return false;
   }
 
+  // a própria biometria libera a chave do cofre: sem ela não há como abrir os dados
   async function desbloquearComBiometria() {
     if (!configRef.current.biometria || !biometria) return false;
-    const ok = await autenticarBiometria(t('seg.biometriaPrompt'), t('seg.usarSenha'));
-    if (ok) {
-      tentativas.current = 0;
-      setBloqueado(false);
+    const chave = await lerChaveBiometria(t('seg.biometriaPrompt'));
+    if (!chave) return false;
+    try {
+      await cofre.desbloquearComChave(chave);
+    } catch {
+      return false;
     }
-    return ok;
+    tentativas.current = 0;
+    setBloqueado(false);
+    return true;
   }
 
+  // "esqueci a senha": a biometria abre o cofre, para que a nova senha regrave os dados sem perdê-los
   async function redefinirComBiometria() {
     if (!biometria) return false;
-    const ok = await autenticarBiometria(t('seg.confirmeIdentidade'), t('comum.cancelar'));
-    if (ok) setRedefinindo(true);
-    return ok;
+    const chave = await lerChaveBiometria(t('seg.confirmeIdentidade'));
+    if (!chave) return false;
+    try {
+      await cofre.desbloquearComChave(chave);
+    } catch {
+      return false;
+    }
+    setRedefinindo(true);
+    return true;
   }
 
   async function iniciarTrocaSenha(pinAtual: string) {
@@ -176,7 +202,11 @@ export function SegurancaProvider({ children }: { children: ReactNode }) {
 
   async function definirSenha(pin: string) {
     const primeiraVez = !temSenha;
+    // com o cofre aberto, troca a chave e regrava os dados; na primeira vez, cria o cofre e cifra o que já existe
+    if (cofre.estaDesbloqueado()) await cofre.trocarPin(pin);
+    else await cofre.desbloquear(pin);
     await salvarSenha(pin);
+    if (configRef.current.biometria) await guardarChaveBiometria(cofre.obterChave()).catch(() => {});
     setTemSenha(true);
     if (primeiraVez) {
       const c = configRef.current;
@@ -191,6 +221,10 @@ export function SegurancaProvider({ children }: { children: ReactNode }) {
 
   async function atualizarConfig(mudancas: Partial<ConfigSeguranca>) {
     let nova = { ...configRef.current, ...mudancas };
+    if ('biometria' in mudancas) {
+      if (nova.biometria) await guardarChaveBiometria(cofre.obterChave()).catch(() => {});
+      else await apagarChaveBiometria();
+    }
     if ('relatorioSemanal' in mudancas || 'relatorioMensal' in mudancas) {
       const ids = await agendarAvisosRelatorio(nova.relatorioSemanal, nova.relatorioMensal, configRef.current.relatorioIds ?? []);
       nova = { ...nova, relatorioIds: ids };

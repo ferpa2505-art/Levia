@@ -1,0 +1,73 @@
+name: Deploy App (Cloudflare)
+
+on:
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - "worker/**"
+      - "site/**"
+      - "docs/**"
+      - "screenshots/**"
+      - "**/*.md"
+      - ".github/workflows/deploy-cloudflare-worker.yml"
+      - ".github/workflows/deploy-landing.yml"
+      - ".github/workflows/deploy-netlify.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-levia-app
+  cancel-in-progress: false
+
+jobs:
+  build-deploy:
+    # disparo manual a partir de outro branch não publica em produção
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-26.04
+    environment:
+      name: production
+      url: https://leviapp.org
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+      - run: npm run type-check
+      - run: npm test -- --runInBand --watch=false __tests__/ia-consentimento.test.ts
+
+      - name: Gerar a PWA
+        run: npx expo export --platform web --output-dir dist
+
+      - name: Conferir arquivos da PWA
+        run: |
+          for f in index.html manifest.webmanifest sw.js _headers icons/icon-192.png icons/icon-512.png; do
+            test -f "dist/$f" || { echo "Faltando dist/$f"; exit 1; }
+          done
+          # carimba o cache do service worker com o commit: sw.js muda a cada publicação e os aparelhos com o app instalado atualizam
+          sed -i "s/const CACHE = 'levia-v2';/const CACHE = 'levia-v2-${GITHUB_SHA::7}';/" dist/sw.js
+          grep -q "levia-v2-${GITHUB_SHA::7}" dist/sw.js || { echo "cache do sw.js não foi carimbado"; exit 1; }
+          node --check dist/sw.js
+          # a regra "/* /index.html 200" é do Netlify; na Cloudflare quem faz isso é o not_found_handling do wrangler.app.jsonc
+          rm -f dist/_redirects
+
+      - name: Publicar levia-app
+        uses: cloudflare/wrangler-action@v4
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          wranglerVersion: "4"
+          command: deploy --config wrangler.app.jsonc
+
+      - name: Conferir o site no ar
+        run: |
+          curl -fsSA "Mozilla/5.0" https://leviapp.org/ | grep -q '<title>Leviã</title>'
+          curl -fsSA "Mozilla/5.0" https://leviapp.org/manifest.webmanifest | grep -q '"short_name"'
+          curl -fsSA "Mozilla/5.0" https://leviapp.org/sw.js | grep -q 'levia-v'
+          curl -fsSA "Mozilla/5.0" https://leviapp.org/ativar | grep -q '<title>Leviã</title>'

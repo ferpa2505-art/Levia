@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { View, Pressable, Alert, ActivityIndicator } from 'react-native';
+import { useRouter } from 'expo-router';
 import { Sparkles, Check, X } from 'lucide-react-native';
 import { ThemedText } from '@components/ThemedText';
 import { Button } from '@components/Button';
@@ -9,6 +10,7 @@ import { idiomaDosAlimentos } from '@constants/alimentosGlobais';
 import { valoresDaPorcao } from '@models/ingredients';
 import { ItemRefeicao } from '@models/records';
 import { analisarFotoDoPrato, darConsentimentoIA, temConsentimentoIA, SugestaoIA } from '@utils/iaPrato';
+import { lerLicenca } from '@utils/licenca';
 import { textoNutrientes } from '@utils/textoNutrientes';
 import { colors, spacing, radius } from '@constants/colors';
 import { estilosTema } from '@theme/estilos';
@@ -16,39 +18,55 @@ import { estilosTema } from '@theme/estilos';
 type Linha = SugestaoIA & { marcado: boolean; gramasTexto: string };
 
 /**
- * Botão "Analisar com IA" + lista de confirmação. A IA sugere; a pessoa
- * marca, corrige os gramas e só então os itens entram na refeição.
+ * Botão de análise. Só funciona com a licença do serial ativado (assinada pelo Worker e presa
+ * a esta instalação); sem ela, leva à tela de ativação. Nenhuma credencial fixa vai no app.
  */
 export function AnaliseIAPrato({ fotoUri, onAdicionar }: { fotoUri: string; onAdicionar: (itens: ItemRefeicao[]) => void }) {
   const { t, idioma } = usePreferences();
+  const router = useRouter();
   const [estado, setEstado] = useState<'inicio' | 'analisando' | 'resultado'>('inicio');
   const [linhas, setLinhas] = useState<Linha[]>([]);
   const [restantes, setRestantes] = useState<number | null>(null);
 
   const numero = (txt: string) => parseFloat(txt.replace(',', '.'));
 
+  function pedirSerial() {
+    Alert.alert(t('ia.erro.licenca'), undefined, [
+      { text: t('comum.cancelar'), style: 'cancel' },
+      { text: t('ia.ativarBotao'), onPress: () => router.push('/ativar') },
+    ]);
+  }
+
   async function analisar() {
     setEstado('analisando');
-    const r = await analisarFotoDoPrato(fotoUri, idiomaDosAlimentos(idioma));
-    if (!r.ok) {
-      setEstado('inicio');
-      if (r.motivo === 'cota') {
-        let quando = '';
-        try {
-          quando = r.liberaEm ? new Date(r.liberaEm).toLocaleDateString(idioma, { day: '2-digit', month: '2-digit' }) : '';
-        } catch {}
-        Alert.alert(t('ia.cotaTitulo'), t('ia.cotaMsg', { data: quando }));
-      } else {
-        Alert.alert(t(`ia.erro.${r.motivo}` as never));
+    try {
+      const r = await analisarFotoDoPrato(fotoUri, idiomaDosAlimentos(idioma));
+      if (!r.ok) {
+        setEstado('inicio');
+        if (r.motivo === 'licenca') {
+          pedirSerial();
+        } else if (r.motivo === 'cota') {
+          let quando = '';
+          try {
+            quando = r.liberaEm ? new Date(r.liberaEm).toLocaleDateString(idioma, { day: '2-digit', month: '2-digit' }) : '';
+          } catch {}
+          Alert.alert(t('ia.cotaTitulo'), t('ia.cotaMsg', { data: quando }));
+        } else {
+          Alert.alert(t(`ia.erro.${r.motivo}` as never));
+        }
+        return;
       }
-      return;
+      setRestantes(r.restantes);
+      setLinhas(r.sugestoes.map((s) => ({ ...s, marcado: s.confianca >= 0.4, gramasTexto: String(s.gramas) })));
+      setEstado('resultado');
+    } catch {
+      setEstado('inicio');
+      Alert.alert(t('ia.erro.servidor' as never));
     }
-    setRestantes(r.restantes);
-    setLinhas(r.sugestoes.map((s) => ({ ...s, marcado: s.confianca >= 0.4, gramasTexto: String(s.gramas) })));
-    setEstado('resultado');
   }
 
   async function pedirAnalise() {
+    if (!(await lerLicenca())) return pedirSerial();
     if (await temConsentimentoIA()) return analisar();
     Alert.alert(t('ia.consentTitulo'), t('ia.consentMsg'), [
       { text: t('comum.cancelar'), style: 'cancel' },
@@ -109,20 +127,11 @@ export function AnaliseIAPrato({ fotoUri, onAdicionar }: { fotoUri: string; onAd
             </Pressable>
             <View style={{ flex: 1, marginHorizontal: spacing.sm }}>
               <ThemedText variant="body" color="text">{l.alimento.nome}</ThemedText>
-              {l.origem === 'ia' && (
-                <ThemedText variant="caption" color="accent">{t('ia.estimado')}</ThemedText>
-              )}
-              {l.unidades > 1 && (
-                <ThemedText variant="caption" color="textSecondary">{t('ia.unidades', { n: l.unidades })}</ThemedText>
-              )}
+              {l.origem === 'ia' && <ThemedText variant="caption" color="accent">{t('ia.estimado')}</ThemedText>}
+              {l.unidades > 1 && <ThemedText variant="caption" color="textSecondary">{t('ia.unidades', { n: l.unidades })}</ThemedText>}
               {g > 0 && <ThemedText variant="caption" color="textSecondary">{textoNutrientes(t, valoresDaPorcao(l.alimento, g))}</ThemedText>}
             </View>
-            <Input
-              value={l.gramasTexto}
-              onChangeText={(v) => atualizar({ gramasTexto: v })}
-              keyboardType="decimal-pad"
-              style={styles.gramas}
-            />
+            <Input value={l.gramasTexto} onChangeText={(v) => atualizar({ gramasTexto: v })} keyboardType="decimal-pad" style={styles.gramas} />
             <ThemedText variant="small" color="textSecondary" style={{ marginLeft: 4 }}>g</ThemedText>
           </View>
         );
@@ -135,40 +144,16 @@ export function AnaliseIAPrato({ fotoUri, onAdicionar }: { fotoUri: string; onAd
           <ThemedText variant="small" color="textSecondary" style={{ marginLeft: 2 }}>{t('ia.descartar')}</ThemedText>
         </Pressable>
       </View>
-      {restantes != null && (
-        <ThemedText variant="caption" color="textSecondary" style={{ marginTop: spacing.sm }}>{t('ia.restantes', { n: restantes })}</ThemedText>
-      )}
+      {restantes != null && <ThemedText variant="caption" color="textSecondary" style={{ marginTop: spacing.sm }}>{t('ia.restantes', { n: restantes })}</ThemedText>}
     </View>
   );
 }
 
 const styles = estilosTema(() => ({
   linha: { flexDirection: 'row', alignItems: 'center' },
-  botaoIA: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: spacing.md,
-    paddingVertical: spacing.md,
-    borderRadius: radius.lg,
-    backgroundColor: colors.primary,
-  },
-  item: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: spacing.sm,
-    borderTopWidth: 1,
-    borderTopColor: colors.border,
-  },
-  caixa: {
-    width: 22,
-    height: 22,
-    borderRadius: 6,
-    borderWidth: 2,
-    borderColor: colors.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
+  botaoIA: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginTop: spacing.md, paddingVertical: spacing.md, borderRadius: radius.lg, backgroundColor: colors.primary },
+  item: { flexDirection: 'row', alignItems: 'center', paddingVertical: spacing.sm, borderTopWidth: 1, borderTopColor: colors.border },
+  caixa: { width: 22, height: 22, borderRadius: 6, borderWidth: 2, borderColor: colors.primary, alignItems: 'center', justifyContent: 'center' },
   caixaMarcada: { backgroundColor: colors.primary },
   gramas: { width: 72, paddingVertical: spacing.xs, paddingHorizontal: spacing.sm, fontSize: 16 },
 }));
