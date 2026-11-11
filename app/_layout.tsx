@@ -100,6 +100,21 @@ function RootNavigation() {
 }
 
 /**
+ * Com a senha criada e o app bloqueado, nenhum provedor de dados de saúde monta: eles só sobem
+ * depois do desbloqueio, quando o cofre já está aberto. Assim nunca leem vazio nem gravam por cima.
+ * A tela de termos é pública e passa direto.
+ */
+function GateSeguranca({ children }: { children: React.ReactNode }) {
+  const seg = useSeguranca();
+  const segments = useSegments();
+  if (segments[0] === 'termos') return <>{children}</>;
+  if (!seg.carregado) return null;
+  const travado = seg.temSenha && (seg.bloqueado || seg.redefinindo);
+  if (travado) return <PortaoSeguranca />;
+  return <>{children}</>;
+}
+
+/**
  * Quando o tema muda, a "key" muda e a navegação é remontada —
  * assim todas as telas são redesenhadas com as cores novas.
  */
@@ -118,6 +133,7 @@ export default function RootLayout() {
     <PreferencesProvider>
       <ProfileProvider>
         <SegurancaProvider>
+        <GateSeguranca>
         <RecordsProvider>
           <CustomRecipesProvider>
             <NewsProvider>
@@ -133,6 +149,7 @@ export default function RootLayout() {
             </NewsProvider>
           </CustomRecipesProvider>
         </RecordsProvider>
+        </GateSeguranca>
         </SegurancaProvider>
       </ProfileProvider>
     </PreferencesProvider>

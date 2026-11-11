@@ -11,7 +11,9 @@ import { normalizarTexto } from '@utils/buscaAlimentos';
  * A IA só diz QUAIS alimentos e QUANTOS GRAMAS; os nutrientes vêm do banco
  * do app. Quando o banco não tem o alimento, usa a estimativa da IA (marcada).
  */
-const URL_IA = 'https://levia-ia-worker.ferpa2505.workers.dev/v1/analisar-prato';
+// EXPO_PUBLIC_WORKER_URL aponta o build de teste para o worker de teste; sem ela, usa a produção
+const WORKER_BASE = process.env.EXPO_PUBLIC_WORKER_URL || 'https://levia-ia-worker.ferpa2505.workers.dev';
+const URL_IA = `${WORKER_BASE}/v1/analisar-prato`;
 const CHAVE_CONSENTIMENTO = 'levia:consentimentoIA';
 
 export { idDaInstalacao };

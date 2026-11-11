@@ -22,7 +22,6 @@ async function reservarNoD1(db, escopos, agora) {
     for (const id of feitas) await db.prepare('DELETE FROM cotas_uso WHERE id = ?').bind(id).run();
     return { ok: false, escopo: e };
   }
-  if (Math.random() < 0.05) await db.prepare('DELETE FROM cotas_uso WHERE ts < ?').bind(agora - 31 * UM_DIA_MS).run();
   return { ok: true };
 }
 
