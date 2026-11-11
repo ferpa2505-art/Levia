@@ -1,7 +1,7 @@
 import { Pressable, View } from 'react-native';
 import { Tabs, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Home, BookOpen, Dumbbell, TrendingUp, HeartPulse, Droplet, Plus } from 'lucide-react-native';
+import { Home, BookOpen, TrendingUp, HeartPulse, Plus, Dumbbell } from 'lucide-react-native';
 import { colors } from '@constants/colors';
 import { MenuOpcoes } from '@components/MenuOpcoes';
 import { useT } from '@context/PreferencesContext';
@@ -46,6 +46,14 @@ export default function TabsLayout() {
         name="index"
         options={{
           title: t('abas.inicio'),
+          headerRight: () => (
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+              <Pressable onPress={() => router.push('/fitness')} hitSlop={12} accessibilityRole="button" accessibilityLabel={t('header.guiaTreinos')}>
+                <Dumbbell size={24} color={colors.primary} strokeWidth={2} />
+              </Pressable>
+              <MenuOpcoes />
+            </View>
+          ),
           tabBarLabel: t('abas.inicio'),
           tabBarIcon: ({ color, focused, size }) => (
             <Home size={size} color={color} strokeWidth={focused ? 2.5 : 2} />
@@ -59,28 +67,6 @@ export default function TabsLayout() {
           tabBarLabel: t('abas.diario'),
           tabBarIcon: ({ color, focused, size }) => (
             <BookOpen size={size} color={color} strokeWidth={focused ? 2.5 : 2} />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="diabetes"
-        options={{
-          href: null,
-          title: t('abas.diabetes') || 'Diabetes',
-          tabBarLabel: t('abas.diabetes') || 'Diabetes',
-          tabBarIcon: ({ color, focused, size }) => (
-            <Droplet size={size} color={color} strokeWidth={focused ? 2.5 : 2} />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="exercises"
-        options={{
-          href: null,
-          title: t('abas.exercicios'),
-          tabBarLabel: t('abas.exercicios'),
-          tabBarIcon: ({ color, focused, size }) => (
-            <Dumbbell size={size} color={color} strokeWidth={focused ? 2.5 : 2} />
           ),
         }}
       />
@@ -130,7 +116,7 @@ export default function TabsLayout() {
       {/* Notícias fica guardada para uma próxima atualização: a tela continua no código, só sai da barra */}
       <Tabs.Screen name="news" options={{ href: null }} />
       <Tabs.Screen
-        name="profile"
+        name="saude"
         options={{
           title: t('abas.saude'),
           tabBarLabel: t('abas.saude'),

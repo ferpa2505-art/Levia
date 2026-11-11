@@ -24,7 +24,7 @@ const LIMITES: Record<Unidade, [number, number]> = { 'mg/dL': [20, 600], 'mmol/L
 const HIPO = 70;
 const ALTA = 250;
 
-export default function DiabetesScreen() {
+export function SecaoDiabetes() {
   const { t } = usePreferences();
   const { glicemias, config, adicionarGlicemia, removerGlicemia, notas, adicionarNota, removerNota } = useDiabetes();
   const hoje = dataDeHoje();

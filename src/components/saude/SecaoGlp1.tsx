@@ -65,7 +65,7 @@ function formatarDataRegistro(dataIso: string, idioma: string): string {
   }
 }
 
-export default function Glp1Screen() {
+export function SecaoGlp1() {
   const { t, tc, idioma } = usePreferences();
   const router = useRouter();
   // separador decimal do exemplo: vírgula ou ponto, conforme o idioma

@@ -660,9 +660,40 @@ const ptBR = {
   "home.maisModulos": "Mais módulos",
   "home.exerciciosDesc": "Treinos, duração e calorias gastas",
   "home.adicionar": "Adicionar refeição",
+  "saude.perfilPeso": "Perfil & Peso",
+  "header.guiaTreinos": "Guia de Treinos",
+  "fitness.titulo": "Guia de Treinos",
+  "fitness.meusTreinos": "Meus treinos",
+  "fitness.historico": "Histórico",
+  "fitness.semTreinos": "Você ainda não tem treinos. Crie o primeiro!",
+  "fitness.exercicios": "exercícios",
+  "fitness.iniciar": "Iniciar",
+  "fitness.editar": "Editar",
+  "fitness.novoTreino": "Novo treino",
+  "fitness.editarTreino": "Treino",
+  "fitness.executarTreino": "Executar treino",
+  "fitness.nomeTreino": "Nome do treino",
+  "fitness.semExercicios": "Adicione pelo menos um exercício ao treino.",
+  "fitness.bibliotecaTitulo": "Biblioteca de exercícios",
+  "fitness.adicionarExercicio": "Adicionar exercício",
+  "fitness.series": "Séries",
+  "fitness.repeticoes": "Repetições",
+  "fitness.carga": "Carga (kg)",
+  "fitness.descanso": "Descanso (s)",
+  "fitness.salvarTreino": "Salvar treino",
+  "fitness.excluirTreino": "Excluir treino",
+  "fitness.confirmarExcluir": "Excluir este treino? Esta ação não pode ser desfeita.",
+  "fitness.serie": "Série",
+  "fitness.feita": "Série feita",
+  "fitness.descansando": "Descanso",
+  "fitness.pular": "Pular",
+  "fitness.concluirTreino": "Concluir treino",
+  "fitness.semSeriesFeitas": "Marque pelo menos uma série como feita antes de concluir.",
+  "fitness.semHistorico": "Nenhum treino registrado ainda.",
 };
 
 export type ChaveTraducao = keyof typeof ptBR;
-export type Traducoes = Record<ChaveTraducao, string>;
+// Idiomas sem uma chave usam o texto do pt-BR (ver i18n/index.ts)
+export type Traducoes = Partial<Record<ChaveTraducao, string>>;
 
 export default ptBR;
