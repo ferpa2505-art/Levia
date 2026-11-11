@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useMemo, useState, ReactNode } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { cofre } from '@utils/cofre';
 import type {
   Configuracoes,
   DadosFitness,
@@ -114,11 +115,11 @@ export function FitnessProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     (async () => {
       try {
-        const raw = await AsyncStorage.getItem(CHAVE);
+        const raw = await cofre.lerDado(CHAVE);
         if (raw) {
           setDados(normalizar(JSON.parse(raw)));
         } else {
-          const antigo = await AsyncStorage.getItem(CHAVE_ANTIGA);
+          const antigo = await cofre.lerDado(CHAVE_ANTIGA);
           if (antigo) setDados(migrarV1(JSON.parse(antigo) as DadosV1));
         }
       } catch {
@@ -131,7 +132,7 @@ export function FitnessProvider({ children }: { children: ReactNode }) {
 
   async function persistir(novo: DadosFitness) {
     setDados(novo);
-    await AsyncStorage.setItem(CHAVE, JSON.stringify(novo)).catch(() => {});
+    await cofre.gravarDado(CHAVE, JSON.stringify(novo)).catch(() => {});
   }
 
   const exercicios = useMemo(() => [...BIBLIOTECA_EXERCICIOS, ...dados.personalizados], [dados.personalizados]);

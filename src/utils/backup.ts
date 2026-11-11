@@ -9,6 +9,8 @@ import { getNotifications } from '@utils/glp1Notifications';
 import { suspenderBloqueio } from '@utils/bloqueioSuspenso';
 import { getRandomBytes } from 'expo-crypto';
 import { cifrar, decifrar, DadosCifrados } from '@utils/cifraBackup';
+import { cofre } from '@utils/cofre';
+import { CHAVE_SAL, ehSensivel } from '@utils/cofreDados';
 
 /**
  * Backup completo dos dados do Leviã num arquivo .json que a pessoa guarda
@@ -19,7 +21,7 @@ import { cifrar, decifrar, DadosCifrados } from '@utils/cifraBackup';
 const FORMATO = 1;
 const FORMATO_CIFRADO = 2;
 /** Chaves que não entram no backup nem na restauração: cache, id do aparelho, licença do serial, consentimento da IA e configuração de segurança (um arquivo de fora não decide isso) */
-const IGNORAR = new Set(['levia:news_cache', 'levia:instalacao', 'levia:licenca', 'levia:consentimentoIA', 'levia:seguranca']);
+const IGNORAR = new Set(['levia:news_cache', 'levia:instalacao', 'levia:licenca', 'levia:consentimentoIA', 'levia:seguranca', CHAVE_SAL]);
 /** Depois de restaurar, as medicações reagendam os lembretes ao abrir */
 export const CHAVE_REAGENDAR = 'levia:reagendarLembretes';
 
@@ -43,6 +45,14 @@ export async function exportarBackup(tituloCompartilhar: string, senha?: string)
   const chaves = (await AsyncStorage.getAllKeys()).filter(chaveDoLevia);
   const pares = await AsyncStorage.multiGet(chaves);
   const dados = Object.fromEntries(pares.filter(([, v]) => v != null) as [string, string][]);
+  // os dados sensíveis saem do cofre já decifrados (exige o app desbloqueado)
+  for (const k of Object.keys(dados)) {
+    if (ehSensivel(k)) {
+      const aberto = await cofre.lerDado(k);
+      if (aberto === null) delete dados[k];
+      else dados[k] = aberto;
+    }
+  }
   const base = {
     app: 'levia' as const,
     versaoApp: Constants.expoConfig?.version ?? '',
@@ -111,9 +121,15 @@ export async function escolherBackup(): Promise<BackupLido> {
 
 /** Substitui os dados atuais pelos do backup. Depois disso o app precisa reiniciar. */
 export async function aplicarBackup(dados: Record<string, string>) {
+  // antes de apagar qualquer coisa: restaurar exige o cofre aberto, senão os dados novos ficariam sem cifra
+  if ((await cofre.temCofre()) && !cofre.estaDesbloqueado()) throw new Error('cofre bloqueado');
   const atuais = (await AsyncStorage.getAllKeys()).filter(chaveDoLevia);
   await AsyncStorage.multiRemove(atuais);
-  await AsyncStorage.multiSet([...Object.entries(dados), [CHAVE_REAGENDAR, '1']]);
+  const simples = Object.entries(dados).filter(([k]) => !ehSensivel(k));
+  await AsyncStorage.multiSet([...simples, [CHAVE_REAGENDAR, '1']]);
+  for (const [k, v] of Object.entries(dados)) {
+    if (ehSensivel(k)) await cofre.gravarDado(k, v);
+  }
   // lembretes antigos deste aparelho não valem mais; as medicações reagendam ao abrir
   await getNotifications()?.cancelAllScheduledNotificationsAsync().catch(() => {});
 }
