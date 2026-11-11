@@ -1,12 +1,11 @@
 import { useState } from 'react';
 import { View, Pressable, StyleSheet } from 'react-native';
-import { ChevronLeft, ChevronRight, Syringe, Dumbbell, Droplet, Pill, UserRound } from 'lucide-react-native';
+import { ChevronLeft, ChevronRight, Syringe, Droplet, Pill, UserRound } from 'lucide-react-native';
 import { TelaRolavel } from '@components/TelaRolavel';
 import { ThemedView } from '@components/ThemedView';
 import { ThemedText } from '@components/ThemedText';
 import { ListaMedicacoes } from '@components/ListaMedicacoes';
 import { SecaoGlp1 } from '@components/saude/SecaoGlp1';
-import { SecaoExercicios } from '@components/saude/SecaoExercicios';
 import { SecaoDiabetes } from '@components/saude/SecaoDiabetes';
 import { SecaoPerfil } from '@components/saude/SecaoPerfil';
 import { colors, spacing, radius } from '@constants/colors';
@@ -14,7 +13,7 @@ import { useT } from '@context/PreferencesContext';
 import type { ChaveTraducao } from '@/i18n/traducoes/pt-BR';
 
 /** Seções internas do módulo Saúde. 'visao' é o painel com os cartões. */
-type SecaoAtiva = 'visao' | 'glp1' | 'exercicios' | 'diabetes' | 'medicacoes' | 'perfil';
+type SecaoAtiva = 'visao' | 'glp1' | 'diabetes' | 'medicacoes' | 'perfil';
 
 type Cartao = {
   id: Exclude<SecaoAtiva, 'visao'>;
@@ -24,7 +23,6 @@ type Cartao = {
 
 const CARTOES: Cartao[] = [
   { id: 'glp1', chave: 'titulos.glp1', icone: Syringe },
-  { id: 'exercicios', chave: 'abas.exercicios', icone: Dumbbell },
   { id: 'diabetes', chave: 'titulos.diabetes', icone: Droplet },
   { id: 'medicacoes', chave: 'med.tituloTela', icone: Pill },
   { id: 'perfil', chave: 'saude.perfilPeso', icone: UserRound },
@@ -83,7 +81,6 @@ export default function SaudeScreen() {
 
       <View style={styles.conteudo}>
         {secaoAtiva === 'glp1' && <SecaoGlp1 />}
-        {secaoAtiva === 'exercicios' && <SecaoExercicios />}
         {secaoAtiva === 'diabetes' && <SecaoDiabetes />}
         {secaoAtiva === 'medicacoes' && (
           <TelaRolavel>

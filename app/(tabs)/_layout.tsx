@@ -1,14 +1,12 @@
-import { Pressable, View } from 'react-native';
-import { Tabs, useRouter } from 'expo-router';
+import { Tabs } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Home, BookOpen, TrendingUp, HeartPulse, Plus, Dumbbell } from 'lucide-react-native';
+import { Home, BookOpen, TrendingUp, HeartPulse, Dumbbell } from 'lucide-react-native';
 import { colors } from '@constants/colors';
 import { MenuOpcoes } from '@components/MenuOpcoes';
 import { useT } from '@context/PreferencesContext';
 
 export default function TabsLayout() {
   const t = useT();
-  const router = useRouter();
   const insets = useSafeAreaInsets();
 
   return (
@@ -46,14 +44,6 @@ export default function TabsLayout() {
         name="index"
         options={{
           title: t('abas.inicio'),
-          headerRight: () => (
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-              <Pressable onPress={() => router.push('/fitness')} hitSlop={12} accessibilityRole="button" accessibilityLabel={t('header.guiaTreinos')}>
-                <Dumbbell size={24} color={colors.primary} strokeWidth={2} />
-              </Pressable>
-              <MenuOpcoes />
-            </View>
-          ),
           tabBarLabel: t('abas.inicio'),
           tabBarIcon: ({ color, focused, size }) => (
             <Home size={size} color={color} strokeWidth={focused ? 2.5 : 2} />
@@ -71,35 +61,12 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
-        name="novo"
+        name="treinos"
         options={{
-          title: t('home.adicionar'),
-          tabBarLabel: () => null,
-          tabBarAccessibilityLabel: t('home.adicionar'),
-          tabBarButton: () => (
-            <View style={{ flex: 1, alignItems: 'center' }}>
-              <Pressable
-                onPress={() => router.push('/refeicao')}
-                accessibilityRole="button"
-                accessibilityLabel={t('home.adicionar')}
-                style={{
-                  marginTop: -4,
-                  width: 52,
-                  height: 52,
-                  borderRadius: 26,
-                  backgroundColor: colors.primary,
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  shadowColor: colors.text,
-                  shadowOffset: { width: 0, height: 4 },
-                  shadowOpacity: 0.15,
-                  shadowRadius: 8,
-                  elevation: 4,
-                }}
-              >
-                <Plus size={26} color={colors.surface} strokeWidth={2.5} />
-              </Pressable>
-            </View>
+          title: t('fitness.titulo'),
+          tabBarLabel: t('fitness.abaTreinos'),
+          tabBarIcon: ({ color, focused, size }) => (
+            <Dumbbell size={size} color={color} strokeWidth={focused ? 2.5 : 2} />
           ),
         }}
       />
