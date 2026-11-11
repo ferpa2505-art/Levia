@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { Header, Hero, TrialExplainer, Momento, Recursos, ComoFunciona } from "./components/SectionsTop";
 import { Glp1, Diabetes, Planos, Telas, Video, Faq, Privacidade, CtaFinal, Contato, Footer } from "./components/SectionsBottom";
 import { WhatsIcon } from "./components/Brand";
+import { ConsentimentoPixel } from "./components/ConsentimentoPixel";
+import { iniciarPixel } from "./pixel";
 import { WHATSAPP_TRIAL } from "./config";
 
 function MobileCta() {
@@ -24,6 +26,10 @@ function MobileCta() {
 }
 
 export default function App() {
+  useEffect(() => {
+    iniciarPixel();
+  }, []);
+
   return (
     <>
       <a href="#conteudo" className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[60] focus:rounded-full focus:bg-white focus:px-4 focus:py-2">
@@ -48,6 +54,7 @@ export default function App() {
       </main>
       <Footer />
       <MobileCta />
+      <ConsentimentoPixel />
     </>
   );
 }

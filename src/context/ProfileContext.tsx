@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { UserProfile, perfilVazio } from '@models/profile';
-import { carregarPerfil, salvarPerfil } from '@utils/profileStorage';
+import { basicoDe, carregarPerfil, salvarPerfil } from '@utils/profileStorage';
+import { cofre } from '@utils/cofre';
 
 interface ProfileContextValue {
   profile: UserProfile;
@@ -17,10 +18,27 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    carregarPerfil().then((perfil) => {
-      setProfile(perfil);
-      setLoading(false);
+    let vivo = true;
+    const carregar = async () => {
+      const perfil = await carregarPerfil();
+      if (vivo) {
+        setProfile(perfil);
+        setLoading(false);
+      }
+    };
+    carregar();
+    // ao abrir o cofre o perfil completo é lido; ao fechar, só a parte básica fica na memória
+    const parar = cofre.ouvir((aberto) => {
+      if (!aberto) {
+        setProfile((p) => ({ ...perfilVazio, ...basicoDe(p) }));
+      } else {
+        carregar();
+      }
     });
+    return () => {
+      vivo = false;
+      parar();
+    };
   }, []);
 
   function updateProfile(parcial: Partial<UserProfile>) {

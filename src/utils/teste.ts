@@ -8,8 +8,6 @@ const DIA_MS = 24 * 3600 * 1000;
 /** Nos últimos dias o aviso fica mais forte (e pode ser dispensado uma vez por dia). */
 export const DIAS_DO_CONVITE = 3;
 
-export const URL_PLANOS = 'https://www.leviapp.org/#planos';
-
 export interface LicencaParaAviso {
   plano?: string;
   acessoAte?: string;

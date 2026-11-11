@@ -2,9 +2,9 @@ import { iniciarTeste } from './licencas';
 import { turnstileSitekey } from './turnstile';
 import { processarMensagemWhatsApp } from './fluxo';
 import { puxarVencidos } from './lembretes';
+import { limparVencidos } from './retencao';
 import { reservarCotaFoto } from './cotas';
 import { ativarSerial, validarLicenca } from './serial';
-import { receberPostbackPayt } from './payt';
 import { receberWebhookHotmart } from './hotmart';
 
 /**
@@ -184,7 +184,11 @@ async function analisarPrato(request, env) {
     console.error('Erro inesperado em perguntarAoGemini:', e?.message);
     resultado = { falha: 'exception ' + (e?.message || 'unknown') };
   }
-  if (!resultado || resultado.falha) return json({ erro: 'falha_ia', motivo: resultado?.falha }, 502);
+  // o detalhe técnico da falha fica no log do Worker, não na resposta
+  if (!resultado || resultado.falha) {
+    if (resultado?.falha) console.error('falha_ia:', String(resultado.falha).slice(0, 200));
+    return json({ erro: 'falha_ia' }, 502);
+  }
   return json({ ...resultado, restantes: reserva.restantes });
 }
 
@@ -239,6 +243,10 @@ async function processarLead(request, env) {
   }
   if (!phone || typeof phone !== 'string' || phone.trim().length === 0) {
     return json({ erro: 'telefone_obrigatorio' }, 400);
+  }
+  // Autorização explícita: sem o aceite da pessoa nada é gravado (nem a data de consentimento é inventada)
+  if (corpo?.consentimento !== true) {
+    return json({ erro: 'consentimento_obrigatorio' }, 400);
   }
 
   // Increment rate limit counter
@@ -298,7 +306,8 @@ async function processarLead(request, env) {
         created_at: agora,
         updated_at: agora
       };
-      await kv.put(`lead:${leadId}`, JSON.stringify(leadData), { expirationTtl: 30 * 24 * 3600 });
+      // mesma chave por telefone que "apagar" (WhatsApp) procura: assim a exclusão alcança este cadastro
+      await kv.put(`lead:tel:${phoneNormalizado}`, JSON.stringify(leadData), { expirationTtl: 30 * 24 * 3600 });
     } catch (e) {
       console.error('Erro ao salvar lead no KV:', e?.message);
       return json({ erro: 'falha_armazenamento' }, 503);
@@ -394,6 +403,10 @@ async function processarWhatsAppInbound(request, env) {
 }
 
 export default {
+  // cron diário (wrangler.toml [triggers]): apaga o que passou do prazo de retenção
+  async scheduled(_evento, env, ctx) {
+    ctx.waitUntil(limparVencidos(env));
+  },
   async fetch(request, env) {
     const { pathname } = new URL(request.url);
     const origem = request.headers.get('Origin');
@@ -410,10 +423,6 @@ export default {
     if (pathname === '/v1/ativar' && request.method === 'POST') {
       try { return comCors(await ativarSerial(request, env), origem); }
       catch (e) { console.error('erro ativar', e?.message); return comCors(json({ erro: 'interno' }, 500), origem); }
-    }
-    if (pathname === '/v1/payt/webhook' && request.method === 'POST') {
-      try { return await receberPostbackPayt(request, env); }
-      catch (e) { console.error('erro payt', e?.message); return json({ erro: 'interno' }, 500); }
     }
     if (pathname === '/v1/hotmart/webhook' && request.method === 'POST') {
       try { return await receberWebhookHotmart(request, env); }

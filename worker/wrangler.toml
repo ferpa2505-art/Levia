@@ -8,6 +8,10 @@ preview_urls = false
 [observability]
 enabled = true
 
+# Retenção: apaga conversas e contadores vencidos todo dia às 03:00 UTC (ver src/retencao.js)
+[triggers]
+crons = ["0 3 * * *"]
+
 [vars]
 GEMINI_MODEL = "gemini-3.8-flash"
 # fotos por conta durante o teste de 7 dias (começa quando o serial é ativado)
@@ -23,12 +27,12 @@ MAX_FOTOS_IP_HORA = "20"
 # Hostnames que podem concluir o desafio Turnstile (sitekey e secret são configurados no Worker)
 TURNSTILE_ALLOWED_HOSTNAMES = "leviapp.org,www.leviapp.org,localhost"
 
-# Hotmart (POST /v1/hotmart/webhook) e PAYT usam os mesmos códigos de produto (id do produto ou código da oferta)
-# PAYT: códigos dos produtos (separados por vírgula) que valem 30 e 365 dias; sem eles, o valor pago decide
-PAYT_PRODUTOS_MENSAL = "8875689"
-PAYT_PRODUTOS_ANUAL = "8876081"
-PAYT_VALOR_MENSAL_CENTAVOS = "1997"
-PAYT_VALOR_ANUAL_CENTAVOS = "19171"
+# Hotmart (POST /v1/hotmart/webhook) usa estes códigos de produto (id do produto ou código da oferta)
+# Códigos dos produtos (separados por vírgula) que valem 30 e 365 dias; sem eles, o valor pago decide
+PRODUTOS_MENSAL = "8875689"
+PRODUTOS_ANUAL = "8876081"
+VALOR_MENSAL_CENTAVOS = "1997"
+VALOR_ANUAL_CENTAVOS = "19171"
 # fotos por 30 dias de quem pagou
 FOTOS_ASSINANTE_30D = "100"
 # Avisos quando o LEVI passa uma conversa para uma pessoa (ver src/avisos.js):
@@ -38,7 +42,9 @@ ALERTA_WHATSAPP = "+35699506350"
 binding = "LEVIA_COTAS"
 id = "7cb6991665974b96b3d7ce447f067a9a"
 
-# Banco de desenvolvimento para contas, testes, pagamentos e licenças.
+# PRODUÇÃO: contas, pagamentos e licenças reais.
+# O nome "levia-licencas-dev" é histórico (D1 não permite renomear); este é o banco de produção.
+# Nunca rode testes, seeds ou migrations experimentais aqui: use o ambiente "test" abaixo.
 [[d1_databases]]
 binding = "LEVIA_DB"
 database_name = "levia-licencas-dev"
@@ -50,6 +56,59 @@ migrations_dir = "migrations"
 # EMAIL_ENCRYPTION_KEY (32 bytes em base64), RESEND_API_KEY, EMAIL_FROM,
 # WHATSAPP_WEBHOOK_SECRET (igual ao do gateway Baileys), GATEWAY_TOKEN (rota /api/lead),
 # LICENCA_TOKEN_KEY (assina a licença do serial; sem ela /v1/ativar e a IA ficam fechados).
-# HOTMART_HOTTOK (o hottok do webhook da Hotmart), PAYT_INTEGRATION_KEY (a "Chave Única" do postback da PAYT; o postback vai para POST /v1/payt/webhook).
+# HOTMART_HOTTOK (o hottok do webhook da Hotmart).
 # Variáveis públicas: TURNSTILE_SITE_KEY, APP_BASE_URL (domínio real do app).
 # TURNSTILE_SITE_KEY é uma variável pública de execução, nunca uma chave secreta.
+
+# ---------------------------------------------------------------------------
+# TESTE: Worker separado com banco separado. Use para qualquer teste manual:
+#   npx wrangler dev --env test --remote
+#   npx wrangler d1 migrations apply levia-licencas-test --remote
+# Segredos do ambiente de teste: npx wrangler secret put NOME --env test
+# ---------------------------------------------------------------------------
+[env.test]
+name = "levia-ia-worker-test"
+workers_dev = true
+
+[env.test.observability]
+enabled = true
+
+[env.test.triggers]
+crons = ["0 3 * * *"]
+
+[env.test.vars]
+GEMINI_MODEL = "gemini-3.8-flash"
+# fotos por conta durante o teste de 7 dias (começa quando o serial é ativado)
+FOTOS_GRATIS_7D = "2"
+# aparelhos por conta (cada serial vale para até este número de instalações)
+MAX_DISPOSITIVOS = "2"
+# dias que o serial emitido no WhatsApp pode ser ativado
+SERIAL_VALIDADE_DIAS = "30"
+# teto de segurança da conta inteira por dia (protege o saldo pré-pago)
+MAX_FOTOS_DIA = "300"
+# por endereço IP, por hora
+MAX_FOTOS_IP_HORA = "20"
+# Hostnames que podem concluir o desafio Turnstile (sitekey e secret são configurados no Worker)
+TURNSTILE_ALLOWED_HOSTNAMES = "leviapp.org,www.leviapp.org,localhost,levia-app-test.ferpa2505.workers.dev"
+
+# Hotmart (POST /v1/hotmart/webhook) usa estes códigos de produto (id do produto ou código da oferta)
+# Códigos dos produtos (separados por vírgula) que valem 30 e 365 dias; sem eles, o valor pago decide
+PRODUTOS_MENSAL = "8875689"
+PRODUTOS_ANUAL = "8876081"
+VALOR_MENSAL_CENTAVOS = "1997"
+VALOR_ANUAL_CENTAVOS = "19171"
+# fotos por 30 dias de quem pagou
+FOTOS_ASSINANTE_30D = "100"
+# Avisos quando o LEVI passa uma conversa para uma pessoa (ver src/avisos.js):
+ALERTA_WHATSAPP = "+35699506350"
+
+[[env.test.kv_namespaces]]
+# KV próprio do teste (levia-cotas-test) — não toca no de produção
+binding = "LEVIA_COTAS"
+id = "1fdff4f56aa94132adaab206206f9166"
+
+[[env.test.d1_databases]]
+binding = "LEVIA_DB"
+database_name = "levia-licencas-test"
+database_id = "0b311672-858c-422a-829f-f7e9cdec428d"
+migrations_dir = "migrations"

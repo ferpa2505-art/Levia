@@ -1,14 +1,12 @@
-import { Pressable, View } from 'react-native';
-import { Tabs, useRouter } from 'expo-router';
+import { Tabs } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Home, BookOpen, Dumbbell, TrendingUp, HeartPulse, Droplet, Plus } from 'lucide-react-native';
+import { Home, BookOpen, TrendingUp, HeartPulse, Dumbbell } from 'lucide-react-native';
 import { colors } from '@constants/colors';
 import { MenuOpcoes } from '@components/MenuOpcoes';
 import { useT } from '@context/PreferencesContext';
 
 export default function TabsLayout() {
   const t = useT();
-  const router = useRouter();
   const insets = useSafeAreaInsets();
 
   return (
@@ -63,57 +61,12 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
-        name="diabetes"
+        name="treinos"
         options={{
-          href: null,
-          title: t('abas.diabetes') || 'Diabetes',
-          tabBarLabel: t('abas.diabetes') || 'Diabetes',
-          tabBarIcon: ({ color, focused, size }) => (
-            <Droplet size={size} color={color} strokeWidth={focused ? 2.5 : 2} />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="exercises"
-        options={{
-          href: null,
-          title: t('abas.exercicios'),
-          tabBarLabel: t('abas.exercicios'),
+          title: t('fitness.titulo'),
+          tabBarLabel: t('fitness.abaTreinos'),
           tabBarIcon: ({ color, focused, size }) => (
             <Dumbbell size={size} color={color} strokeWidth={focused ? 2.5 : 2} />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="novo"
-        options={{
-          title: t('home.adicionar'),
-          tabBarLabel: () => null,
-          tabBarAccessibilityLabel: t('home.adicionar'),
-          tabBarButton: () => (
-            <View style={{ flex: 1, alignItems: 'center' }}>
-              <Pressable
-                onPress={() => router.push('/refeicao')}
-                accessibilityRole="button"
-                accessibilityLabel={t('home.adicionar')}
-                style={{
-                  marginTop: -4,
-                  width: 52,
-                  height: 52,
-                  borderRadius: 26,
-                  backgroundColor: colors.primary,
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  shadowColor: colors.text,
-                  shadowOffset: { width: 0, height: 4 },
-                  shadowOpacity: 0.15,
-                  shadowRadius: 8,
-                  elevation: 4,
-                }}
-              >
-                <Plus size={26} color={colors.surface} strokeWidth={2.5} />
-              </Pressable>
-            </View>
           ),
         }}
       />
@@ -130,7 +83,7 @@ export default function TabsLayout() {
       {/* Notícias fica guardada para uma próxima atualização: a tela continua no código, só sai da barra */}
       <Tabs.Screen name="news" options={{ href: null }} />
       <Tabs.Screen
-        name="profile"
+        name="saude"
         options={{
           title: t('abas.saude'),
           tabBarLabel: t('abas.saude'),

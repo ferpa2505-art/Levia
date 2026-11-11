@@ -84,6 +84,72 @@ export async function avisarEquipe(env, { telefone, nome, etapa, idioma, motivo,
   return { whatsapp, email };
 }
 
+const RESULTADOS_PAGAMENTO = {
+  plano_desconhecido: 'plano não identificado',
+  sem_telefone: 'compra sem telefone válido',
+  conta_indisponivel: 'conta do comprador indisponível',
+};
+
+function textoPagamentoNaoLiberado({ provedor, idEvento, resultado, produtos, valorCentavos }) {
+  const linhas = [
+    '⚠️ Pagamento não liberado',
+    `Provedor: ${provedor}`,
+    `Compra: ${idEvento}`,
+    `Motivo: ${RESULTADOS_PAGAMENTO[resultado] ?? resultado}`,
+  ];
+  const itens = (produtos ?? []).filter(Boolean);
+  if (itens.length) linhas.push(`Produtos/oferta: ${itens.join(', ')}`);
+  if (Number(valorCentavos) > 0) linhas.push(`Valor: R$ ${(Number(valorCentavos) / 100).toFixed(2).replace('.', ',')}`);
+  linhas.push('Nenhum acesso foi liberado. Confira a compra na Hotmart.');
+  return linhas.join('\n');
+}
+
+async function avisarPagamentoPorEmail(env, texto, { provedor, idEvento }) {
+  if (!env.RESEND_API_KEY) return false;
+  const para = String(env.ALERTA_EMAILS ?? '').split(',').map((e) => e.trim()).filter((e) => EMAIL_VALIDO.test(e));
+  if (para.length === 0) return false;
+  const r = await tentar(() => fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${env.RESEND_API_KEY}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      from: env.EMAIL_FROM || REMETENTE_PADRAO,
+      to: para,
+      subject: `⚠️ Pagamento não liberado — ${provedor} ${idEvento}`,
+      text: texto,
+    }),
+  }), 'email de pagamento');
+  if (r && !r.ok) console.error('alerta de pagamento (email): resposta', r.status);
+  return !!r?.ok;
+}
+
+/**
+ * Avisa a equipe quando um pagamento aprovado não pôde ser liberado, por WhatsApp e por e-mail
+ * (se ALERTA_EMAILS estiver definido). Leva só o necessário para agir (provedor, compra, motivo,
+ * produtos e valor), nunca telefone, nome ou e-mail do comprador. O id fixo por evento evita
+ * alerta repetido quando o provedor reenvia o mesmo aviso.
+ */
+export async function avisarPagamentoNaoReconhecido(env, {
+  provedor, idEvento, resultado, produtos = [], valorCentavos = 0, agora = Date.now(),
+}) {
+  const texto = textoPagamentoNaoLiberado({ provedor, idEvento, resultado, produtos, valorCentavos });
+  const id = `alerta-pgto-${provedor}-${idEvento}-${resultado}`.slice(0, 200);
+  const destino = String(env.ALERTA_WHATSAPP ?? '').replace(/\D/g, '');
+
+  let whatsapp = null;
+  if (destino && env.LEVIA_DB) {
+    const r = await tentar(() => env.LEVIA_DB.prepare(
+      'INSERT OR IGNORE INTO wa_outbox (id, phone, texto, enviar_em, criado_em) VALUES (?, ?, ?, ?, ?)',
+    ).bind(id, `+${destino}`, texto, agora, agora).run(), 'alerta de pagamento');
+    whatsapp = r ? r.meta?.changes === 1 : false;
+    // já avisado por este evento: não repete em nenhum canal
+    if (whatsapp === false) return { whatsapp: false, email: false, repetido: true };
+  }
+
+  const email = await avisarPagamentoPorEmail(env, texto, { provedor, idEvento });
+  if (!whatsapp && !email) console.error('alerta de pagamento: nenhum canal configurado ou todos falharam');
+  return { whatsapp: whatsapp === true, email };
+}
+
 /** Pedidos de falar com uma pessoa, nos 5 idiomas do atendimento. */
 const PEDIDOS = [
   'atendente', 'falar com uma pessoa', 'falar com alguem', 'falar com humano', 'pessoa de verdade', 'humano',

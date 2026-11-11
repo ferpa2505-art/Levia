@@ -54,8 +54,9 @@ async function tentar(fn) {
 export async function cancelarLembretes(env, phone, agora = Date.now()) {
   if (!env.LEVIA_DB) return;
   await tentar(() => env.LEVIA_DB.prepare(
-    // os avisos para a equipe (id 'aviso-…') não são lembretes de cliente: nunca se cancelam por mensagem recebida
-    "UPDATE wa_outbox SET cancelado_em = ? WHERE phone = ? AND enviado_em IS NULL AND cancelado_em IS NULL AND id NOT LIKE 'aviso-%'",
+    // os avisos para a equipe (id 'aviso-…' e 'alerta-…') e o serial de uma compra (id 'pgto-…') não são lembretes de
+    // cliente: nunca se cancelam por mensagem recebida (quem acabou de pagar costuma escrever ao bot na hora)
+    "UPDATE wa_outbox SET cancelado_em = ? WHERE phone = ? AND enviado_em IS NULL AND cancelado_em IS NULL AND id NOT LIKE 'aviso-%' AND id NOT LIKE 'alerta-%' AND id NOT LIKE 'pgto-%'",
   ).bind(agora, phone).run());
 }
 
@@ -102,7 +103,7 @@ export async function puxarVencidos(env, agora = Date.now(), limite = 10) {
     const r = await env.LEVIA_DB.prepare(
       `SELECT o.id, o.phone, o.texto FROM wa_outbox o
        WHERE o.enviado_em IS NULL AND o.cancelado_em IS NULL AND o.enviar_em <= ?1
-         AND (o.id LIKE 'aviso-%' OR EXISTS (SELECT 1 FROM wa_sessions s WHERE s.phone = o.phone))
+         AND (o.id LIKE 'aviso-%' OR o.id LIKE 'pgto-%' OR o.id LIKE 'alerta-%' OR EXISTS (SELECT 1 FROM wa_sessions s WHERE s.phone = o.phone))
        ORDER BY o.enviar_em LIMIT ?2`,
     ).bind(agora, limite).all();
     return r.results ?? [];
@@ -118,9 +119,6 @@ export async function puxarVencidos(env, agora = Date.now(), limite = 10) {
       const { texto, midia } = lerToque(l.texto);
       entregues.push({ id: l.id, telefone: l.phone.replace(/\D/g, ''), texto, midia });
     }
-  }
-  if (Math.random() < 0.05) {
-    await tentar(() => env.LEVIA_DB.prepare('DELETE FROM wa_outbox WHERE criado_em < ?').bind(agora - 14 * UM_DIA_MS).run());
   }
   return entregues;
 }

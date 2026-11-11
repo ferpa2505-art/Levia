@@ -5,6 +5,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Platform } from 'react-native';
 import { scryptAsync } from '@noble/hashes/scrypt';
 import { utf8ToBytes } from '@noble/hashes/utils';
+import { deBase64, paraBase64 } from '@utils/cifraBackup';
 
 /**
  * No celular a senha fica no cofre do sistema (SecureStore). No navegador (PWA)
@@ -157,4 +158,40 @@ export async function autenticarBiometria(mensagem: string, cancelar: string): P
   } catch {
     return false;
   }
+}
+
+/* ---------- chave do cofre guardada para a biometria (só no celular) ---------- */
+
+const CHAVE_COFRE_BIO = 'levia_cofre_bio';
+
+/**
+ * Guarda a chave do cofre no cofre do sistema, liberada só pela biometria. Assim o app desbloqueia
+ * por digital/rosto sem o PIN, e o "esqueci" consegue trocar o PIN sem perder os dados.
+ * No navegador (PWA) não há biometria: não guarda nada.
+ */
+export async function guardarChaveBiometria(chave: Uint8Array | null): Promise<void> {
+  if (Platform.OS === 'web' || !chave) return;
+  await SecureStore.setItemAsync(CHAVE_COFRE_BIO, paraBase64(chave), {
+    requireAuthentication: true,
+    keychainAccessible: SecureStore.WHEN_UNLOCKED_THIS_DEVICE_ONLY,
+  });
+}
+
+/** Chave do cofre, depois da biometria. null se cancelou, falhou ou não há chave guardada. */
+export async function lerChaveBiometria(mensagem: string): Promise<Uint8Array | null> {
+  if (Platform.OS === 'web') return null;
+  try {
+    const guardada = await SecureStore.getItemAsync(CHAVE_COFRE_BIO, {
+      requireAuthentication: true,
+      authenticationPrompt: mensagem,
+    });
+    return guardada ? deBase64(guardada) : null;
+  } catch {
+    return null;
+  }
+}
+
+export async function apagarChaveBiometria(): Promise<void> {
+  if (Platform.OS === 'web') return;
+  await SecureStore.deleteItemAsync(CHAVE_COFRE_BIO).catch(() => {});
 }

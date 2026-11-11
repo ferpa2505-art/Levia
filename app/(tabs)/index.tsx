@@ -3,7 +3,7 @@ import { View, ScrollView, Pressable } from 'react-native';
 import { TelaRolavel } from '@components/TelaRolavel';
 import { useRouter } from 'expo-router';
 import Constants from 'expo-constants';
-import { Beef, Droplet, Zap, Feather, Target, Syringe, ChevronRight, TrendingDown, Wheat, Nut, Leaf, Dumbbell } from 'lucide-react-native';
+import { Beef, Droplet, Zap, Feather, Target, ChevronRight, TrendingDown, Wheat, Nut, Leaf } from 'lucide-react-native';
 import { GraficoPesoTendencia } from '@components/GraficoPesoTendencia';
 import { Dica } from '@components/Dica';
 import { FaixaTeste } from '@components/FaixaTeste';
@@ -14,15 +14,16 @@ import { Input } from '@components/Input';
 import { LeviaPena } from '@components/LeviaPena';
 import { AnelKcal } from '@components/AnelKcal';
 import { BarrasKcal } from '@components/GraficoEvolucao';
-import { CartaoGlicemia } from '@components/diabetes/CartaoGlicemia';
 import { useProfile } from '@context/ProfileContext';
 import { useRecords } from '@context/RecordsContext';
-import { useDiabetes } from '@context/DiabetesContext';
+
 import { colors, spacing, radius } from '@constants/colors';
 import { useT } from '@context/PreferencesContext';
 import { calcularEvolucao } from '@utils/evolucao';
 import { diasSeguidos, partesDosMacros } from '@utils/constancia';
 import { dataDeHoje } from '@utils/recordsStorage';
+import { useFitness } from '@context/FitnessContext';
+import { kcalDaSessao } from '@utils/fitnessLogica';
 import { salvarPerfil } from '@utils/profileStorage';
 import { MensagemErro } from '@components/forms/MensagemErro';
 import { estilosTema } from '@theme/estilos';
@@ -36,9 +37,13 @@ export default function HomeScreen() {
     aguaHojeMl, pesoAtualKg, pesos, adicionarPeso, kcalGastaHoje, refeicoes,
   } = useRecords();
   const nome = profile.comoChamar || profile.nome || '';
-  const temGlicemias = useDiabetes().glicemias.length > 0;
 
   const hoje = dataDeHoje();
+  // gasto de hoje = exercícios registrados + treinos do Guia (estimativa MET); o saldo desconta do que foi ingerido
+  const { sessoes: sessoesGuia } = useFitness();
+  const gastoGuiaHoje = sessoesGuia.filter((s) => s.data === hoje).reduce((soma, s) => soma + kcalDaSessao(s, profile.pesoAtualKg ?? 70), 0);
+  const gastoHoje = kcalGastaHoje + gastoGuiaHoje;
+  const saldoHoje = kcalHoje - gastoHoje;
   const sequencia = useMemo(() => diasSeguidos(refeicoes.map((r) => r.data), hoje), [refeicoes, hoje]);
   const semana = useMemo(
     () => calcularEvolucao(
@@ -105,12 +110,15 @@ export default function HomeScreen() {
         <ThemedView variant="surface" style={[styles.card, styles.cardShadow]}>
           <ThemedText variant="caption" color="textSecondary" style={styles.sobretitulo}>{t('home.seuDiaAteAqui')}</ThemedText>
           <View style={styles.anelLinha}>
-            <AnelKcal kcal={kcalHoje} meta={profile.metaKcalDia} />
+            <AnelKcal kcal={saldoHoje} meta={profile.metaKcalDia} />
             <View style={{ flex: 1, marginLeft: spacing.lg }}>
               <ThemedText variant="subheading" color="text">{t('home.cadaEscolha')}</ThemedText>
               <ThemedText variant="small" color="textSecondary">{t('home.noSeuRitmo')}</ThemedText>
               <ThemedText variant="small" color="textSecondary" style={{ marginTop: spacing.xs }}>
                 {profile.metaKcalDia ? t('home.deMeta', { meta: profile.metaKcalDia }) : t('home.semMeta')}
+              </ThemedText>
+              <ThemedText variant="small" color="textSecondary">
+                {t('home.saldoDetalhe', { ingeridas: kcalHoje, gastas: gastoHoje })}
               </ThemedText>
               {sequencia > 0 && (
                 <View style={[styles.chipCuidado, { backgroundColor: colors.primarySoft }]}>
@@ -163,7 +171,7 @@ export default function HomeScreen() {
           </View>
           <View style={styles.statsGrid}>
             <Stat largo icone={<Droplet size={18} color={colors.accent} strokeWidth={2.25} />} valor={aguaHojeMl} rotulo={t('home.agua')} cor="accent" fundo={colors.accentSoft} />
-            <Stat largo icone={<Zap size={18} color={colors.secondary} strokeWidth={2.25} />} valor={kcalGastaHoje} rotulo={t('home.kcalGastas')} cor="secondary" fundo={colors.secondarySoft} />
+            <Stat largo icone={<Zap size={18} color={colors.secondary} strokeWidth={2.25} />} valor={gastoHoje} rotulo={t('home.kcalGastas')} cor="secondary" fundo={colors.secondarySoft} />
           </View>
         </ThemedView>
 
@@ -255,53 +263,6 @@ export default function HomeScreen() {
             <ChevronRight size={14} color={colors.primary} strokeWidth={2} />
           </Pressable>
         </ThemedView>
-
-        <Pressable onPress={() => router.push('/glp1')}>
-          <ThemedView variant="surface" style={[styles.card, styles.cardShadow, styles.glp1Card]}>
-            <View style={styles.glp1IconCircle}>
-              <Syringe size={20} color={colors.primary} strokeWidth={2} />
-            </View>
-            <View style={{ flex: 1, marginLeft: spacing.md }}>
-              <ThemedText variant="subheading" color="text">{t('titulos.glp1')}</ThemedText>
-              <ThemedText variant="small" color="textSecondary">
-                {t('home.glp1Desc')}
-              </ThemedText>
-            </View>
-            <ChevronRight size={20} color={colors.textSecondary} strokeWidth={2} />
-          </ThemedView>
-        </Pressable>
-
-        <Pressable onPress={() => router.push('/exercises')}>
-          <ThemedView variant="surface" style={[styles.card, styles.cardShadow, styles.glp1Card]}>
-            <View style={styles.glp1IconCircle}>
-              <Dumbbell size={20} color={colors.primary} strokeWidth={2} />
-            </View>
-            <View style={{ flex: 1, marginLeft: spacing.md }}>
-              <ThemedText variant="subheading" color="text">{t('abas.exercicios')}</ThemedText>
-              <ThemedText variant="small" color="textSecondary">{t('home.exerciciosDesc')}</ThemedText>
-            </View>
-            <ChevronRight size={20} color={colors.textSecondary} strokeWidth={2} />
-          </ThemedView>
-        </Pressable>
-
-        {(profile.tipoDiabetes !== 'nenhum' || temGlicemias) && (
-          <CartaoGlicemia onAbrir={() => router.push('/diabetes')} />
-        )}
-
-        {!(profile.tipoDiabetes !== 'nenhum' || temGlicemias) && (
-          <Pressable onPress={() => router.push('/diabetes')}>
-            <ThemedView variant="surface" style={[styles.card, styles.cardShadow, styles.glp1Card]}>
-              <View style={styles.glp1IconCircle}>
-                <Droplet size={20} color={colors.primary} strokeWidth={2} />
-              </View>
-              <View style={{ flex: 1, marginLeft: spacing.md }}>
-                <ThemedText variant="subheading" color="text">{t('abas.diabetes')}</ThemedText>
-                <ThemedText variant="small" color="textSecondary">{t('home.diabetesDesc')}</ThemedText>
-              </View>
-              <ChevronRight size={20} color={colors.textSecondary} strokeWidth={2} />
-            </ThemedView>
-          </Pressable>
-        )}
 
         <View style={styles.status}>
           <ThemedText variant="caption" color="textSecondary">Leviã v{Constants.expoConfig?.version ?? ''}</ThemedText>

@@ -1,5 +1,8 @@
-import { StyleSheet } from 'react-native';
+import { ImageStyle, StyleSheet, TextStyle, ViewStyle } from 'react-native';
 import { obterVersaoTema } from '@constants/colors';
+
+/** Qualquer estilo válido do React Native (substitui StyleSheet.NamedStyles, removido nos tipos do RN 0.88) */
+type EstiloRN = ViewStyle | TextStyle | ImageStyle;
 
 /**
  * Igual ao StyleSheet.create, mas refaz os estilos quando o tema muda.
@@ -10,7 +13,7 @@ import { obterVersaoTema } from '@constants/colors';
  * sempre que o tema for trocado — assim as cores fixas dentro dos estilos
  * (ex.: borderColor: colors.primary) acompanham o tema escolhido.
  */
-export function estilosTema<T extends StyleSheet.NamedStyles<T> | StyleSheet.NamedStyles<any>>(
+export function estilosTema<const T extends Record<string, EstiloRN>>(
   fabrica: () => T
 ): T {
   let cache: T | null = null;
@@ -22,7 +25,7 @@ export function estilosTema<T extends StyleSheet.NamedStyles<T> | StyleSheet.Nam
       cache = StyleSheet.create(fabrica()) as T;
       versao = atual;
     }
-    return cache;
+    return cache as T;
   }
 
   return new Proxy({} as T, {

@@ -10,6 +10,7 @@ import path from 'path';
 import axios from 'axios';
 import fs from 'node:fs';
 import qrcode from 'qrcode-terminal';
+import http from 'node:http';
 
 const logger = pino({ level: 'info' }, pino.destination({ dest: process.stdout.fd, sync: false }));
 
@@ -33,6 +34,16 @@ const INTERVALO_LEMBRETES_MS = parseInt(LEMBRETES_INTERVALO_MS, 10);
 let sock = null;
 let isConnected = false;
 let heartbeatTimer = null;
+let abertaDesde = null;
+
+// Endpoint de saúde: só dentro do container (o healthcheck do Docker consulta).
+// 200 = conectado ao WhatsApp; 503 = desconectado ou reconectando.
+const PORTA_SAUDE = Number(process.env.PORTA_SAUDE ?? 3001);
+http.createServer((req, res) => {
+  if (req.url !== '/health') { res.writeHead(404).end(); return; }
+  res.writeHead(isConnected ? 200 : 503, { 'Content-Type': 'application/json' });
+  res.end(JSON.stringify({ conectado: isConnected, desde: abertaDesde }));
+}).on('error', (e) => logger.warn({ err: e?.message }, 'Endpoint de saúde indisponível')).listen(PORTA_SAUDE, '127.0.0.1');
 
 if (!WHATSAPP_WEBHOOK_SECRET) {
   logger.fatal('WHATSAPP_WEBHOOK_SECRET ausente: o Worker recusa mensagens sem assinatura');
@@ -240,10 +251,12 @@ async function connect() {
     
     if (connection === 'open') {
       isConnected = true;
+      abertaDesde = new Date().toISOString();
       logger.info('Conectado ao WhatsApp!');
       startHeartbeat();
     } else if (connection === 'close') {
       isConnected = false;
+      abertaDesde = null;
       stopHeartbeat();
       const reason = lastDisconnect?.error?.output?.statusCode;
       logger.warn({ reason }, 'Desconectado do WhatsApp');

@@ -2,12 +2,14 @@ import { useState } from "react";
 import { Logo, Check, WhatsIcon } from "./Brand";
 import { PhoneMockup, type Variant } from "./PhoneMockup";
 import { TrialButton } from "./SectionsTop";
+import { pixelConfigurado, rastrearCheckout } from "../pixel";
 import {
   LINK_CHECKOUT_MENSAL,
   LINK_CHECKOUT_ANUAL,
   LINK_ATIVAR,
   LINK_ATIVAR_LABEL,
   LINK_PRIVACIDADE,
+  LINK_TERMOS,
   EMAIL_CONTATO,
   YOUTUBE_ID,
   isPending,
@@ -99,8 +101,9 @@ export function Diabetes() {
 
 const planFeatures = ["Análise de refeições com IA", "Módulos GLP-1 e Diabetes", "Macros, hábitos e diário completo", "Relatórios semanais e mensais", "Todos os recursos do Leviã"];
 
-function PlanCard({ highlight, tag, name, price, per, perDay, note, href, cta }: {
+function PlanCard({ highlight, tag, name, price, per, perDay, note, href, cta, plano, valor }: {
   highlight?: boolean; tag?: string; name: string; price: string; per: string; perDay: string; note: string; href: string; cta: string;
+  plano: "mensal" | "anual"; valor: number;
 }) {
   const pending = isPending(href);
   return (
@@ -134,6 +137,7 @@ function PlanCard({ highlight, tag, name, price, per, perDay, note, href, cta }:
           href={href}
           target="_blank"
           rel="noopener noreferrer"
+          onClick={() => rastrearCheckout(plano, valor)}
           className={`mt-8 block rounded-full px-6 py-3.5 text-center font-semibold transition ${highlight ? "bg-pessego-500 text-salvia-900 hover:bg-pessego-300" : "bg-salvia-700 text-marfim hover:bg-salvia-900"}`}
         >
           {cta}
@@ -171,6 +175,8 @@ export function Planos() {
             href={LINK_CHECKOUT_MENSAL}
             cta="Assinar plano mensal"
             note="Pagamento seguro pela Hotmart"
+            plano="mensal"
+            valor={19.97}
           />
           <PlanCard
             highlight
@@ -182,10 +188,17 @@ export function Planos() {
             href={LINK_CHECKOUT_ANUAL}
             cta="Assinar plano anual"
             note="Pagamento seguro pela Hotmart"
+            plano="anual"
+            valor={191.71}
           />
         </div>
         <p className="mx-auto mt-8 max-w-2xl text-center text-sm leading-relaxed text-carvao/75">
           Pague a qualquer momento durante o teste. Após a confirmação do pagamento, você recebe no WhatsApp o serial do seu plano: 30 dias (mensal) ou 365 dias (anual).
+        </p>
+        <p className="mt-3 text-center text-xs text-carvao/60">
+          Ao assinar, você concorda com os{" "}
+          <a href={LINK_TERMOS} target="_blank" rel="noopener noreferrer" className="font-semibold text-salvia-700 underline underline-offset-2">Termos de Serviço</a>
+          .
         </p>
         <p className="mt-3 text-center text-xs text-carvao/55">
           O Leviã funciona no navegador (PWA). Não está na App Store nem na Play Store.
@@ -311,8 +324,8 @@ export function Faq() {
 export function Privacidade() {
   const flow = [
     ["Você no Leviã", "No controle da sua jornada."],
-    ["Coleta mínima", "Quiz, refeições, doses, fotos e glicemia, só no app."],
-    ["Processamento seguro", "Criptografia e isolamento por usuário."],
+    ["Coleta mínima", "Refeições, doses e glicemia ficam no seu aparelho; o servidor guarda só o necessário para o acesso."],
+    ["Sem surpresas", "Sem anúncios e sem venda de dados. A foto só vai para a IA quando você pede."],
     ["Devolutiva", "Relatórios e evolução."],
   ];
   return (
@@ -341,7 +354,7 @@ export function Privacidade() {
             Ler a política de privacidade
           </a>
         </div>
-        <p className="mt-4 text-xs text-carvao/60">Esta página institucional não coleta dados de saúde e não usa cookies de rastreamento ou publicidade.</p>
+        <p className="mt-4 text-xs text-carvao/60">Esta página institucional não coleta dados de saúde. Com o seu consentimento, usamos o pixel da Meta para medir visitas e cliques no checkout — você pode recusar sem perder nenhuma funcionalidade.</p>
       </div>
     </section>
   );
@@ -431,6 +444,16 @@ export function Footer() {
         </nav>
         <div className="space-y-2 text-sm">
           <p className="mb-3 text-xs font-semibold uppercase tracking-widest text-pessego-300">Cuidado</p>
+          <a href={LINK_TERMOS} target="_blank" rel="noopener noreferrer" className="block text-marfim/80 hover:text-marfim">Termos de Serviço</a>
+          {pixelConfigurado() && (
+            <button
+              type="button"
+              onClick={() => window.dispatchEvent(new Event("levia:pixel-prefs"))}
+              className="block text-left text-marfim/80 hover:text-marfim"
+            >
+              Preferências de cookies
+            </button>
+          )}
           <a href={LINK_PRIVACIDADE} target="_blank" rel="noopener noreferrer" className="block text-marfim/80 hover:text-marfim">Política de privacidade</a>
           <a href={`mailto:${EMAIL_CONTATO}`} className="block text-marfim/80 hover:text-marfim">{EMAIL_CONTATO}</a>
         </div>
