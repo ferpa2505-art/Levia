@@ -230,17 +230,6 @@ async function marcarProcessado(db, messageId) {
   }
 }
 
-/** Conversas abandonadas e registros de mensagens antigos não ficam guardados para sempre. */
-async function limparAntigos(db, agora) {
-  if (!db || Math.random() >= 0.05) return;
-  try {
-    await db.prepare('DELETE FROM wa_sessions WHERE updated_at < ?').bind(new Date(agora - 3 * 24 * 3600 * 1000).toISOString()).run();
-    await db.prepare('DELETE FROM wa_processed WHERE created_at < ?').bind(new Date(agora - 30 * 24 * 3600 * 1000).toISOString()).run();
-  } catch (e) {
-    console.error('Erro ao limpar antigos:', e?.message);
-  }
-}
-
 async function buscarLeadPorTelefone(db, phone) {
   if (!db) return null;
   try {
@@ -324,7 +313,6 @@ export async function processarMensagemWhatsApp(env, phone, texto, messageId, ag
   await marcarProcessado(db, messageId);
   // qualquer mensagem da pessoa cancela os lembretes pendentes; a pergunta seguinte agenda os novos
   await cancelarLembretes(env, phoneFormatado, agora);
-  await limparAntigos(db, agora);
 
   const comando = semAcento(texto).replace(/[^a-z0-9 ]/g, '').trim();
   const sessao = await obterSessao(db, phoneFormatado);

@@ -8,6 +8,10 @@ preview_urls = false
 [observability]
 enabled = true
 
+# Retenção: apaga conversas e contadores vencidos todo dia às 03:00 UTC (ver src/retencao.js)
+[triggers]
+crons = ["0 3 * * *"]
+
 [vars]
 GEMINI_MODEL = "gemini-3.8-flash"
 # fotos por conta durante o teste de 7 dias (começa quando o serial é ativado)
@@ -68,6 +72,9 @@ workers_dev = true
 
 [env.test.observability]
 enabled = true
+
+[env.test.triggers]
+crons = ["0 3 * * *"]
 
 [env.test.vars]
 GEMINI_MODEL = "gemini-3.8-flash"

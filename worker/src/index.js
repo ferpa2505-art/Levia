@@ -2,6 +2,7 @@ import { iniciarTeste } from './licencas';
 import { turnstileSitekey } from './turnstile';
 import { processarMensagemWhatsApp } from './fluxo';
 import { puxarVencidos } from './lembretes';
+import { limparVencidos } from './retencao';
 import { reservarCotaFoto } from './cotas';
 import { ativarSerial, validarLicenca } from './serial';
 import { receberWebhookHotmart } from './hotmart';
@@ -402,6 +403,10 @@ async function processarWhatsAppInbound(request, env) {
 }
 
 export default {
+  // cron diário (wrangler.toml [triggers]): apaga o que passou do prazo de retenção
+  async scheduled(_evento, env, ctx) {
+    ctx.waitUntil(limparVencidos(env));
+  },
   async fetch(request, env) {
     const { pathname } = new URL(request.url);
     const origem = request.headers.get('Origin');

@@ -1,6 +1,7 @@
 import worker from '../worker/src/index';
 import { processarMensagemWhatsApp } from '../worker/src/fluxo';
 import { avisarEquipe } from '../worker/src/avisos';
+import { limparVencidos } from '../worker/src/retencao';
 import { criarD1, temSqlite } from '../test-utils/d1';
 
 // node:sqlite só existe no Node 22.13+; sem ele estes testes são pulados (o CI usa Node 22)
@@ -133,5 +134,58 @@ describe('apagar: cobre todos os caminhos de dados', () => {
     const { env } = ambiente({ TYPEBOT_PHONE_HMAC_KEY: undefined });
     await falar(env, 'apagar', TEL);
     expect((await falar(env, '1', TEL)).tipo).toBe('apagar_falhou');
+  });
+});
+
+describe('retenção: prazos da política rodam pelo cron, não por sorteio', () => {
+  const DIA = 24 * 3600 * 1000;
+  const AGORA = Date.parse('2026-11-11T03:00:00Z');
+  const quando = (dias: number) => new Date(AGORA - dias * DIA).toISOString();
+
+  teste('conversa vencida (4 dias) sai; conversa recente (1 dia) fica', async () => {
+    const { db, env } = ambiente();
+    db.sql('INSERT INTO wa_sessions (phone, stage, data_json, updated_at) VALUES (?, ?, ?, ?)', '+5511111111111', 'pergunta_nome', '{}', quando(4));
+    db.sql('INSERT INTO wa_sessions (phone, stage, data_json, updated_at) VALUES (?, ?, ?, ?)', '+5511222222222', 'pergunta_nome', '{}', quando(1));
+    const r = await limparVencidos(env, AGORA);
+    expect(r.removidos.wa_sessions).toBe(1);
+    expect(db.sql('SELECT phone FROM wa_sessions')).toEqual([{ phone: '+5511222222222' }]);
+  });
+
+  teste('contador de uso de 40 dias sai; de 5 dias fica', async () => {
+    const { db, env } = ambiente();
+    db.sql('INSERT INTO cotas_uso (chave, ts) VALUES (?, ?)', 'conta:a', AGORA - 40 * DIA);
+    db.sql('INSERT INTO cotas_uso (chave, ts) VALUES (?, ?)', 'conta:b', AGORA - 5 * DIA);
+    await limparVencidos(env, AGORA);
+    expect(db.sql('SELECT chave FROM cotas_uso')).toEqual([{ chave: 'conta:b' }]);
+  });
+
+  teste('fila de lembretes com mais de 14 dias sai (tempo em milissegundos)', async () => {
+    const { db, env } = ambiente();
+    db.sql('INSERT INTO wa_outbox (id, phone, texto, enviar_em, criado_em) VALUES (?, ?, ?, ?, ?)', 'velho', '+5511222222222', 'x', AGORA - 20 * DIA, AGORA - 20 * DIA);
+    db.sql('INSERT INTO wa_outbox (id, phone, texto, enviar_em, criado_em) VALUES (?, ?, ?, ?, ?)', 'novo', '+5511222222222', 'y', AGORA - DIA, AGORA - DIA);
+    await limparVencidos(env, AGORA);
+    expect(db.sql('SELECT id FROM wa_outbox')).toEqual([{ id: 'novo' }]);
+  });
+
+  teste('o cron (scheduled) executa a limpeza completa', async () => {
+    const { db, env } = ambiente();
+    db.sql('INSERT INTO wa_sessions (phone, stage, data_json, updated_at) VALUES (?, ?, ?, ?)', '+5511111111111', 'pergunta_nome', '{}', new Date(Date.now() - 10 * DIA).toISOString());
+    const espera: Promise<unknown>[] = [];
+    await (worker as any).scheduled({ cron: '0 3 * * *' }, env, { waitUntil: (p: Promise<unknown>) => espera.push(p) });
+    await Promise.all(espera);
+    expect(contar(db, 'wa_sessions')).toBe(0);
+  });
+
+  teste('falha em uma tabela não impede as outras', async () => {
+    const { db, env } = ambiente();
+    db.sql('INSERT INTO cotas_uso (chave, ts) VALUES (?, ?)', 'conta:a', AGORA - 40 * DIA);
+    const prepare = db.prepare.bind(db);
+    db.prepare = (sql: string, args?: any[]) => {
+      if (/FROM wa_sessions/.test(sql)) throw new Error('falha');
+      return prepare(sql, args);
+    };
+    const r = await limparVencidos(env, AGORA);
+    expect(r.falhas).toEqual(['wa_sessions']);
+    expect(contar(db, 'cotas_uso')).toBe(0);
   });
 });

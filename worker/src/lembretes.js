@@ -120,8 +120,5 @@ export async function puxarVencidos(env, agora = Date.now(), limite = 10) {
       entregues.push({ id: l.id, telefone: l.phone.replace(/\D/g, ''), texto, midia });
     }
   }
-  if (Math.random() < 0.05) {
-    await tentar(() => env.LEVIA_DB.prepare('DELETE FROM wa_outbox WHERE criado_em < ?').bind(agora - 14 * UM_DIA_MS).run());
-  }
   return entregues;
 }
