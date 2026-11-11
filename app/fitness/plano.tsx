@@ -37,11 +37,14 @@ export default function PlanoSemanal() {
     setDiaEscolhido(diaEscolhido === indice ? null : indice);
   }
 
-  function confirmarPlano(id: PlanoInicialId, rotulo: string) {
-    Alert.alert(t('fitness.aplicarPlano'), `${rotulo}\n\n${t('fitness.aplicarPlanoAviso')}`, [
-      { text: t('comum.cancelar'), style: 'cancel' },
-      { text: t('fitness.aplicar'), onPress: () => void aplicarPlanoInicial(id) },
-    ]);
+  // confirmação dentro da própria tela (não depende da caixa do navegador, que pode ser bloqueada)
+  const [planoPendente, setPlanoPendente] = useState<{ id: PlanoInicialId; rotulo: string } | null>(null);
+
+  async function aplicarPendente() {
+    if (!planoPendente) return;
+    const { id } = planoPendente;
+    setPlanoPendente(null);
+    await aplicarPlanoInicial(id);
   }
 
   function confirmarExclusao(id: string, nome: string) {
@@ -65,20 +68,22 @@ export default function PlanoSemanal() {
             const aberto = diaEscolhido === indice;
             const origem = trocando === indice;
             return (
-              <View key={indice} style={[styles.linhaDia, origem && { backgroundColor: colors.primarySoft }]}>
-                <Pressable onPress={() => tocarDia(indice)} style={styles.dia} accessibilityRole="button">
-                  <ThemedText variant="body" color="text" style={styles.nomeDia}>
-                    {nomeDiaSemana(indice, idioma, 'long')}
-                  </ThemedText>
-                  <ThemedText variant="small" color={rotina ? 'primary' : 'textSecondary'} style={{ flex: 1 }}>
-                    {rotina ? rotina.nome : t('fitness.diaDescanso')}
-                  </ThemedText>
-                </Pressable>
-                {trocando === null && (
-                  <Pressable onPress={() => setTrocando(indice)} hitSlop={8} accessibilityLabel={t('fitness.trocarDia')}>
-                    <ArrowLeftRight size={18} color={colors.textSecondary} strokeWidth={2} />
+              <View key={indice} style={[styles.bloco, origem && { backgroundColor: colors.primarySoft }]}>
+                <View style={styles.linhaDia}>
+                  <Pressable onPress={() => tocarDia(indice)} style={styles.dia} accessibilityRole="button">
+                    <ThemedText variant="body" color="text" style={styles.nomeDia}>
+                      {nomeDiaSemana(indice, idioma, 'long')}
+                    </ThemedText>
+                    <ThemedText variant="small" color={rotina ? 'primary' : 'textSecondary'} style={{ flex: 1 }}>
+                      {rotina ? rotina.nome : t('fitness.diaDescanso')}
+                    </ThemedText>
                   </Pressable>
-                )}
+                  {trocando === null && (
+                    <Pressable onPress={() => setTrocando(indice)} hitSlop={8} accessibilityLabel={t('fitness.trocarDia')}>
+                      <ArrowLeftRight size={18} color={colors.textSecondary} strokeWidth={2} />
+                    </Pressable>
+                  )}
+                </View>
                 {aberto && trocando === null && (
                   <View style={styles.opcoes}>
                     {rotinas.map((r) => (
@@ -101,8 +106,16 @@ export default function PlanoSemanal() {
 
         <ThemedText variant="subheading" color="text" style={{ marginTop: spacing.sm }}>{t('fitness.planosProntos')}</ThemedText>
         {PLANOS_INICIAIS.map((p) => (
-          <Button key={p.id} label={t(p.chave)} variant="outline" onPress={() => confirmarPlano(p.id, t(p.chave))} />
+          <Button key={p.id} label={t(p.chave)} variant="outline" onPress={() => setPlanoPendente({ id: p.id, rotulo: t(p.chave) })} />
         ))}
+        {planoPendente && (
+          <ThemedView variant="surface" style={styles.card}>
+            <ThemedText variant="subheading" color="text">{t('fitness.aplicarPlano')}: {planoPendente.rotulo}</ThemedText>
+            <ThemedText variant="small" color="textSecondary">{t('fitness.aplicarPlanoAviso')}</ThemedText>
+            <Button label={t('fitness.aplicar')} onPress={() => void aplicarPendente()} />
+            <Button label={t('comum.cancelar')} variant="outline" onPress={() => setPlanoPendente(null)} />
+          </ThemedView>
+        )}
 
         <View style={styles.cabecalhoRotinas}>
           <ThemedText variant="subheading" color="text">{t('fitness.minhasRotinas')}</ThemedText>
@@ -141,10 +154,11 @@ export default function PlanoSemanal() {
 const styles = StyleSheet.create({
   container: { padding: spacing.lg, gap: spacing.md },
   card: { borderRadius: radius.lg, padding: spacing.sm },
-  linhaDia: { paddingVertical: spacing.sm, paddingHorizontal: spacing.sm, flexDirection: 'row', alignItems: 'center', gap: spacing.sm, borderRadius: radius.md },
+  linhaDia: { paddingVertical: spacing.sm, flexDirection: 'row', alignItems: 'center', gap: spacing.sm, borderRadius: radius.md },
   dia: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: spacing.md },
   nomeDia: { width: 110 },
-  opcoes: { position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 10, backgroundColor: colors.surface, borderRadius: radius.md, borderWidth: 1, borderColor: colors.border },
+  bloco: { borderRadius: radius.md, paddingHorizontal: spacing.sm },
+  opcoes: { marginBottom: spacing.sm, backgroundColor: colors.background, borderRadius: radius.md, borderWidth: 1, borderColor: colors.border, overflow: 'hidden' },
   opcao: { padding: spacing.md, borderBottomWidth: 1, borderBottomColor: colors.border },
   cabecalhoRotinas: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: spacing.md },
   rotina: { borderRadius: radius.lg, padding: spacing.md, flexDirection: 'row', alignItems: 'center' },
