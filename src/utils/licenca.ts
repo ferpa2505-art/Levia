@@ -6,7 +6,7 @@ import { randomUUID } from 'expo-crypto';
  * licença assinada, presa a esta instalação. A IA só responde com essa licença.
  * A verificação de verdade é no servidor: este arquivo só guarda e envia.
  */
-const WORKER = process.env.EXPO_PUBLIC_WORKER_URL || 'https://levia-ia-worker.ferpa2505.workers.dev';
+const WORKER = 'https://levia-ia-worker.ferpa2505.workers.dev';
 const CHAVE_INSTALACAO = 'levia:instalacao';
 const CHAVE_LICENCA = 'levia:licenca';
 

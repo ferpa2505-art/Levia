@@ -1,6 +1,6 @@
 import { Platform } from 'react-native';
 
-const WORKER = process.env.EXPO_PUBLIC_WORKER_URL || 'https://levia-ia-worker.ferpa2505.workers.dev';
+const WORKER = 'https://levia-ia-worker.ferpa2505.workers.dev';
 const SCRIPT_ID = 'levia-turnstile-script';
 
 type BrowserNode = {
