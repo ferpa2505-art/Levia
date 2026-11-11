@@ -17,8 +17,8 @@ describe('planos: links de pagamento da Hotmart', () => {
     expect(PRECO_MENSAL).toBe('R$ 19,97');
     expect(PRECO_ANUAL).toBe('R$ 191,71');
     const wrangler = fs.readFileSync('worker/wrangler.toml', 'utf8');
-    expect(wrangler).toContain('PAYT_VALOR_MENSAL_CENTAVOS = "1997"');
-    expect(wrangler).toContain('PAYT_VALOR_ANUAL_CENTAVOS = "19171"');
+    expect(wrangler).toContain('VALOR_MENSAL_CENTAVOS = "1997"');
+    expect(wrangler).toContain('VALOR_ANUAL_CENTAVOS = "19171"');
   });
 
   test('"Ver planos" abre a tela de planos do app (não a página de vendas) e a tela está registrada', () => {

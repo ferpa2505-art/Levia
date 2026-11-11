@@ -282,18 +282,35 @@ async function criarLeadCompleto(env, { phone, name, email, dor, consent_at }) {
 
 const chaveLeadKV = (phone) => `lead:tel:${phone}`;
 
+/**
+ * Apaga tudo o que se liga ao telefone. Devolve true só se TODAS as remoções deram certo;
+ * qualquer falha é registrada e a confirmação não diz "apagado". Repetir é seguro (são DELETEs).
+ */
 async function apagarTudoDe(env, phone) {
-  try { await env.LEVIA_COTAS?.delete(chaveLeadKV(phone)); } catch (e) { console.error('apagar KV:', e?.message); }
+  const digitos = String(phone).replace(/\D/g, '');
+  let ok = true;
+  try { await env.LEVIA_COTAS?.delete(chaveLeadKV(phone)); } catch (e) { ok = false; console.error('apagar KV:', e?.message); }
   if (env.LEVIA_DB) {
-    for (const sql of [
-      'DELETE FROM leads WHERE phone = ?',
-      'DELETE FROM wa_sessions WHERE phone = ?',
-      'DELETE FROM wa_outbox WHERE phone = ?',
+    // a sessão fica por último: se algo falhar, a confirmação continua valendo para a nova tentativa
+    for (const [sql, args] of [
+      ['DELETE FROM leads WHERE phone = ?', [phone]],
+      ['DELETE FROM wa_outbox WHERE phone = ?', [phone]],
+      // avisos à equipe ficam com o número da equipe como destino, mas levam o telefone do cliente no texto
+      ['DELETE FROM wa_outbox WHERE id LIKE ?', [`aviso-${digitos}-%`]],
     ]) {
-      try { await env.LEVIA_DB.prepare(sql).bind(phone).run(); } catch (e) { console.error('apagar:', e?.message); }
+      try { await env.LEVIA_DB.prepare(sql).bind(...args).run(); } catch (e) { ok = false; console.error('apagar:', e?.message); }
     }
+  } else {
+    ok = false;
   }
-  await apagarContaPorTelefone(env, phone);
+  try {
+    // sem a conta removida o serial continuaria valendo: só conta como feito se a remoção rodou
+    if (!(await apagarContaPorTelefone(env, phone))) ok = false;
+  } catch (e) { ok = false; console.error('apagar conta:', e?.message); }
+  if (ok && env.LEVIA_DB) {
+    try { await env.LEVIA_DB.prepare('DELETE FROM wa_sessions WHERE phone = ?').bind(phone).run(); } catch (e) { ok = false; console.error('apagar sessão:', e?.message); }
+  }
+  return ok;
 }
 
 // ---------- a conversa ----------
@@ -354,7 +371,8 @@ export async function processarMensagemWhatsApp(env, phone, texto, messageId, ag
   if (estadoAtual === ESTADOS.CONFIRMAR_APAGAR) {
     const r = respostaSimNao(texto);
     if (r === 'sim') {
-      await apagarTudoDe(env, phoneFormatado);
+      // a conversa continua em confirmação: a pessoa pode tentar de novo com 1
+      if (!(await apagarTudoDe(env, phoneFormatado))) return { tipo: 'apagar_falhou', resposta: T.apagarFalhou };
       return { tipo: 'apagado', resposta: T.apagado };
     }
     if (r === 'nao') {

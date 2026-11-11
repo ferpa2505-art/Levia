@@ -8,7 +8,7 @@ const teste = temSqlite ? test : test.skip;
 function ambiente() {
   return {
     LEVIA_DB: criarD1(), LICENCA_TOKEN_KEY: 'k1', TYPEBOT_PHONE_HMAC_KEY: 'k2', EMAIL_HASH_KEY: 'k3',
-    HOTMART_HOTTOK: 'hottok-secreto', PAYT_PRODUTOS_ANUAL: '222', PAYT_PRODUTOS_MENSAL: '111',
+    HOTMART_HOTTOK: 'hottok-secreto', PRODUTOS_ANUAL: '222', PRODUTOS_MENSAL: '111',
     ALERTA_WHATSAPP: '+35699506350',
   } as any;
 }

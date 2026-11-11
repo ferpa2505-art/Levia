@@ -1,5 +1,5 @@
 import { iguais } from './cripto';
-import { lerCorpo, processarPagamento, resposta } from './payt';
+import { lerCorpo, processarPagamento, resposta } from './pagamentos';
 
 /**
  * Pagamento pela Hotmart (webhook versão 2.0.0): o hottok vem no cabeçalho X-HOTMART-HOTTOK

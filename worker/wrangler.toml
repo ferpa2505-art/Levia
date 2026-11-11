@@ -23,12 +23,12 @@ MAX_FOTOS_IP_HORA = "20"
 # Hostnames que podem concluir o desafio Turnstile (sitekey e secret são configurados no Worker)
 TURNSTILE_ALLOWED_HOSTNAMES = "leviapp.org,www.leviapp.org,localhost"
 
-# Hotmart (POST /v1/hotmart/webhook) e PAYT usam os mesmos códigos de produto (id do produto ou código da oferta)
-# PAYT: códigos dos produtos (separados por vírgula) que valem 30 e 365 dias; sem eles, o valor pago decide
-PAYT_PRODUTOS_MENSAL = "8875689"
-PAYT_PRODUTOS_ANUAL = "8876081"
-PAYT_VALOR_MENSAL_CENTAVOS = "1997"
-PAYT_VALOR_ANUAL_CENTAVOS = "19171"
+# Hotmart (POST /v1/hotmart/webhook) usa estes códigos de produto (id do produto ou código da oferta)
+# Códigos dos produtos (separados por vírgula) que valem 30 e 365 dias; sem eles, o valor pago decide
+PRODUTOS_MENSAL = "8875689"
+PRODUTOS_ANUAL = "8876081"
+VALOR_MENSAL_CENTAVOS = "1997"
+VALOR_ANUAL_CENTAVOS = "19171"
 # fotos por 30 dias de quem pagou
 FOTOS_ASSINANTE_30D = "100"
 # Avisos quando o LEVI passa uma conversa para uma pessoa (ver src/avisos.js):
@@ -52,7 +52,7 @@ migrations_dir = "migrations"
 # EMAIL_ENCRYPTION_KEY (32 bytes em base64), RESEND_API_KEY, EMAIL_FROM,
 # WHATSAPP_WEBHOOK_SECRET (igual ao do gateway Baileys), GATEWAY_TOKEN (rota /api/lead),
 # LICENCA_TOKEN_KEY (assina a licença do serial; sem ela /v1/ativar e a IA ficam fechados).
-# HOTMART_HOTTOK (o hottok do webhook da Hotmart), PAYT_INTEGRATION_KEY (a "Chave Única" do postback da PAYT; o postback vai para POST /v1/payt/webhook).
+# HOTMART_HOTTOK (o hottok do webhook da Hotmart).
 # Variáveis públicas: TURNSTILE_SITE_KEY, APP_BASE_URL (domínio real do app).
 # TURNSTILE_SITE_KEY é uma variável pública de execução, nunca uma chave secreta.
 
@@ -84,12 +84,12 @@ MAX_FOTOS_IP_HORA = "20"
 # Hostnames que podem concluir o desafio Turnstile (sitekey e secret são configurados no Worker)
 TURNSTILE_ALLOWED_HOSTNAMES = "leviapp.org,www.leviapp.org,localhost"
 
-# Hotmart (POST /v1/hotmart/webhook) e PAYT usam os mesmos códigos de produto (id do produto ou código da oferta)
-# PAYT: códigos dos produtos (separados por vírgula) que valem 30 e 365 dias; sem eles, o valor pago decide
-PAYT_PRODUTOS_MENSAL = "8875689"
-PAYT_PRODUTOS_ANUAL = "8876081"
-PAYT_VALOR_MENSAL_CENTAVOS = "1997"
-PAYT_VALOR_ANUAL_CENTAVOS = "19171"
+# Hotmart (POST /v1/hotmart/webhook) usa estes códigos de produto (id do produto ou código da oferta)
+# Códigos dos produtos (separados por vírgula) que valem 30 e 365 dias; sem eles, o valor pago decide
+PRODUTOS_MENSAL = "8875689"
+PRODUTOS_ANUAL = "8876081"
+VALOR_MENSAL_CENTAVOS = "1997"
+VALOR_ANUAL_CENTAVOS = "19171"
 # fotos por 30 dias de quem pagou
 FOTOS_ASSINANTE_30D = "100"
 # Avisos quando o LEVI passa uma conversa para uma pessoa (ver src/avisos.js):
