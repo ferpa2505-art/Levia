@@ -413,3 +413,79 @@ describe('auditoria no D1: quem não tem token não enche a tabela', () => {
     expect(await contar(db, "ip = '7.7.7.7'")).toBe(4);
   });
 });
+
+describe('limite por IP da Cloudflare (binding ADMIN_LIMITE)', () => {
+  function limitador(respostas: Array<boolean | Error>) {
+    const chaves: string[] = [];
+    const limit = jest.fn(async ({ key }: { key: string }) => {
+      chaves.push(key);
+      const r = respostas.length ? respostas.shift()! : true;
+      if (r instanceof Error) throw r;
+      return { success: r };
+    });
+    return { limit, chaves };
+  }
+
+  test('limite excedido devolve 429 com Retry-After, mesmo com o token certo, sem chamar a Meta', async () => {
+    const { limit, chaves } = limitador([false]);
+    const rede = interceptar({ id: '1_1' });
+    let r: Response;
+    try {
+      r = await postar(ambiente({ ADMIN_LIMITE: { limit } }), '6.6.6.6');
+    } finally {
+      rede.restaurar();
+    }
+    expect(r!.status).toBe(429);
+    expect(r!.headers.get('Retry-After')).toBe('60');
+    expect(await r!.json()).toEqual({ erro: 'muitas_tentativas' });
+    expect(rede.chamadas).toHaveLength(0);
+    expect(chaves).toEqual(['6.6.6.6']); // a chave é o IP
+  });
+
+  test('dentro do limite a chamada segue normalmente', async () => {
+    const { limit } = limitador([true]);
+    const rede = interceptar({ id: '1234567890_77' });
+    let r: Response;
+    try {
+      r = await postar(ambiente({ ADMIN_LIMITE: { limit } }), '6.6.6.7');
+    } finally {
+      rede.restaurar();
+    }
+    expect(r!.status).toBe(200);
+    expect(limit).toHaveBeenCalledTimes(1);
+  });
+
+  test('se o binding falhar, não bloqueia (defesa em profundidade) e o token continua exigido', async () => {
+    const espia = jest.spyOn(console, 'error').mockImplementation(() => {});
+    const { limit } = limitador([new Error('limitador fora'), new Error('limitador fora')]);
+    const rede = interceptar({ id: '1_2' });
+    let ok: Response; let negado: Response;
+    try {
+      ok = await postar(ambiente({ ADMIN_LIMITE: { limit } }), '6.6.6.8');
+      negado = await postar(ambiente({ ADMIN_LIMITE: { limit } }), '6.6.6.8', 'errado');
+    } finally {
+      rede.restaurar();
+      espia.mockRestore();
+    }
+    expect(ok!.status).toBe(200);
+    expect(negado!.status).toBe(401);
+  });
+
+  test('sem o binding nada muda; sem ADMIN_TOKEN a rota continua fechada (503) antes do limitador', async () => {
+    const semBinding = await postar(ambiente({ LEVIA_DB: undefined }), '6.6.6.9', 'errado');
+    expect(semBinding.status).toBe(401);
+    const { limit } = limitador([true]);
+    const fechada = await postar(ambiente({ ADMIN_TOKEN: undefined, ADMIN_LIMITE: { limit } }), '6.6.6.10');
+    expect(fechada.status).toBe(503);
+    expect(limit).not.toHaveBeenCalled();
+  });
+
+  testeD1('o 429 do limitador também respeita o teto de gravação da auditoria', async () => {
+    const db = criarD1();
+    const { limit } = limitador(Array(30).fill(false));
+    const env = ambiente({ LEVIA_DB: db, ADMIN_LIMITE: { limit } });
+    for (let i = 0; i < 30; i++) await postar(env, '6.6.6.11');
+    const n = Number((await db.prepare("SELECT COUNT(*) AS n FROM admin_auditoria WHERE ip = '6.6.6.11'").first())!.n);
+    expect(n).toBe(3);
+  });
+});
