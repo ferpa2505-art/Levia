@@ -8,7 +8,7 @@ preview_urls = false
 [observability]
 enabled = true
 
-# Retenção: apaga conversas e contadores vencidos todo dia às 03:00 UTC (ver src/retencao.js)
+# Retenção diária às 03:00 UTC: conversas/contadores vencidos (src/retencao.js) e auditoria administrativa (src/auditoria.js)
 [triggers]
 crons = ["0 3 * * *"]
 
@@ -20,6 +20,8 @@ FOTOS_GRATIS_7D = "2"
 MAX_DISPOSITIVOS = "2"
 # dias que o serial emitido no WhatsApp pode ser ativado
 SERIAL_VALIDADE_DIAS = "30"
+# retenção da auditoria das rotas administrativas (limpeza diária no cron do Worker)
+AUDITORIA_RETENCAO_DIAS = "180"
 # teto de segurança da conta inteira por dia (protege o saldo pré-pago)
 MAX_FOTOS_DIA = "300"
 # por endereço IP, por hora
@@ -56,6 +58,8 @@ migrations_dir = "migrations"
 # EMAIL_ENCRYPTION_KEY (32 bytes em base64), RESEND_API_KEY, EMAIL_FROM,
 # WHATSAPP_WEBHOOK_SECRET (igual ao do gateway Baileys), GATEWAY_TOKEN (rota /api/lead),
 # LICENCA_TOKEN_KEY (assina a licença do serial; sem ela /v1/ativar e a IA ficam fechados).
+# FB_PAGE_ID e FB_PAGE_TOKEN (Pages API, ver src/facebook.js; o token é sempre secret).
+# ADMIN_TOKEN (Bearer das rotas /v1/admin/pagina/*; sem ele, as rotas respondem 503).
 # HOTMART_HOTTOK (o hottok do webhook da Hotmart).
 # Variáveis públicas: TURNSTILE_SITE_KEY, APP_BASE_URL (domínio real do app).
 # TURNSTILE_SITE_KEY é uma variável pública de execução, nunca uma chave secreta.
@@ -84,6 +88,8 @@ FOTOS_GRATIS_7D = "2"
 MAX_DISPOSITIVOS = "2"
 # dias que o serial emitido no WhatsApp pode ser ativado
 SERIAL_VALIDADE_DIAS = "30"
+# retenção da auditoria das rotas administrativas (limpeza diária no cron do Worker)
+AUDITORIA_RETENCAO_DIAS = "180"
 # teto de segurança da conta inteira por dia (protege o saldo pré-pago)
 MAX_FOTOS_DIA = "300"
 # por endereço IP, por hora
