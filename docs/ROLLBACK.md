@@ -69,3 +69,21 @@ O que ele confere (18 checagens):
 **O que ele não cobre** (por ser somente leitura): ativação com serial, análise de foto, webhook da Hotmart e rotas administrativas. Isso continua nos testes automatizados do repositório; testar ao vivo exigiria escrever dados.
 
 Os workflows de deploy já fazem `/health` e `/versao` (Worker) e `versao.json` (landing) ao final.
+
+## 5. Ensaio realizado (12/11/2026, autorizado pelo responsável)
+
+Rollback de **emergência do Worker** (`levia-ia-worker`) ensaiado em produção com `wrangler rollback`, nesta ordem:
+
+| Momento | Versão do Worker | `/versao` | `/health` | Smoke (`scripts/smoke.cjs`) |
+|---|---|---|---|---|
+| Antes | `0d9afb8c-c6d7-423a-9400-46412688132c` | `fee7dcd63e414e38c4b96d124d614f3099b0f947` | `{"ok":true}` | (18 de 18 na rodada anterior) |
+| Rollback para a versão do deploy de `e3d6fe2` | `28ae7f39-cf0a-4ed4-933e-4fd18d06846c` | `e3d6fe22399531087b399575170016812190b748` | `{"ok":true}` | **18 de 18** com `--sha-worker e3d6fe2` |
+| Volta | `0d9afb8c-c6d7-423a-9400-46412688132c` | `fee7dcd63e414e38c4b96d124d614f3099b0f947` | `{"ok":true}` | **18 de 18** com `--sha-worker fee7dcd` |
+
+O que o ensaio mostrou:
+- O rollback levou segundos e o `/versao` passou a informar o commit **antigo**, como descrito na seção 3.
+- As rotas admin continuaram fechadas durante o rollback (`401`, não `503`): o `ADMIN_TOKEN` seguiu configurado.
+- **Cuidado com secrets:** a versão `16b7c1bd` (03:55 UTC) é uma "Secret Change" (criação do `ADMIN_TOKEN`). Reverter para uma versão **anterior** a ela pode desfazer secrets. Só reverta para versões posteriores à última troca de secret, e confira `wrangler deployments list` antes.
+- Comando usado: `cd worker && npx wrangler rollback <VERSION_ID> --message "motivo" --yes`.
+
+**Não foram ensaiados:** rollback do **app** e da **landing** (cada um tem seu config, ver seção 3) e o caminho de revert por PR (seção 2).
