@@ -66,6 +66,6 @@ O que ele confere (18 checagens):
 - App: `/` e `/ativar` (título "Leviã"), manifesto, `sw.js` carimbado com o commit e sem cache, ícones, cabeçalhos de segurança (nosniff, Referrer-Policy, CSP com `frame-ancestors 'none'`).
 - Landing: `/` e `/versao.json`. A landing só muda com `site/landing`, então pode estar num commit mais antigo que o app: o `--sha` não é exigido dela.
 
-**O que ele não cobre** (por ser somente leitura): ativação com serial, análise de foto, webhook da Hotmart e rotas administrativas. Isso continua nos testes automatizados do repositório; testar ao vivo exigiria escrever dados.
+**O que ele não cobre** (por ser somente leitura): ativação com serial, análise de foto, webhook da Hotmart e rotas administrativas. Esses fluxos de escrita têm um teste à parte, **local**, em `scripts/e2e-local.cjs` (`npm run e2e:local`): sobe o Worker de verdade (`wrangler dev --local`) com um banco e um KV descartáveis e segredos gerados na hora, e percorre webhook da Hotmart (compra, repetição, reembolso) → serial → ativação de aparelhos e limite de dispositivos → rotas admin fechadas e auditoria → CORS. **Não toca a produção**, não usa conta da Cloudflare nem dado real. A análise de foto só é testada até a recusa sem licença (não há chave real do Gemini).
 
 Os workflows de deploy já fazem `/health` e `/versao` (Worker) e `versao.json` (landing) ao final.
