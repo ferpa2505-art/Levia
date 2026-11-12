@@ -1,12 +1,16 @@
 name: Smoke test (somente leitura)
 
 # Manual: confere a produção só com GET, HEAD e OPTIONS (sem token, sem dados, sem escrita).
-# Use depois de publicar ou de fazer rollback; informe o commit esperado para exigir que app e Worker estejam nele.
+# Use depois de publicar ou de fazer rollback. "sha" exige o app nesse commit; "sha_worker" exige o Worker (que só muda quando worker/** muda).
 on:
   workflow_dispatch:
     inputs:
       sha:
-        description: "Commit esperado em produção (7 a 40 caracteres hex). Vazio = não exige."
+        description: "Commit esperado no APP (7 a 40 caracteres hex). Vazio = não exige."
+        required: false
+        default: ""
+      sha_worker:
+        description: "Commit esperado no Worker (7 a 40 caracteres hex). Vazio = não exige."
         required: false
         default: ""
 
@@ -26,9 +30,9 @@ jobs:
       - name: Smoke test
         env:
           SHA_ESPERADO: ${{ inputs.sha }}
+          SHA_WORKER_ESPERADO: ${{ inputs.sha_worker }}
         run: |
-          if [ -n "$SHA_ESPERADO" ]; then
-            node scripts/smoke.cjs --sha "$SHA_ESPERADO"
-          else
-            node scripts/smoke.cjs
-          fi
+          args=()
+          if [ -n "$SHA_ESPERADO" ]; then args+=(--sha "$SHA_ESPERADO"); fi
+          if [ -n "$SHA_WORKER_ESPERADO" ]; then args+=(--sha-worker "$SHA_WORKER_ESPERADO"); fi
+          node scripts/smoke.cjs "${args[@]}"

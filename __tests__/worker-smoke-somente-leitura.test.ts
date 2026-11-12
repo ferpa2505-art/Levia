@@ -53,9 +53,9 @@ function servidor(ajustes: Record<string, Resposta> = {}) {
   return { fetchFalso, chamadas };
 }
 
-async function rodar(ajustes: Record<string, Resposta> = {}, sha: string | null = null) {
+async function rodar(ajustes: Record<string, Resposta> = {}, sha: string | null = null, shaWorker: string | null = null) {
   const { fetchFalso, chamadas } = servidor(ajustes);
-  const resultados = await executarSmoke({ fetchImpl: fetchFalso, alvos: ALVOS, sha });
+  const resultados = await executarSmoke({ fetchImpl: fetchFalso, alvos: ALVOS, sha, shaWorker });
   return { resultados, chamadas };
 }
 
@@ -84,12 +84,21 @@ describe('smoke test somente leitura', () => {
     expect(fetchFalso).not.toHaveBeenCalled();
   });
 
-  test('commit diferente do esperado reprova Worker e app', async () => {
-    const { resultados } = await rodar({}, 'b'.repeat(7));
-    expect(falhas(resultados)).toEqual([
-      '/versao informa o commit publicado',
-      'sw.js carimbado com o commit e sem cache',
-    ]);
+  test('--sha exige só o APP no commit; o Worker pode estar num commit mais antigo', async () => {
+    const OUTRO = 'c'.repeat(40);
+    // app no commit esperado e Worker atrás (só muda com worker/**): passa
+    const atrasado = await rodar({ 'GET https://w.test/versao': { status: 200, corpo: JSON.stringify({ commit: OUTRO }) } }, SHA);
+    expect(falhas(atrasado.resultados)).toEqual([]);
+    // app em outro commit: reprova só o app
+    const appErrado = await rodar({}, 'b'.repeat(7));
+    expect(falhas(appErrado.resultados)).toEqual(['sw.js carimbado com o commit e sem cache']);
+  });
+
+  test('--sha-worker exige o Worker no commit informado', async () => {
+    const ok = await rodar({}, null, SHA.slice(0, 7));
+    expect(falhas(ok.resultados)).toEqual([]);
+    const errado = await rodar({}, null, 'b'.repeat(7));
+    expect(falhas(errado.resultados)).toEqual(['/versao informa o commit publicado']);
   });
 
   test('Worker sem commit injetado ("desconhecido") reprova', async () => {
@@ -143,6 +152,7 @@ describe('smoke test somente leitura', () => {
 
   test('--sha inválido é recusado e a saída formatada resume o resultado', async () => {
     await expect(executarSmoke({ fetchImpl: jest.fn(), alvos: ALVOS, sha: 'zzz' })).rejects.toThrow(/hexadecimais/);
+    await expect(executarSmoke({ fetchImpl: jest.fn(), alvos: ALVOS, shaWorker: 'zzz' })).rejects.toThrow(/sha-worker/);
     const { resultados } = await rodar();
     expect(formatar(resultados)).toMatch(/\d+ de \d+ checagens passaram\./);
   });
@@ -152,5 +162,7 @@ describe('smoke test somente leitura', () => {
     expect(() => lerArgumentos(['--app-url', 'http://x.com'])).toThrow(/https/);
     expect(() => lerArgumentos(['--apagar'])).toThrow(/desconhecido/);
     expect(() => lerArgumentos(['--sha'])).toThrow(/valor/);
+    expect(lerArgumentos(['--sha-worker', 'abc1234']).shaWorker).toBe('abc1234');
+    expect(() => lerArgumentos(['--sha-worker'])).toThrow(/valor/);
   });
 });
