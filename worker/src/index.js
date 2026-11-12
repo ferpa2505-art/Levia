@@ -445,6 +445,8 @@ export default {
       catch (e) { console.error('erro wa inbound', e?.message); return comCors(json({ erro: 'interno' }, 500), origem); }
     }
     if (pathname === '/health') return json({ ok: true });
+    // commit publicado (GIT_SHA entra no deploy, ver .github/workflows/deploy-cloudflare-worker.yml); so um hash publico, nada sensivel
+    if (pathname === '/versao' && request.method === 'GET') return json({ commit: String(env.GIT_SHA ?? 'desconhecido').slice(0, 40) });
     return json({ erro: 'nao_encontrado' }, 404);
   },
 };

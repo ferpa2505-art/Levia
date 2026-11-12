@@ -67,6 +67,14 @@ describe('Cloudflare Worker API (synthetic, offline)', () => {
     await expectJson(await send(makeRequest('/health')), 200, { ok: true });
   });
 
+  test('GET /versao returns only the published commit hash', async () => {
+    await expectJson(await send(makeRequest('/versao'), createEnv({ GIT_SHA: 'abc1234def5678' })), 200, { commit: 'abc1234def5678' });
+  });
+
+  test('GET /versao reports desconhecido when no commit was injected', async () => {
+    await expectJson(await send(makeRequest('/versao')), 200, { commit: 'desconhecido' });
+  });
+
   test('unknown route returns 404', async () => {
     await expectJson(await send(makeRequest('/unknown')), 404, { erro: 'nao_encontrado' });
   });
