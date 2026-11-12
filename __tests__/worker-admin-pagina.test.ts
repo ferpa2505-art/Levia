@@ -352,3 +352,64 @@ describe('auditoria persistida no D1', () => {
     expect(await r!.json()).toEqual({ ok: true, id: '1234567890_56' });
   });
 });
+
+describe('auditoria no D1: quem não tem token não enche a tabela', () => {
+  const contar = async (db: ReturnType<typeof criarD1>, where = '1=1') =>
+    Number((await db.prepare(`SELECT COUNT(*) AS n FROM admin_auditoria WHERE ${where}`).first())!.n);
+
+  testeD1('muitas recusas do mesmo IP gravam no máximo 3 linhas, mas todas ficam no log', async () => {
+    const db = criarD1();
+    const env = ambiente({ LEVIA_DB: db });
+    const linhas = await capturarLogs(async () => {
+      for (let i = 0; i < 40; i++) await postar(env, '9.9.9.9', 'errado');
+    });
+    expect(linhas).toHaveLength(40);
+    expect(await contar(db, "ip = '9.9.9.9'")).toBe(3);
+  });
+
+  testeD1('recusas de muitos IPs diferentes respeitam o teto global da janela', async () => {
+    const db = criarD1();
+    const env = ambiente({ LEVIA_DB: db });
+    for (let i = 0; i < 200; i++) await postar(env, `20.0.${Math.floor(i / 250)}.${i % 250}`, 'errado');
+    expect(await contar(db)).toBe(60);
+  });
+
+  testeD1('rota sem ADMIN_TOKEN configurado também tem teto (503 sem token)', async () => {
+    const db = criarD1();
+    const env = ambiente({ LEVIA_DB: db, ADMIN_TOKEN: undefined });
+    for (let i = 0; i < 30; i++) await postar(env, '8.8.8.8');
+    expect(await contar(db, "ip = '8.8.8.8'")).toBe(3);
+  });
+
+  testeD1('ações autenticadas sempre gravam, mesmo com os tetos de recusa já atingidos', async () => {
+    const db = criarD1();
+    const env = ambiente({ LEVIA_DB: db });
+    for (let i = 0; i < 200; i++) await postar(env, `30.0.0.${i % 250}`, 'errado');
+    expect(await contar(db, "motivo = 'nao_autorizado'")).toBeLessThanOrEqual(60);
+    const rede = interceptar({ id: '1234567890_99' });
+    try {
+      for (let i = 0; i < 5; i++) {
+        const r = await chamar(env, '/v1/admin/pagina/post', {
+          method: 'POST',
+          headers: { ...autorizado, 'cf-connecting-ip': '30.1.1.1' },
+          body: JSON.stringify({ mensagem: 'oi' }),
+        });
+        expect(r.status).toBe(200);
+      }
+    } finally {
+      rede.restaurar();
+    }
+    expect(await contar(db, "motivo = 'ok'")).toBe(5);
+  });
+
+  testeD1('o teto vale por janela de 15 minutos: depois dela volta a gravar', async () => {
+    const db = criarD1();
+    const env = ambiente({ LEVIA_DB: db });
+    for (let i = 0; i < 6; i++) await postar(env, '7.7.7.7', 'errado');
+    expect(await contar(db, "ip = '7.7.7.7'")).toBe(3);
+    // envelhece as 3 linhas para fora da janela
+    db.sql('UPDATE admin_auditoria SET criado_em = criado_em - ?', 16 * 60 * 1000);
+    await postar(env, '7.7.7.7', 'errado');
+    expect(await contar(db, "ip = '7.7.7.7'")).toBe(4);
+  });
+});
