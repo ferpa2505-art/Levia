@@ -46,9 +46,21 @@ jobs:
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           workingDirectory: worker
           wranglerVersion: "4"
-          command: deploy --var GIT_SHA:${{ github.sha }}
-      - name: Check /health
-        run: curl -fsS https://levia-ia-worker.ferpa2505.workers.dev/health | grep -q '"ok":true'
+          # a tag da versao e o commit: o /versao e o /health passam a informar o version_metadata da Cloudflare
+          command: deploy --tag ${{ github.sha }}
+      - name: Check /health (ok, id da versao e tag com o commit)
+        run: |
+          for i in 1 2 3; do
+            corpo=$(curl -fsS https://levia-ia-worker.ferpa2505.workers.dev/health || true)
+            echo "$corpo"
+            if echo "$corpo" | grep -q '"ok":true' \
+              && echo "$corpo" | grep -q '"versao":"[0-9a-f-]\{8,\}' \
+              && echo "$corpo" | grep -q "\"tag\":\"${GITHUB_SHA}\""; then
+              exit 0
+            fi
+            sleep 5
+          done
+          echo "o /health no ar nao informa ok, a versao e a tag ${GITHUB_SHA}"; exit 1
       - name: Check /versao (commit publicado)
         run: |
           for i in 1 2 3; do

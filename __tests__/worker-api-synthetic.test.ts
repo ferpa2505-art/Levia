@@ -64,15 +64,25 @@ describe('Cloudflare Worker API (synthetic, offline)', () => {
   afterEach(() => { global.fetch = originalFetch; });
 
   test('GET /health returns the health contract', async () => {
-    await expectJson(await send(makeRequest('/health')), 200, { ok: true });
+    await expectJson(await send(makeRequest('/health')), 200, { ok: true, versao: 'desconhecida', tag: 'desconhecida' });
   });
 
-  test('GET /versao returns only the published commit hash', async () => {
-    await expectJson(await send(makeRequest('/versao'), createEnv({ GIT_SHA: 'abc1234def5678' })), 200, { commit: 'abc1234def5678' });
+  test('GET /versao returns only the published commit hash, which is the version tag', async () => {
+    const env = createEnv({ CF_VERSION_METADATA: { id: 'v1-7d3c9a', tag: 'abc1234def5678' } });
+    await expectJson(await send(makeRequest('/versao'), env), 200, { commit: 'abc1234def5678' });
   });
 
   test('GET /versao reports desconhecido when no commit was injected', async () => {
-    await expectJson(await send(makeRequest('/versao')), 200, { commit: 'desconhecido' });
+    await expectJson(await send(makeRequest('/versao'), createEnv({ CF_VERSION_METADATA: undefined })), 200, { commit: 'desconhecido' });
+  });
+
+  test('GET /health reports the real Worker version id and tag from version_metadata', async () => {
+    const env = createEnv({ CF_VERSION_METADATA: { id: 'v1-7d3c9a-uuid', tag: 'abc1234def5678', timestamp: '2026-11-12T21:00:00Z' } });
+    await expectJson(await send(makeRequest('/health'), env), 200, { ok: true, versao: 'v1-7d3c9a-uuid', tag: 'abc1234def5678' });
+  });
+
+  test('GET /health falls back when the runtime has no version metadata (local dev)', async () => {
+    await expectJson(await send(makeRequest('/health'), createEnv({ CF_VERSION_METADATA: undefined })), 200, { ok: true, versao: 'desconhecida', tag: 'desconhecida' });
   });
 
   test('unknown route returns 404', async () => {
