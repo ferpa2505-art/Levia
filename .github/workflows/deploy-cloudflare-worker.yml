@@ -46,6 +46,13 @@ jobs:
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           workingDirectory: worker
           wranglerVersion: "4"
-          command: deploy
+          command: deploy --var GIT_SHA:${{ github.sha }}
       - name: Check /health
         run: curl -fsS https://levia-ia-worker.ferpa2505.workers.dev/health | grep -q '"ok":true'
+      - name: Check /versao (commit publicado)
+        run: |
+          for i in 1 2 3; do
+            curl -fsS https://levia-ia-worker.ferpa2505.workers.dev/versao | grep -q "\"commit\":\"${GITHUB_SHA}\"" && exit 0
+            sleep 5
+          done
+          echo "o Worker no ar não informa o commit ${GITHUB_SHA}"; exit 1
