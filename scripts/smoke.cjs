@@ -7,7 +7,8 @@
  * real é usado. Serve antes e depois de publicar ou de fazer rollback.
  *
  *   node scripts/smoke.cjs                  # confere o que está no ar
- *   node scripts/smoke.cjs --sha <commit>   # exige que app e Worker estejam nesse commit (7 a 40 hex)
+ *   node scripts/smoke.cjs --sha <commit>   # exige o APP nesse commit (7 a 40 hex)
+ *   node scripts/smoke.cjs --sha-worker <commit>  # exige o Worker nesse commit (só muda quando worker/** muda)
  *   node scripts/smoke.cjs --json           # saída em JSON (para outras ferramentas)
  *
  * Sai com código 0 se tudo passou e 1 se algo falhou.
@@ -56,12 +57,16 @@ function json(texto) {
 }
 
 /** Roda todas as checagens. `fetchImpl` e `alvos` são injetáveis para teste. */
-async function executarSmoke({ fetchImpl = globalThis.fetch, alvos = PADRAO, sha = null } = {}) {
+async function executarSmoke({ fetchImpl = globalThis.fetch, alvos = PADRAO, sha = null, shaWorker = null } = {}) {
   const requisitar = criarCliente(fetchImpl);
   const resultados = [];
   const prefixo = sha ? String(sha).toLowerCase() : null;
   if (prefixo && !/^[0-9a-f]{7,40}$/.test(prefixo)) {
     throw new Error('--sha precisa ter de 7 a 40 caracteres hexadecimais');
+  }
+  const prefixoWorker = shaWorker ? String(shaWorker).toLowerCase() : null;
+  if (prefixoWorker && !/^[0-9a-f]{7,40}$/.test(prefixoWorker)) {
+    throw new Error('--sha-worker precisa ter de 7 a 40 caracteres hexadecimais');
   }
 
   async function checar(grupo, nome, funcao) {
@@ -90,7 +95,8 @@ async function executarSmoke({ fetchImpl = globalThis.fetch, alvos = PADRAO, sha
     exigir(r.status === 200, `status ${r.status}`);
     const commit = json(r.texto)?.commit;
     exigir(typeof commit === 'string' && SHA_COMPLETO.test(commit), `commit inválido ou "desconhecido": ${String(commit).slice(0, 12)}`);
-    if (prefixo) exigir(commit.startsWith(prefixo), `Worker está em ${commit.slice(0, 7)}, esperado ${prefixo.slice(0, 7)}`);
+    // o Worker só é republicado quando worker/** muda: pode ficar atrás do app, então só exige commit com --sha-worker
+    if (prefixoWorker) exigir(commit.startsWith(prefixoWorker), `Worker está em ${commit.slice(0, 7)}, esperado ${prefixoWorker.slice(0, 7)}`);
     return commit.slice(0, 7);
   });
 
@@ -190,7 +196,7 @@ async function executarSmoke({ fetchImpl = globalThis.fetch, alvos = PADRAO, sha
     exigir(r.status === 200, `status ${r.status}`);
     const commit = json(r.texto)?.commit;
     exigir(typeof commit === 'string' && SHA_COMPLETO.test(commit), 'commit inválido');
-    return commit.slice(0, 7); // a landing só muda com site/landing: pode ficar atrás do app, por isso não exige --sha
+    return commit.slice(0, 7); // a landing só muda com site/landing: pode ficar atrás do app, por isso não exige --sha nem --sha-worker
   });
 
   return resultados;
@@ -209,11 +215,12 @@ function formatar(resultados) {
 }
 
 function lerArgumentos(argv) {
-  const opcoes = { sha: null, json: false, alvos: { ...PADRAO } };
+  const opcoes = { sha: null, shaWorker: null, json: false, alvos: { ...PADRAO } };
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
     if (a === '--json') opcoes.json = true;
     else if (a === '--sha') opcoes.sha = argv[++i] ?? '';
+    else if (a === '--sha-worker') opcoes.shaWorker = argv[++i] ?? '';
     else if (a === '--worker-url') opcoes.alvos.worker = argv[++i] ?? '';
     else if (a === '--app-url') opcoes.alvos.app = argv[++i] ?? '';
     else if (a === '--landing-url') opcoes.alvos.landing = argv[++i] ?? '';
@@ -223,12 +230,13 @@ function lerArgumentos(argv) {
     if (!/^https:\/\/[^/\s]+\/?$/.test(url)) throw new Error(`--${nome}-url precisa ser https://dominio (recebi "${url}")`);
   }
   if (opcoes.sha === '') throw new Error('--sha precisa de um valor');
+  if (opcoes.shaWorker === '') throw new Error('--sha-worker precisa de um valor');
   return opcoes;
 }
 
 async function principal(argv) {
   const opcoes = lerArgumentos(argv);
-  const resultados = await executarSmoke({ alvos: opcoes.alvos, sha: opcoes.sha });
+  const resultados = await executarSmoke({ alvos: opcoes.alvos, sha: opcoes.sha, shaWorker: opcoes.shaWorker });
   console.log(opcoes.json ? JSON.stringify(resultados, null, 2) : formatar(resultados));
   return resultados.every((r) => r.ok) ? 0 : 1;
 }

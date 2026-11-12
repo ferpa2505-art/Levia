@@ -52,7 +52,8 @@ Há um script **somente de leitura** (`scripts/smoke.cjs`): só faz GET, HEAD e 
 
 ```bash
 npm run smoke                      # confere o que está no ar
-npm run smoke -- --sha <commit>    # exige que app e Worker estejam nesse commit
+npm run smoke -- --sha <commit>    # exige o APP nesse commit
+npm run smoke -- --sha-worker <commit>  # exige o Worker nesse commit (só muda quando worker/** muda)
 npm run smoke -- --json            # saída em JSON
 ```
 
