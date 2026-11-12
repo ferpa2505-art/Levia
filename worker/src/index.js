@@ -408,6 +408,12 @@ const PERIODOS_INSIGHTS = new Set(['day', 'week', 'days_28']);
 // Força bruta no ADMIN_TOKEN: 10 falhas por IP em 15 min bloqueiam a rota até a próxima janela.
 const ADMIN_MAX_FALHAS = 10;
 const ADMIN_JANELA_MS = 15 * 60 * 1000;
+// Auditoria no D1 só das RECUSAS (sem token válido): teto por IP e global por janela, para quem não tem
+// token não conseguir encher a tabela (o D1 também guarda licenças e seriais). Ações autenticadas sempre gravam;
+// o log de observabilidade (console.log) continua registrando todas as requisições.
+const MOTIVOS_RECUSADOS = ['nao_autorizado', 'muitas_tentativas', 'nao_configurado'];
+const AUDITORIA_RECUSADAS_POR_IP = 3;
+const AUDITORIA_RECUSADAS_GLOBAL = 60;
 
 async function lerFalhasAdmin(kv, chave) {
   if (!kv) return 0;
@@ -427,13 +433,30 @@ async function registrarFalhaAdmin(kv, chave, falhas) {
 async function persistirAuditoria(env, registro) {
   const db = env?.LEVIA_DB;
   if (!db) return;
+  const valores = [
+    crypto.randomUUID(), registro.rota, registro.metodo, registro.ip, registro.status,
+    registro.motivo, registro.detalhe ?? null, Date.now(),
+  ];
   try {
+    if (MOTIVOS_RECUSADOS.includes(registro.motivo)) {
+      // um único INSERT condicional (atômico no D1): só grava se os tetos da janela não foram atingidos
+      const marcas = MOTIVOS_RECUSADOS.map(() => '?').join(', ');
+      const desde = Date.now() - ADMIN_JANELA_MS;
+      await db.prepare(
+        'INSERT INTO admin_auditoria (id, rota, metodo, ip, status, motivo, detalhe, criado_em) ' +
+        'SELECT ?, ?, ?, ?, ?, ?, ?, ? WHERE ' +
+        `(SELECT COUNT(*) FROM admin_auditoria WHERE ip = ? AND criado_em >= ? AND motivo IN (${marcas})) < ? AND ` +
+        `(SELECT COUNT(*) FROM admin_auditoria WHERE criado_em >= ? AND motivo IN (${marcas})) < ?`,
+      ).bind(
+        ...valores,
+        registro.ip, desde, ...MOTIVOS_RECUSADOS, AUDITORIA_RECUSADAS_POR_IP,
+        desde, ...MOTIVOS_RECUSADOS, AUDITORIA_RECUSADAS_GLOBAL,
+      ).run();
+      return;
+    }
     await db.prepare(
       'INSERT INTO admin_auditoria (id, rota, metodo, ip, status, motivo, detalhe, criado_em) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-    ).bind(
-      crypto.randomUUID(), registro.rota, registro.metodo, registro.ip, registro.status,
-      registro.motivo, registro.detalhe ?? null, Date.now(),
-    ).run();
+    ).bind(...valores).run();
   } catch (e) {
     // a auditoria é acessória: se o D1 falhar, a resposta administrativa continua
     console.error('auditoria admin: falha ao gravar', e?.message);
