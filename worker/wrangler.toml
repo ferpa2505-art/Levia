@@ -40,6 +40,13 @@ FOTOS_ASSINANTE_30D = "100"
 # Avisos quando o LEVI passa uma conversa para uma pessoa (ver src/avisos.js):
 ALERTA_WHATSAPP = "+35699506350"
 
+# Limite por IP das rotas administrativas (/v1/admin/*): 20 chamadas por minuto, contadas de forma atômica pela
+# Cloudflare (src/index.js, limiteAdminExcedido). Sem este binding o Worker só usa o contador de falhas no KV.
+[[ratelimits]]
+name = "ADMIN_LIMITE"
+namespace_id = "1001"
+simple = { limit = 20, period = 60 }
+
 [[kv_namespaces]]
 binding = "LEVIA_COTAS"
 id = "7cb6991665974b96b3d7ce447f067a9a"

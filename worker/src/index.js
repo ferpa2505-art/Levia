@@ -478,10 +478,32 @@ async function auditar(env, rota, request, resposta, motivo, detalhe = '') {
   return resposta;
 }
 
+/**
+ * Limite por IP, contado de forma atômica pela Cloudflare (binding ADMIN_LIMITE, ver wrangler.toml).
+ * Complementa o contador de falhas no KV, que não é atômico e deixa rajadas paralelas passarem.
+ * Defesa em profundidade: sem o binding, ou se ele falhar, não bloqueia nada.
+ */
+async function limiteAdminExcedido(env, ip) {
+  if (typeof env.ADMIN_LIMITE?.limit !== 'function') return false;
+  try {
+    const { success } = await env.ADMIN_LIMITE.limit({ key: ip });
+    return success === false;
+  } catch (e) {
+    console.error('admin limite (binding):', e?.message);
+    return false;
+  }
+}
+
 /** Rotas administrativas: fechadas por padrão até ADMIN_TOKEN existir no Worker. */
 async function autorizarAdmin(request, env, rota) {
   const esperado = env.ADMIN_TOKEN;
   if (!esperado) return auditar(env, rota, request, json({ erro: 'nao_configurado' }, 503), 'nao_configurado');
+
+  if (await limiteAdminExcedido(env, request.headers.get('cf-connecting-ip') ?? 'sem-ip')) {
+    const resposta = json({ erro: 'muitas_tentativas' }, 429);
+    resposta.headers.set('Retry-After', '60');
+    return auditar(env, rota, request, resposta, 'muitas_tentativas');
+  }
 
   const agora = Date.now();
   const janela = Math.floor(agora / ADMIN_JANELA_MS);
