@@ -20,11 +20,15 @@ O Leviã é um aplicativo (Android e web/PWA) de registro pessoal de peso, alime
 - **Fotos de pratos:** no Android, uma cópia reduzida fica em arquivo no aparelho. No PWA, a foto reduzida é guardada como texto junto da refeição, no armazenamento do navegador.
 - **Preferências:** idioma, tema, e-mail para relatórios (se informado), senha e biometria do app.
 
-Parte disso são **dados pessoais sensíveis de saúde** (LGPD, art. 5º, II). O Leviã não recebe cópia desses registros. Depois que você cria a senha do app, eles são **cifrados no aparelho** (AES-256-GCM). A chave é derivada da sua senha e não é guardada em texto. Sem a senha, ninguém consegue ler esses registros, nem nós. Antes de você criar a senha, durante o cadastro, os registros ficam em texto no aparelho até essa etapa.
+Parte disso são **dados pessoais sensíveis de saúde** (LGPD, art. 5º, II). O Leviã não recebe cópia desses registros. Depois que você cria a senha do app, eles são **cifrados no aparelho** (AES-256-GCM) com uma chave de dados aleatória criada no seu aparelho. Como essa chave fica protegida depende de onde você usa o Leviã:
+
+- **No celular (Android):** a chave de dados é protegida por uma chave guardada no cofre do sistema do aparelho (Android Keystore). Quem copiar só o armazenamento do app, por exemplo de um backup, não consegue abrir os registros sem essa chave do sistema. A senha do app funciona como trava do app, com limite de tentativas; ela não é a chave dos dados.
+- **No navegador (PWA):** o navegador não tem cofre do sistema. A chave de dados é protegida por uma chave derivada da **sua senha** (Argon2id). Nesse caso a proteção contra quem copiar o armazenamento do navegador **depende de a senha ser longa e difícil de adivinhar**: uma senha numérica curta, como um PIN de 4 a 10 dígitos, pode ser descoberta por quem tiver uma cópia dos dados do navegador. Prefira o celular para os registros mais sensíveis ou use uma senha longa.
+
+Nada disso protege contra quem usa o aparelho **desbloqueado** com o app aberto, contra quem já sabe a senha, contra programas maliciosos com acesso total ao aparelho, nem contra uma cópia feita antes de você criar a senha: durante o cadastro, os registros ficam em texto no aparelho até essa etapa.
 
 - **Senha esquecida, sem biometria ativada:** os dados ficam inacessíveis e não conseguimos recuperá-los. A única forma de restaurar é um backup feito antes.
-- **Biometria ativada (celular):** a chave fica protegida pelo sistema do aparelho. Você consegue trocar a senha sem perder os dados.
-- A criptografia protege contra quem tem acesso ao armazenamento do aparelho ou do navegador, mas não contra quem tem o aparelho desbloqueado e a senha.
+- **Biometria ativada (celular):** a chave de dados fica protegida pelo sistema do aparelho e é liberada pela biometria. Você consegue trocar a senha sem perder os dados.
 - Seu e-mail e a informação de que o cadastro foi concluído ficam guardados sem cifra, no armazenamento do app, para que o app saiba se deve pedir o cadastro.
 
 ## 4. Dados que ficam no servidor do Leviã
