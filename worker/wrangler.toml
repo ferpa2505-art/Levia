@@ -59,6 +59,7 @@ migrations_dir = "migrations"
 # WHATSAPP_WEBHOOK_SECRET (igual ao do gateway Baileys), GATEWAY_TOKEN (rota /api/lead),
 # LICENCA_TOKEN_KEY (assina a licença do serial; sem ela /v1/ativar e a IA ficam fechados).
 # FB_PAGE_ID e FB_PAGE_TOKEN (Pages API, ver src/facebook.js; o token é sempre secret).
+# FB_APP_SECRET (opcional; só para apps com "Exigir App Secret", gera o appsecret_proof).
 # ADMIN_TOKEN (Bearer das rotas /v1/admin/pagina/*; sem ele, as rotas respondem 503).
 # HOTMART_HOTTOK (o hottok do webhook da Hotmart).
 # Variáveis públicas: TURNSTILE_SITE_KEY, APP_BASE_URL (domínio real do app).

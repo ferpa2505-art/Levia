@@ -1,3 +1,4 @@
+import { createHmac } from 'node:crypto';
 import {
   chamarPagina, publicarPost, obterPagina, obterInsights,
   ErroPagina, ErroTokenPagina, ehTokenInvalido, VERSAO_GRAPH,
@@ -155,5 +156,46 @@ describe('cliente da Pages API', () => {
     }
     expect(capturado).toBeInstanceOf(ErroPagina);
     expect(capturado.status).toBe(502);
+  });
+});
+
+describe('appsecret_proof', () => {
+  const SEGREDO = 'segredo-do-app';
+  const esperado = () => createHmac('sha256', SEGREDO).update('token-secreto-da-pagina').digest('hex');
+
+  test('sem FB_APP_SECRET nenhuma prova é enviada', async () => {
+    const rede = interceptar({ data: [] });
+    try {
+      await obterPagina(ambiente());
+    } finally {
+      rede.restaurar();
+    }
+    expect(new URL(rede.chamadas[0].url).searchParams.get('appsecret_proof')).toBeNull();
+  });
+
+  test('com FB_APP_SECRET o GET leva o HMAC do token e nunca o segredo', async () => {
+    const rede = interceptar({ data: [] });
+    try {
+      await obterPagina(ambiente({ FB_APP_SECRET: SEGREDO }));
+    } finally {
+      rede.restaurar();
+    }
+    const params = new URL(rede.chamadas[0].url).searchParams;
+    expect(params.get('appsecret_proof')).toBe(esperado());
+    expect(rede.chamadas[0].url).not.toContain(SEGREDO);
+    expect(rede.chamadas[0].url).not.toContain('token-secreto-da-pagina');
+  });
+
+  test('no POST a prova vai no corpo form-encoded, não na URL', async () => {
+    const rede = interceptar({ id: '1_2' });
+    try {
+      await publicarPost(ambiente({ FB_APP_SECRET: SEGREDO }), { mensagem: 'oi' });
+    } finally {
+      rede.restaurar();
+    }
+    const { url, init } = rede.chamadas[0];
+    expect(new URL(url).searchParams.get('appsecret_proof')).toBeNull();
+    expect(new URLSearchParams(init.body.toString()).get('appsecret_proof')).toBe(esperado());
+    expect(init.body.toString()).not.toContain(SEGREDO);
   });
 });

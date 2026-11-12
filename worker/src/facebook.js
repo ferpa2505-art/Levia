@@ -4,6 +4,8 @@
  * Segurança: o token de Página vive só no Worker (secret FB_PAGE_TOKEN) e vai no header
  * Authorization, nunca na query string — assim não aparece em log de URL nem em histórico de proxy.
  * O ID da Página também vem do ambiente (FB_PAGE_ID), para o mesmo código servir teste e produção.
+ * Se FB_APP_SECRET estiver definido (apps com "Exigir App Secret"), cada chamada leva o
+ * appsecret_proof calculado a partir do token — o segredo do app não é enviado.
  *
  * Erro 190 (token inválido, expirado ou revogado) vira ErroTokenPagina: o chamador precisa pedir um
  * token novo, e não tratar como falha genérica e ficar repetindo a chamada para sempre.
@@ -37,6 +39,18 @@ export function ehTokenInvalido(erro) {
   return erro instanceof ErroTokenPagina || Number(erro?.codigo) === 190;
 }
 
+/**
+ * appsecret_proof: HMAC-SHA256 do access token usando o App Secret como chave (hex).
+ * Apps com "Exigir App Secret" recusam chamadas sem essa prova; o segredo em si nunca sai daqui.
+ */
+export async function provaDoApp(token, segredo) {
+  const chave = await crypto.subtle.importKey(
+    'raw', new TextEncoder().encode(segredo), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign'],
+  );
+  const assinatura = await crypto.subtle.sign('HMAC', chave, new TextEncoder().encode(token));
+  return [...new Uint8Array(assinatura)].map((b) => b.toString(16).padStart(2, '0')).join('');
+}
+
 function configuracao(env) {
   const pageId = String(env?.FB_PAGE_ID ?? '').trim();
   const token = String(env?.FB_PAGE_TOKEN ?? '').trim();
@@ -63,13 +77,16 @@ function montarUrl(pageId, caminho, params) {
 export async function chamarPagina(env, caminho, { metodo = 'GET', params = {}, corpo = {} } = {}) {
   const { pageId, token } = configuracao(env);
   const verbo = String(metodo).toUpperCase();
-  const url = montarUrl(pageId, caminho, verbo === 'GET' ? params : {});
+  const segredo = String(env?.FB_APP_SECRET ?? '').trim();
+  const prova = segredo ? await provaDoApp(token, segredo) : null;
+  const parametros = prova ? { ...params, appsecret_proof: prova } : params;
+  const url = montarUrl(pageId, caminho, verbo === 'GET' ? parametros : {});
   const cabecalhos = { Authorization: `Bearer ${token}` };
   const init = { method: verbo, headers: cabecalhos };
 
   if (verbo !== 'GET') {
     const form = new URLSearchParams();
-    for (const [chave, valor] of Object.entries({ ...params, ...corpo })) {
+    for (const [chave, valor] of Object.entries({ ...parametros, ...corpo })) {
       if (valor === undefined || valor === null || valor === '') continue;
       form.set(chave, Array.isArray(valor) ? valor.join(',') : String(valor));
     }
