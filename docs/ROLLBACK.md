@@ -48,12 +48,23 @@ Depois do rollback de emergência, o `/versao` e o `sw.js` mostram o commit **an
 
 ## 4. Smoke test (antes e depois de qualquer publicação)
 
-- [ ] `GET /health` do Worker → 200 com `{"ok":true}`.
-- [ ] `GET /versao` do Worker → commit esperado.
-- [ ] `https://leviapp.org/` e `https://leviapp.org/ativar` → 200, título "Leviã".
-- [ ] `https://www.leviapp.org/` → 200.
-- [ ] Preflight `OPTIONS` em `/v1/ativar` com `Origin: https://leviapp.org` devolve `Access-Control-Allow-Origin` igual à origem; com uma origem estranha, sem esse cabeçalho.
-- [ ] `POST /v1/analisar-prato` sem credencial válida é recusado (nunca 200).
-- [ ] Nenhum dado real em testes: use contas, telefones e e-mails fictícios.
+Há um script **somente de leitura** (`scripts/smoke.cjs`): só faz GET, HEAD e OPTIONS (qualquer outro método é recusado antes de sair da máquina), sem token, sem criar conta, sem enviar foto e sem chamar rotas administrativas. Não usa dado real.
 
-Os workflows de deploy já fazem `/health` (e, no Worker, `/versao`) ao final; o restante é manual.
+```bash
+npm run smoke                      # confere o que está no ar
+npm run smoke -- --sha <commit>    # exige que app e Worker estejam nesse commit
+npm run smoke -- --json            # saída em JSON
+```
+
+Também roda no GitHub, manualmente: **Actions → "Smoke test (somente leitura)" → Run workflow** (campo opcional com o commit esperado). Sai com código 0 se tudo passou e 1 se algo falhou.
+
+O que ele confere (18 checagens):
+
+- Worker: `/health`, `/versao` (commit), rota inexistente → 404 sem detalhe, sitekey do Turnstile só com a chave pública.
+- CORS: preflight aceita `https://leviapp.org` e `https://www.leviapp.org` (sem `*`, com `Vary: Origin`, sem credenciais) e recusa origens estranhas.
+- App: `/` e `/ativar` (título "Leviã"), manifesto, `sw.js` carimbado com o commit e sem cache, ícones, cabeçalhos de segurança (nosniff, Referrer-Policy, CSP com `frame-ancestors 'none'`).
+- Landing: `/` e `/versao.json`. A landing só muda com `site/landing`, então pode estar num commit mais antigo que o app: o `--sha` não é exigido dela.
+
+**O que ele não cobre** (por ser somente leitura): ativação com serial, análise de foto, webhook da Hotmart e rotas administrativas. Isso continua nos testes automatizados do repositório; testar ao vivo exigiria escrever dados.
+
+Os workflows de deploy já fazem `/health` e `/versao` (Worker) e `versao.json` (landing) ao final.
