@@ -61,7 +61,7 @@ Também roda no GitHub, manualmente: **Actions → "Smoke test (somente leitura)
 
 O que ele confere (18 checagens):
 
-- Worker: `/health`, `/versao` (commit), rota inexistente → 404 sem detalhe, sitekey do Turnstile só com a chave pública.
+- Worker: `/health` (ok, versao e commit), `/versao` (commit), rota inexistente → 404 sem detalhe, sitekey do Turnstile só com a chave pública.
 - CORS: preflight aceita `https://leviapp.org` e `https://www.leviapp.org` (sem `*`, com `Vary: Origin`, sem credenciais) e recusa origens estranhas.
 - App: `/` e `/ativar` (título "Leviã"), manifesto, `sw.js` carimbado com o commit e sem cache, ícones, cabeçalhos de segurança (nosniff, Referrer-Policy, CSP com `frame-ancestors 'none'`).
 - Landing: `/` e `/versao.json`. A landing só muda com `site/landing`, então pode estar num commit mais antigo que o app: o `--sha` não é exigido dela.

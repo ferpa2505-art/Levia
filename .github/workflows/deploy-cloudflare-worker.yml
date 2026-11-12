@@ -39,6 +39,9 @@ jobs:
       url: https://levia-ia-worker.ferpa2505.workers.dev
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Versao do projeto (vai para o /health)
+        id: versao
+        run: echo "versao=$(node -p 'require("./package.json").version')" >> "$GITHUB_OUTPUT"
       - name: Deploy levia-ia-worker
         uses: cloudflare/wrangler-action@953926a2e2182532811c01a25e53647d93bf07c0 # v4.1.3
         with:
@@ -46,9 +49,18 @@ jobs:
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           workingDirectory: worker
           wranglerVersion: "4"
-          command: deploy --var GIT_SHA:${{ github.sha }}
-      - name: Check /health
-        run: curl -fsS https://levia-ia-worker.ferpa2505.workers.dev/health | grep -q '"ok":true'
+          command: deploy --var GIT_SHA:${{ github.sha }} --var VERSAO:${{ steps.versao.outputs.versao }}
+      - name: Check /health (ok, versao e commit)
+        run: |
+          for i in 1 2 3; do
+            corpo=$(curl -fsS https://levia-ia-worker.ferpa2505.workers.dev/health || true)
+            echo "$corpo"
+            if echo "$corpo" | grep -q '"ok":true' && echo "$corpo" | grep -q "\"commit\":\"${GITHUB_SHA}\""; then
+              exit 0
+            fi
+            sleep 5
+          done
+          echo "o /health no ar nao informa ok e o commit ${GITHUB_SHA}"; exit 1
       - name: Check /versao (commit publicado)
         run: |
           for i in 1 2 3; do

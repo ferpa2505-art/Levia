@@ -64,7 +64,7 @@ describe('Cloudflare Worker API (synthetic, offline)', () => {
   afterEach(() => { global.fetch = originalFetch; });
 
   test('GET /health returns the health contract', async () => {
-    await expectJson(await send(makeRequest('/health')), 200, { ok: true });
+    await expectJson(await send(makeRequest('/health')), 200, { ok: true, versao: 'desconhecida', commit: 'desconhecido' });
   });
 
   test('GET /versao returns only the published commit hash', async () => {
@@ -73,6 +73,14 @@ describe('Cloudflare Worker API (synthetic, offline)', () => {
 
   test('GET /versao reports desconhecido when no commit was injected', async () => {
     await expectJson(await send(makeRequest('/versao')), 200, { commit: 'desconhecido' });
+  });
+
+  test('GET /health reports the version injected at deploy and the published commit', async () => {
+    await expectJson(await send(makeRequest('/health'), createEnv({ GIT_SHA: 'abc1234def5678', VERSAO: '0.4.0' })), 200, { ok: true, versao: '0.4.0', commit: 'abc1234def5678' });
+  });
+
+  test('GET /health keeps the contract valid when the version was not injected', async () => {
+    await expectJson(await send(makeRequest('/health'), createEnv({ GIT_SHA: 'abc1234def5678' })), 200, { ok: true, versao: 'desconhecida', commit: 'abc1234def5678' });
   });
 
   test('unknown route returns 404', async () => {
