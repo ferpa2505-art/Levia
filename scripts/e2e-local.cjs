@@ -146,7 +146,7 @@ async function principal() {
     console.log('[basico]');
     await passo('/health e /versao respondem', async () => {
       const h = await req('/health'); exigir(h.status === 200 && h.json?.ok === true, `health ${h.status}`);
-      const v = await req('/versao'); exigir(v.status === 200 && v.json?.commit === 'desconhecido', `versao ${v.texto}`);
+      const v = await req('/versao'); exigir(v.status === 200 && typeof v.json?.commit === 'string', `versao ${v.texto}`);
     });
 
     console.log('\n[webhook da Hotmart]');

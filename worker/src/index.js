@@ -639,9 +639,14 @@ export default {
         return auditar(env, '/v1/admin/pagina/insights', request, json({ erro: 'interno' }, 500), 'interno');
       }
     }
-    if (pathname === '/health') return json({ ok: true, versao: String(env.VERSAO ?? 'desconhecida').slice(0, 40), commit: String(env.GIT_SHA ?? 'desconhecido').slice(0, 40) });
-    // commit publicado e versao do projeto (GIT_SHA e VERSAO entram no deploy, ver .github/workflows/deploy-cloudflare-worker.yml); so dado publico, nada sensivel
-    if (pathname === '/versao' && request.method === 'GET') return json({ commit: String(env.GIT_SHA ?? 'desconhecido').slice(0, 40) });
+    // versao real do Worker, do binding version_metadata (id e tag definidos pela Cloudflare no deploy);
+    // sem o binding (dev local), cai no fallback em vez de quebrar. So dado publico, nada sensivel.
+    if (pathname === '/health') {
+      const versao = env.CF_VERSION_METADATA ?? {};
+      return json({ ok: true, versao: String(versao.id ?? 'desconhecida').slice(0, 64), tag: String(versao.tag ?? 'desconhecida').slice(0, 64) });
+    }
+    // /versao devolve o commit publicado, que e a tag da versao (o deploy passa --tag com o SHA)
+    if (pathname === '/versao' && request.method === 'GET') return json({ commit: String((env.CF_VERSION_METADATA ?? {}).tag ?? 'desconhecido').slice(0, 40) });
     return json({ erro: 'nao_encontrado' }, 404);
   },
 };
