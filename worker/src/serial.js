@@ -14,7 +14,7 @@ const LICENCA_DIAS = 365; // quem revoga é o banco (conta/aparelho), não o ven
 const ALFABETO = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 const SERIAL = /^[A-HJ-NP-Z2-9]{16}$/;
 const LINK_DO_EMAIL = /^[A-Za-z0-9_-]{43}$/; // código do fluxo do Typebot (/v1/teste/iniciar)
-const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 function resposta(corpo, status = 200) {
   return new Response(JSON.stringify(corpo), {
