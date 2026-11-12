@@ -990,7 +990,10 @@ describe('LEVI: aviso à equipe quando a conversa passa para uma pessoa', () => 
     expect(fila[0].texto).toContain('https://wa.me/5511987654321');
     expect(fila[0].texto).not.toContain('Oi'); // nada do que o cliente escreveu
 
-    const resend = fetchSpy.mock.calls.filter((c) => String(c[0]).includes('api.resend.com'));
+    // compara o host exato: "includes" aceitaria qualquer URL que carregue esse texto no caminho
+    const resend = fetchSpy.mock.calls.filter((c) => {
+      try { return new URL(String(c[0])).hostname === 'api.resend.com'; } catch { return false; }
+    });
     expect(resend).toHaveLength(1);
     const corpo = JSON.parse(resend[0][1].body);
     expect(corpo.to).toEqual(['contatoapplevia@gmail.com', 'contato@leviapp.org']);
