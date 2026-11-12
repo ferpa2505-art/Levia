@@ -1,0 +1,34 @@
+name: Smoke test (somente leitura)
+
+# Manual: confere a produção só com GET, HEAD e OPTIONS (sem token, sem dados, sem escrita).
+# Use depois de publicar ou de fazer rollback; informe o commit esperado para exigir que app e Worker estejam nele.
+on:
+  workflow_dispatch:
+    inputs:
+      sha:
+        description: "Commit esperado em produção (7 a 40 caracteres hex). Vazio = não exige."
+        required: false
+        default: ""
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    runs-on: ubuntu-26.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+      - name: Smoke test
+        env:
+          SHA_ESPERADO: ${{ inputs.sha }}
+        run: |
+          if [ -n "$SHA_ESPERADO" ]; then
+            node scripts/smoke.cjs --sha "$SHA_ESPERADO"
+          else
+            node scripts/smoke.cjs
+          fi
