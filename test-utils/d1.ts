@@ -10,6 +10,7 @@ import path from 'node:path';
 const MIGRATIONS = [
   '0001_initial', '0002_leads', '0003_add_lead_columns', '0003_whatsapp',
   '0004_whatsapp_tables', '0005_cotas_uso', '0006_wa_outbox', '0007_payment_payload',
+  '0008_auditoria_admin',
 ];
 
 type Argumentos = unknown[];
