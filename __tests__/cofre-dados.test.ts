@@ -1,10 +1,11 @@
 import { randomBytes } from 'node:crypto';
 import {
-  CHAVE_SAL, CofreBloqueado, criarCofre, PREFIXO_ENVELOPE, estaCifrado, ArmazenamentoBruto,
+  CHAVE_CABECALHO, CHAVE_SAL, CofreBloqueado, criarCofre, PREFIXO_ENVELOPE_V2, estaCifrado, ArmazenamentoBruto,
 } from '../src/utils/cofreDados';
 
-// scrypt leve nos testes; o custo real (2^15) é usado no app
+// KDFs leves nos testes; o custo real (scrypt 2^15 / Argon2id 32 MiB x3) é usado no app
 const LEVE = { N: 2 ** 10, r: 8, p: 1 };
+const ARGON_LEVE = { m: 64, t: 1, p: 1 };
 const aleatorio = (n: number) => new Uint8Array(randomBytes(n));
 
 function armazenamentoFalso(inicial: Record<string, string> = {}) {
@@ -20,7 +21,7 @@ function armazenamentoFalso(inicial: Record<string, string> = {}) {
   return bruto;
 }
 
-const cofre = (armazenamento: ArmazenamentoBruto) => criarCofre({ armazenamento, aleatorio, scrypt: LEVE });
+const cofre = (armazenamento: ArmazenamentoBruto) => criarCofre({ armazenamento, aleatorio, scrypt: LEVE, argon2: ARGON_LEVE });
 
 describe('cofre de dados de saúde', () => {
   test('grava cifrado e lê de volta com o cofre aberto', async () => {
@@ -73,18 +74,21 @@ describe('cofre de dados de saúde', () => {
     await c.desbloquear('1234');
     expect(estaCifrado(arm.mapa.get('levia:diabetes')!)).toBe(true);
     expect(await c.lerDado('levia:diabetes')).toBe('{"antigo":true}');
-    expect(arm.mapa.get(CHAVE_SAL)).toBeTruthy();
+    expect(arm.mapa.get(CHAVE_CABECALHO)).toBeTruthy(); // cabeçalho v2 (a DEK embrulhada)
+    expect(arm.mapa.get(CHAVE_SAL)).toBeUndefined(); // o sal do v1 não existe mais
   });
 
-  test('trocar o PIN regrava tudo em uma única gravação e a nova senha abre', async () => {
+  test('trocar o PIN reembrulha a chave em uma única gravação (sem regravar os dados) e a nova senha abre', async () => {
     const arm = armazenamentoFalso();
     const c = cofre(arm);
     await c.desbloquear('1234');
     await c.gravarDado('levia:medicacoes', 'lista');
     await c.gravarDado('levia:userProfile', 'perfil');
     const antes = arm.multiSets;
+    const dadosAntes = [arm.mapa.get('levia:medicacoes'), arm.mapa.get('levia:userProfile')];
     await c.trocarPin('567890');
-    expect(arm.multiSets).toBe(antes + 1);
+    expect(arm.multiSets).toBe(antes); // nenhum dado foi regravado
+    expect([arm.mapa.get('levia:medicacoes'), arm.mapa.get('levia:userProfile')]).toEqual(dadosAntes);
     expect(await c.lerDado('levia:medicacoes')).toBe('lista');
     c.bloquear();
     await expect(cofre(arm).desbloquear('1234')).rejects.toBeInstanceOf(CofreBloqueado);
@@ -98,7 +102,7 @@ describe('cofre de dados de saúde', () => {
     const c = cofre(arm);
     await c.desbloquear('1234');
     await c.gravarDado('levia:fitness', 'x');
-    expect(arm.mapa.get('levia:fitness')!.startsWith(PREFIXO_ENVELOPE)).toBe(true);
+    expect(arm.mapa.get('levia:fitness')!.startsWith(PREFIXO_ENVELOPE_V2)).toBe(true);
   });
 
   test('antes de existir cofre (onboarding), lê e grava em texto puro; o PIN cifra tudo depois', async () => {
