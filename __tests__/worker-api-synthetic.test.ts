@@ -104,6 +104,40 @@ describe('Cloudflare Worker API (synthetic, offline)', () => {
     expect(response.headers.get('Access-Control-Allow-Origin')).toBe('https://leviapp.org');
   });
 
+  const ORIGENS_ESTRANHAS = [
+    'https://evil.example',
+    'https://leviapp.org.evil.example',
+    'https://evil-leviapp.org',
+    'http://leviapp.org',
+    'https://leviapp.org:8443',
+    'null',
+  ];
+
+  test.each(ORIGENS_ESTRANHAS)('CORS preflight from foreign origin %s gets no allow headers', async (origem) => {
+    const response = await send(makeRequest('/v1/ativar', { method: 'OPTIONS', headers: { Origin: origem } }));
+    expect(response.status).toBe(204);
+    expect(response.headers.get('Access-Control-Allow-Origin')).toBeNull();
+    expect(response.headers.get('Access-Control-Allow-Methods')).toBeNull();
+    expect(response.headers.get('Access-Control-Allow-Headers')).toBeNull();
+  });
+
+  test.each(ORIGENS_ESTRANHAS)('CORS on a real request from foreign origin %s is not granted', async (origem) => {
+    const response = await send(makeRequest('/v1/turnstile/sitekey', { headers: { Origin: origem } }));
+    expect(response.headers.get('Access-Control-Allow-Origin')).toBeNull();
+  });
+
+  test('CORS without an Origin header grants nothing', async () => {
+    const response = await send(makeRequest('/v1/turnstile/sitekey'));
+    expect(response.headers.get('Access-Control-Allow-Origin')).toBeNull();
+  });
+
+  test('CORS never answers with a wildcard and varies by origin', async () => {
+    const response = await send(makeRequest('/v1/analisar-prato', { method: 'OPTIONS', headers: { Origin: ALLOWED_ORIGIN } }));
+    expect(response.headers.get('Access-Control-Allow-Origin')).not.toBe('*');
+    expect(response.headers.get('Vary')).toBe('Origin');
+    expect(response.headers.get('Access-Control-Allow-Credentials')).toBeNull();
+  });
+
   test('old public app token cannot authorize photo analysis', async () => {
     await expectJson(await send(makeAnalysis({
       imagem: SYNTHETIC_IMAGE_BASE64, instalacao: INSTALLATION_ID,
