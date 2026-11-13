@@ -8,6 +8,10 @@ import { contaDoTelefone, formatarSerial, gerarSerial } from './serial';
  * e o entrega pelo WhatsApp. Quem já usa o teste não precisa reativar: o acesso pago vale na hora
  * para os aparelhos já ativados. Estorno e chargeback revogam o acesso daquela compra.
  *
+ * Acesso e mensagens do serial são gravados no MESMO lote (transação): ou o comprador recebe o acesso
+ * e o serial na fila, ou nada muda e o evento é desfeito para o reenvio do provedor tentar de novo.
+ * Assim não existe "pago, liberado, mas sem serial".
+ *
  * Configuração de planos (wrangler.toml [vars]): PRODUTOS_MENSAL e PRODUTOS_ANUAL (códigos separados
  * por vírgula) e VALOR_MENSAL_CENTAVOS / VALOR_ANUAL_CENTAVOS (valor de referência, usado só se o código
  * e o nome não disserem o plano).
@@ -25,7 +29,7 @@ export function resposta(corpo, status = 200) {
 const texto = (v) => (typeof v === 'string' || typeof v === 'number' ? String(v).trim() : '');
 const normalizar = (v) => texto(v).toLowerCase().replace(/[\s-]+/g, '_');
 const lista = (v) => texto(v).split(',').map((s) => s.trim().toLowerCase()).filter(Boolean);
-const semAcento = (v) => texto(v).normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+const semAcento = (v) => texto(v).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
 const chave = (v) => semAcento(v).replace(/[^a-z0-9]/g, '');
 const palavras = (v) => semAcento(v).split(/[^a-z0-9]+/).filter(Boolean);
 
@@ -105,7 +109,18 @@ const concluir = (db, provedor, idEvento, tipo, resultado, iso) => db.prepare(
   "UPDATE payment_events SET processed_at = ?, processing_result = ? WHERE provider = ? AND event_id = ? || ':' || ?",
 ).bind(iso, resultado, provedor, idEvento, tipo).run();
 
-async function liberarAcesso(env, conta, plano, idEvento, agora) {
+function mensagemDeLiberacao({ fim, rotulo }, link) {
+  const ate = new Date(fim).toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' });
+  return `Pagamento confirmado! 🎉 Seu plano ${rotulo} do Leviã está liberado até ${ate}.\n\n` +
+    `Se você já usa o app, ele já está liberado, não precisa fazer nada. Se for ativar agora, abra ${link}, toque em "Ativar" e cole o serial que vou enviar na próxima mensagem 👇`;
+}
+
+/**
+ * Libera o plano, troca o serial e põe as duas mensagens na fila do WhatsApp num único lote.
+ * Prefixo "pgto-": mensagem transacional de compra, entregue mesmo sem sessão aberta
+ * (quem pagou pela landing pode nunca ter falado com o bot e precisa receber o serial).
+ */
+async function liberarAcesso(env, conta, plano, idEvento, agora, telefone, link) {
   const db = env.LEVIA_DB;
   const iso = new Date(agora).toISOString();
   const { dias, rotulo } = PLANOS[plano];
@@ -117,6 +132,8 @@ async function liberarAcesso(env, conta, plano, idEvento, agora) {
   const fim = new Date(inicio + dias * UM_DIA_MS).toISOString();
   const direitoId = crypto.randomUUID();
   const serial = gerarSerial();
+  const formatado = formatarSerial(serial);
+  const mensagens = [mensagemDeLiberacao({ fim, rotulo }, link), formatado];
   await db.batch([
     db.prepare(
       `INSERT INTO entitlements (id, account_id, plan, status, photo_limit, current_period_start, current_period_end, last_payment_id, created_at, updated_at)
@@ -126,24 +143,11 @@ async function liberarAcesso(env, conta, plano, idEvento, agora) {
     db.prepare(
       'INSERT INTO activation_codes (id, account_id, entitlement_id, code_hash, issued_at, expires_at) VALUES (?, ?, ?, ?, ?, ?)',
     ).bind(crypto.randomUUID(), conta.id, direitoId, await sha256(serial), iso, fim),
-  ]);
-  return { serial: formatarSerial(serial), fim, rotulo };
-}
-
-function mensagemDeLiberacao({ serial, fim, rotulo }, link) {
-  const ate = new Date(fim).toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' });
-  return `Pagamento confirmado! 🎉 Seu plano ${rotulo} do Leviã está liberado até ${ate}.\n\n` +
-    `Se você já usa o app, ele já está liberado, não precisa fazer nada. Se for ativar agora, abra ${link}, toque em "Ativar" e cole o serial que vou enviar na próxima mensagem 👇`;
-}
-
-async function avisarNoWhatsApp(env, telefone, mensagens, agora) {
-  for (const msg of mensagens) {
-    // prefixo "pgto-": mensagem transacional de compra, entregue mesmo sem sessão aberta
-    // (quem pagou pela landing pode nunca ter falado com o bot e precisa receber o serial)
-    await env.LEVIA_DB.prepare(
+    ...mensagens.map((msg) => db.prepare(
       'INSERT INTO wa_outbox (id, phone, texto, enviar_em, criado_em) VALUES (?, ?, ?, ?, ?)',
-    ).bind(`pgto-${crypto.randomUUID()}`, telefone, msg, agora, agora).run();
-  }
+    ).bind(`pgto-${crypto.randomUUID()}`, telefone, msg, agora, agora)),
+  ]);
+  return { serial: formatado, fim, rotulo };
 }
 
 /**
@@ -213,6 +217,17 @@ async function processarEventoRegistrado(env, db, provedor, tipo, dados, iso, ag
     return resposta({ ok: true, pendente: 'plano_desconhecido' });
   }
 
+  // aviso fora de ordem: o estorno desta compra chegou antes da aprovação, então ela não libera nada
+  if (tipo === 'paid') {
+    const revertida = await db.prepare(
+      "SELECT 1 AS existe FROM payment_events WHERE provider = ? AND event_id = ? || ':reverted'",
+    ).bind(provedor, dados.idEvento).first();
+    if (revertida) {
+      await concluir(db, provedor, dados.idEvento, tipo, 'ja_revertido', iso);
+      return resposta({ ok: true, pendente: 'ja_revertido' });
+    }
+  }
+
   const conta = await contaDoTelefone(env, telefone, agora);
   if (!conta || conta.status !== 'active') {
     await concluir(db, provedor, dados.idEvento, tipo, 'conta_indisponivel', iso);
@@ -240,14 +255,10 @@ async function processarEventoRegistrado(env, db, provedor, tipo, dados, iso, ag
     return resposta({ ok: true, revogado: true });
   }
 
-  const liberado = await liberarAcesso(env, conta, plano, dados.idEvento, agora);
-  estado.acessoAlterado = true;
   const link = `${env.APP_BASE_URL || 'https://leviapp.org'}/ativar`;
-  try {
-    await avisarNoWhatsApp(env, telefone, [mensagemDeLiberacao(liberado, link), liberado.serial], agora);
-  } catch (e) {
-    console.error(`${provedor}: aviso no WhatsApp falhou`, e?.message); // o acesso já está liberado
-  }
+  // acesso + serial na fila numa transação só: se falhar, nada mudou e o evento é desfeito
+  const liberado = await liberarAcesso(env, conta, plano, dados.idEvento, agora, telefone, link);
+  estado.acessoAlterado = true;
   await concluir(db, provedor, dados.idEvento, tipo, `liberado_${plano}`, iso);
   return resposta({ ok: true, plano, acessoAte: liberado.fim });
 }
