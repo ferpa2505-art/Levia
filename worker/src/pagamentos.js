@@ -1,4 +1,5 @@
 import { avisarPagamentoNaoReconhecido } from './avisos';
+import { normalizarTelefoneE164 } from './telefone';
 import { sha256 } from './cripto';
 import { contaDoTelefone, formatarSerial, gerarSerial } from './serial';
 
@@ -54,11 +55,9 @@ export async function lerCorpo(request) {
   } catch { return null; }
 }
 
-/** Telefone do comprador em E.164 (+55…): sem DDI, assume Brasil. */
+/** Telefone do comprador em E.164: respeita o DDI que veio no checkout (ver telefone.js). */
 export function telefoneDoComprador(bruto) {
-  let digitos = texto(bruto).replace(/\D/g, '').replace(/^0+/, '');
-  if (digitos.length === 10 || digitos.length === 11) digitos = `55${digitos}`;
-  return digitos.length >= 12 && digitos.length <= 15 ? `+${digitos}` : null;
+  return normalizarTelefoneE164(bruto);
 }
 
 /**

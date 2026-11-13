@@ -1,5 +1,6 @@
 import worker from '../worker/src/index';
 import { puxarVencidos } from '../worker/src/lembretes';
+import { telefoneDoComprador } from '../worker/src/pagamentos';
 import { processarMensagemWhatsApp } from '../worker/src/fluxo';
 import { criarD1, temSqlite } from '../test-utils/d1';
 
@@ -185,5 +186,35 @@ describe('webhook Hotmart', () => {
   teste('eventos sem efeito (boleto impresso, atraso) são ignorados', async () => {
     const r = await hotmart(ambiente(), evento('PURCHASE_BILLET_PRINTED'));
     expect((await r.json()).ignorado).toBe('PURCHASE_BILLET_PRINTED');
+  });
+});
+
+describe('telefone internacional', () => {
+  teste('compra com número de Malta entrega o serial para o número certo', async () => {
+    const env = ambiente();
+    const r = await (await hotmart(env, evento('PURCHASE_APPROVED', {
+      buyer: { checkout_phone: '+35699506350' },
+      product: {},
+      purchase: { transaction: 'HP-MT', price: { value: 19.97 } },
+    }))).json();
+    expect(r.plano).toBe('monthly');
+    const msgs = await puxarVencidos(env, Date.now() + 1000);
+    expect(msgs).toHaveLength(2);
+    expect(msgs[1].telefone).toBe('35699506350');
+    expect(msgs[1].texto).toMatch(/^[A-HJ-NP-Z2-9]{4}(-[A-HJ-NP-Z2-9]{4}){3}$/);
+  });
+
+  test.each([
+    ['+35699506350', '+35699506350'],
+    ['00351912345678', '+351912345678'],
+    ['+55 11 98765-4321', '+5511987654321'],
+    ['11987654321', '+5511987654321'],
+    ['(11) 3456-7890', '+551134567890'],
+    ['5511987654321', '+5511987654321'],
+    ['35699506350', null],
+    ['', null],
+    ['abc', null],
+  ] as [string, string | null][])('normaliza %s para %s', (entrada, esperado) => {
+    expect(telefoneDoComprador(entrada)).toBe(esperado);
   });
 });
