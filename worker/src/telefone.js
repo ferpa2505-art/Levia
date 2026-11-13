@@ -8,6 +8,14 @@
  * telefone" e avisa a equipe, em vez de mandar o serial para um número de outro país.
  */
 const DDI_BR = '55';
+// DDI conhecidos (espelha a lista de fusos de lembretes.js) com o tamanho máximo do número
+// nacional. Serve para quando o checkout manda o número SEM o "+", como a Hotmart faz:
+// "35699506350" é Malta (356 + 99506350), não um DDD brasileiro 35.
+const DDIS_CONHECIDOS = [
+  ['351', 9], ['353', 9], ['356', 8], ['352', 9], ['34', 9], ['33', 9], ['39', 10], ['49', 11],
+  ['44', 10], ['31', 9], ['32', 8], ['41', 9], ['43', 11], ['30', 10], ['46', 9], ['45', 8],
+  ['47', 8], ['48', 9], ['54', 10], ['55', 11], ['1', 10],
+].sort((a, b) => String(b[0]).length - String(a[0]).length);
 const MIN_COM_DDI = 8; // menor número nacional realista (o E.164 vai até 15)
 const MAX_E164 = 15;
 
@@ -37,7 +45,14 @@ export function normalizarTelefoneE164(bruto) {
     } else if (brasileiroPlausivel(semZero)) {
       digitos = `${DDI_BR}${semZero}`;
     } else {
-      return null; // sem DDI e sem cara de brasileiro: não há como saber o país
+      // sem "+", mas começando com um DDI conhecido: "35699506350" é Malta (356 + 99506350)
+      const achado = DDIS_CONHECIDOS.find(([ddi, maxNacional]) => {
+        if (!semZero.startsWith(ddi)) return false;
+        const nacional = semZero.slice(String(ddi).length).length;
+        return nacional >= 7 && nacional <= maxNacional;
+      });
+      if (!achado) return null; // não há como saber o país
+      digitos = semZero;
     }
   }
 
