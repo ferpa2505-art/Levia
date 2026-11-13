@@ -39,18 +39,6 @@ jobs:
       url: https://levia-ia-worker.ferpa2505.workers.dev
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      # Migrations ANTES de publicar: o schema nunca pode ficar atrás do código.
-      # Sem este passo, um INSERT em tabela nova falha dentro de try/catch e fica invisível
-      # (foi assim que o registro de alerta_envios poderia se perder em silêncio).
-      # Endpoint "apply" num ambiente não interativo aplica sem perguntar e captura backup.
-      - name: Aplicar migrations do D1 (antes do deploy)
-        uses: cloudflare/wrangler-action@953926a2e2182532811c01a25e53647d93bf07c0 # v4.1.3
-        with:
-          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          workingDirectory: worker
-          wranglerVersion: "4"
-          command: d1 migrations apply levia-licencas-dev --remote
       - name: Deploy levia-ia-worker
         uses: cloudflare/wrangler-action@953926a2e2182532811c01a25e53647d93bf07c0 # v4.1.3
         with:
