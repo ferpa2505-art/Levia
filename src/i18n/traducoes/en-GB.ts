@@ -621,7 +621,7 @@ const traducoes: Traducoes = {
   "evo.proteina": "Protein",
   "evo.carbo": "Carbs",
   "evo.gordura": "Fat",
-  "evo.fibra": "Fiber",
+  "evo.fibra": "Fibre",
   "evo.agua": "Water (avg/day)",
   "evo.constancia": "{dias} of {total} days with a meal logged",
   "evo.mediu": "What you measured",
