@@ -39,6 +39,8 @@ export async function limparVencidos(env, agora = Date.now()) {
     ['cotas_uso', 'DELETE FROM cotas_uso WHERE ts < ?', [agora - PRAZOS.contadorDias * UM_DIA_MS]],
     // a fila guarda tempos em milissegundos (INTEGER), não texto
     ['wa_outbox', 'DELETE FROM wa_outbox WHERE criado_em < ?', [agora - PRAZOS.filaDias * UM_DIA_MS]],
+    // histórico do alerta: mesmo prazo dos contadores técnicos (31 dias)
+    ['alerta_envios', 'DELETE FROM alerta_envios WHERE criado_em < ?', [agora - PRAZOS.contadorDias * UM_DIA_MS]],
   ];
   for (const [tabela, sql, args] of passos) {
     try {
