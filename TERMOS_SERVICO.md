@@ -31,6 +31,8 @@ Você concorda em usar o Leviã para fins pessoais, informar dados verdadeiros, 
 
 Os registros de saúde ficam no seu aparelho; o servidor guarda apenas o necessário para liberar o acesso (nome, telefone, objetivo informado no WhatsApp, aparelhos e uso). Detalhes, base legal, prestadores e seus direitos estão na Política de Privacidade. Você é responsável pela exatidão do que registra e por guardar seus backups.
 
+Alimentos e bebidas digitados por você podem ficar salvos no aparelho para reutilização, e as preferências do gráfico ficam armazenadas nele. Se você optar por sugerir um alimento à equipe, o app abre seu aplicativo de e-mail com os dados do alimento; você revisa e confirma o envio.
+
 ## 7. Análise por IA
 
 É opcional e depende do seu consentimento a cada uso. A foto é enviada ao Google Gemini por meio do nosso servidor, conforme a Política de Privacidade. A IA pode errar o alimento e a quantidade; o resultado é apenas uma sugestão que você confere e salva.

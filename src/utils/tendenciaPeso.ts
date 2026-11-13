@@ -9,15 +9,15 @@ const MIN_DIAS = 7;
 const MAX_DIAS_PREVISAO = 3 * 365;
 const DIA_MS = 24 * 3600 * 1000;
 
-/** "AAAA-MM-DD" → dias desde 1970 (meio-dia local, imune a horário de verão) */
+/** "AAAA-MM-DD" → número de dias desde 1970, sem depender do fuso horário */
 export function diaNumero(dataIso: string): number {
   const [a, m, d] = dataIso.split('-').map(Number);
-  return Math.round(new Date(a, (m || 1) - 1, d || 1, 12).getTime() / DIA_MS);
+  return Date.UTC(a, (m || 1) - 1, d || 1) / DIA_MS;
 }
 
 export function dataDoDia(dia: number): Date {
   const d = new Date(dia * DIA_MS);
-  return new Date(d.getFullYear(), d.getMonth(), d.getDate(), 12);
+  return new Date(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), 12);
 }
 
 export interface Tendencia {

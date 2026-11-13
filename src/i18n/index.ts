@@ -88,7 +88,9 @@ export function traduzir(
   chave: ChaveTraducao,
   params?: Record<string, string | number>
 ): string {
-  let texto = TRADUCOES[idioma]?.[chave] ?? ptBR[chave] ?? chave;
+  // chave que o idioma ainda não tem: inglês (pt-PT usa o pt-BR)
+  const reserva = idioma === 'pt-PT' ? ptBR : enUS;
+  let texto = TRADUCOES[idioma]?.[chave] ?? reserva[chave] ?? ptBR[chave] ?? chave;
   if (params) {
     for (const [nome, valor] of Object.entries(params)) {
       texto = texto.split(`{${nome}}`).join(String(valor));

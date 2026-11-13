@@ -16,6 +16,8 @@ O Leviã é um aplicativo (Android e web/PWA) de registro pessoal de peso, alime
 
 - **Perfil:** nome, como prefere ser chamado(a), pronome, sexo biológico, idade, altura, peso, meta de peso e tipo de diabetes, se informados.
 - **Peso e alimentação:** pesagens, refeições, alimentos, horários, calorias e nutrientes, água, receitas e exercícios.
+- **Meus alimentos:** alimentos e bebidas digitados por você, com os valores informados, para reutilizar em outros registros.
+- **Gráficos:** a última configuração escolhida, como período, refeições e nutrientes.
 - **Saúde:** doses e sintomas de GLP-1, glicemias e faixa-alvo, medicações, horários e observações.
 - **Fotos de pratos:** no Android, uma cópia reduzida fica em arquivo no aparelho. No PWA, a foto reduzida é guardada como texto junto da refeição, no armazenamento do navegador.
 - **Preferências:** idioma, tema, e-mail para relatórios (se informado), senha e biometria do app.
@@ -83,9 +85,13 @@ O servidor tem rotas restritas à equipe, por exemplo para publicar e medir a P�
 
 Finalidade: segurança, prevenção de fraude e rastreabilidade das ações administrativas. Base legal: legítimo interesse e segurança (LGPD, art. 7º, IX). Prazo: 180 dias, apagados automaticamente todos os dias. As mesmas linhas aparecem nos registros operacionais da Cloudflare, que seguem a retenção do plano de hospedagem dela.
 
+### 4.6 Envio opcional de alimento por e-mail
+
+Ao salvar um alimento digitado por você, o app pode perguntar se deseja sugeri-lo à equipe do Leviã. Se aceitar, o app abre seu aplicativo de e-mail com o nome do alimento, os valores informados por 100 g, a medida usada, o idioma e a versão do app, para **contatoapplevia@gmail.com**. Você revisa e confirma o envio no seu aplicativo de e-mail; nenhum registro de saúde acompanha a sugestão.
+
 ## 5. Base legal
 
-- **Consentimento** (LGPD, arts. 7º, I e 11, I) para guardar nome, telefone e objetivo no atendimento, para enviar a foto à IA e para o pixel de medição da página de vendas (seção 4.4). Você pode revogá-lo a qualquer momento (seção 9).
+- **Consentimento** (LGPD, arts. 7º, I e 11, I) para guardar nome, telefone e objetivo no atendimento, para enviar a foto à IA, para o pixel de medição da página de vendas (seção 4.4) e para enviar sugestões de alimentos por e-mail (seção 4.6). Você pode revogá-lo a qualquer momento (seção 9).
 - **Execução do serviço** (art. 7º, V) para liberar e manter seu acesso.
 - **Legítimo interesse e segurança** (art. 7º, IX) para limitar abuso, prevenir fraude e registrar o acesso às rotas administrativas (seção 4.5), usando só o mínimo necessário.
 - **Obrigação legal** (art. 7º, II) quando a lei exigir a guarda de algum dado.
