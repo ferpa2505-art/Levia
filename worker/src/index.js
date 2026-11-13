@@ -3,6 +3,7 @@ import { turnstileSitekey } from './turnstile';
 import { processarMensagemWhatsApp } from './fluxo';
 import { puxarVencidos } from './lembretes';
 import { limparVencidos } from './retencao';
+import { alertarPagamentosPresos, provarEnvioDoAlerta } from './alertaFila';
 import { reservarCotaFoto } from './cotas';
 import { ativarSerial, validarLicenca } from './serial';
 import { receberWebhookHotmart } from './hotmart';
@@ -504,6 +505,34 @@ async function autorizarAdmin(request, env, rota) {
   return null;
 }
 
+/**
+ * Dispara o alerta da fila de pagamento sob demanda, sem esperar o cron das 03:00 UTC.
+ * Sem `teste`, roda o alerta real (respeita o limite de 1 por dia). Com `?teste=1`, manda só o
+ * e-mail marcado como teste: é a prova de que o canal funciona, sem depender do painel do Resend.
+ */
+async function dispararAlertaDaFila(request, env) {
+  const rota = '/v1/admin/alerta-fila';
+  const negado = await autorizarAdmin(request, env, rota);
+  if (negado) return negado;
+  const teste = new URL(request.url).searchParams.get('teste') === '1';
+  try {
+    const resultado = teste ? await provarEnvioDoAlerta(env) : await alertarPagamentosPresos(env);
+    const ok = teste ? resultado.email : resultado.alertado;
+    // nada preso não é falha: é o estado saudável, e a linha do dia registra houve_alerta = 0
+    const semPendencia = !teste && !resultado.presas && !resultado.pagosSemAparelho;
+    const motivo = ok ? 'ok' : semPendencia ? 'sem_pendencia' : (resultado.repetido ? 'ja_alertado_hoje' : 'envio_falhou');
+    return auditar(
+      env, rota, request,
+      json({ ok, ...resultado }, ok || semPendencia || resultado.repetido ? 200 : 502),
+      motivo,
+      teste ? 'teste' : '',
+    );
+  } catch (e) {
+    console.error('erro admin alerta fila', e?.message);
+    return auditar(env, rota, request, json({ erro: 'interno' }, 500), 'interno');
+  }
+}
+
 /** Traduz o erro do cliente da Pages API para uma resposta sem detalhe interno. */
 function respostaDeErroDaPagina(env, e, rota, request) {
   if (e?.codigo === 'nao_configurado') {
@@ -617,6 +646,10 @@ export default {
         console.error('erro admin insights', e?.message);
         return auditar(env, '/v1/admin/pagina/insights', request, json({ erro: 'interno' }, 500), 'interno');
       }
+    }
+    // alerta da fila de pagamento sob demanda (cron das 03:00 UTC não espera): ?teste=1 manda só o e-mail
+    if (pathname === '/v1/admin/alerta-fila' && request.method === 'POST') {
+      return dispararAlertaDaFila(request, env);
     }
     // versao real do Worker, do binding version_metadata (id e tag definidos pela Cloudflare no deploy);
     // sem o binding (dev local), cai no fallback em vez de quebrar. So dado publico, nada sensivel.

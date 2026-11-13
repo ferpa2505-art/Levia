@@ -24,6 +24,12 @@ const pago = (env: any, id: string, contaId: string, criado: number) =>
     id, contaId, new Date(AGORA + 300 * DIA).toISOString(), new Date(criado).toISOString(), new Date(criado).toISOString(),
   );
 const alertas = (env: any) => env.LEVIA_DB.sql("SELECT texto FROM wa_outbox WHERE id LIKE 'alerta-fila-%'") as { texto: string }[];
+const envios = (env: any) => env.LEVIA_DB.sql('SELECT * FROM alerta_envios ORDER BY criado_em') as any[];
+const comFetch = async (resposta: any, fn: () => Promise<void>) => {
+  const original = global.fetch;
+  (global as any).fetch = jest.fn(async () => resposta);
+  try { await fn(); } finally { (global as any).fetch = original; }
+};
 
 describe('alerta diário de entregas de pagamento presas', () => {
   teste('sem nada preso, nenhum alerta', async () => {
@@ -95,5 +101,56 @@ describe('alerta diário de entregas de pagamento presas', () => {
 
   teste('medição sem banco não quebra', async () => {
     expect(await medirPagamentosPresos({} as any, AGORA)).toEqual({ presas: 0, maisAntigaHoras: 0, pertoDeApagar: 0, pagosSemAparelho: 0 });
+  });
+
+  teste('registra que o Resend aceitou o e-mail, com a contagem do dia', async () => {
+    const env = ambiente({ RESEND_API_KEY: 're_teste', ALERTA_EMAILS: 'dono@exemplo.com' });
+    fila(env, 'pgto-1', AGORA - 2 * HORA);
+    await comFetch({ ok: true, status: 200 }, async () => {
+      const r = await alertarPagamentosPresos(env, AGORA);
+      expect(r).toMatchObject({ alertado: true, whatsapp: true, email: true, emailStatus: 200, registrado: true });
+    });
+    const [linha] = envios(env);
+    expect(linha).toMatchObject({ id: 'alerta-fila-2026-11-13', dia: '2026-11-13', presas: 1, houve_alerta: 1, whatsapp: 1, email: 1, email_status: 200 });
+    expect(linha.email_erro).toBeNull();
+    expect(JSON.stringify(linha)).not.toContain('11987654321');
+  });
+
+  teste('registra a recusa do Resend sem esconder que o WhatsApp foi enfileirado', async () => {
+    const env = ambiente({ RESEND_API_KEY: 're_teste', ALERTA_EMAILS: 'dono@exemplo.com' });
+    fila(env, 'pgto-1', AGORA - 2 * HORA);
+    await comFetch({ ok: false, status: 403 }, async () => {
+      const r = await alertarPagamentosPresos(env, AGORA);
+      expect(r).toMatchObject({ alertado: true, whatsapp: true, email: false, emailStatus: 403 });
+    });
+    const [linha] = envios(env);
+    expect(linha).toMatchObject({ houve_alerta: 1, email: 0, email_status: 403, email_erro: 'http_403' });
+  });
+
+  teste('sem ALERTA_EMAILS fica registrado o motivo de não ter saído e-mail', async () => {
+    const env = ambiente({ RESEND_API_KEY: 're_teste' });
+    fila(env, 'pgto-1', AGORA - 2 * HORA);
+    await alertarPagamentosPresos(env, AGORA);
+    const [linha] = envios(env);
+    expect(linha).toMatchObject({ email: 0, email_erro: 'sem_alerta_emails' });
+  });
+
+  teste('grava a execução do dia mesmo quando nada está preso', async () => {
+    const env = ambiente();
+    await alertarPagamentosPresos(env, AGORA);
+    const [linha] = envios(env);
+    expect(linha).toMatchObject({ id: 'alerta-fila-2026-11-13', houve_alerta: 0, whatsapp: 0, email: 0, presas: 0, pagos_sem_aparelho: 0 });
+    expect(alertas(env)).toHaveLength(0);
+  });
+
+  teste('histórico do alerta é apagado junto da limpeza, no prazo de 31 dias', async () => {
+    const env = ambiente();
+    env.LEVIA_DB.sql(
+      "INSERT INTO alerta_envios (id, dia, criado_em, atualizado_em) VALUES ('alerta-fila-2026-09-01', '2026-09-01', ?, ?)",
+      AGORA - 40 * DIA, AGORA - 40 * DIA,
+    );
+    const r = await limparVencidos(env, AGORA);
+    expect(r.removidos.alerta_envios).toBe(1);
+    expect(envios(env).map((l) => l.dia)).toEqual(['2026-11-13']);
   });
 });
