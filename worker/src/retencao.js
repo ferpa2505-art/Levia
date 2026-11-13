@@ -1,3 +1,5 @@
+import { alertarPagamentosPresos } from './alertaFila';
+
 /**
  * Prazos de retenção do servidor, no mesmo texto de PRIVACIDADE.md (seção 8):
  * conversas não concluídas, cerca de 3 dias; contadores técnicos, cerca de 31 dias.
@@ -5,6 +7,7 @@
  *
  * Roda pelo cron do Worker (wrangler.toml [triggers]), uma vez por dia. Antes era um sorteio por
  * mensagem, que não garantia prazo nenhum: uma conversa podia ficar guardada por tempo indefinido.
+ * Antes de apagar, confere se há entregas de pagamento presas e avisa a equipe (alertaFila.js).
  */
 const UM_DIA_MS = 24 * 3600 * 1000;
 
@@ -23,6 +26,12 @@ export async function limparVencidos(env, agora = Date.now()) {
   const db = env.LEVIA_DB;
   const resultado = { removidos: {}, falhas: [] };
   if (!db) return resultado;
+  // antes da limpeza: o que está preso precisa ser visto antes de a retenção de 14 dias apagar
+  try {
+    resultado.alertaFila = await alertarPagamentosPresos(env, agora);
+  } catch (e) {
+    console.error('retenção (alerta da fila):', e?.message);
+  }
   const iso = (dias) => new Date(agora - dias * UM_DIA_MS).toISOString();
   const passos = [
     ['wa_sessions', 'DELETE FROM wa_sessions WHERE updated_at < ?', [iso(PRAZOS.conversaDias)]],
