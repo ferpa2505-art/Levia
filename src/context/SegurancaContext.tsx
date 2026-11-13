@@ -175,6 +175,8 @@ export function SegurancaProvider({ children }: { children: ReactNode }) {
     } catch {
       return false;
     }
+    // se o cofre acabou de migrar para o formato v2, a chave guardada passa a ser a chave de dados nova
+    await guardarChaveBiometria(cofre.obterChave()).catch(() => {});
     tentativas.current = 0;
     setBloqueado(false);
     return true;

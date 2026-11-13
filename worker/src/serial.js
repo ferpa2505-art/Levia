@@ -147,37 +147,114 @@ export async function ativarSerial(request, env, agora = Date.now()) {
 
   const db = env.LEVIA_DB;
   const iso = new Date(agora).toISOString();
+  // A leitura inicial identifica o código; somente as guardas no batch autorizam escritas.
   const linha = await db.prepare(
-    `SELECT c.id AS codigo_id, c.account_id AS conta_id, a.status AS conta_status
-     FROM activation_codes c JOIN accounts a ON a.id = c.account_id
+    `SELECT c.id AS codigo_id, c.account_id AS conta_id, a.status AS conta_status,
+            c.entitlement_id AS direito_id, e.status AS direito_status, e.current_period_end AS direito_fim
+     FROM activation_codes c
+     JOIN accounts a ON a.id = c.account_id
+     LEFT JOIN entitlements e ON e.id = c.entitlement_id AND e.account_id = c.account_id
      WHERE c.code_hash = ? AND c.invalidated_at IS NULL AND c.expires_at > ?`,
   ).bind(await sha256(codigo), iso).first();
-  // mesma resposta para "não existe", "venceu" e "foi substituído": não ajuda quem está tentando adivinhar
   if (!linha || linha.conta_status !== 'active') return resposta({ erro: 'serial_invalido' }, 403);
 
   const existente = await db.prepare('SELECT account_id, revoked_at FROM installations WHERE id = ?').bind(instalacao).first();
-  if (existente) {
-    if (existente.account_id !== linha.conta_id) return resposta({ erro: 'instalacao_em_uso' }, 409);
-    if (existente.revoked_at) return resposta({ erro: 'aparelho_revogado' }, 403);
-    await db.prepare('UPDATE installations SET last_seen_at = ? WHERE id = ?').bind(iso, instalacao).run();
-  } else {
-    // um único comando: dois aparelhos ativando ao mesmo tempo não passam do limite
-    const inseriu = await db.prepare(
-      `INSERT INTO installations (id, account_id, first_seen_at, last_seen_at)
-       SELECT ?1, ?2, ?3, ?3 WHERE (SELECT COUNT(*) FROM installations WHERE account_id = ?2 AND revoked_at IS NULL) < ?4`,
-    ).bind(instalacao, linha.conta_id, iso, Number(env.MAX_DISPOSITIVOS || 2)).run();
-    if (inseriu?.meta?.changes !== 1) return resposta({ erro: 'limite_dispositivos' }, 409);
-  }
+  if (existente && existente.account_id !== linha.conta_id) return resposta({ erro: 'instalacao_em_uso' }, 409);
+  if (existente?.revoked_at) return resposta({ erro: 'aparelho_revogado' }, 403);
 
-  // o teste de 7 dias começa na primeira ativação e não reinicia (INSERT OR IGNORE)
+  // O batch é o ponto de decisão da ativação. Cada escrita revalida a autorização.
+  const validadeCodigo = `
+    c.id = ? AND c.account_id = ? AND c.code_hash = ?
+    AND c.invalidated_at IS NULL AND c.expires_at > ?
+    AND a.id = c.account_id AND a.status = 'active'
+    AND (
+      c.entitlement_id IS NULL
+      OR EXISTS (
+        SELECT 1 FROM entitlements e
+        WHERE e.id = c.entitlement_id AND e.account_id = c.account_id
+          AND e.status IN ('active', 'trialing')
+          AND (e.current_period_end IS NULL OR e.current_period_end > ?)
+      )
+    )
+    AND (
+      c.entitlement_id IS NOT NULL
+      OR EXISTS (
+        SELECT 1 FROM entitlements s
+        WHERE s.account_id = c.account_id
+          AND s.status IN ('active', 'trialing')
+          AND (s.current_period_end IS NULL OR s.current_period_end > ?)
+      )
+      OR EXISTS (
+        SELECT 1 FROM trials t
+        WHERE t.account_id = c.account_id AND t.status = 'active' AND t.expires_at > ?
+      )
+      OR NOT EXISTS (SELECT 1 FROM trials t WHERE t.account_id = c.account_id)
+    )`;
+  const argumentos = [linha.codigo_id, linha.conta_id, await sha256(codigo), iso, iso, iso, iso];
+  const comandos = [];
+  if (existente) {
+    comandos.push(db.prepare(
+      `UPDATE installations SET last_seen_at = ?
+       WHERE id = ? AND account_id = ? AND revoked_at IS NULL
+         AND EXISTS (
+           SELECT 1 FROM activation_codes c JOIN accounts a ON a.id = c.account_id
+           WHERE ${validadeCodigo}
+         )`,
+    ).bind(iso, instalacao, linha.conta_id, ...argumentos));
+  } else {
+    comandos.push(db.prepare(
+      `INSERT INTO installations (id, account_id, first_seen_at, last_seen_at)
+       SELECT ?, c.account_id, ?, ?
+       FROM activation_codes c JOIN accounts a ON a.id = c.account_id
+       WHERE ${validadeCodigo}
+         AND NOT EXISTS (SELECT 1 FROM installations i WHERE i.id = ?)
+         AND (SELECT COUNT(*) FROM installations i WHERE i.account_id = c.account_id AND i.revoked_at IS NULL) < ?`,
+    ).bind(instalacao, iso, iso, ...argumentos, instalacao, Number(env.MAX_DISPOSITIVOS || 2)));
+  }
   const fimTeste = new Date(agora + TESTE_DIAS * UM_DIA_MS).toISOString();
-  await db.batch([
-    db.prepare(
-      `INSERT OR IGNORE INTO trials (account_id, started_at, expires_at, photo_limit, created_at, updated_at)
-       VALUES (?1, ?2, ?3, ?4, ?2, ?2)`,
-    ).bind(linha.conta_id, iso, fimTeste, Number(env.FOTOS_GRATIS_7D || 2)),
-    db.prepare('UPDATE activation_codes SET used_at = COALESCE(used_at, ?) WHERE id = ?').bind(iso, linha.codigo_id),
-  ]);
+  comandos.push(db.prepare(
+    `INSERT OR IGNORE INTO trials (account_id, started_at, expires_at, photo_limit, created_at, updated_at)
+     SELECT c.account_id, ?, ?, ?, ?, ?
+     FROM activation_codes c JOIN accounts a ON a.id = c.account_id
+     WHERE ${validadeCodigo}
+       AND c.entitlement_id IS NULL
+       AND NOT EXISTS (SELECT 1 FROM trials t WHERE t.account_id = c.account_id)
+       AND EXISTS (SELECT 1 FROM installations i WHERE i.id = ? AND i.account_id = c.account_id AND i.revoked_at IS NULL)`,
+  ).bind(iso, fimTeste, Number(env.FOTOS_GRATIS_7D || 2), iso, iso, ...argumentos, instalacao));
+  comandos.push(db.prepare(
+    `UPDATE activation_codes SET used_at = COALESCE(used_at, ?)
+     WHERE id = ?
+       AND EXISTS (
+         SELECT 1 FROM activation_codes c JOIN accounts a ON a.id = c.account_id
+         WHERE ${validadeCodigo}
+           AND EXISTS (SELECT 1 FROM installations i WHERE i.id = ? AND i.account_id = c.account_id AND i.revoked_at IS NULL)
+       )`,
+  ).bind(iso, linha.codigo_id, ...argumentos, instalacao));
+  const resultados = await db.batch(comandos);
+  const mutacaoInstalacao = Number(resultados?.[0]?.meta?.changes ?? 0) === 1;
+  if (!mutacaoInstalacao) {
+    // Releitura serve só para classificar a recusa, nunca para autorizar outra escrita.
+    const atual = await db.prepare(
+      `SELECT c.invalidated_at, c.expires_at, a.status AS conta_status,
+              c.entitlement_id AS direito_id, e.status AS direito_status, e.current_period_end AS direito_fim
+       FROM activation_codes c JOIN accounts a ON a.id = c.account_id
+       LEFT JOIN entitlements e ON e.id = c.entitlement_id AND e.account_id = c.account_id
+       WHERE c.id = ?`,
+    ).bind(linha.codigo_id).first();
+    if (!atual || atual.invalidated_at || !(atual.expires_at > iso) || atual.conta_status !== 'active') return resposta({ erro: 'serial_invalido' }, 403);
+    if (atual.direito_id && (atual.direito_status === null || !['active', 'trialing'].includes(atual.direito_status) || (atual.direito_fim && !(atual.direito_fim > iso)))) {
+      return resposta({ erro: 'serial_invalido' }, 403);
+    }
+    const atualInstalacao = await db.prepare('SELECT account_id, revoked_at FROM installations WHERE id = ?').bind(instalacao).first();
+    if (atualInstalacao?.revoked_at) return resposta({ erro: 'aparelho_revogado' }, 403);
+    if (atualInstalacao && atualInstalacao.account_id !== linha.conta_id) return resposta({ erro: 'instalacao_em_uso' }, 409);
+    const acessoAtual = await acessoDaConta(env, linha.conta_id, agora);
+    if (!acessoAtual) {
+      const trial = await db.prepare('SELECT account_id FROM trials WHERE account_id = ?').bind(linha.conta_id).first();
+      if (trial) return resposta({ erro: 'acesso_expirado' }, 402);
+    }
+    return resposta({ erro: 'limite_dispositivos' }, 409);
+  }
 
   const acesso = await acessoDaConta(env, linha.conta_id, agora);
   if (!acesso) return resposta({ erro: 'acesso_expirado' }, 402);
@@ -208,14 +285,12 @@ export async function validarLicenca(env, licenca, instalacao, agora = Date.now(
   if (typeof dados?.c !== 'string' || dados.i !== instalacao || !(Number(dados.e) * 1000 > agora)) {
     return falha(403, 'licenca_invalida');
   }
-
   const linha = await env.LEVIA_DB.prepare(
     `SELECT a.status AS conta_status, i.revoked_at AS revogado
      FROM installations i JOIN accounts a ON a.id = i.account_id
      WHERE i.id = ? AND i.account_id = ?`,
   ).bind(instalacao, dados.c).first();
   if (!linha || linha.conta_status !== 'active' || linha.revogado) return falha(403, 'licenca_revogada');
-
   const acesso = await acessoDaConta(env, dados.c, agora);
   if (!acesso) return falha(402, 'acesso_expirado');
   return { ok: true, conta: { id: dados.c, limite: acesso.limite, janelaMs: acesso.janelaMs }, plano: acesso.plano, fim: acesso.fim };
