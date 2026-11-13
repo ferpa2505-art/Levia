@@ -8,6 +8,7 @@ import { ativarSerial, validarLicenca } from './serial';
 import { receberWebhookHotmart } from './hotmart';
 import { publicarPost, obterInsights, ehTokenInvalido } from './facebook';
 import { limparAuditoriaAntiga } from './auditoria';
+import { normalizarTelefoneE164 } from './telefone';
 
 /**
  * levia-ia-worker - analise de foto do prato para o app Leviã.
@@ -65,29 +66,6 @@ function imagemJpegValida(valor) {
   }
 }
 
-function normalizarTelefoneBR(phone) {
-  // Remove all non-digits
-  const digits = String(phone).replace(/\D/g, '');
-  
-  // If already has country code (starts with 55), return as-is
-  if (digits.startsWith('55') && digits.length >= 12) {
-    return '+' + digits;
-  }
-  
-  // Brazilian numbers: assume +55
-  // Format: +55 DDD NUMBER (e.g., +5511999999999)
-  if (digits.length === 10 || digits.length === 11) {
-    return '+55' + digits;
-  }
-  
-  // If it has a leading 0 (common in Brazil), remove it
-  if (digits.startsWith('0') && (digits.length === 11 || digits.length === 12)) {
-    return '+55' + digits.slice(1);
-  }
-  
-  // Default: return with +55 prefix
-  return '+55' + digits;
-}
 
 function prompt(idioma) {
   const lingua = IDIOMAS[idioma] ?? IDIOMAS.pt;
@@ -255,7 +233,8 @@ async function processarLead(request, env) {
   await kv.put(chaveRateLimit, String(usados + 1), { expirationTtl: 120 });
 
   // Normalizar telefone para E.164
-  const phoneNormalizado = normalizarTelefoneBR(phone.trim());
+  const phoneNormalizado = normalizarTelefoneE164(phone);
+  if (!phoneNormalizado) return json({ erro: 'telefone_invalido' }, 400);
   const agora = new Date().toISOString();
 
   // 4. Deduplicação: verificar se já existe lead com esse telefone
