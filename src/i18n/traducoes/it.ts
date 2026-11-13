@@ -1,6 +1,6 @@
-import type { Traducoes } from './pt-BR';
+import type { TraducoesParciais } from './pt-BR';
 
-const traducoes: Traducoes = {
+const traducoes: TraducoesParciais = {
   "comum.continuar": "Continua",
   "comum.voltar": "← Indietro",
   "comum.cancelar": "Annulla",
@@ -397,7 +397,7 @@ const traducoes: Traducoes = {
   "atu.pronta": "Aggiornamento scaricato! Tocca qui sotto per applicarlo.",
   "atu.reiniciar": "Applica e riavvia l'app",
   "atu.erro": "Impossibile verificare ora. Controlla la connessione e riprova.",
-  "gl.faixaErro": "Minimum must be lower than maximum (between 40 and 400 mg/dL).",
+  "gl.faixaErro": "Il minimo deve essere inferiore al massimo (tra 40 e 400 mg/dL).",
   "dia.hipoTitulo": "⚠️ Glicemia bassa ({v} mg/dL)",
   "dia.hipoMsg": "Se hai sintomi (tremore, sudore freddo, vertigini, confusione), segui il piano concordato con il medico. Un'indicazione comune è assumere 15 g di carboidrati ad azione rapida (es.: mezzo bicchiere di succo) e rimisurare dopo 15 minuti.\n\nIn caso di svenimento, convulsioni o forte confusione, chiama i soccorsi.",
   "dia.altaTitulo": "Glicemia alta ({v} mg/dL)",
@@ -606,9 +606,9 @@ const traducoes: Traducoes = {
   "atu.webTitulo": "È disponibile una nuova versione di Leviã",
   "atu.webMsg": "Aggiorna per ricevere i miglioramenti.",
   "atu.webBotao": "Aggiorna",
-  "ia.erro.licenca": "To analyze photos, first activate the serial you received on WhatsApp.",
-  "ia.erro.expirado": "Your access period has ended. Message us on WhatsApp to continue.",
-  "ia.ativarBotao": "Activate serial",
+  "ia.erro.licenca": "Per analizzare le foto, attiva prima il seriale che hai ricevuto su WhatsApp.",
+  "ia.erro.expirado": "Il tuo periodo di accesso è terminato. Scrivici su WhatsApp per continuare.",
+  "ia.ativarBotao": "Attiva seriale",
   "abas.evolucao": "Andamento",
   "evo.titulo": "Il tuo andamento",
   "evo.periodo.dia": "Oggi",

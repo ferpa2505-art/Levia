@@ -64,7 +64,25 @@ describe('Cloudflare Worker API (synthetic, offline)', () => {
   afterEach(() => { global.fetch = originalFetch; });
 
   test('GET /health returns the health contract', async () => {
-    await expectJson(await send(makeRequest('/health')), 200, { ok: true });
+    await expectJson(await send(makeRequest('/health')), 200, { ok: true, versao: 'desconhecida', tag: 'desconhecida' });
+  });
+
+  test('GET /versao returns only the published commit hash, which is the version tag', async () => {
+    const env = createEnv({ CF_VERSION_METADATA: { id: 'v1-7d3c9a', tag: 'abc1234def5678' } });
+    await expectJson(await send(makeRequest('/versao'), env), 200, { commit: 'abc1234def5678' });
+  });
+
+  test('GET /versao reports desconhecido when no commit was injected', async () => {
+    await expectJson(await send(makeRequest('/versao'), createEnv({ CF_VERSION_METADATA: undefined })), 200, { commit: 'desconhecido' });
+  });
+
+  test('GET /health reports the real Worker version id and tag from version_metadata', async () => {
+    const env = createEnv({ CF_VERSION_METADATA: { id: 'v1-7d3c9a-uuid', tag: 'abc1234def5678', timestamp: '2026-11-12T21:00:00Z' } });
+    await expectJson(await send(makeRequest('/health'), env), 200, { ok: true, versao: 'v1-7d3c9a-uuid', tag: 'abc1234def5678' });
+  });
+
+  test('GET /health falls back when the runtime has no version metadata (local dev)', async () => {
+    await expectJson(await send(makeRequest('/health'), createEnv({ CF_VERSION_METADATA: undefined })), 200, { ok: true, versao: 'desconhecida', tag: 'desconhecida' });
   });
 
   test('unknown route returns 404', async () => {
@@ -94,6 +112,40 @@ describe('Cloudflare Worker API (synthetic, offline)', () => {
     const response = await send(makeRequest('/v1/ativar', { method: 'OPTIONS', headers: { Origin: 'https://leviapp.org' } }));
     expect(response.status).toBe(204);
     expect(response.headers.get('Access-Control-Allow-Origin')).toBe('https://leviapp.org');
+  });
+
+  const ORIGENS_ESTRANHAS = [
+    'https://evil.example',
+    'https://leviapp.org.evil.example',
+    'https://evil-leviapp.org',
+    'http://leviapp.org',
+    'https://leviapp.org:8443',
+    'null',
+  ];
+
+  test.each(ORIGENS_ESTRANHAS)('CORS preflight from foreign origin %s gets no allow headers', async (origem) => {
+    const response = await send(makeRequest('/v1/ativar', { method: 'OPTIONS', headers: { Origin: origem } }));
+    expect(response.status).toBe(204);
+    expect(response.headers.get('Access-Control-Allow-Origin')).toBeNull();
+    expect(response.headers.get('Access-Control-Allow-Methods')).toBeNull();
+    expect(response.headers.get('Access-Control-Allow-Headers')).toBeNull();
+  });
+
+  test.each(ORIGENS_ESTRANHAS)('CORS on a real request from foreign origin %s is not granted', async (origem) => {
+    const response = await send(makeRequest('/v1/turnstile/sitekey', { headers: { Origin: origem } }));
+    expect(response.headers.get('Access-Control-Allow-Origin')).toBeNull();
+  });
+
+  test('CORS without an Origin header grants nothing', async () => {
+    const response = await send(makeRequest('/v1/turnstile/sitekey'));
+    expect(response.headers.get('Access-Control-Allow-Origin')).toBeNull();
+  });
+
+  test('CORS never answers with a wildcard and varies by origin', async () => {
+    const response = await send(makeRequest('/v1/analisar-prato', { method: 'OPTIONS', headers: { Origin: ALLOWED_ORIGIN } }));
+    expect(response.headers.get('Access-Control-Allow-Origin')).not.toBe('*');
+    expect(response.headers.get('Vary')).toBe('Origin');
+    expect(response.headers.get('Access-Control-Allow-Credentials')).toBeNull();
   });
 
   test('old public app token cannot authorize photo analysis', async () => {

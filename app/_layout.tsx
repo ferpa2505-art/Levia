@@ -89,6 +89,7 @@ function RootNavigation() {
       <Stack.Screen name="peso" options={{ headerShown: true, title: t('titulos.peso') }} />
       <Stack.Screen name="medicacao" options={{ headerShown: true, title: t('med.tituloTela') }} />
       <Stack.Screen name="refeicao" options={{ headerShown: true, title: t('ref.titulo') }} />
+      <Stack.Screen name="grafico-nutricao" options={{ headerShown: true, title: t('gn.titulo') }} />
       <Stack.Screen name="apetite" options={{ headerShown: true, title: t('titulos.apetite') }} />
       <Stack.Screen name="fitness" options={{ headerShown: false }} />
     </Stack>

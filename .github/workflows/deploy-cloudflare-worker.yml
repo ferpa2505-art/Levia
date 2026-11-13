@@ -20,8 +20,8 @@ jobs:
   test:
     runs-on: ubuntu-26.04
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-node@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: 22
           cache: npm
@@ -38,14 +38,33 @@ jobs:
       name: production
       url: https://levia-ia-worker.ferpa2505.workers.dev
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Deploy levia-ia-worker
-        uses: cloudflare/wrangler-action@v4
+        uses: cloudflare/wrangler-action@953926a2e2182532811c01a25e53647d93bf07c0 # v4.1.3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           workingDirectory: worker
           wranglerVersion: "4"
-          command: deploy
-      - name: Check /health
-        run: curl -fsS https://levia-ia-worker.ferpa2505.workers.dev/health | grep -q '"ok":true'
+          # a tag da versao e o commit: o /versao e o /health passam a informar o version_metadata da Cloudflare
+          command: deploy --tag ${{ github.sha }}
+      - name: Check /health (ok, id da versao e tag com o commit)
+        run: |
+          for i in 1 2 3; do
+            corpo=$(curl -fsS https://levia-ia-worker.ferpa2505.workers.dev/health || true)
+            echo "$corpo"
+            if echo "$corpo" | grep -q '"ok":true' \
+              && echo "$corpo" | grep -q '"versao":"[0-9a-f-]\{8,\}' \
+              && echo "$corpo" | grep -q "\"tag\":\"${GITHUB_SHA}\""; then
+              exit 0
+            fi
+            sleep 5
+          done
+          echo "o /health no ar nao informa ok, a versao e a tag ${GITHUB_SHA}"; exit 1
+      - name: Check /versao (commit publicado)
+        run: |
+          for i in 1 2 3; do
+            curl -fsS https://levia-ia-worker.ferpa2505.workers.dev/versao | grep -q "\"commit\":\"${GITHUB_SHA}\"" && exit 0
+            sleep 5
+          done
+          echo "o Worker no ar não informa o commit ${GITHUB_SHA}"; exit 1

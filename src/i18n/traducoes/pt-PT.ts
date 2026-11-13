@@ -1,6 +1,6 @@
-import type { Traducoes } from './pt-BR';
+import type { TraducoesParciais } from './pt-BR';
 
-const traducoes: Traducoes = {
+const traducoes: TraducoesParciais = {
   "comum.continuar": "Continuar",
   "comum.voltar": "← Voltar",
   "comum.cancelar": "Cancelar",
@@ -351,7 +351,7 @@ const traducoes: Traducoes = {
   "ref.fotoSalvaMsg": "Estamos treinando a IA do Leviã para reconhecer pratos brasileiros. Em breve ela vai identificar o que tem no prato e calcular calorias, proteínas e carboidratos automaticamente.",
   "ref.iaEmBreve": "✨ Em breve: a IA do Leviã vai reconhecer este prato e preencher os alimentos para você.",
   "ref.semPermissaoFoto": "Sem permissão. Libere a câmera/fotos do Leviã em Configurações do Android > Apps > Leviã > Permissões.",
-  "ref.oQueComeu": "O que você comeu?",
+  "ref.oQueComeu": "O que comeu?",
   "ref.buscarPh": "Buscar alimento ou receita (ex.: arroz)",
   "ref.incluir": "Incluir",
   "ref.manual": "Não achou? Digite os valores",
@@ -606,9 +606,9 @@ const traducoes: Traducoes = {
   "atu.webTitulo": "Nova versão do Leviã disponível",
   "atu.webMsg": "Atualize para receber as melhorias.",
   "atu.webBotao": "Atualizar",
-  "ia.erro.licenca": "Para analisar fotos, ative primeiro o serial que você recebeu no WhatsApp.",
-  "ia.erro.expirado": "Seu período de acesso terminou. Fale com a gente no WhatsApp para continuar.",
-  "ia.ativarBotao": "Ativar serial",
+  "ia.erro.licenca": "Para analisar fotos, ative primeiro o número de série que recebeu no WhatsApp.",
+  "ia.erro.expirado": "O seu período de acesso terminou. Contacte-nos pelo WhatsApp para continuar.",
+  "ia.ativarBotao": "Ativar número de série",
   "abas.evolucao": "Evolução",
   "evo.titulo": "Sua evolução",
   "evo.periodo.dia": "Hoje",

@@ -9,7 +9,9 @@
     "ios": "expo start --ios",
     "web": "expo start --web",
     "test": "jest --watch",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "smoke": "node scripts/smoke.cjs",
+    "e2e:local": "node scripts/e2e-local.cjs"
   },
   "dependencies": {
     "@expo/metro-runtime": "~58.0.17",

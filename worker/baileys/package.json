@@ -12,7 +12,7 @@
   "dependencies": {
     "@whiskeysockets/baileys": "^6.7.0",
     "axios": "^1.7.0",
-    "link-preview-js": "^3.2.0",
+    "link-preview-js": "^4.0.4",
     "pino": "^9.0.0",
     "pino-pretty": "^11.0.0",
     "qrcode-terminal": "^0.12.0"
