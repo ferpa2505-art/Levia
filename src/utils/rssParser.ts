@@ -39,7 +39,14 @@ function extrairTag(bloco: string, tag: string): string {
 }
 
 function limparHtml(texto: string): string {
-  return texto.replace(/<[^>]+>/g, '').trim();
+  // Uma passada só deixa resto de tag aninhada (`<scr<script>ipt>` vira `<script>`), que é
+  // o padrão apontado pelo alerta de sanitização incompleta. Repete até não mudar mais.
+  let limpo = texto;
+  for (;;) {
+    const proximo = limpo.replace(/<[^>]*>/g, '');
+    if (proximo === limpo) return proximo.trim();
+    limpo = proximo;
+  }
 }
 
 /**

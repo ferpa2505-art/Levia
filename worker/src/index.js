@@ -6,6 +6,8 @@ import { limparVencidos } from './retencao';
 import { reservarCotaFoto } from './cotas';
 import { ativarSerial, validarLicenca } from './serial';
 import { receberWebhookHotmart } from './hotmart';
+import { publicarPost, obterInsights, ehTokenInvalido } from './facebook';
+import { limparAuditoriaAntiga } from './auditoria';
 
 /**
  * levia-ia-worker - analise de foto do prato para o app Leviã.
@@ -402,10 +404,189 @@ async function processarWhatsAppInbound(request, env) {
   return json({ processados: resultados.length, resultados });
 }
 
+const PERIODOS_INSIGHTS = new Set(['day', 'week', 'days_28']);
+// Força bruta no ADMIN_TOKEN: 10 falhas por IP em 15 min bloqueiam a rota até a próxima janela.
+const ADMIN_MAX_FALHAS = 10;
+const ADMIN_JANELA_MS = 15 * 60 * 1000;
+// Auditoria no D1 só das RECUSAS (sem token válido): teto por IP e global por janela, para quem não tem
+// token não conseguir encher a tabela (o D1 também guarda licenças e seriais). Ações autenticadas sempre gravam;
+// o log de observabilidade (console.log) continua registrando todas as requisições.
+const MOTIVOS_RECUSADOS = ['nao_autorizado', 'muitas_tentativas', 'nao_configurado'];
+const AUDITORIA_RECUSADAS_POR_IP = 3;
+const AUDITORIA_RECUSADAS_GLOBAL = 60;
+
+async function lerFalhasAdmin(kv, chave) {
+  if (!kv) return 0;
+  try { return Number(await kv.get(chave)) || 0; } catch (e) { console.error('admin limite: leitura', e?.message); return 0; }
+}
+
+async function registrarFalhaAdmin(kv, chave, falhas) {
+  if (!kv) return;
+  try { await kv.put(chave, String(falhas + 1), { expirationTtl: Math.ceil(ADMIN_JANELA_MS / 1000) + 60 }); }
+  catch (e) { console.error('admin limite: escrita', e?.message); }
+}
+
+/**
+ * Auditoria das rotas administrativas: uma linha por requisição com rota, método, IP, status e motivo.
+ * Nunca registra token, header Authorization, corpo da requisição ou texto publicado.
+ */
+async function persistirAuditoria(env, registro) {
+  const db = env?.LEVIA_DB;
+  if (!db) return;
+  const valores = [
+    crypto.randomUUID(), registro.rota, registro.metodo, registro.ip, registro.status,
+    registro.motivo, registro.detalhe ?? null, Date.now(),
+  ];
+  try {
+    if (MOTIVOS_RECUSADOS.includes(registro.motivo)) {
+      // um único INSERT condicional (atômico no D1): só grava se os tetos da janela não foram atingidos
+      const marcas = MOTIVOS_RECUSADOS.map(() => '?').join(', ');
+      const desde = Date.now() - ADMIN_JANELA_MS;
+      await db.prepare(
+        'INSERT INTO admin_auditoria (id, rota, metodo, ip, status, motivo, detalhe, criado_em) ' +
+        'SELECT ?, ?, ?, ?, ?, ?, ?, ? WHERE ' +
+        `(SELECT COUNT(*) FROM admin_auditoria WHERE ip = ? AND criado_em >= ? AND motivo IN (${marcas})) < ? AND ` +
+        `(SELECT COUNT(*) FROM admin_auditoria WHERE criado_em >= ? AND motivo IN (${marcas})) < ?`,
+      ).bind(
+        ...valores,
+        registro.ip, desde, ...MOTIVOS_RECUSADOS, AUDITORIA_RECUSADAS_POR_IP,
+        desde, ...MOTIVOS_RECUSADOS, AUDITORIA_RECUSADAS_GLOBAL,
+      ).run();
+      return;
+    }
+    await db.prepare(
+      'INSERT INTO admin_auditoria (id, rota, metodo, ip, status, motivo, detalhe, criado_em) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+    ).bind(...valores).run();
+  } catch (e) {
+    // a auditoria é acessória: se o D1 falhar, a resposta administrativa continua
+    console.error('auditoria admin: falha ao gravar', e?.message);
+  }
+}
+
+async function auditar(env, rota, request, resposta, motivo, detalhe = '') {
+  const registro = {
+    rota,
+    metodo: request.method,
+    ip: request.headers.get('cf-connecting-ip') ?? 'sem-ip',
+    status: resposta.status,
+    motivo,
+    ...(detalhe ? { detalhe: String(detalhe).slice(0, 80) } : {}),
+  };
+  // log primeiro: mesmo que o D1 falhe, fica o registro na observabilidade
+  console.log('admin_auditoria', JSON.stringify(registro));
+  await persistirAuditoria(env, registro);
+  return resposta;
+}
+
+/**
+ * Limite por IP, contado de forma atômica pela Cloudflare (binding ADMIN_LIMITE, ver wrangler.toml).
+ * Complementa o contador de falhas no KV, que não é atômico e deixa rajadas paralelas passarem.
+ * Defesa em profundidade: sem o binding, ou se ele falhar, não bloqueia nada.
+ */
+async function limiteAdminExcedido(env, ip) {
+  if (typeof env.ADMIN_LIMITE?.limit !== 'function') return false;
+  try {
+    const { success } = await env.ADMIN_LIMITE.limit({ key: ip });
+    return success === false;
+  } catch (e) {
+    console.error('admin limite (binding):', e?.message);
+    return false;
+  }
+}
+
+/** Rotas administrativas: fechadas por padrão até ADMIN_TOKEN existir no Worker. */
+async function autorizarAdmin(request, env, rota) {
+  const esperado = env.ADMIN_TOKEN;
+  if (!esperado) return auditar(env, rota, request, json({ erro: 'nao_configurado' }, 503), 'nao_configurado');
+
+  if (await limiteAdminExcedido(env, request.headers.get('cf-connecting-ip') ?? 'sem-ip')) {
+    const resposta = json({ erro: 'muitas_tentativas' }, 429);
+    resposta.headers.set('Retry-After', '60');
+    return auditar(env, rota, request, resposta, 'muitas_tentativas');
+  }
+
+  const agora = Date.now();
+  const janela = Math.floor(agora / ADMIN_JANELA_MS);
+  const ip = request.headers.get('cf-connecting-ip') ?? 'sem-ip';
+  const chave = `admin:falhas:${ip}:${janela}`;
+  const falhas = await lerFalhasAdmin(env.LEVIA_COTAS, chave);
+  if (falhas >= ADMIN_MAX_FALHAS) {
+    const resposta = json({ erro: 'muitas_tentativas' }, 429);
+    resposta.headers.set('Retry-After', String(Math.ceil(((janela + 1) * ADMIN_JANELA_MS - agora) / 1000)));
+    return auditar(env, rota, request, resposta, 'muitas_tentativas');
+  }
+
+  const cabecalho = request.headers.get('Authorization') ?? '';
+  const token = cabecalho.startsWith('Bearer ') ? cabecalho.slice(7).trim() : '';
+  if (!token || !iguais(token, String(esperado))) {
+    await registrarFalhaAdmin(env.LEVIA_COTAS, chave, falhas);
+    return auditar(env, rota, request, json({ erro: 'nao_autorizado' }, 401), 'nao_autorizado');
+  }
+  return null;
+}
+
+/** Traduz o erro do cliente da Pages API para uma resposta sem detalhe interno. */
+function respostaDeErroDaPagina(env, e, rota, request) {
+  if (e?.codigo === 'nao_configurado') {
+    return auditar(env, rota, request, json({ erro: 'pagina_nao_configurada' }, 503), 'pagina_nao_configurada');
+  }
+  if (e?.codigo === 'parametro') {
+    return auditar(env, rota, request, json({ erro: 'parametro_invalido', detalhe: String(e.message).slice(0, 160) }, 400), 'parametro_invalido');
+  }
+  if (ehTokenInvalido(e)) {
+    console.error('admin pagina: token invalido', e?.subcodigo ?? '-');
+    return auditar(env, rota, request,
+      json({ erro: 'token_pagina_invalido', codigo: e?.codigo ?? 190, subcodigo: e?.subcodigo ?? null }, 502),
+      'token_pagina_invalido', e?.subcodigo ?? '');
+  }
+  console.error('admin pagina:', e?.codigo ?? e?.status ?? '-');
+  return auditar(env, rota, request, json({ erro: 'pagina_indisponivel' }, 502), 'pagina_indisponivel');
+}
+
+async function publicarNaPagina(request, env) {
+  const rota = '/v1/admin/pagina/post';
+  const negado = await autorizarAdmin(request, env, rota);
+  if (negado) return negado;
+  let corpo;
+  try { corpo = await request.json(); } catch { return auditar(env, rota, request, json({ erro: 'corpo_invalido' }, 400), 'corpo_invalido'); }
+  const { mensagem, link, publicado, agendarPara } = corpo ?? {};
+  try {
+    const criado = await publicarPost(env, { mensagem, link, publicado: publicado !== false, agendarPara });
+    return auditar(env, rota, request, json({ ok: true, id: criado?.id ?? null }), 'ok', criado?.id ?? '');
+  } catch (e) {
+    return respostaDeErroDaPagina(env, e, rota, request);
+  }
+}
+
+async function lerInsightsDaPagina(request, env) {
+  const rota = '/v1/admin/pagina/insights';
+  const negado = await autorizarAdmin(request, env, rota);
+  if (negado) return negado;
+  const { searchParams } = new URL(request.url);
+  const metricas = (searchParams.get('metric') ?? '').split(',').map((m) => m.trim()).filter(Boolean).slice(0, 10);
+  const periodo = searchParams.get('period') ?? 'day';
+  if (!PERIODOS_INSIGHTS.has(periodo)) {
+    return auditar(env, rota, request, json({ erro: 'periodo_invalido' }, 400), 'periodo_invalido');
+  }
+  try {
+    const dados = await obterInsights(env, {
+      metricas: metricas.length ? metricas : undefined,
+      periodo,
+      desde: searchParams.get('since') ?? undefined,
+      ate: searchParams.get('until') ?? undefined,
+    });
+    return auditar(env, rota, request, json({ ok: true, dados: dados?.data ?? [], paging: dados?.paging }), 'ok');
+  } catch (e) {
+    return respostaDeErroDaPagina(env, e, rota, request);
+  }
+}
+
 export default {
-  // cron diário (wrangler.toml [triggers]): apaga o que passou do prazo de retenção
+  // cron diário (wrangler.toml [triggers]): retenção de conversas e da auditoria administrativa
   async scheduled(_evento, env, ctx) {
     ctx.waitUntil(limparVencidos(env));
+    const resultado = await limparAuditoriaAntiga(env);
+    console.log('auditoria_retencao', JSON.stringify(resultado));
   },
   async fetch(request, env) {
     const { pathname } = new URL(request.url);
@@ -444,7 +625,28 @@ export default {
       try { return comCors(await processarWhatsAppInbound(request, env), origem); }
       catch (e) { console.error('erro wa inbound', e?.message); return comCors(json({ erro: 'interno' }, 500), origem); }
     }
-    if (pathname === '/health') return json({ ok: true });
+    if (pathname === '/v1/admin/pagina/post' && request.method === 'POST') {
+      try { return await publicarNaPagina(request, env); }
+      catch (e) {
+        console.error('erro admin post', e?.message);
+        return auditar(env, '/v1/admin/pagina/post', request, json({ erro: 'interno' }, 500), 'interno');
+      }
+    }
+    if (pathname === '/v1/admin/pagina/insights' && request.method === 'GET') {
+      try { return await lerInsightsDaPagina(request, env); }
+      catch (e) {
+        console.error('erro admin insights', e?.message);
+        return auditar(env, '/v1/admin/pagina/insights', request, json({ erro: 'interno' }, 500), 'interno');
+      }
+    }
+    // versao real do Worker, do binding version_metadata (id e tag definidos pela Cloudflare no deploy);
+    // sem o binding (dev local), cai no fallback em vez de quebrar. So dado publico, nada sensivel.
+    if (pathname === '/health') {
+      const versao = env.CF_VERSION_METADATA ?? {};
+      return json({ ok: true, versao: String(versao.id ?? 'desconhecida').slice(0, 64), tag: String(versao.tag ?? 'desconhecida').slice(0, 64) });
+    }
+    // /versao devolve o commit publicado, que e a tag da versao (o deploy passa --tag com o SHA)
+    if (pathname === '/versao' && request.method === 'GET') return json({ commit: String((env.CF_VERSION_METADATA ?? {}).tag ?? 'desconhecido').slice(0, 40) });
     return json({ erro: 'nao_encontrado' }, 404);
   },
 };
