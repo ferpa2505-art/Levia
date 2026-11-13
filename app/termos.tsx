@@ -10,84 +10,91 @@ const URL_PRIVACIDADE = 'https://ferpa2505-art.github.io/levia-policies/privacid
 const EMAIL_CONTATO = 'contato@leviapp.org';
 
 /**
- * Termos de Serviço publicados em https://leviapp.org/termos (fonte: TERMOS_SERVICO.md).
+ * Termos de Serviço publicados em https://leviapp.org/termos (fonte: TERMOS_SERVICO.md, versão 2026-11-13).
  * Documento jurídico em português; o texto não é traduzido para não perder validade.
  */
 const SECOES: { titulo: string; paragrafos: string[] }[] = [
   {
     titulo: '1. Aceitação',
     paragrafos: [
-      'Ao ativar e usar o Leviã (aplicativo Android e web/PWA) você concorda com estes termos e com a Política de Privacidade. Se não concordar, não use o serviço.',
+      'Ao ativar e usar o Leviã (aplicativo Android e web/PWA) você declara que leu e concorda com estes termos e com a Política de Privacidade. Se não concordar, não use o serviço. Concordar com estes termos não substitui os consentimentos específicos pedidos em cada momento (atendimento pelo WhatsApp, análise de foto por IA e pixel da página de vendas), que você pode dar ou recusar separadamente e revogar quando quiser.',
     ],
   },
   {
-    titulo: '2. O que é o Leviã',
+    titulo: '2. Quem oferece o Leviã',
+    paragrafos: [
+      `O Leviã é oferecido por Luis Fernando Paulino, pessoa física, que atua com o nome FP Tech & Art, Brasil. Contato: ${EMAIL_CONTATO}.`,
+    ],
+  },
+  {
+    titulo: '3. O que é o Leviã',
     paragrafos: [
       'Uma ferramenta de registro e organização pessoal de peso, alimentação, água, exercícios, tratamento com medicamentos GLP-1, glicemia e medicações, com lembretes, relatórios, backup e, opcionalmente, análise de foto de prato por inteligência artificial.',
     ],
   },
   {
-    titulo: '3. Aviso de saúde',
+    titulo: '4. Aviso de saúde',
     paragrafos: [
       'O Leviã não é dispositivo médico e não faz diagnóstico, não prescreve tratamento nem ajusta doses. Não substitui médico, nutricionista ou outro profissional de saúde. Seus valores de calorias e nutrientes, inclusive os estimados pela IA, são aproximados e podem estar errados: confira sempre antes de salvar e não tome decisões de tratamento, de insulina ou de medicação com base só neles.',
       'Em emergência (hipoglicemia grave, confusão, desmaio, dor no peito, falta de ar), ligue 192 (SAMU) ou o serviço de emergência local. O Leviã não é um sistema de alerta: lembretes dependem do seu aparelho e podem falhar.',
     ],
   },
   {
-    titulo: '4. Acesso, serial e teste',
+    titulo: '5. Acesso, serial e teste',
     paragrafos: [
-      '• O acesso é liberado por um serial pessoal, enviado pelo atendimento no WhatsApp. Não o compartilhe nem o revenda.',
-      '• Cada serial vale para até 2 aparelhos. O teste de 7 dias começa na primeira ativação, com limite de uso da IA informado no app.',
-      '• Podemos limitar, suspender ou revogar acessos em caso de abuso, fraude, tentativa de burlar limites ou violação destes termos. Você pode pedir um novo serial a qualquer momento pelo próprio WhatsApp (o anterior deixa de valer).',
-      '• Assinatura: os planos mensal e anual e seus preços ficam em www.leviapp.org, com pagamento pela Hotmart. Preço, renovação, cancelamento e reembolso são informados antes da contratação, respeitando o Código de Defesa do Consumidor (inclusive o direito de arrependimento de 7 dias em compras online). Cancelamentos e reembolsos são feitos na própria Hotmart ou pelo contato do site.',
+      '• O acesso é liberado por um serial pessoal (código de ativação), enviado pelo atendimento no WhatsApp. Não o compartilhe nem o revenda.',
+      '• Cada serial vale para até 2 aparelhos. O teste de 7 dias começa na primeira ativação de um serial de teste, com limite de uso da IA informado no app. O serial de um plano pago libera o plano contratado e não inicia um novo teste.',
+      '• Podemos limitar, suspender ou revogar acessos em caso de abuso, fraude, tentativa de burlar limites, reembolso ou cancelamento da compra, ou violação destes termos. Você pode pedir um novo serial a qualquer momento pelo próprio WhatsApp (o anterior deixa de valer).',
+      '• Assinatura: os planos mensal e anual e seus preços ficam em www.leviapp.org, com pagamento pela Hotmart. Preço, renovação, cancelamento e reembolso são informados antes da contratação, respeitando o Código de Defesa do Consumidor (inclusive o direito de arrependimento de 7 dias em compras online). Cancelamentos e reembolsos são feitos na própria Hotmart ou pelo contato do site. Com o reembolso ou cancelamento, o acesso do plano é encerrado.',
     ],
   },
   {
-    titulo: '5. Uso adequado',
+    titulo: '6. Uso adequado',
     paragrafos: [
       'Você concorda em usar o Leviã para fins pessoais, informar dados verdadeiros, ter 18 anos ou mais e proteger o acesso ao seu aparelho. Você concorda em não: usá-lo para tratar ou diagnosticar outras pessoas, tentar invadir, sobrecarregar ou contornar os limites do serviço, extrair o código ou os dados do servidor, enviar fotos de terceiros, rostos ou documentos para a análise de IA, nem copiar, revender ou distribuir o app.',
     ],
   },
   {
-    titulo: '6. Seus dados',
+    titulo: '7. Seus dados e a segurança do aparelho',
     paragrafos: [
-      'Os registros de saúde ficam no seu aparelho; o servidor guarda apenas o necessário para liberar o acesso (nome, telefone, objetivo informado no WhatsApp, aparelhos e uso). Detalhes, base legal, prestadores e seus direitos estão na Política de Privacidade. Você é responsável pela exatidão do que registra e por guardar seus backups.',
+      'Os registros de saúde ficam no seu aparelho; o servidor guarda apenas o necessário para liberar o acesso (nome, telefone, e-mail se informado, objetivo informado no WhatsApp, aparelhos e uso). Detalhes, base legal, prestadores, prazos e seus direitos estão na Política de Privacidade. Você é responsável pela exatidão do que registra e por guardar seus backups.',
+      'Senha no navegador (PWA): no navegador, a proteção dos registros contra quem copiar os dados do navegador depende da força da sua senha. Um PIN numérico curto pode ser descoberto por quem tiver essa cópia. Ao usar o Leviã no navegador, você declara estar ciente desse risco; para os registros mais sensíveis, prefira o app no celular ou uma senha longa. Se esquecer a senha sem biometria ativada, os dados não podem ser recuperados por nós.',
     ],
   },
   {
-    titulo: '7. Análise por IA',
+    titulo: '8. Análise por IA',
     paragrafos: [
-      'É opcional e depende do seu consentimento a cada uso. A foto é enviada ao Google Gemini por meio do nosso servidor, conforme a Política de Privacidade. A IA pode errar o alimento e a quantidade; o resultado é apenas uma sugestão que você confere e salva.',
+      'É opcional e depende do seu consentimento, pedido antes do primeiro uso; cada foto só é enviada quando você toca em Analisar com IA. A foto é enviada ao Google Gemini por meio do nosso servidor, apenas para identificar alimentos e estimar porções, conforme a Política de Privacidade; o Leviã não faz reconhecimento facial. A IA pode errar o alimento e a quantidade; o resultado é apenas uma sugestão que você confere e salva.',
     ],
   },
   {
-    titulo: '8. Disponibilidade e mudanças',
+    titulo: '9. Disponibilidade e mudanças',
     paragrafos: [
       'O serviço é oferecido "no estado em que se encontra", sem garantia de funcionamento ininterrupto. Podemos mudar, suspender ou encerrar recursos; se o serviço for descontinuado, avisaremos com antecedência razoável e você poderá exportar seus dados pelo backup.',
     ],
   },
   {
-    titulo: '9. Propriedade intelectual',
+    titulo: '10. Propriedade intelectual',
     paragrafos: [
       'O Leviã, sua marca e seu design pertencem a Luis Fernando Paulino (FP Tech & Art). Você recebe uma licença pessoal, não exclusiva e revogável, para usar o app. Os registros que você cria continuam sendo seus.',
     ],
   },
   {
-    titulo: '10. Responsabilidade',
+    titulo: '11. Responsabilidade',
     paragrafos: [
-      'Dentro do que a lei permite, não respondemos por decisões de saúde tomadas com base no app, por perda de dados causada por falta de backup, por falhas de terceiros (WhatsApp, Google, Cloudflare, lojas de aplicativos) nem por danos indiretos. Nada nestes termos exclui responsabilidade que a lei não permita excluir, em especial a prevista no Código de Defesa do Consumidor. Havendo responsabilidade, ela se limita ao valor que você pagou pelo serviço nos 12 meses anteriores ao fato, no que a lei permitir.',
+      'Dentro do que a lei permite, não respondemos por decisões de saúde tomadas com base no app, por perda de dados causada por falta de backup ou por senha esquecida, por falhas de terceiros (WhatsApp, Google, Cloudflare, Hotmart, lojas de aplicativos) nem por danos indiretos. Nada nestes termos exclui responsabilidade que a lei não permita excluir, em especial a prevista no Código de Defesa do Consumidor e na LGPD. Havendo responsabilidade, ela se limita ao valor que você pagou pelo serviço nos 12 meses anteriores ao fato, no que a lei permitir.',
     ],
   },
   {
-    titulo: '11. Lei aplicável e contato',
+    titulo: '12. Lei aplicável e contato',
     paragrafos: [
       `Estes termos seguem as leis do Brasil; fica eleito o foro do domicílio do consumidor. Dúvidas, pedidos de privacidade e suporte: ${EMAIL_CONTATO}.`,
     ],
   },
   {
-    titulo: '12. Alterações',
+    titulo: '13. Alterações',
     paragrafos: [
-      'Podemos atualizar estes termos. Mudanças relevantes serão avisadas no app ou pelo WhatsApp antes de valerem; o uso continuado depois do aviso indica concordância. A data no topo mostra a última alteração.',
+      'Podemos atualizar estes termos. Mudanças relevantes serão avisadas no app ou pelo WhatsApp antes de valerem; o uso continuado depois do aviso indica concordância. A data e a versão no topo mostram a última alteração.',
     ],
   },
 ];
@@ -99,7 +106,7 @@ export default function Termos() {
     <TelaRolavel>
       <ThemedView style={styles.container}>
         <ThemedText variant="caption" color="textSecondary">
-          Última atualização: 4 de novembro de 2026
+          Última atualização: 13 de novembro de 2026 · Versão 2026-11-13
         </ThemedText>
 
         {SECOES.map((secao) => (
