@@ -44,6 +44,11 @@ VALOR_ANUAL_CENTAVOS = "19171"
 FOTOS_ASSINANTE_30D = "100"
 # Avisos quando o LEVI passa uma conversa para uma pessoa (ver src/avisos.js):
 ALERTA_WHATSAPP = "+35699506350"
+# E-mail dos avisos operacionais (src/avisos.js e src/alertaFila.js): é o canal que chega mesmo
+# com o gateway do WhatsApp parado. O remetente padrão do Resend (onboarding@resend.dev) só
+# entrega para o e-mail dono da conta Resend; para avisar mais gente, defina EMAIL_FROM com um
+# domínio verificado.
+ALERTA_EMAILS = "ferpa2505@gmail.com"
 
 # Limite por IP das rotas administrativas (/v1/admin/*): 20 chamadas por minuto, contadas de forma atômica pela
 # Cloudflare (src/index.js, limiteAdminExcedido). Sem este binding o Worker só usa o contador de falhas no KV.
