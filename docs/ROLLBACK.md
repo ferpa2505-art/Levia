@@ -59,9 +59,9 @@ npm run smoke -- --json            # saída em JSON
 
 Também roda no GitHub, manualmente: **Actions → "Smoke test (somente leitura)" → Run workflow** (campo opcional com o commit esperado). Sai com código 0 se tudo passou e 1 se algo falhou.
 
-O que ele confere (18 checagens):
+O que ele confere (19 checagens):
 
-- Worker: `/health` (ok, versao e tag vindas do `version_metadata`; a versao e o id que o `wrangler rollback` usa), `/versao` (commit = tag da versao), rota inexistente → 404 sem detalhe, sitekey do Turnstile só com a chave pública.
+- Worker: `/health` responde `ok` e a checagem separada exige `versao` e `tag` válidas do `version_metadata` (com `--sha-worker`, a tag tem de ser o commit esperado — é o que pega deploy sem `--tag`); a `versao` é o id que o `wrangler rollback` usa; `/versao` (commit = tag da versao), rota inexistente → 404 sem detalhe, sitekey do Turnstile só com a chave pública.
 - CORS: preflight aceita `https://leviapp.org` e `https://www.leviapp.org` (sem `*`, com `Vary: Origin`, sem credenciais) e recusa origens estranhas.
 - App: `/` e `/ativar` (título "Leviã"), manifesto, `sw.js` carimbado com o commit e sem cache, ícones, cabeçalhos de segurança (nosniff, Referrer-Policy, CSP com `frame-ancestors 'none'`).
 - Landing: `/` e `/versao.json`. A landing só muda com `site/landing`, então pode estar num commit mais antigo que o app: o `--sha` não é exigido dela.

@@ -26,7 +26,7 @@ function servidor(ajustes: Record<string, Resposta> = {}) {
     const chave = `${metodo} ${url}`;
     if (ajustes[chave]) return falsa(ajustes[chave]);
     const origem = init.headers?.Origin;
-    if (url === 'https://w.test/health') return falsa({ status: 200, corpo: '{"ok":true}' });
+    if (url === 'https://w.test/health') return falsa({ status: 200, corpo: JSON.stringify({ ok: true, versao: '9a9d459b-09a3-4a6f', tag: SHA }) });
     if (url === 'https://w.test/versao') return falsa({ status: 200, corpo: JSON.stringify({ commit: SHA }) });
     if (url === 'https://w.test/rota-que-nao-existe') return falsa({ status: 404, corpo: '{"erro":"nao_encontrado"}' });
     if (url === 'https://w.test/v1/turnstile/sitekey') {
@@ -65,7 +65,7 @@ describe('smoke test somente leitura', () => {
   test('tudo saudável: todas as checagens passam', async () => {
     const { resultados } = await rodar({}, SHA);
     expect(falhas(resultados)).toEqual([]);
-    expect(resultados.length).toBeGreaterThanOrEqual(18);
+    expect(resultados.length).toBeGreaterThanOrEqual(19);
   });
 
   test('só usa GET, HEAD e OPTIONS e nunca manda credencial', async () => {
@@ -98,12 +98,22 @@ describe('smoke test somente leitura', () => {
     const ok = await rodar({}, null, SHA.slice(0, 7));
     expect(falhas(ok.resultados)).toEqual([]);
     const errado = await rodar({}, null, 'b'.repeat(7));
-    expect(falhas(errado.resultados)).toEqual(['/versao informa o commit publicado']);
+    expect(falhas(errado.resultados)).toEqual(['/versao informa o commit publicado', '/health informa a versao e a tag do Worker']);
   });
 
   test('Worker sem commit injetado ("desconhecido") reprova', async () => {
     const { resultados } = await rodar({ 'GET https://w.test/versao': { status: 200, corpo: '{"commit":"desconhecido"}' } });
     expect(falhas(resultados)).toContain('/versao informa o commit publicado');
+  });
+
+  test('/health sem tag valida reprova, mesmo com ok:true', async () => {
+    const { resultados } = await rodar({ 'GET https://w.test/health': { status: 200, corpo: '{"ok":true,"versao":"v1-abc","tag":"desconhecida"}' } });
+    expect(falhas(resultados)).toContain('/health informa a versao e a tag do Worker');
+  });
+
+  test('--sha-worker reprova quando a tag do /health nao e o commit esperado', async () => {
+    const { resultados } = await rodar({ 'GET https://w.test/health': { status: 200, corpo: JSON.stringify({ ok: true, versao: 'v1-abc', tag: 'c'.repeat(40) }) } }, null, SHA.slice(0, 7));
+    expect(falhas(resultados)).toEqual(['/health informa a versao e a tag do Worker']);
   });
 
   test('CORS com curinga ou que aceita origem estranha reprova', async () => {
@@ -146,7 +156,7 @@ describe('smoke test somente leitura', () => {
       return fetchFalso(url, init);
     });
     const resultados = await executarSmoke({ fetchImpl: queda, alvos: ALVOS });
-    expect(falhas(resultados)).toEqual(['/health responde {"ok":true}']);
+    expect(falhas(resultados)).toEqual(['/health responde {"ok":true}', '/health informa a versao e a tag do Worker']);
     expect(resultados.find((r: any) => !r.ok).detalhe).toMatch(/rede fora/);
   });
 
