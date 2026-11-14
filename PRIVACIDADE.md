@@ -109,7 +109,7 @@ O arquivo de backup ou relatório é criado no seu aparelho e só sai dele para 
 ## 8. Por quanto tempo guardamos
 
 - **No aparelho:** até você apagar, desinstalar o app ou limpar os dados.
-- **No servidor:** nome, telefone e objetivo ficam enquanto sua conta existir ou até você pedir a exclusão; conversas não concluídas, cerca de 3 dias; contadores técnicos, cerca de 31 dias; registro de segurança das rotas administrativas (seção 4.5), 180 dias; dados de cobrança, quando houver, pelo prazo legal.
+- **No servidor:** nome, telefone e objetivo do cadastro ficam enquanto você tiver plano ou teste ativo; sem plano ativo, são apagados automaticamente depois de 180 dias, ou antes se você pedir a exclusão; conversas não concluídas, cerca de 3 dias; contadores técnicos, cerca de 31 dias; registro de segurança das rotas administrativas (seção 4.5), 180 dias; dados de cobrança, quando houver, pelo prazo legal.
 - **Foto enviada à IA:** o Leviã não a guarda; a retenção pelo Google segue os termos dele.
 
 ## 9. Seus direitos
