@@ -1,3 +1,6 @@
+# O script-src abaixo é reescrito no build: o plugin cspComHashes (vite.config.ts) troca
+# 'unsafe-inline' pelo sha256 de cada <script> inline do index.html. Não edite o script-src
+# esperando que ele chegue assim ao ar — edite o plugin.
 /*
   X-Content-Type-Options: nosniff
   Referrer-Policy: strict-origin-when-cross-origin
