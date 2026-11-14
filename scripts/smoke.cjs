@@ -100,6 +100,18 @@ async function executarSmoke({ fetchImpl = globalThis.fetch, alvos = PADRAO, sha
     return commit.slice(0, 7);
   });
 
+  await checar('worker', '/health informa a versao e a tag do Worker', async () => {
+    const r = await requisitar(`${W}/health`);
+    exigir(r.status === 200, `status ${r.status}`);
+    const corpo = json(r.texto);
+    exigir(corpo?.ok === true, `ok ausente: ${String(r.texto).slice(0, 60)}`);
+    exigir(typeof corpo.versao === 'string' && corpo.versao.length >= 8 && corpo.versao !== 'desconhecida', `versao invalida: ${String(corpo.versao).slice(0, 20)}`);
+    exigir(typeof corpo.tag === 'string' && SHA_COMPLETO.test(corpo.tag), `tag invalida ou "desconhecida": ${String(corpo.tag).slice(0, 12)}`);
+    // a tag e o commit publicado: so cobra o valor esperado quando o commit do Worker foi informado
+    if (prefixoWorker) exigir(corpo.tag.startsWith(prefixoWorker), `Worker esta em ${corpo.tag.slice(0, 7)}, esperado ${prefixoWorker.slice(0, 7)}`);
+    return `${corpo.versao.slice(0, 8)}… / ${corpo.tag.slice(0, 7)}`;
+  });
+
   await checar('worker', 'rota inexistente devolve 404 sem vazar detalhe', async () => {
     const r = await requisitar(`${W}/rota-que-nao-existe`);
     exigir(r.status === 404, `status ${r.status}`);

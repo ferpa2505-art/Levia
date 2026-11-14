@@ -1,0 +1,6 @@
+# Configuração do actionlint (usado no PR checks, job "actionlint").
+# O rótulo ubuntu-26.04 roda de verdade nos nossos workflows, mas ainda não está na lista
+# embutida do actionlint — sem isto ele acusa "label is unknown" em todo arquivo.
+self-hosted-runner:
+  labels:
+    - ubuntu-26.04
