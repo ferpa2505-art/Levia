@@ -462,6 +462,7 @@ const traducoes: TraducoesParciais = {
   "seg.confirmarTitulo": "Bevestig je pincode",
   "seg.confirmeIdentidade": "Bevestig dat jij het bent",
   "seg.criarSub": "Kies {min} tot {max} cijfers. Die beschermt je gezondheidsgegevens.",
+  "seg.avisoWeb": "In the browser, the password is only a screen lock: your data stays on this device and is not encrypted.",
   "seg.criarTitulo": "Maak je pincode",
   "seg.desbloquearSub": "Voer je pincode in om verder te gaan.",
   "seg.desbloquearTitulo": "Welkom terug",

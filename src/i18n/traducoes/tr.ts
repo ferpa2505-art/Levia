@@ -462,6 +462,7 @@ const traducoes: TraducoesParciais = {
   "seg.confirmarTitulo": "Şifreni onayla",
   "seg.confirmeIdentidade": "Sen olduğunu doğrula",
   "seg.criarSub": "{min}–{max} rakam seç. Sağlık verilerini korur.",
+  "seg.avisoWeb": "In the browser, the password is only a screen lock: your data stays on this device and is not encrypted.",
   "seg.criarTitulo": "Şifreni oluştur",
   "seg.desbloquearSub": "Devam etmek için şifreni gir.",
   "seg.desbloquearTitulo": "Tekrar hoş geldin",

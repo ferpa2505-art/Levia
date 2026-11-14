@@ -462,6 +462,7 @@ const traducoes: TraducoesParciais = {
   "seg.confirmarTitulo": "비밀번호 확인",
   "seg.confirmeIdentidade": "본인인지 확인하세요",
   "seg.criarSub": "{min}~{max}자리 숫자를 고르세요. 건강 데이터를 보호해요.",
+  "seg.avisoWeb": "In the browser, the password is only a screen lock: your data stays on this device and is not encrypted.",
   "seg.criarTitulo": "비밀번호 만들기",
   "seg.desbloquearSub": "계속하려면 비밀번호를 입력하세요.",
   "seg.desbloquearTitulo": "다시 오신 걸 환영해요",

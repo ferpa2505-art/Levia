@@ -462,6 +462,7 @@ const traducoes: TraducoesParciais = {
   "seg.confirmarTitulo": "PIN bestätigen",
   "seg.confirmeIdentidade": "Bestätige, dass du es bist",
   "seg.criarSub": "Wähle {min} bis {max} Ziffern. Sie schützt deine Gesundheitsdaten.",
+  "seg.avisoWeb": "In the browser, the password is only a screen lock: your data stays on this device and is not encrypted.",
   "seg.criarTitulo": "PIN erstellen",
   "seg.desbloquearSub": "Gib deine PIN ein, um fortzufahren.",
   "seg.desbloquearTitulo": "Willkommen zurück",

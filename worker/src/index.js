@@ -4,7 +4,7 @@ import { processarMensagemWhatsApp } from './fluxo';
 import { puxarVencidos } from './lembretes';
 import { limparVencidos } from './retencao';
 import { alertarPagamentosPresos, provarEnvioDoAlerta } from './alertaFila';
-import { reservarCotaFoto } from './cotas';
+import { reservarCotaFoto, reservarEscopos } from './cotas';
 import { ativarSerial, validarLicenca } from './serial';
 import { receberWebhookHotmart } from './hotmart';
 import { publicarPost, obterInsights, ehTokenInvalido } from './facebook';
@@ -76,8 +76,6 @@ function iguais(a, b) {
   for (let i = 0; i < a.length; i++) dif |= a.charCodeAt(i) ^ b.charCodeAt(i);
   return dif === 0;
 }
-
-async function lerNumero(kv, chave) { return Number((await kv.get(chave)) ?? 0); }
 
 function imagemJpegValida(valor) {
   if (typeof valor !== 'string' || valor.length < 1000 || valor.length > TAMANHO_MAX_BASE64) return false;
@@ -227,13 +225,11 @@ async function processarLead(request, env) {
   const authError = await verificarAutenticacao(request, env);
   if (authError) return authError;
 
-  // 2. Rate limiting (10 req/min por IP)
+  // 2. Rate limiting (10 req/min por IP), reservado de forma atômica no D1 (rajadas paralelas não passam do limite)
   const kv = env.LEVIA_COTAS;
   const ip = request.headers.get('cf-connecting-ip') ?? 'sem-ip';
-  const minuto = new Date().toISOString().slice(0, 16).replace(':', '');
-  const chaveRateLimit = `lead:ip:${ip}:${minuto}`;
-  const usados = await lerNumero(kv, chaveRateLimit);
-  if (usados >= 10) return json({ erro: 'muitas_tentativas' }, 429);
+  const limite = await reservarEscopos(env, [{ nome: 'lead-ip', chave: `lead:ip:${ip}`, limite: 10, janelaMs: 60 * 1000 }]);
+  if (!limite.ok) return json({ erro: 'muitas_tentativas' }, 429);
 
   // 3. Parse e validação do corpo
   let corpo;
@@ -252,9 +248,6 @@ async function processarLead(request, env) {
   if (corpo?.consentimento !== true) {
     return json({ erro: 'consentimento_obrigatorio' }, 400);
   }
-
-  // Increment rate limit counter
-  await kv.put(chaveRateLimit, String(usados + 1), { expirationTtl: 120 });
 
   // Normalizar telefone para E.164
   const phoneNormalizado = normalizarTelefoneE164(phone);

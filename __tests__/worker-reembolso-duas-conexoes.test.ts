@@ -81,12 +81,13 @@ describe('integração duas conexões: reembolso × ativação', () => {
       let pendente: Promise<Response> | undefined;
       try {
         const chaves = {
+          PRODUTOS_MENSAL: '111',
           LICENCA_TOKEN_KEY: 'fixture-licenca', TYPEBOT_PHONE_HMAC_KEY: 'fixture-telefone',
           EMAIL_HASH_KEY: 'fixture-email', FOTOS_GRATIS_7D: '2',
         };
         const envA: any = { ...chaves, LEVIA_DB: par.dbA };
         const envB: any = { ...chaves, LEVIA_DB: par.dbB };
-        const dados = { idEvento: 'COMPRA-TESTE-101', telefone: '+5511900000099', produtos: ['mensal'], valorCentavos: 1997 };
+        const dados = { idEvento: 'COMPRA-TESTE-101', telefone: '+5511900000099', produtos: ['111'], valorCentavos: 1997 };
         const paid = await processarPagamento(envA, 'hotmart', 'paid', dados, { fixture: true });
         expect(paid.status).toBe(200);
         expect(await paid.json()).toMatchObject({ plano: 'monthly' });

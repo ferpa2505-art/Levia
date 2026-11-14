@@ -33,7 +33,7 @@ describe('webhook Hotmart', () => {
   teste('hottok errado é recusado', async () => {
     const r = await hotmart(ambiente(), evento('PURCHASE_APPROVED'), 'errado');
     expect(r.status).toBe(401);
-    expect(await r.json()).toEqual({ erro: 'nao_autorizado', recebido: 6, esperado: 14 }); // só tamanhos
+    expect(await r.json()).toEqual({ erro: 'nao_autorizado' }); // sem revelar o tamanho do token esperado
   });
 
   teste('espaço ou quebra de linha nas pontas do hottok não atrapalha', async () => {
@@ -52,9 +52,9 @@ describe('webhook Hotmart', () => {
     expect(msgs[1].texto).toMatch(/^[A-HJ-NP-Z2-9]{4}(-[A-HJ-NP-Z2-9]{4}){3}$/);
   });
 
-  teste('plano mensal pelo valor, repetição ignorada e reembolso revoga', async () => {
+  teste('plano mensal pelo código, repetição ignorada e reembolso revoga', async () => {
     const env = ambiente();
-    const mensal = evento('PURCHASE_APPROVED', { product: {}, purchase: { transaction: 'HP2', price: { value: 19.97 } } });
+    const mensal = evento('PURCHASE_APPROVED', { product: { id: 111 }, purchase: { transaction: 'HP2', price: { value: 19.97 } } });
     expect((await (await hotmart(env, mensal)).json()).plano).toBe('monthly');
     expect((await (await hotmart(env, mensal)).json()).duplicado).toBe(true);
     await hotmart(env, evento('PURCHASE_REFUNDED', { product: {}, purchase: { transaction: 'HP2' } }));
@@ -82,22 +82,24 @@ describe('webhook Hotmart', () => {
     expect(serial).toBeTruthy();
   });
 
-  teste('reconhece o plano pelo nome do produto mesmo com código novo', async () => {
+  teste('nome do produto com código novo NÃO libera plano (só alerta)', async () => {
     const env = ambiente();
     const corpo = await (await hotmart(env, evento('PURCHASE_APPROVED', {
       product: { id: 999, name: 'Leviã Anual' },
       purchase: { transaction: 'HP9', price: { value: 0 } },
     }))).json();
-    expect(corpo.plano).toBe('annual');
+    expect(corpo.plano).toBeUndefined();
+    expect(corpo.pendente).toBe('plano_desconhecido');
   });
 
-  teste('reconhece o mensal por preço promocional', async () => {
+  teste('preço promocional sem código conhecido NÃO libera plano (só alerta)', async () => {
     const env = ambiente();
     const corpo = await (await hotmart(env, evento('PURCHASE_APPROVED', {
       product: {},
       purchase: { transaction: 'HP10', price: { value: 9.97 } },
     }))).json();
-    expect(corpo.plano).toBe('monthly');
+    expect(corpo.plano).toBeUndefined();
+    expect(corpo.pendente).toBe('plano_desconhecido');
   });
 
   teste('plano desconhecido não cria conta e guarda o resumo do aviso', async () => {
@@ -194,7 +196,7 @@ describe('telefone internacional', () => {
     const env = ambiente();
     const r = await (await hotmart(env, evento('PURCHASE_APPROVED', {
       buyer: { checkout_phone: '+35699506350' },
-      product: {},
+      product: { id: 111 },
       purchase: { transaction: 'HP-MT', price: { value: 19.97 } },
     }))).json();
     expect(r.plano).toBe('monthly');

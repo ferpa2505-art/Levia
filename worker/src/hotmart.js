@@ -51,8 +51,8 @@ export async function receberWebhookHotmart(request, env, agora = Date.now()) {
   const hottok = (request.headers.get('x-hotmart-hottok') || dados.hottok || '').trim();
   const esperado = String(env.HOTMART_HOTTOK).trim();
   if (!iguais(hottok, esperado)) {
-    // só os tamanhos, nunca os valores: ajuda a ver se foi colado o código errado
-    return resposta({ erro: 'nao_autorizado', recebido: hottok.length, esperado: esperado.length }, 401);
+    // nada além do erro: tamanho do token esperado ajudaria quem tenta adivinhá-lo
+    return resposta({ erro: 'nao_autorizado' }, 401);
   }
   if (!dados.idEvento) return resposta({ erro: 'sem_id_da_compra' }, 400);
 

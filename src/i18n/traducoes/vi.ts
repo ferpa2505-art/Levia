@@ -462,6 +462,7 @@ const traducoes: TraducoesParciais = {
   "seg.confirmarTitulo": "Xác nhận mã PIN",
   "seg.confirmeIdentidade": "Xác nhận đó là bạn",
   "seg.criarSub": "Chọn {min} đến {max} chữ số. Mã giúp bảo vệ dữ liệu sức khỏe.",
+  "seg.avisoWeb": "In the browser, the password is only a screen lock: your data stays on this device and is not encrypted.",
   "seg.criarTitulo": "Tạo mã PIN",
   "seg.desbloquearSub": "Nhập mã PIN để tiếp tục.",
   "seg.desbloquearTitulo": "Chào mừng trở lại",

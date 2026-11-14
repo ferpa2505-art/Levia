@@ -76,6 +76,14 @@ describe('/api/lead: autorização antes de gravar', () => {
     expect(linha.consent_at).toBeTruthy();
   });
 
+  teste('rajada paralela em /api/lead: a partir da 11ª chamada do mesmo IP vem 429', async () => {
+    const { env } = ambiente();
+    const respostas = await Promise.all(Array.from({ length: 15 }, () =>
+      worker.fetch(leadRequest({ ...DADOS_LEAD, consentimento: true }), env)));
+    const codigos = respostas.map((r) => r.status);
+    expect(codigos.filter((c) => c === 429)).toHaveLength(5);
+  });
+
   teste('sem a chave do gateway a rota continua fechada', async () => {
     const { env } = ambiente();
     const r = await worker.fetch(new Request('https://worker.test/api/lead', {

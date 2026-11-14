@@ -462,6 +462,7 @@ const traducoes: TraducoesParciais = {
   "seg.confirmarTitulo": "تأكيد الرمز",
   "seg.confirmeIdentidade": "أكّد أنك أنت",
   "seg.criarSub": "اختر من {min} إلى {max} أرقام. يحمي بياناتك الصحية.",
+  "seg.avisoWeb": "In the browser, the password is only a screen lock: your data stays on this device and is not encrypted.",
   "seg.criarTitulo": "أنشئ رمزك",
   "seg.desbloquearSub": "أدخل رمزك للمتابعة.",
   "seg.desbloquearTitulo": "مرحبًا بعودتك",

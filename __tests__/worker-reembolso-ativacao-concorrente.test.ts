@@ -14,9 +14,9 @@ async function cenario() {
   const db = criarD1();
   const env: any = {
     LEVIA_DB: db, LICENCA_TOKEN_KEY: 'chave-ficticia-licenca',
-    TYPEBOT_PHONE_HMAC_KEY: 'chave-ficticia-telefone', EMAIL_HASH_KEY: 'chave-ficticia-email', FOTOS_GRATIS_7D: '2',
+    TYPEBOT_PHONE_HMAC_KEY: 'chave-ficticia-telefone', EMAIL_HASH_KEY: 'chave-ficticia-email', FOTOS_GRATIS_7D: '2', PRODUTOS_MENSAL: '111',
   };
-  const dados = { idEvento: COMPRA, telefone: '+5511900000099', produtos: ['Plano mensal'], valorCentavos: 1997 };
+  const dados = { idEvento: COMPRA, telefone: '+5511900000099', produtos: ['111'], valorCentavos: 1997 };
   const compra = await processarPagamento(env, 'hotmart', 'paid', dados, { fixture: 'paid' });
   expect(compra.status).toBe(200);
   expect(await compra.json()).toMatchObject({ ok: true, plano: 'monthly' });

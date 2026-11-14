@@ -462,6 +462,7 @@ const traducoes: TraducoesParciais = {
   "seg.confirmarTitulo": "Подтвердите код",
   "seg.confirmeIdentidade": "Подтвердите, что это вы",
   "seg.criarSub": "Выберите от {min} до {max} цифр. Код защищает ваши данные о здоровье.",
+  "seg.avisoWeb": "In the browser, the password is only a screen lock: your data stays on this device and is not encrypted.",
   "seg.criarTitulo": "Создайте код",
   "seg.desbloquearSub": "Введите код, чтобы продолжить.",
   "seg.desbloquearTitulo": "С возвращением",
