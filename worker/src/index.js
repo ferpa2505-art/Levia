@@ -20,6 +20,29 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const IDIOMAS = { pt: 'português do Brasil', en: 'English', es: 'español', fr: 'français', it: 'italiano' };
 const ORIGENS_WEB = ['https://leviapp.org', 'https://www.leviapp.org', 'http://localhost:8081', 'https://typebot.com', 'https://app.typebot.io'];
 const APP_BASE_URL_DEFAULT = 'https://leviapp.org';
+// O Worker só devolve JSON: nenhuma página, script, estilo ou frame. Por isso a CSP pode ser a mais
+// restritiva possível. Sem includeSubDomains no HSTS de propósito: o Worker também responde em
+// *.workers.dev, e prender subdomínios de um domínio compartilhado é efeito colateral grande demais.
+const CABECALHOS_SEGURANCA = {
+  'Strict-Transport-Security': 'max-age=31536000',
+  'X-Content-Type-Options': 'nosniff',
+  'X-Frame-Options': 'DENY',
+  'Referrer-Policy': 'no-referrer',
+  'Content-Security-Policy': "default-src 'none'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'",
+};
+
+/** Aplica os cabeçalhos de segurança sem sobrescrever o que a rota já definiu (CORS, cache…). */
+function comSeguranca(resposta) {
+  const cabecalhos = new Headers(resposta.headers);
+  for (const [nome, valor] of Object.entries(CABECALHOS_SEGURANCA)) {
+    if (!cabecalhos.has(nome)) cabecalhos.set(nome, valor);
+  }
+  return new Response(resposta.body, {
+    status: resposta.status,
+    statusText: resposta.statusText,
+    headers: cabecalhos,
+  });
+}
 
 function cabecalhosCors(origem) {
   if (!origem || !ORIGENS_WEB.includes(origem)) return {};
@@ -589,7 +612,7 @@ async function lerInsightsDaPagina(request, env) {
   }
 }
 
-export default {
+const app = {
   // cron diário (wrangler.toml [triggers]): retenção de conversas e da auditoria administrativa
   async scheduled(_evento, env, ctx) {
     ctx.waitUntil(limparVencidos(env));
@@ -661,4 +684,11 @@ export default {
     if (pathname === '/versao' && request.method === 'GET') return json({ commit: String((env.CF_VERSION_METADATA ?? {}).tag ?? 'desconhecido').slice(0, 40) });
     return json({ erro: 'nao_encontrado' }, 404);
   },
+};
+
+// Porta de saída única: toda resposta — JSON, erro, preflight — sai com os cabeçalhos de segurança.
+// Sem isso, cada rota teria de lembrar de aplicá-los, e uma esquecida seria suficiente para furar.
+export default {
+  fetch: async (request, env, ctx) => comSeguranca(await app.fetch(request, env, ctx)),
+  scheduled: app.scheduled,
 };
