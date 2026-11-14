@@ -14,8 +14,7 @@ import { contaDoTelefone, formatarSerial, gerarSerial } from './serial';
  * Assim não existe "pago, liberado, mas sem serial".
  *
  * Configuração de planos (wrangler.toml [vars]): PRODUTOS_MENSAL e PRODUTOS_ANUAL (códigos separados
- * por vírgula) e VALOR_MENSAL_CENTAVOS / VALOR_ANUAL_CENTAVOS (valor de referência, usado só se o código
- * e o nome não disserem o plano).
+ * por vírgula). Só o código decide o plano.
  */
 const UM_DIA_MS = 24 * 3600 * 1000;
 const PLANOS = { monthly: { dias: 30, rotulo: 'mensal' }, annual: { dias: 365, rotulo: 'anual' } };
@@ -33,14 +32,6 @@ const lista = (v) => texto(v).split(',').map((s) => s.trim().toLowerCase()).filt
 const semAcento = (v) => texto(v).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
 const chave = (v) => semAcento(v).replace(/[^a-z0-9]/g, '');
 const palavras = (v) => semAcento(v).split(/[^a-z0-9]+/).filter(Boolean);
-
-/** O nome do produto/oferta pode dizer o plano mesmo quando o código é novo (ex.: "Leviã Anual"). */
-function planoPorTexto(produtos) {
-  const termos = produtos.flatMap(palavras);
-  if (termos.some((p) => ['anual', 'annual', 'yearly'].includes(p))) return 'annual';
-  if (termos.some((p) => ['mensal', 'monthly'].includes(p))) return 'monthly';
-  return null;
-}
 
 /** Lê o corpo como JSON ou formulário (a[b]=1 vira { a: { b: 1 } }). */
 export async function lerCorpo(request) {
@@ -65,9 +56,10 @@ export function telefoneDoComprador(bruto) {
 }
 
 /**
- * Mensal ou anual, na ordem: código do produto/oferta configurado (ignorando espaços e pontuação),
- * nome do produto/oferta, plano declarado e, por último, o valor pago com tolerância para promoções.
- * Fora dessas faixas a compra fica registrada para conferência, em vez de liberar o plano errado.
+ * Mensal ou anual SÓ pelo código do produto/oferta configurado (PRODUTOS_MENSAL / PRODUTOS_ANUAL),
+ * ignorando espaços e pontuação. Nome do produto e valor pago não liberam plano: quem tiver o hottok
+ * não consegue ganhar acesso com um produto de nome parecido ou um preço qualquer. Compra de código
+ * novo (ex.: oferta nova) fica registrada como plano_desconhecido e avisa a equipe para cadastrar o código.
  */
 function planoDaCompra(env, dados) {
   const mensais = lista(env.PRODUTOS_MENSAL).map(chave);
@@ -75,23 +67,6 @@ function planoDaCompra(env, dados) {
   const codigos = (dados.produtos ?? []).map(chave).filter(Boolean);
   if (codigos.some((p) => anuais.includes(p))) return 'annual';
   if (codigos.some((p) => mensais.includes(p))) return 'monthly';
-
-  const porNome = planoPorTexto(dados.produtos ?? []);
-  if (porNome) return porNome;
-
-  const declarado = normalizar(dados.plano);
-  if (['annual', 'anual', 'yearly'].includes(declarado)) return 'annual';
-  if (['monthly', 'mensal'].includes(declarado)) return 'monthly';
-
-  const mensal = Number(env.VALOR_MENSAL_CENTAVOS || 1997);
-  const anual = Number(env.VALOR_ANUAL_CENTAVOS || 19171);
-  const valor = Number(dados.valorCentavos) || 0;
-  if (valor > 0) {
-    const distMensal = mensal > 0 ? Math.abs(valor - mensal) / mensal : Infinity;
-    const distAnual = anual > 0 ? Math.abs(valor - anual) / anual : Infinity;
-    // aceita cupom/desconto de até ~55%; abaixo disso o preço não decide, para não liberar por engano
-    if (Math.min(distMensal, distAnual) <= 0.55) return distAnual <= distMensal ? 'annual' : 'monthly';
-  }
   return null;
 }
 
