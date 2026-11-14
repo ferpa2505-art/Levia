@@ -33,7 +33,7 @@ describe('webhook Hotmart', () => {
   teste('hottok errado é recusado', async () => {
     const r = await hotmart(ambiente(), evento('PURCHASE_APPROVED'), 'errado');
     expect(r.status).toBe(401);
-    expect(await r.json()).toEqual({ erro: 'nao_autorizado', recebido: 6, esperado: 14 }); // só tamanhos
+    expect(await r.json()).toEqual({ erro: 'nao_autorizado' }); // sem revelar o tamanho do token esperado
   });
 
   teste('espaço ou quebra de linha nas pontas do hottok não atrapalha', async () => {
