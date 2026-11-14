@@ -75,6 +75,7 @@ jobs:
       - name: Check /health (ok, id da versao e tag com o commit)
         run: |
           for i in 1 2 3; do
+            echo "tentativa $i/3"
             corpo=$(curl -fsS https://levia-ia-worker.ferpa2505.workers.dev/health || true)
             echo "$corpo"
             if echo "$corpo" | grep -q '"ok":true' \
@@ -88,6 +89,7 @@ jobs:
       - name: Check /versao (commit publicado)
         run: |
           for i in 1 2 3; do
+            echo "tentativa $i/3"
             curl -fsS https://levia-ia-worker.ferpa2505.workers.dev/versao | grep -q "\"commit\":\"${GITHUB_SHA}\"" && exit 0
             sleep 5
           done
