@@ -918,7 +918,7 @@ describe('serial: seriais vitalícios (script manual)', () => {
     rodar(db, lote.sql);
 
     expect((db.sql('SELECT COUNT(*) AS n FROM accounts')[0] as any).n).toBe(3);
-    expect((db.sql("SELECT COUNT(*) AS n FROM entitlements WHERE provider_subscription_id = 'vitalicio-manual' AND current_period_end IS NULL")[0] as any).n).toBe(3);
+    expect((db.sql("SELECT COUNT(*) AS n FROM entitlements WHERE provider_subscription_id LIKE 'vitalicio-manual%' AND current_period_end IS NULL")[0] as any).n).toBe(3);
     // só o hash fica no banco
     expect(JSON.stringify(db.sql('SELECT * FROM activation_codes'))).not.toContain(lote.itens[0].serial);
     // o serial pode ser digitado de novo por ~10 anos (a licença do app vale 365 dias)
@@ -941,6 +941,34 @@ describe('serial: seriais vitalícios (script manual)', () => {
     const lote = montarLote({ nome: 'Teste', quantidade: 1 });
     expect(lote.sql).not.toContain('entitlements');
     expect(lote.itens[0].nome).toBe('Teste');
+  });
+
+  teste('o lote fica registrado no banco com quem recebeu, sem guardar o serial', () => {
+    const { db } = ambiente();
+    const lote = montarLote({ nome: 'Parceiro Alfa', quantidade: 2, vitalicio: true, fotos: 60 });
+    rodar(db, lote.sql);
+
+    const rastro = db.sql("SELECT detalhe FROM admin_auditoria WHERE motivo = 'serial_manual' ORDER BY detalhe") as any[];
+    expect(rastro).toHaveLength(2);
+    expect(rastro[0].detalhe).toContain('lote=Parceiro Alfa');
+    expect(rastro[0].detalhe).toContain('item=1/2');
+    expect(rastro[1].detalhe).toContain('item=2/2');
+    expect(rastro[0].detalhe).toContain('tipo=vitalicio');
+    // o vitalício leva o lote no próprio direito, que não expira nem é apagado pela retenção
+    expect((db.sql("SELECT provider_subscription_id AS p FROM entitlements LIMIT 1")[0] as any).p).toBe('vitalicio-manual:parceiro-alfa');
+    // o serial em texto nunca entra no banco nem no arquivo .sql
+    for (const item of lote.itens) {
+      expect(lote.sql).not.toContain(item.serial);
+      expect(JSON.stringify(db.sql('SELECT * FROM activation_codes'))).not.toContain(item.serial);
+    }
+  });
+
+  teste('nome com aspas não quebra o SQL do lote', () => {
+    const lote = montarLote({ nome: "D'Ávila", quantidade: 1, vitalicio: true });
+    expect(lote.sql).toContain("lote=D''Ávila");
+    expect(lote.sql).toContain('vitalicio-manual:d-avila');
+    const { db } = ambiente();
+    expect(() => rodar(db, lote.sql)).not.toThrow();
   });
 });
 

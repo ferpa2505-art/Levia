@@ -14,6 +14,11 @@
  * O banco guarda só o hash (sha256) do serial. Com --saida, os seriais vão para um .txt na pasta
  * (não aparecem no terminal); sem ela, aparecem aqui. Guarde-os: não dá para recuperar depois.
  *
+ * Rastro no banco: cada serial gera uma linha em admin_auditoria (rota /manual/serial) com o nome
+ * do lote, a posição no lote e o id da conta, e os vitalícios levam o lote no
+ * provider_subscription_id ('vitalicio-manual:<lote>'). Assim dá para saber quem recebeu mesmo
+ * depois de apagar o .txt — o serial em si nunca entra no SQL.
+ *
  * Como o vitalício funciona: o serial (activation_codes) é o que a pessoa digita no app; o
  * entitlement com current_period_end vazio (NULL) é o que mantém o acesso, sem vencer nunca.
  * A licença que o app guarda vale 365 dias; passado esse prazo o app pede o serial de novo, e por
@@ -31,7 +36,24 @@ function gerarSerial() {
   return [...crypto.randomBytes(16)].map((b) => ALFABETO[b & 31]).join('');
 }
 
-function montarSql({ nome, dias, vitalicio = false, fotos = 100, agora = Date.now(), serial = gerarSerial() }) {
+/** Rótulo curto e seguro do lote, para caber no banco e não estragar o SQL. */
+function rotuloDoLote(nome) {
+  const limpo = String(nome ?? '')
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')
+    .slice(0, 40);
+  return limpo || 'sem-nome';
+}
+
+/** Escapa aspas simples do texto livre (nome do lote) antes de entrar no SQL. */
+function paraSql(texto, limite = 120) {
+  return String(texto ?? '').replace(/'/g, "''").slice(0, limite);
+}
+
+function montarSql({
+  nome, dias, vitalicio = false, fotos = 100, agora = Date.now(), serial = gerarSerial(),
+  lote = nome, indice = 1, total = 1,
+}) {
   const validade = dias ?? (vitalicio ? DIAS_VITALICIO : 30);
   const iso = new Date(agora).toISOString();
   const expira = new Date(agora + validade * UM_DIA_MS).toISOString();
@@ -40,6 +62,8 @@ function montarSql({ nome, dias, vitalicio = false, fotos = 100, agora = Date.no
   // accounts exige um email_hash único; para conta manual ele é só uma marca aleatória derivada do nome
   const marca = crypto.createHash('sha256').update(`manual:${nome}:${contaId}`).digest('hex');
   const codeHash = crypto.createHash('sha256').update(serial).digest('hex');
+  // o rastro fica no banco: lote, posição, tipo e conta. O serial nunca entra no SQL.
+  const detalhe = paraSql(`lote=${lote} item=${indice}/${total} tipo=${vitalicio ? 'vitalicio' : 'teste'} conta=${contaId}`);
   const linhas = [
     `INSERT INTO accounts (id, email_hash, created_at, updated_at) VALUES ('${contaId}', '${marca}', '${iso}', '${iso}');`,
     `INSERT INTO activation_codes (id, account_id, code_hash, issued_at, expires_at) VALUES ('${codigoId}', '${contaId}', '${codeHash}', '${iso}', '${expira}');`,
@@ -48,18 +72,26 @@ function montarSql({ nome, dias, vitalicio = false, fotos = 100, agora = Date.no
     // plan só aceita 'monthly' ou 'annual'; sem fim (NULL) o acesso não vence; a marca permite achar depois
     linhas.push(
       `INSERT INTO entitlements (id, account_id, plan, status, photo_limit, photo_used, current_period_start, current_period_end, provider_subscription_id, created_at, updated_at) ` +
-      `VALUES ('${crypto.randomUUID()}', '${contaId}', 'annual', 'active', ${Number(fotos)}, 0, '${iso}', NULL, 'vitalicio-manual', '${iso}', '${iso}');`,
+      `VALUES ('${crypto.randomUUID()}', '${contaId}', 'annual', 'active', ${Number(fotos)}, 0, '${iso}', NULL, 'vitalicio-manual:${rotuloDoLote(lote)}', '${iso}', '${iso}');`,
     );
   }
+  linhas.push(
+    `INSERT INTO admin_auditoria (id, rota, metodo, ip, status, motivo, detalhe, criado_em) ` +
+    `VALUES ('${crypto.randomUUID()}', '/manual/serial', 'SCRIPT', 'local', 200, 'serial_manual', '${detalhe}', ${agora});`,
+  );
   linhas.push('');
-  return { sql: linhas.join('\n'), serial, serialFormatado: serial.match(/.{4}/g).join('-'), contaId, expira };
+  return { sql: linhas.join('\n'), serial, serialFormatado: serial.match(/.{4}/g).join('-'), contaId, expira, detalhe };
 }
 
 /** Várias contas num só arquivo .sql. */
 function montarLote({ nome, quantidade = 1, ...resto }) {
   const itens = [];
   for (let i = 1; i <= quantidade; i++) {
-    itens.push({ nome: quantidade > 1 ? `${nome} ${i}` : nome, ...montarSql({ nome: quantidade > 1 ? `${nome} ${i}` : nome, ...resto }) });
+    const nomeDoItem = quantidade > 1 ? `${nome} ${i}` : nome;
+    itens.push({
+      nome: nomeDoItem,
+      ...montarSql({ nome: nomeDoItem, lote: nome, indice: i, total: quantidade, ...resto }),
+    });
   }
   return { itens, sql: itens.map((i) => i.sql).join('\n') };
 }
@@ -110,5 +142,6 @@ if (require.main === module) {
   }
   console.log(`Arquivo SQL: ${arquivo}`);
   console.log(`Rode (na pasta worker): npx wrangler d1 execute levia-licencas-dev --remote --file="${arquivo}"`);
+  console.log(`Rastro no banco: ${lote.itens.length} linha(s) em admin_auditoria (lote "${nome}") + o lote no direito dos vitalícios.`);
   console.log('Depois apague o arquivo .sql. Os seriais não podem ser recuperados depois.');
 }
