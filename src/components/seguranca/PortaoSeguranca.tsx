@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { View, Pressable, Switch, Alert, KeyboardAvoidingView, ScrollView } from 'react-native';
+import { View, Pressable, Switch, Alert, KeyboardAvoidingView, ScrollView, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Mail, ShieldCheck } from 'lucide-react-native';
 import { ThemedText } from '@components/ThemedText';
@@ -147,7 +147,7 @@ function TelaCriarSenha() {
     <>
       <Cabecalho
         titulo={confirmando ? t('seg.confirmarTitulo') : seg.redefinindo ? t('seg.novaSenhaTitulo') : t('seg.criarTitulo')}
-        sub={confirmando ? t('seg.confirmarSub') : t('seg.criarSub', { min: PIN_MIN, max: PIN_MAX })}
+        sub={confirmando ? t('seg.confirmarSub') : `${t('seg.criarSub', { min: PIN_MIN, max: PIN_MAX })}${Platform.OS === 'web' ? ` ${t('seg.avisoWeb')}` : ''}`}
       />
       <TecladoPin
         valor={confirmando ? confirmacao : pin}

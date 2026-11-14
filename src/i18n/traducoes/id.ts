@@ -462,6 +462,7 @@ const traducoes: TraducoesParciais = {
   "seg.confirmarTitulo": "Konfirmasi PIN",
   "seg.confirmeIdentidade": "Konfirmasi bahwa ini kamu",
   "seg.criarSub": "Pilih {min} sampai {max} angka. PIN melindungi data kesehatanmu.",
+  "seg.avisoWeb": "In the browser, the password is only a screen lock: your data stays on this device and is not encrypted.",
   "seg.criarTitulo": "Buat PIN",
   "seg.desbloquearSub": "Masukkan PIN untuk melanjutkan.",
   "seg.desbloquearTitulo": "Selamat datang kembali",

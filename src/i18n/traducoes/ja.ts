@@ -462,6 +462,7 @@ const traducoes: TraducoesParciais = {
   "seg.confirmarTitulo": "暗証番号の確認",
   "seg.confirmeIdentidade": "本人確認をしてください",
   "seg.criarSub": "{min}〜{max}桁の数字を選んでください。健康データを守ります。",
+  "seg.avisoWeb": "In the browser, the password is only a screen lock: your data stays on this device and is not encrypted.",
   "seg.criarTitulo": "暗証番号を作成",
   "seg.desbloquearSub": "続けるには暗証番号を入力してください。",
   "seg.desbloquearTitulo": "おかえりなさい",

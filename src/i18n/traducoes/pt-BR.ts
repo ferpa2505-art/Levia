@@ -461,6 +461,7 @@ const ptBR = {
   "seg.confirmarTitulo": "Confirme sua senha",
   "seg.confirmeIdentidade": "Confirme que é você",
   "seg.criarSub": "Escolha de {min} a {max} números. Ela protege seus dados de saúde.",
+  "seg.avisoWeb": "No navegador, a senha é só uma trava de tela: os dados ficam neste aparelho e não são criptografados.",
   "seg.criarTitulo": "Crie sua senha",
   "seg.desbloquearSub": "Digite sua senha para continuar.",
   "seg.desbloquearTitulo": "Bem-vindo(a) de volta",

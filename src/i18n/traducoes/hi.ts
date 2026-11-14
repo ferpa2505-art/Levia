@@ -462,6 +462,7 @@ const traducoes: TraducoesParciais = {
   "seg.confirmarTitulo": "पिन की पुष्टि करें",
   "seg.confirmeIdentidade": "पुष्टि करें कि यह आप हैं",
   "seg.criarSub": "{min} से {max} अंक चुनें। यह आपके स्वास्थ्य डेटा की रक्षा करता है।",
+  "seg.avisoWeb": "In the browser, the password is only a screen lock: your data stays on this device and is not encrypted.",
   "seg.criarTitulo": "अपना पिन बनाएँ",
   "seg.desbloquearSub": "जारी रखने के लिए पिन डालें।",
   "seg.desbloquearTitulo": "फिर से स्वागत है",

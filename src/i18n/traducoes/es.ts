@@ -462,6 +462,7 @@ const traducoes: Traducoes = {
   "seg.confirmarTitulo": "Confirma tu código",
   "seg.confirmeIdentidade": "Confirma que eres tú",
   "seg.criarSub": "Elige de {min} a {max} números. Protege tus datos de salud.",
+  "seg.avisoWeb": "In the browser, the password is only a screen lock: your data stays on this device and is not encrypted.",
   "seg.criarTitulo": "Crea tu código",
   "seg.desbloquearSub": "Escribe tu código para continuar.",
   "seg.desbloquearTitulo": "Bienvenido(a) de nuevo",
