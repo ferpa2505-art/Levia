@@ -32,7 +32,7 @@ jest.mock('expo-image-manipulator', () => {
 });
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { analisarFotoDoPrato, darConsentimentoIA, temConsentimentoIA } from '../src/utils/iaPrato';
+import { analisarFotoDoPrato, darConsentimentoIA, revogarConsentimentoIA, temConsentimentoIA } from '../src/utils/iaPrato';
 
 const itemFicticio = {
   nome: 'Alimento fictício xyzzy',
@@ -55,6 +55,30 @@ describe('Consentimento e análise por IA (dados fictícios)', () => {
   test('sem consentimento retorna false; após darConsentimentoIA retorna true', async () => {
     expect(await temConsentimentoIA()).toBe(false);
     await darConsentimentoIA();
+    expect(await temConsentimentoIA()).toBe(true);
+  });
+
+  test('revogar remove apenas a autorização e permite nova escolha', async () => {
+    mockArmazem['levia:perfil'] = 'perfil fictício';
+    mockArmazem['levia:licenca'] = 'licença fictícia';
+    mockArmazem['levia:instalacao'] = 'instalação fictícia';
+    await darConsentimentoIA();
+    await revogarConsentimentoIA();
+    expect(await temConsentimentoIA()).toBe(false);
+    expect(AsyncStorage.removeItem).toHaveBeenCalledWith('levia:consentimentoIA');
+    expect(mockArmazem).toEqual({
+      'levia:perfil': 'perfil fictício',
+      'levia:licenca': 'licença fictícia',
+      'levia:instalacao': 'instalação fictícia',
+    });
+    await darConsentimentoIA();
+    expect(await temConsentimentoIA()).toBe(true);
+  });
+
+  test('falha ao revogar é reportada e não remove a autorização', async () => {
+    await darConsentimentoIA();
+    (AsyncStorage.removeItem as jest.Mock).mockRejectedValueOnce(new Error('falha fictícia'));
+    await expect(revogarConsentimentoIA()).rejects.toThrow('falha fictícia');
     expect(await temConsentimentoIA()).toBe(true);
   });
 

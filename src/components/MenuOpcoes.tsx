@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Linking, Modal, Pressable, ScrollView, Switch, View, useWindowDimensions } from 'react-native';
+import { Alert, Linking, Modal, Pressable, ScrollView, Switch, View, useWindowDimensions } from 'react-native';
 import Constants from 'expo-constants';
 import { useRouter } from 'expo-router';
 import {
@@ -16,8 +16,31 @@ import { IDIOMAS } from '@/i18n';
 import { colors, spacing, radius, NomeTema } from '@constants/colors';
 import { estilosTema } from '@theme/estilos';
 import { suspenderBloqueio } from '@utils/bloqueioSuspenso';
+import { revogarConsentimentoIA } from '@utils/iaPrato';
 
 const URL_PRIVACIDADE = 'https://ferpa2505-art.github.io/levia-policies/privacidade.html';
+
+// Os idiomas ainda sem texto específico usam inglês. A retirada vale somente neste aparelho.
+const TEXTO_REVOGAR_IA = {
+  pt: {
+    titulo: 'Revogar autorização de fotos por IA',
+    descricao: 'Não apaga seus dados. O aviso será exibido novamente antes da próxima análise.',
+    sucesso: 'Autorização de IA revogada neste aparelho. Análises já enviadas podem ter sido processadas.',
+    erro: 'Não foi possível revogar agora. Tente novamente.',
+  },
+  es: {
+    titulo: 'Retirar autorización de fotos por IA',
+    descricao: 'No borra tus datos. Se volverá a pedir autorización antes del próximo análisis.',
+    sucesso: 'Autorización de IA retirada en este dispositivo. Los análisis ya enviados pueden haberse procesado.',
+    erro: 'No se pudo retirar la autorización. Inténtalo de nuevo.',
+  },
+  en: {
+    titulo: 'Withdraw AI photo consent',
+    descricao: 'Your data stays on this device. You will be asked again before the next analysis.',
+    sucesso: 'AI consent withdrawn on this device. Analyses already sent may have been processed.',
+    erro: 'Could not withdraw consent. Please try again.',
+  },
+} as const;
 
 type Tela = 'principal' | 'tema' | 'idioma' | 'atualizacoes' | 'backup' | 'fontes';
 
@@ -44,6 +67,7 @@ export function MenuOpcoes() {
   const { height } = useWindowDimensions();
 
   const nomeIdiomaAtual = IDIOMAS.find((i) => i.codigo === idioma)?.nome ?? idioma;
+  const textoIA = idioma.startsWith('pt') ? TEXTO_REVOGAR_IA.pt : idioma === 'es' ? TEXTO_REVOGAR_IA.es : TEXTO_REVOGAR_IA.en;
 
   function abrir() {
     setTela('principal');
@@ -52,6 +76,15 @@ export function MenuOpcoes() {
 
   function fechar() {
     setAberto(false);
+  }
+
+  async function revogarIA() {
+    try {
+      await revogarConsentimentoIA();
+      Alert.alert(textoIA.titulo, textoIA.sucesso);
+    } catch {
+      Alert.alert(textoIA.titulo, textoIA.erro);
+    }
   }
 
   /** Fecha o menu antes: o seletor de arquivos e o pedido de senha abrem por cima do app */
@@ -83,7 +116,7 @@ export function MenuOpcoes() {
         <Pressable style={styles.fundo} onPress={fechar}>
           <Pressable style={[styles.caixa, { maxHeight: height * 0.75 }]} onPress={() => {}}>
             {tela === 'principal' && (
-              <>
+              <ScrollView>
                 <ThemedText variant="subheading" color="text" style={styles.titulo}>
                   {t('menu.titulo')}
                 </ThemedText>
@@ -134,6 +167,14 @@ export function MenuOpcoes() {
                   <ChevronRight size={20} color={colors.textSecondary} strokeWidth={2} />
                 </Pressable>
 
+                <Pressable style={styles.item} accessibilityRole="button" accessibilityLabel={textoIA.titulo} onPress={revogarIA}>
+                  <ShieldCheck size={20} color={colors.primary} strokeWidth={2} />
+                  <View style={styles.itemTextos}>
+                    <ThemedText variant="body" color="text">{textoIA.titulo}</ThemedText>
+                    <ThemedText variant="small" color="textSecondary">{textoIA.descricao}</ThemedText>
+                  </View>
+                </Pressable>
+
                 <Pressable style={styles.item} onPress={() => {
                     suspenderBloqueio();
                     Linking.openURL(URL_PRIVACIDADE);
@@ -164,7 +205,7 @@ export function MenuOpcoes() {
                 <ThemedText variant="caption" color="textSecondary" style={styles.versao}>
                   Leviã v{Constants.expoConfig?.version ?? ''}
                 </ThemedText>
-              </>
+              </ScrollView>
             )}
 
             {tela === 'backup' && (
@@ -322,6 +363,6 @@ const styles = estilosTema(() => ({
   amostra: {
     width: 22,
     height: 22,
-    borderRadius: 11,
+    borderRadius: radius.sm,
   },
 }));

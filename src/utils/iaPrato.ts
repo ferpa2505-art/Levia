@@ -47,6 +47,11 @@ export async function darConsentimentoIA(): Promise<void> {
   await AsyncStorage.setItem(CHAVE_CONSENTIMENTO, '1');
 }
 
+/** Remove somente a autorização de IA deste aparelho. Registros e licença não são alterados. */
+export async function revogarConsentimentoIA(): Promise<void> {
+  await AsyncStorage.removeItem(CHAVE_CONSENTIMENTO);
+}
+
 /** JPEG de no máximo 1024 px no lado maior: ~150–300 KB, suficiente para a IA */
 async function fotoReduzidaBase64(uri: string): Promise<string> {
   const ctx = ImageManipulator.manipulate(uri);
