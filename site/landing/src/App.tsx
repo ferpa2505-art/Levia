@@ -5,6 +5,9 @@ import { WhatsIcon } from "./components/Brand";
 import { ConsentimentoPixel } from "./components/ConsentimentoPixel";
 import { iniciarPixel } from "./pixel";
 import { WHATSAPP_TRIAL } from "./config";
+import { International } from "./International";
+
+type Idioma = "pt" | "en" | "es";
 
 function MobileCta() {
   const [show, setShow] = useState(false);
@@ -26,12 +29,33 @@ function MobileCta() {
 }
 
 export default function App() {
+  const [idioma, setIdioma] = useState<Idioma | null>(null);
   useEffect(() => {
     iniciarPixel();
   }, []);
+  useEffect(() => {
+    document.documentElement.lang = idioma === "en" ? "en-GB" : idioma === "es" ? "es-ES" : "pt-BR";
+  }, [idioma]);
 
   return (
     <>
+      <div className="bg-salvia-900 px-5 py-3 text-center text-sm text-marfim">
+        <label htmlFor="idioma">Idioma / Language / Idioma: </label>
+        <select id="idioma" value={idioma ?? ""} onChange={(e) => setIdioma(e.target.value as Idioma)}
+          className="rounded-md bg-marfim px-3 py-1 text-salvia-900">
+          {!idioma && <option value="" disabled>Escolha / Choose / Elige</option>}
+          <option value="pt" lang="pt-BR">Português</option>
+          <option value="en" lang="en-GB">English</option>
+          <option value="es" lang="es-ES">Español</option>
+        </select>
+      </div>
+      {!idioma ? (
+        <main className="mx-auto max-w-3xl px-5 py-20 text-center">
+          <h1 className="font-serif text-4xl text-salvia-900">Leviã</h1>
+          <p className="mt-5 text-lg">Escolha seu idioma acima. <span lang="en-GB">Choose your language above.</span> <span lang="es-ES">Elige tu idioma arriba.</span></p>
+        </main>
+      ) : idioma !== "pt" ? <International idioma={idioma} /> : (
+      <>
       <a href="#conteudo" className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[60] focus:rounded-full focus:bg-white focus:px-4 focus:py-2">
         Pular para o conteúdo
       </a>
@@ -54,7 +78,9 @@ export default function App() {
       </main>
       <Footer />
       <MobileCta />
-      <ConsentimentoPixel />
+      </>
+      )}
+      <div lang="pt-BR"><ConsentimentoPixel /></div>
     </>
   );
 }

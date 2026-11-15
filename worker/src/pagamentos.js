@@ -83,7 +83,23 @@ const concluir = (db, provedor, idEvento, tipo, resultado, iso) => db.prepare(
   "UPDATE payment_events SET processed_at = ?, processing_result = ? WHERE provider = ? AND event_id = ? || ':' || ?",
 ).bind(iso, resultado, provedor, idEvento, tipo).run();
 
-function mensagemDeLiberacao({ fim, rotulo }, link) {
+function mensagemDeLiberacao({ fim, rotulo, plano }, link, telefone) {
+  if (telefone.startsWith('+44')) {
+    const ate = new Date(fim).toLocaleDateString('en-GB', { timeZone: 'Europe/London' });
+    return `Payment confirmed! 🎉 Your Leviã ${plano === 'annual' ? 'annual' : 'monthly'} plan is active until ${ate}.\n\n` +
+      `If you already use the app, your access is active. To activate now, open ${link}, tap "Ativar" and enter the serial in the next message 👇`;
+  }
+  if (telefone.startsWith('+34')) {
+    const ate = new Date(fim).toLocaleDateString('es-ES', { timeZone: 'Europe/Madrid' });
+    return `¡Pago confirmado! 🎉 Tu plan ${plano === 'annual' ? 'anual' : 'mensual'} de Leviã está activo hasta el ${ate}.\n\n` +
+      `Si ya usas la aplicación, tu acceso está activo. Para activar ahora, abre ${link}, pulsa "Ativar" e introduce el serial del siguiente mensaje 👇`;
+  }
+  // Sem preferência de idioma no pagamento: inglês é o fallback para outros DDIs.
+  if (!telefone.startsWith('+55')) {
+    const ate = new Date(fim).toLocaleDateString('en-GB', { timeZone: 'UTC' });
+    return `Payment confirmed! 🎉 Your Leviã ${plano === 'annual' ? 'annual' : 'monthly'} plan is active until ${ate} (UTC).\n\n` +
+      `If you already use the app, your access is active. To activate now, open ${link}, tap "Ativar" and enter the serial in the next message 👇`;
+  }
   const ate = new Date(fim).toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' });
   return `Pagamento confirmado! 🎉 Seu plano ${rotulo} do Leviã está liberado até ${ate}.\n\n` +
     `Se você já usa o app, ele já está liberado, não precisa fazer nada. Se for ativar agora, abra ${link}, toque em "Ativar" e cole o serial que vou enviar na próxima mensagem 👇`;
@@ -107,7 +123,7 @@ async function liberarAcesso(env, conta, plano, idEvento, agora, telefone, link)
   const direitoId = crypto.randomUUID();
   const serial = gerarSerial();
   const formatado = formatarSerial(serial);
-  const mensagens = [mensagemDeLiberacao({ fim, rotulo }, link), formatado];
+  const mensagens = [mensagemDeLiberacao({ fim, rotulo, plano }, link, telefone), formatado];
   await db.batch([
     db.prepare(
       `INSERT INTO entitlements (id, account_id, plan, status, photo_limit, current_period_start, current_period_end, last_payment_id, created_at, updated_at)

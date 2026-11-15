@@ -1,6 +1,7 @@
 import worker from '../worker/src/index';
 import { puxarVencidos } from '../worker/src/lembretes';
 import { criarD1, temSqlite } from '../test-utils/d1';
+import { emitirSerial } from '../worker/src/serial';
 
 /**
  * Pagamento × entrega do serial: acesso pago e mensagens do serial são gravados juntos.
@@ -25,7 +26,7 @@ const evento = (event: string, extra: any = {}) => ({
   event,
   data: {
     product: { id: 222 },
-    buyer: { checkout_phone: '11987654321' },
+    buyer: { checkout_phone: '+5511987654321' },
     purchase: { transaction: 'HPA1', price: { value: 191.71 } },
     ...extra,
   },
@@ -33,6 +34,63 @@ const evento = (event: string, extra: any = {}) => ({
 const contar = (env: any, tabela: string) => Number(env.LEVIA_DB.sql(`SELECT COUNT(*) AS n FROM ${tabela}`)[0].n);
 
 describe('Hotmart: acesso pago nunca fica sem serial', () => {
+  teste('telefone ambíguo fica pendente sem conta, direito ou serial e alerta sem dados pessoais', async () => {
+    const env = ambiente();
+    env.ALERTA_WHATSAPP = '+35699506350';
+    const corpo = evento('PURCHASE_APPROVED', {
+      buyer: { checkout_phone: '34912345678', name: 'Pessoa fictícia', email: 'ficticio@example.test' },
+    });
+    expect(await (await hotmart(env, corpo)).json()).toEqual({ ok: true, pendente: 'sem_telefone' });
+    expect(contar(env, 'accounts')).toBe(0);
+    expect(contar(env, 'entitlements')).toBe(0);
+    expect(contar(env, 'activation_codes')).toBe(0);
+    const filas = env.LEVIA_DB.sql('SELECT id, phone, texto FROM wa_outbox');
+    expect(filas).toHaveLength(1);
+    expect(filas[0].id).toMatch(/^alerta-pgto-/);
+    expect(filas[0].phone).toBe('+35699506350');
+    expect(filas[0].texto).toContain('sem telefone');
+    expect(filas[0].texto).not.toMatch(/34912345678|Pessoa fictícia|ficticio@example\.test/);
+    expect(env.LEVIA_DB.sql('SELECT processing_result FROM payment_events')[0].processing_result).toBe('sem_telefone');
+  });
+
+  teste.each([
+    ['+447123456789', '447123456789', 'Payment confirmed', 'monthly'],
+    ['+34912345678', '0034912345678', '¡Pago confirmado!', 'annual'],
+    ['+5511987654321', '5511987654321', 'Pagamento confirmado', 'annual'],
+  ])('reconcilia teste e compra %s, repete e reembolsa', async (telefone, pagamento, mensagem, plano) => {
+    const env = ambiente();
+    const emissao: any = await emitirSerial(env, { telefone });
+    const ativacao = await worker.fetch(new Request('https://w.test/v1/ativar', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ serial: emissao.serial, instalacao: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa' }),
+    }), env);
+    expect((await ativacao.json()).plano).toBe('teste');
+    const contaTeste = env.LEVIA_DB.sql('SELECT account_id FROM trials')[0].account_id;
+    const compra = evento('PURCHASE_APPROVED', {
+      buyer: { checkout_phone: pagamento },
+      product: { id: plano === 'monthly' ? 111 : 222 },
+      purchase: { transaction: 'HP-IDENTIDADE' },
+    });
+    expect((await (await hotmart(env, compra)).json()).plano).toBe(plano);
+    expect((await (await hotmart(env, compra)).json()).duplicado).toBe(true);
+    expect(contar(env, 'accounts')).toBe(1);
+    const direito = env.LEVIA_DB.sql('SELECT account_id, status FROM entitlements')[0];
+    expect(direito.account_id).toBe(contaTeste);
+    const filas = env.LEVIA_DB.sql("SELECT phone, texto FROM wa_outbox WHERE id LIKE 'pgto-%'");
+    expect(filas).toHaveLength(2);
+    expect(filas.every((m: any) => m.phone === telefone)).toBe(true);
+    expect(filas[0].texto).toContain(mensagem);
+    expect(filas[1].texto).toMatch(SERIAL);
+    const estorno = evento('PURCHASE_REFUNDED', {
+      buyer: { checkout_phone: pagamento },
+      purchase: { transaction: 'HP-IDENTIDADE' },
+    });
+    expect((await (await hotmart(env, estorno)).json()).revogado).toBe(true);
+    expect(env.LEVIA_DB.sql('SELECT status FROM entitlements')[0].status).toBe('revoked');
+    expect(env.LEVIA_DB.sql('SELECT status FROM trials')[0].status).toBe('active');
+  });
+
   teste('se a fila do WhatsApp falha, nada é liberado e o reenvio do provedor entrega acesso e serial', async () => {
     const env = ambiente();
     env.LEVIA_DB.sql(
