@@ -64,7 +64,12 @@ export function useBackupDados() {
         text: t('dados.restaurarAgora'),
         style: 'destructive',
         onPress: async () => {
-          await aplicarBackup(dados);
+          try {
+            await aplicarBackup(dados);
+          } catch {
+            Alert.alert(t('dados.erro'));
+            return;
+          }
           // recarrega o app para todas as telas lerem os dados restaurados
           await Updates.reloadAsync().catch(() => Alert.alert(t('dados.reabra')));
         },
