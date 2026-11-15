@@ -83,7 +83,9 @@ export type BackupLido =
 
 function filtrarDados(dados: unknown): Record<string, string> | null {
   if (typeof dados !== 'object' || !dados || Array.isArray(dados)) return null;
-  return Object.fromEntries(Object.entries(dados).filter(([k, v]) => chaveDoLevia(k) && typeof v === 'string')) as Record<string, string>;
+  const filtrados = Object.fromEntries(Object.entries(dados).filter(([k, v]) => chaveDoLevia(k) && typeof v === 'string')) as Record<string, string>;
+  // Um backup vazio (inclusive após excluir chaves internas) não pode substituir os dados atuais.
+  return Object.keys(filtrados).length > 0 ? filtrados : null;
 }
 
 /** Abre um backup com senha. null = senha errada ou arquivo alterado. */

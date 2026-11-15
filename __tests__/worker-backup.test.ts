@@ -109,3 +109,29 @@ test.each([null, [], 'inválido'])('recusa argumento inválido sem escrever: %s'
   expect(storage.multiSet).not.toHaveBeenCalled();
   expect(vault.gravarDado).not.toHaveBeenCalled();
 });
+
+test.each([
+  ['objeto vazio', {}],
+  ['somente cabeçalho do cofre', { [CHAVE_CABECALHO]: 'cabeçalho antigo' }],
+  ['somente chaves protegidas', { [CHAVE_SAL]: 'sal', 'levia:licenca': 'licença' }],
+  ['chaves externas ou valores inválidos', { 'outra:chave': 'valor', 'levia:invalido': 42 }],
+])('recusa backup sem dados restauráveis (%s) antes de escrever', async (_descricao, dados) => {
+  const antes = [...armazenamento];
+  await expect(aplicarBackup(dados)).rejects.toThrow('backup inválido');
+  expect(storage.getAllKeys).not.toHaveBeenCalled();
+  expect(storage.multiRemove).not.toHaveBeenCalled();
+  expect(storage.multiSet).not.toHaveBeenCalled();
+  expect(vault.gravarDado).not.toHaveBeenCalled();
+  expect([...armazenamento]).toEqual(antes);
+});
+
+test('arquivo aberto ou cifrado sem dados restauráveis é recusado', async () => {
+  jest.mocked(DocumentPicker.getDocumentAsync).mockResolvedValue({ canceled: false, assets: [{ uri: 'cache/backup', name: 'backup' }] });
+  jest.mocked(FileSystem.readAsStringAsync).mockResolvedValue(JSON.stringify({ app: 'levia', formato: 1, dados: { [CHAVE_CABECALHO]: 'antigo' } }));
+  expect(await escolherBackup()).toEqual({ ok: false, motivo: 'invalido' });
+  jest.mocked(decifrar).mockResolvedValue(JSON.stringify({ [CHAVE_CABECALHO]: 'antigo' }));
+  expect(await abrirBackupCifrado({} as any, 'senha')).toBeNull();
+  expect(storage.multiRemove).not.toHaveBeenCalled();
+  expect(storage.multiSet).not.toHaveBeenCalled();
+  expect(vault.gravarDado).not.toHaveBeenCalled();
+});
