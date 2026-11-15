@@ -87,3 +87,75 @@ O que o ensaio mostrou:
 - Comando usado: `cd worker && npx wrangler rollback <VERSION_ID> --message "motivo" --yes`.
 
 **Não foram ensaiados:** rollback do **app** e da **landing** (cada um tem seu config, ver seção 3) e o caminho de revert por PR (seção 2).
+
+## 6. Banco de dados (D1) — backup e restore
+
+> Ensaiado em **15/11/2026** num banco **separado** (`levia-restore-teste`, criado e deletado no ensaio). O banco de produção **não** foi restaurado: o restore do Time Travel é **no lugar** e reverte o banco inteiro — por isso o ensaio foi feito fora dele.
+
+O D1 `levia-licencas-dev` guarda contas, direitos, seriais, aparelhos e a auditoria: perder isso não tem rollback de código que resolva.
+
+### 6.1 Ver o ponto de restauração disponível
+
+```bash
+cd worker
+npx wrangler d1 time-travel info levia-licencas-dev
+```
+
+Sai o bookmark atual e o comando pronto para restaurar. Dois detalhes que fazem perder tempo:
+
+- **não existe `--remote`** nesse subcomando (ele é sempre remoto) — com a flag, o wrangler imprime a ajuda;
+- o `restore` **não aceita `-y`** — em terminal não interativo ele assume `yes` sozinho.
+
+### 6.2 Cópia verificável, sem risco (é o que se faz na rotina)
+
+```bash
+cd worker
+npx wrangler d1 create levia-restore-teste          # banco descartável
+npx wrangler d1 export levia-licencas-dev --remote --output=../.git/backup.sql
+npx wrangler d1 execute levia-restore-teste --remote --file=../.git/backup.sql -y
+```
+
+Depois compare as contagens dos dois lados, tabela por tabela:
+
+```sql
+SELECT (SELECT COUNT(*) FROM accounts) contas,
+       (SELECT COUNT(*) FROM entitlements) direitos,
+       (SELECT COUNT(*) FROM installations) aparelhos,
+       (SELECT COUNT(*) FROM leads) leads,
+       (SELECT COUNT(*) FROM wa_outbox) outbox;
+```
+
+Referência do ensaio de 15/11: dump de **86.622 bytes**, **15 tabelas**, **343 linhas** aplicadas, `size_after` **286.720** — igual ao de produção. Paridade exata nas 10 tabelas conferidas (contas 8, trials 6, pagamentos 3, direitos 3, seriais 8, aparelhos 5, leads 5, outbox 77, auditoria 15, alertas 2).
+
+**Apague o dump depois:** ele contém `email_ciphertext`, `phone_hash` e os demais dados de contas. Backup que fica em disco sem controle é o mesmo risco, com outro nome.
+
+### 6.3 Restore de verdade (destrutivo — só no banco descartável ou num incidente)
+
+```bash
+# 1. guarde o bookmark do estado BOM
+npx wrangler d1 time-travel info levia-restore-teste
+
+# 2. ...acontece o estrago (no ensaio: DELETE FROM leads → 3 linhas → 0)...
+
+# 3. volte para o bookmark, sem -y e sem --remote
+npx wrangler d1 time-travel restore levia-restore-teste --bookmark=<BOOKMARK>
+```
+
+O wrangler responde com o bookmark de **desfazer** (`↩️ To undo this operation…`): **anote-o**, é o seu rollback do rollback.
+
+No ensaio: `leads` foi de 3 para 0 com `DELETE`, o restore devolveu as 3 linhas, e a produção seguiu intacta (8 contas / 5 leads / 1 direito ativo).
+
+### 6.4 O que o ensaio mostrou de armadilha
+
+| Situação | O que acontece |
+|---|---|
+| `--timestamp` anterior à criação do banco | `erro 7500` (internal error). Use **bookmark**; timestamp só serve para dentro da janela de vida do banco |
+| Export | O wrangler avisa que o banco fica **indisponível durante a operação**. Foi rápido com 86 KB, mas em produção escolha horário calmo |
+| Bookmark | É **por banco**. O bookmark de produção não restaura o banco de teste nem vice-versa |
+| Restore | É **no lugar**: recuperar produção significa reverter o banco inteiro para um instante. Não existe "restaurar como outro banco" no CLI |
+
+### 6.5 O que ficou provado e o que não ficou
+
+Provado: Time Travel ativo em produção, export/import fiel (paridade linha a linha) e restore por bookmark funcionando de fato.
+
+**Não** provado: restaurar **produção** sob incidente real (é destrutivo e não foi feito) e se o app funciona apontando para um banco restaurado (o ensaio não abriu o app contra a cópia).
