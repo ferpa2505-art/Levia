@@ -27,7 +27,7 @@ A decisão final de GO é do dono do produto: o que está aqui é o que foi **pr
 | Deploy cancelado | `43644439427` (#116) — **superado** pelo `7495c77`, que já contém o `d24723f`; cancelado para liberar o `concurrency`. Nada do #116 ficou de fora |
 | Smoke | **19/19** com `--sha-worker 7495c77f…`, rodado em 15/11 contra produção |
 | Code scanning | **0 alertas abertos** |
-| Dependabot | **6 alertas, todos `low`** (eram 2 em 13/11) |
+| Dependabot | **2 alertas abertos, ambos `low`** em 15/11: `esbuild` (corrigido) e `deepmerge` (sem versão corrigida) |
 | PRs abertos | **nenhum** |
 | Working tree | limpo; só `docs/LEVIA_COMO_ATIVAR.pdf` não rastreado (decisão pendente) |
 
@@ -62,7 +62,7 @@ O **#44** e o **#109** mexeram só no **app** (`src/utils/iaPrato.ts`, `src/comp
 
 Os PRs **#105**, **#108** e **#109** também foram mesclados nesse intervalo; o sha de cada um não foi conferido aqui.
 
-Foi por causa desses PRs que o Dependabot caiu de 9 para 2 alertas em 13/11. Em 15/11 ele está em **6 alertas `low`** — as dependências novas do #116 e do #117 trouxeram avisos novos — e **não há PR aberto** no repositório.
+Foi por causa desses PRs que o Dependabot caiu de 9 para 2 alertas em 13/11. Em 15/11 há **2 alertas abertos, ambos `low`** (`esbuild` e `deepmerge`) e **nenhum PR aberto** no repositório. A contagem de "6" que apareceu antes vinha de uma leitura minha que contava o campo `severity` mais de uma vez por alerta; o painel mostra **2 abertos e 7 fechados**.
 
 **Atualização de 15/11:** a produção agora é o `7495c77`, que contém o #101 entre outros — o descompasso entre `main` e produção que existia em 13/11 acabou.
 
@@ -76,7 +76,7 @@ Foi por causa desses PRs que o Dependabot caiu de 9 para 2 alertas em 13/11. Em 
 | `main` protegida | ruleset exige `verify`, `worker-api-tests`, `CodeQL`; sem force-push, sem deleção |
 | `actionlint` no CI | job novo no `pr-checks.yml` (v1.7.12, sha256 conferido). Na estreia pegou **4 avisos do shellcheck** em workflows antigos (SC2034 em três laços, SC2086 no `py_compile`) — todos corrigidos no #118 |
 | CodeQL ligado e zerado | **0 alertas abertos** |
-| Dependabot ligado | **6 alertas, todos `low`** — subiu de 2 para 6 com as dependências novas |
+| Dependabot ligado e triado | **2 alertas abertos, ambos `low`**: `esbuild` (servidor de dev no Windows — corrigido subindo para 0.28.2) e `deepmerge` (só via `jest-config`, sem versão corrigida publicada) |
 | Smoke cobre a versão | **19/19 em produção** com `--sha-worker 7495c77f…` (15/11); a checagem de `versao`/`tag` do `/health` é nova (#118) e reprova deploy sem `--tag` |
 | Cabeçalhos de segurança no Worker | `Strict-Transport-Security`, `nosniff`, `X-Frame-Options: DENY`, `Referrer-Policy`, CSP `default-src 'none'` — conferidos por HTTP em `/health`, 404 e 401 |
 | CORS preservado sob os cabeçalhos novos | preflight de `/v1/ativar` com origem `https://leviapp.org` devolve `204` com `Access-Control-Allow-Origin` **e** a CSP; origem estranha não recebe CORS |
@@ -94,7 +94,7 @@ Foi por causa desses PRs que o Dependabot caiu de 9 para 2 alertas em 13/11. Em 
 
 ### 1.5 Falta — não bloqueia
 
-- [ ] **6 alertas `low` do Dependabot**: atualizar ou aceitar por escrito.
+- [ ] **`deepmerge` (`low`)**: sem versão corrigida publicada (4.3.1 é a última) e alcançável só por `jest-config`, com config do próprio repositório — decidir dispensar com motivo `tolerable_risk`.
 - [x] **Backup do D1 provado (15/11)**: Time Travel ativo em produção, export/import fiel e restore por bookmark executado num banco descartável. Runbook em `docs/ROLLBACK.md` §6.
 - [ ] **Restore de produção em incidente real**: o Time Travel restaura **no lugar** e reverte o banco inteiro — isso é destrutivo e não foi ensaiado. Também falta abrir o app contra um banco restaurado para provar que os dados voltam utilizáveis.
 - [ ] **Alerta de segurança**: pico de `401`, falha de webhook ou erro `5xx` não avisam ninguém. O `alerta_envios` já existe e poderia carregar isso.
