@@ -31,6 +31,7 @@ jest.mock('@utils/cofreDados', () => ({
 
 const storage = jest.mocked(AsyncStorage);
 const vault = jest.mocked(cofre);
+let armazenamento: Map<string, string>;
 const antigo = {
   [CHAVE_CABECALHO]: 'cabeçalho antigo',
   [CHAVE_SAL]: 'sal antigo',
@@ -44,7 +45,15 @@ const antigo = {
 
 beforeEach(() => {
   jest.resetAllMocks();
-  storage.getAllKeys.mockResolvedValue([CHAVE_CABECALHO, CHAVE_SAL, 'levia:licenca', 'levia:seguranca', 'levia:userProfile', 'levia:tema']);
+  armazenamento = new Map([
+    [CHAVE_CABECALHO, 'cabeçalho atual'], [CHAVE_SAL, 'sal atual'],
+    ['levia:licenca', 'licença atual'], ['levia:seguranca', 'segurança atual'],
+    ['levia:userProfile', 'perfil cifrado atual'], ['levia:tema', 'claro'],
+  ]);
+  storage.getAllKeys.mockImplementation(async () => [...armazenamento.keys()]);
+  storage.multiRemove.mockImplementation(async (chaves) => { chaves.forEach((chave) => armazenamento.delete(chave)); });
+  storage.multiSet.mockImplementation(async (pares) => { pares.forEach(([chave, valor]) => armazenamento.set(chave, valor)); });
+  vault.gravarDado.mockImplementation(async (chave, valor) => { armazenamento.set(chave, `cifrado:${valor}`); });
   vault.temCofre.mockResolvedValue(true);
   vault.estaDesbloqueado.mockReturnValue(true);
 });
@@ -72,6 +81,12 @@ test('aplicação revalida os dados e preserva o cabeçalho e a segurança atuai
   expect(storage.multiSet).toHaveBeenCalledWith([['levia:tema', 'escuro'], ['levia:reagendarLembretes', '1']]);
   expect(vault.gravarDado).toHaveBeenCalledTimes(1);
   expect(vault.gravarDado).toHaveBeenCalledWith('levia:userProfile', 'perfil novo');
+  expect(Object.fromEntries(armazenamento)).toEqual({
+    [CHAVE_CABECALHO]: 'cabeçalho atual', [CHAVE_SAL]: 'sal atual',
+    'levia:licenca': 'licença atual', 'levia:seguranca': 'segurança atual',
+    'levia:userProfile': 'cifrado:perfil novo', 'levia:tema': 'escuro',
+    'levia:reagendarLembretes': '1',
+  });
 });
 
 test.each([[false, false], [false, true], [true, false]])(
@@ -79,10 +94,12 @@ test.each([[false, false], [false, true], [true, false]])(
   async (existe, desbloqueado) => {
     vault.temCofre.mockResolvedValue(existe);
     vault.estaDesbloqueado.mockReturnValue(desbloqueado);
+    const antes = [...armazenamento];
     await expect(aplicarBackup(antigo)).rejects.toThrow();
     expect(storage.multiRemove).not.toHaveBeenCalled();
     expect(storage.multiSet).not.toHaveBeenCalled();
     expect(vault.gravarDado).not.toHaveBeenCalled();
+    expect([...armazenamento]).toEqual(antes);
   },
 );
 

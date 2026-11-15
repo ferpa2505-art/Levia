@@ -44,7 +44,7 @@ export const TEXTOS = {
       `só para liberar o acesso e dar suporte. Seus registros de saúde do app ficam no seu aparelho.\n` +
       `Política: ${pol}\n\n` +
       `${NUMEROS[0]} DIGITE *1* PARA *SIM, concordo e quero continuar*\n${NUMEROS[1]} DIGITE *2* PARA *NÃO*`,
-    consentimentoNegado: 'Tudo bem, sem problema! Nada foi guardado. Se mudar de ideia, é só me chamar. 👋',
+    consentimentoNegado: (pol) => `Tudo bem! Não criaremos um novo cadastro nem pediremos seu nome, e-mail ou objetivo. Guardamos um identificador técnico da mensagem para evitar respostas duplicadas. Política de privacidade: ${pol}`,
     pedirNome: 'Perfeito! Como posso te chamar?',
     nomeSaudacao: 'Esse parece um cumprimento 😊 Qual é o seu nome?',
     nomeInvalido: 'Não consegui entender o nome. Pode escrever só como prefere ser chamado(a)?',
@@ -94,7 +94,7 @@ export const TEXTOS = {
       `apenas para ativar o acesso e dar apoio. Os seus registos de saúde da app ficam no seu telemóvel.\n` +
       `Política: ${pol}\n\n` +
       `${NUMEROS[0]} ESCREVA *1* PARA *SIM, concordo e quero continuar*\n${NUMEROS[1]} ESCREVA *2* PARA *NÃO*`,
-    consentimentoNegado: 'Sem problema! Não foi guardado nada. Se mudar de ideias, é só falar comigo. 👋',
+    consentimentoNegado: (pol) => `Sem problema! Não criaremos um novo registo nem pediremos o seu nome, e-mail ou objetivo. Guardamos um identificador técnico da mensagem para evitar respostas duplicadas. Política de privacidade: ${pol}`,
     pedirNome: 'Perfeito! Como posso tratá-lo(a)?',
     nomeSaudacao: 'Isso parece uma saudação 😊 Qual é o seu nome?',
     nomeInvalido: 'Não consegui perceber o nome. Pode escrever apenas como prefere ser tratado(a)?',
@@ -144,7 +144,7 @@ export const TEXTOS = {
       `only to set up your access and give you support. Your health records in the app stay on your device.\n` +
       `Policy: ${pol}\n\n` +
       `${NUMEROS[0]} TYPE *1* FOR *YES, I agree and want to continue*\n${NUMEROS[1]} TYPE *2* FOR *NO*`,
-    consentimentoNegado: 'No problem! Nothing was saved. If you change your mind, just message me. 👋',
+    consentimentoNegado: (pol) => `No problem! We won't create a new registration or ask for your name, email or goal. We keep a technical message identifier to prevent duplicate responses. Privacy policy: ${pol}`,
     pedirNome: 'Great! What should I call you?',
     nomeSaudacao: "That looks like a greeting 😊 What's your name?",
     nomeInvalido: "I couldn't understand the name. Could you write just what you'd like to be called?",
@@ -194,7 +194,7 @@ export const TEXTOS = {
       `solo para activar tu acceso y darte soporte. Tus registros de salud de la app se quedan en tu dispositivo.\n` +
       `Política: ${pol}\n\n` +
       `${NUMEROS[0]} ESCRIBE *1* PARA *SÍ, estoy de acuerdo y quiero continuar*\n${NUMEROS[1]} ESCRIBE *2* PARA *NO*`,
-    consentimentoNegado: '¡Sin problema! No se guardó nada. Si cambias de opinión, escríbeme. 👋',
+    consentimentoNegado: (pol) => `¡Sin problema! No crearemos un nuevo registro ni pediremos tu nombre, correo electrónico u objetivo. Guardamos un identificador técnico del mensaje para evitar respuestas duplicadas. Política de privacidad: ${pol}`,
     pedirNome: '¡Perfecto! ¿Cómo te puedo llamar?',
     nomeSaudacao: 'Eso parece un saludo 😊 ¿Cómo te llamas?',
     nomeInvalido: 'No pude entender el nombre. ¿Puedes escribir solo cómo prefieres que te llame?',
@@ -244,7 +244,7 @@ export const TEXTOS = {
       `solo per attivare l'accesso e darti assistenza. I tuoi dati sanitari nell'app restano sul tuo dispositivo.\n` +
       `Informativa: ${pol}\n\n` +
       `${NUMEROS[0]} SCRIVI *1* PER *SÌ, accetto e voglio continuare*\n${NUMEROS[1]} SCRIVI *2* PER *NO*`,
-    consentimentoNegado: 'Nessun problema! Non è stato salvato nulla. Se cambi idea, scrivimi. 👋',
+    consentimentoNegado: (pol) => `Nessun problema! Non creeremo una nuova registrazione né chiederemo nome, email o obiettivo. Conserviamo un identificativo tecnico del messaggio per evitare risposte duplicate. Informativa sulla privacy: ${pol}`,
     pedirNome: 'Perfetto! Come posso chiamarti?',
     nomeSaudacao: 'Sembra un saluto 😊 Come ti chiami?',
     nomeInvalido: 'Non ho capito il nome. Puoi scrivere solo come preferisci essere chiamato/a?',

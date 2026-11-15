@@ -457,16 +457,27 @@ describe('LEVI: idioma, conversa, consentimento e lembretes', () => {
     expect(ok.resposta).toContain('virtual assistant');
   });
 
-  teste('responder NÃO (em inglês, 2) encerra sem guardar nada nem agendar lembretes', async () => {
-    const { db, env } = ambiente();
-    await falar(env, 'oi');
-    await falar(env, '3');
-    const r = await falar(env, '2');
-    expect(r.tipo).toBe('cancelado');
-    expect(r.resposta).toContain('Nothing was saved');
-    expect(contar(db, 'wa_sessions')).toBe(0);
-    expect(contar(db, 'leads')).toBe(0);
-    expect(pendentes(db)).toHaveLength(0);
+  teste('responder NÃO informa registro técnico e política em cada idioma, sem cadastro ou lembretes pendentes', async () => {
+    const idiomas: Record<string, string[]> = {
+      '1': ['Não criaremos um novo cadastro', 'nome, e-mail ou objetivo', 'identificador técnico', 'Política de privacidade'],
+      '2': ['Não criaremos um novo registo', 'nome, e-mail ou objetivo', 'identificador técnico', 'Política de privacidade'],
+      '3': ["won't create a new registration", 'name, email or goal', 'technical message identifier', 'Privacy policy'],
+      '4': ['No crearemos un nuevo registro', 'nombre, correo electrónico u objetivo', 'identificador técnico', 'Política de privacidad'],
+      '5': ['Non creeremo una nuova registrazione', 'nome, email o obiettivo', 'identificativo tecnico', 'Informativa sulla privacy'],
+    };
+    for (const [idioma, trechos] of Object.entries(idiomas)) {
+      const { db, env } = ambiente({ POLITICA_URL: 'https://exemplo.test/privacidade' });
+      await falar(env, 'oi');
+      await falar(env, idioma);
+      const r = await falar(env, '2');
+      expect(r.tipo).toBe('cancelado');
+      for (const trecho of trechos) expect(r.resposta).toContain(trecho);
+      expect(r.resposta).toContain('https://exemplo.test/privacidade');
+      expect(contar(db, 'wa_sessions')).toBe(0);
+      expect(contar(db, 'leads')).toBe(0);
+      expect(pendentes(db)).toHaveLength(0);
+      expect(db.sql('SELECT msg_id FROM wa_processed WHERE msg_id = ?', `lv-${n}`)).toHaveLength(1);
+    }
   });
 
   teste('cumprimentos não viram nome; "oi, sou a Renata" vira Renata', async () => {
@@ -592,6 +603,24 @@ describe('LEVI: idioma, conversa, consentimento e lembretes', () => {
     await falar(env, 'oi');
     await falar(env, '3');
     expect((await falar(env, 'stop')).resposta).toContain("won't message you anymore");
+  });
+
+  teste('PARAR durante confirmação de APAGAR encerra sem excluir conta ou serial', async () => {
+    const { db, env } = ambiente();
+    await ate_o_nome(env);
+    await falar(env, 'Maria Silva');
+    await falar(env, '2');
+    const fim = await falar(env, '3');
+    const serial = fim.resposta.match(/[A-HJ-NP-Z2-9]{4}(?:-[A-HJ-NP-Z2-9]{4}){3}/)![0];
+    expect((await falar(env, 'APAGAR')).tipo).toBe('confirmar_apagar');
+    const r = await falar(env, 'PARAR');
+    expect(r.tipo).toBe('parou');
+    expect(r.resposta).toBe(TEXTOS['pt-BR'].parar);
+    expect(contar(db, 'wa_sessions')).toBe(0);
+    expect(pendentes(db)).toHaveLength(0);
+    for (const tabela of ['leads', 'accounts', 'activation_codes']) expect(contar(db, tabela)).toBe(1);
+    expect((await falar(env, '1')).tipo).toBe('ja_finalizado');
+    expect((await ativar(env, serial, A)).status).toBe(200);
   });
 
   teste('APAGAR pede confirmação e então exclui cadastro, conta e serial', async () => {
