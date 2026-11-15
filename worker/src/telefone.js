@@ -1,8 +1,8 @@
 /**
  * Telefone em E.164 (+DDI…), para compradores de qualquer país.
  *
- * O DDI explícito manda. Sem + ou 00, todas as interpretações plausíveis são consideradas;
- * se houver conflito ou não houver interpretação conhecida, retorna null para revisão.
+ * O DDI explícito manda. Sem + ou 00, números que também parecem nacionais brasileiros
+ * ficam pendentes: a lista de DDIs abaixo não é completa e não prova ausência de conflito.
  */
 const DDI_BR = '55';
 // DDI conhecidos (espelha a lista de fusos de lembretes.js) com o tamanho máximo do número
@@ -36,8 +36,8 @@ export function normalizarTelefoneE164(bruto) {
   if (!digitos) return null;
 
   if (!comDDI) {
+    if (brasileiroPlausivel(digitos)) return null;
     const candidatos = new Set();
-    if (brasileiroPlausivel(digitos)) candidatos.add(`${DDI_BR}${digitos}`);
     for (const [ddi, maxNacional] of DDIS_CONHECIDOS) {
       if (!digitos.startsWith(ddi)) continue;
       const nacional = digitos.slice(ddi.length);

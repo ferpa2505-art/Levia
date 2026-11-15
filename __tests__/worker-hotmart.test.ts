@@ -202,6 +202,8 @@ describe('telefone internacional', () => {
     expect(r.plano).toBe('monthly');
     const msgs = await puxarVencidos(env, Date.now() + 1000);
     expect(msgs).toHaveLength(2);
+    expect(msgs[0].texto).toContain('Payment confirmed');
+    expect(msgs[0].texto).toContain('(UTC)');
     expect(msgs[1].telefone).toBe('35699506350');
     expect(msgs[1].texto).toMatch(/^[A-HJ-NP-Z2-9]{4}(-[A-HJ-NP-Z2-9]{4}){3}$/);
   });
@@ -212,7 +214,8 @@ describe('telefone internacional', () => {
     ['+55 11 98765-4321', '+5511987654321'],
     ['11987654321', null], // pode ser Brasil ou DDI 1
     ['(11) 3456-7890', null], // também admite DDI 1 pelo analisador
-    ['21987654321', '+5521987654321'], // nenhuma outra interpretação conhecida
+    ['21987654321', null], // lista de DDIs incompleta não comprova ausência de conflito
+    ['79912345678', null], // pode ser +7, DDI fora da lista
     ['5511987654321', '+5511987654321'],
     ['+34912345678', '+34912345678'],
     ['0034912345678', '+34912345678'],
