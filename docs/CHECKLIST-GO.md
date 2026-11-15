@@ -1,9 +1,11 @@
 # Checklist de GO — Leviã e Prof. Controller
 
-Estado conferido em 15/11/2026, por API do GitHub, `git`, D1 remoto (`levia-licencas-dev`) e requisições HTTP reais.
+Estado conferido em 15/11/2026, às **04:12 UTC**, por API do GitHub, `git`, D1 remoto (`levia-licencas-dev`) e requisições HTTP reais.
 A decisão final de GO é do dono do produto: o que está aqui é o que foi **provado** e o que **falta**.
 
-- Leviã: `main` = **`7495c77`** (19 commits desde o `8e5f849` de 13/11)
+> **Todo sha neste documento é um retrato datado.** `main` muda a cada merge e este arquivo não se atualiza sozinho: leia como "o que era verdade às 04:12 UTC de 15/11", não como estado atual. Para o agora, use `git log -1` e o `/health` de produção.
+
+- Leviã: `main` = **`033c0e6`** às 04:12 UTC (22 commits desde o `8e5f849` de 13/11)
 - Prof. Controller: `main` local = **`319e373`** — só o sha foi relido em 15/11; o resto da seção 2 continua sendo a conferência de 13/11
 
 > Este documento agora vive aqui, em `Levia/docs/CHECKLIST-GO.md`, para ter histórico no git. A seção 2 trata do **Prof. Controller**, que tem repositório próprio: ela está junto por conveniência da decisão de GO e pode migrar para lá depois.
@@ -16,11 +18,12 @@ A decisão final de GO é do dono do produto: o que está aqui é o que foi **pr
 
 | Item | Valor |
 |---|---|
-| `main` | **`7495c77`** — 19 commits desde o `8e5f849` |
-| Produção (`/health`) | `{"ok":true,"versao":"7953cb5f-efbd-44ea-8df5-0e55e130fbc6","tag":"7495c77f5eb6f5b2752f8eec29d4df8ca1df1a59"}` — tag = `main`, confirmado por HTTP |
+| `main` | **`033c0e6`** — retrato de 15/11 04:12 UTC; 22 commits desde o `8e5f849` |
+| Produção do Worker (`/health`) | `{"ok":true,"versao":"7953cb5f-efbd-44ea-8df5-0e55e130fbc6","tag":"7495c77f5eb6f5b2752f8eec29d4df8ca1df1a59"}` — build de `7495c77`, conferido por HTTP. Não está atrasado: depois dele o `main` só recebeu mudanças de **app** |
 | Deploy do Worker | ✅ `43645280749` `success` — passos `Aplicar migrations do D1`, `Deploy`, `Check /health` e `Check /versao` todos verdes |
 | Deploy Landing (`www.leviapp.org`) | ✅ `43645280949` `success`; `versao.json` = **`7495c77f…`** |
-| Deploy App (`leviapp.org`) | ✅ `43645280753` `success`; `sw.js` em produção = **`levia-v2-7495c77`** |
+| App em produção (`leviapp.org`) | `sw.js` = **`levia-v2-7495c77`** — ou seja, **sem** o #44 e o #109 |
+| Deploy App pendente | ⚠️ `43659104654` (#109) em **`waiting` desde 00:37 UTC**, job `build-deploy` sem nenhum passo iniciado, aguardando a aprovação de `production` (`required_reviewers`). **Enquanto não for aprovado, #44 e #109 não estão no ar** |
 | Deploy cancelado | `43644439427` (#116) — **superado** pelo `7495c77`, que já contém o `d24723f`; cancelado para liberar o `concurrency`. Nada do #116 ficou de fora |
 | Smoke | **19/19** com `--sha-worker 7495c77f…`, rodado em 15/11 contra produção |
 | Code scanning | **0 alertas abertos** |
@@ -52,6 +55,10 @@ A decisão final de GO é do dono do produto: o que está aqui é o que foi **pr
 | **#116** | correções da auditoria de segurança (HSTS, webhook Hotmart, plano por código, rate limit, retenção de leads) — **PR do dono, não revisado nesta sessão** | `d24723f` |
 | **#117** | landing: `script-src` com `sha256` calculado no build no lugar de `'unsafe-inline'` | `acec09e` |
 | **#118** | `actionlint` no PR checks e smoke exigindo `versao`/`tag` do `/health` | `7495c77` |
+| **#44** | WhatsApp inbound: bug de escopo de variável e outras correções do fluxo de entrada | `96e1f0d` |
+| **#109** | revogar o consentimento de fotos por IA **sem** apagar os dados do usuário | `cbad668` |
+
+O **#44** e o **#109** mexeram só no **app** (`src/utils/iaPrato.ts`, `src/components/MenuOpcoes.tsx` e testes), não no Worker — é por isso que o `/health` continua em `7495c77` sem estar atrasado, e é por isso que a aprovação que falta é a do **Deploy App**.
 
 Os PRs **#105**, **#108** e **#109** também foram mesclados nesse intervalo; o sha de cada um não foi conferido aqui.
 
