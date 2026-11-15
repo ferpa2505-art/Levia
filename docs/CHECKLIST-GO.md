@@ -83,6 +83,7 @@ Foi por causa desses PRs que o Dependabot caiu de 9 para 2 alertas em 13/11. Em 
 | Landing sem `'unsafe-inline'` no `script-src` | hashes `sha256` calculados no build; se a CSP sair furada, o **build falha**. Em produção conferido por HTTP |
 | Landing: página e Pixel funcionam sob a CSP nova | página renderiza sem violação no console; com consentimento, `fbevents.js`, `signals/config` e `PageView` em `200` |
 | Testes | worker: **268/268** em 17 suites, incluindo 7 novos de cabeçalhos; smoke unitário: 14/14 |
+| Backup do D1 provado | export de produção (**86.622 bytes**, 15 tabelas) → import num banco separado, **paridade exata em 10 tabelas**; e restore por bookmark de verdade (`DELETE` de 3 leads → restore devolveu os 3). Produção intocada |
 
 ### 1.4 Falta — bloqueia o GO
 
@@ -94,7 +95,8 @@ Foi por causa desses PRs que o Dependabot caiu de 9 para 2 alertas em 13/11. Em 
 ### 1.5 Falta — não bloqueia
 
 - [ ] **6 alertas `low` do Dependabot**: atualizar ou aceitar por escrito.
-- [ ] **Backup com restore testado**: o D1 tem Time Travel da Cloudflare (30 d, recurso da plataforma) e houve dois exports manuais em 13/11, mas **nenhum restore foi ensaiado**.
+- [x] **Backup do D1 provado (15/11)**: Time Travel ativo em produção, export/import fiel e restore por bookmark executado num banco descartável. Runbook em `docs/ROLLBACK.md` §6.
+- [ ] **Restore de produção em incidente real**: o Time Travel restaura **no lugar** e reverte o banco inteiro — isso é destrutivo e não foi ensaiado. Também falta abrir o app contra um banco restaurado para provar que os dados voltam utilizáveis.
 - [ ] **Alerta de segurança**: pico de `401`, falha de webhook ou erro `5xx` não avisam ninguém. O `alerta_envios` já existe e poderia carregar isso.
 - [ ] 429 ao vivo em produção (o teste automatizado cobre).
 - [ ] Rollback de **app** e **landing** (só o do Worker foi ensaiado).
