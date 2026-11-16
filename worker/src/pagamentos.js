@@ -1,4 +1,4 @@
-import { avisarPagamentoNaoReconhecido } from './avisos';
+import { avisarPagamentoNaoReconhecido, avisarEstornoSemRevogacao } from './avisos';
 import { normalizarTelefoneE164 } from './telefone';
 import { sha256 } from './cripto';
 import { contaDoTelefone, formatarSerial, gerarSerial } from './serial';
@@ -179,6 +179,30 @@ export async function processarPagamento(env, provedor, tipo, dados, corpo, agor
 }
 
 async function processarEventoRegistrado(env, db, provedor, tipo, dados, iso, agora, estado) {
+  // Estorno/chargeback/cancelamento revoga pelo ID da transação (o mesmo gravado em
+  // entitlements.last_payment_id na liberação). Não depende do telefone: se o número do evento
+  // não for reconhecido, o acesso pago ainda assim é revogado. Sem nada para revogar, a equipe é avisada.
+  if (tipo === 'reverted') {
+    const [direitos] = await db.batch([
+      db.prepare(
+        "UPDATE entitlements SET status = 'revoked', updated_at = ?1 WHERE last_payment_id = ?2 AND status = 'active'",
+      ).bind(iso, dados.idEvento),
+      db.prepare(
+        `UPDATE activation_codes SET invalidated_at = ?1 WHERE invalidated_at IS NULL
+         AND entitlement_id IN (SELECT id FROM entitlements WHERE last_payment_id = ?2)`,
+      ).bind(iso, dados.idEvento),
+    ]);
+    if ((direitos?.meta?.changes ?? 0) > 0) {
+      estado.acessoAlterado = true;
+      await concluir(db, provedor, dados.idEvento, tipo, 'revogado', iso);
+      return resposta({ ok: true, revogado: true });
+    }
+    await concluir(db, provedor, dados.idEvento, tipo, 'nada_a_revogar', iso);
+    console.error(`${provedor}: estorno sem acesso ativo para revogar`, dados.idEvento);
+    await avisarEstornoSemRevogacao(env, { provedor, idEvento: dados.idEvento, agora });
+    return resposta({ ok: true, pendente: 'nada_a_revogar' });
+  }
+
   const telefone = telefoneDoComprador(dados.telefone, dados.paisIso);
   if (!telefone) {
     await concluir(db, provedor, dados.idEvento, tipo, 'sem_telefone', iso);
@@ -228,21 +252,6 @@ async function processarEventoRegistrado(env, db, provedor, tipo, dados, iso, ag
       });
     }
     return resposta({ ok: true, pendente: 'conta_indisponivel' });
-  }
-
-  if (tipo === 'reverted') {
-    await db.batch([
-      db.prepare(
-        "UPDATE entitlements SET status = 'revoked', updated_at = ?1 WHERE account_id = ?2 AND last_payment_id = ?3 AND status = 'active'",
-      ).bind(iso, conta.id, dados.idEvento),
-      db.prepare(
-        `UPDATE activation_codes SET invalidated_at = ?1 WHERE invalidated_at IS NULL
-         AND entitlement_id IN (SELECT id FROM entitlements WHERE account_id = ?2 AND last_payment_id = ?3)`,
-      ).bind(iso, conta.id, dados.idEvento),
-    ]);
-    estado.acessoAlterado = true;
-    await concluir(db, provedor, dados.idEvento, tipo, 'revogado', iso);
-    return resposta({ ok: true, revogado: true });
   }
 
   const link = `${env.APP_BASE_URL || 'https://leviapp.org'}/ativar`;

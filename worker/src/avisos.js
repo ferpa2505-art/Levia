@@ -150,6 +150,36 @@ export async function avisarPagamentoNaoReconhecido(env, {
   return { whatsapp: whatsapp === true, email };
 }
 
+/**
+ * Estorno/chargeback que não encontrou acesso ativo ligado à transação. Pode ser normal (a compra
+ * nunca foi liberada) ou um acesso liberado à mão que continua ativo: a equipe confere.
+ * Mesmos canais e mesma regra de não repetir do alerta de pagamento.
+ */
+export async function avisarEstornoSemRevogacao(env, { provedor, idEvento, agora = Date.now() }) {
+  const texto = [
+    '⚠️ Estorno sem acesso para revogar',
+    `Provedor: ${provedor}`,
+    `Compra: ${idEvento}`,
+    'Nenhum acesso ativo estava ligado a esta compra.',
+    'Se o acesso foi liberado à mão (ex.: compra que ficou pendente), revogue o serial manualmente.',
+  ].join('\n');
+  const id = `alerta-estorno-${provedor}-${idEvento}`.slice(0, 200);
+  const destino = String(env.ALERTA_WHATSAPP ?? '').replace(/\D/g, '');
+
+  let whatsapp = null;
+  if (destino && env.LEVIA_DB) {
+    const r = await tentar(() => env.LEVIA_DB.prepare(
+      'INSERT OR IGNORE INTO wa_outbox (id, phone, texto, enviar_em, criado_em) VALUES (?, ?, ?, ?, ?)',
+    ).bind(id, `+${destino}`, texto, agora, agora).run(), 'alerta de estorno');
+    whatsapp = r ? r.meta?.changes === 1 : false;
+    if (whatsapp === false) return { whatsapp: false, email: false, repetido: true };
+  }
+
+  const email = await avisarPagamentoPorEmail(env, texto, { provedor, idEvento });
+  if (!whatsapp && !email) console.error('alerta de estorno: nenhum canal configurado ou todos falharam');
+  return { whatsapp: whatsapp === true, email };
+}
+
 /** Pedidos de falar com uma pessoa, nos 5 idiomas do atendimento. */
 const PEDIDOS = [
   'atendente', 'falar com uma pessoa', 'falar com alguem', 'falar com humano', 'pessoa de verdade', 'humano',
