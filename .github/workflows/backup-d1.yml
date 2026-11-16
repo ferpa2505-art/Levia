@@ -1,0 +1,109 @@
+name: Backup D1 (produção → R2) + teste de restore
+
+# Cópia semanal do banco de PRODUÇÃO (levia-licencas-dev, nome histórico) fora do D1.
+# O Time Travel do D1 cobre só os últimos dias; este arquivo é a cópia que sobrevive a
+# um banco apagado, a uma conta comprometida ou a um erro descoberto tarde.
+#
+# Fluxo: exporta → compacta → envia ao bucket R2 privado → restaura num banco TEMPORÁRIO
+# → confere a contagem de linhas de cada tabela → apaga o banco temporário.
+# O conteúdo do banco nunca é impresso no log nem vira artefato do GitHub (dados pessoais).
+#
+# Precisa do token CLOUDFLARE_API_TOKEN com: D1 Edit (já usado nas migrations) e
+# Workers R2 Storage Edit. Sem R2, o passo de envio falha e o log diz o motivo.
+
+on:
+  schedule:
+    - cron: "41 2 * * 0" # domingo 02:41 UTC, antes da retenção diária do Worker (03:00)
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: backup-d1-producao
+  cancel-in-progress: false
+
+env:
+  BANCO: levia-licencas-dev
+  BUCKET: levia-backups
+  CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+  CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+  WRANGLER_SEND_METRICS: "false"
+
+jobs:
+  backup:
+    runs-on: ubuntu-26.04
+    timeout-minutes: 30
+    steps:
+      - name: Exportar o banco de produção
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/bkp"
+          npx --yes wrangler@4 d1 export "$BANCO" --remote --output="$RUNNER_TEMP/bkp/backup.sql"
+          tamanho=$(stat -c %s "$RUNNER_TEMP/bkp/backup.sql")
+          echo "tamanho do export: $tamanho bytes"
+          if [ "$tamanho" -lt 1000 ]; then
+            echo "::error::Export pequeno demais ($tamanho bytes): algo deu errado, não vou enviar."
+            exit 1
+          fi
+
+      - name: Enviar ao R2 (bucket privado)
+        run: |
+          set -euo pipefail
+          cd "$RUNNER_TEMP/bkp"
+          if ! npx --yes wrangler@4 r2 bucket info "$BUCKET" > /dev/null 2>&1; then
+            echo "bucket $BUCKET não existe: criando"
+            npx --yes wrangler@4 r2 bucket create "$BUCKET"
+          fi
+          carimbo=$(date -u +%Y-%m-%d_%H%M)
+          gzip -9 -c backup.sql > backup.sql.gz
+          sha256sum backup.sql.gz | cut -d' ' -f1 > backup.sql.gz.sha256
+          chave="d1/$BANCO/$carimbo.sql.gz"
+          npx --yes wrangler@4 r2 object put "$BUCKET/$chave" --file=backup.sql.gz --content-type=application/gzip --remote
+          npx --yes wrangler@4 r2 object put "$BUCKET/$chave.sha256" --file=backup.sql.gz.sha256 --content-type=text/plain --remote
+          echo "enviado: r2://$BUCKET/$chave (sha256 $(cat backup.sql.gz.sha256))" | tee -a "$GITHUB_STEP_SUMMARY"
+
+      - name: Restaurar num banco temporário e conferir
+        run: |
+          set -euo pipefail
+          cd "$RUNNER_TEMP/bkp"
+          temp="levia-restore-test-${GITHUB_RUN_ID}"
+          echo "TEMP_DB=$temp" >> "$GITHUB_ENV"
+          npx --yes wrangler@4 d1 create "$temp" > /dev/null
+          npx --yes wrangler@4 d1 execute "$temp" --remote --file=backup.sql --yes > /dev/null
+
+          # Tabelas do banco restaurado (ignora as internas do SQLite e da Cloudflare)
+          npx --yes wrangler@4 d1 execute "$temp" --remote --json --command \
+            "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' AND name NOT LIKE '_cf_%' ORDER BY name" \
+            | jq -r '.[0].results[].name' > tabelas.txt
+          echo "tabelas restauradas: $(wc -l < tabelas.txt)"
+          if [ ! -s tabelas.txt ]; then
+            echo "::error::Restore não criou nenhuma tabela."; exit 1
+          fi
+
+          # Compara: linhas INSERT no arquivo exportado x linhas no banco restaurado
+          falhas=0
+          echo "| tabela | no backup | restaurado |" >> "$GITHUB_STEP_SUMMARY"
+          echo "|---|---|---|" >> "$GITHUB_STEP_SUMMARY"
+          while read -r t; do
+            esperado=$(grep -cE "^INSERT INTO \"?${t}\"? " backup.sql || true)
+            obtido=$(npx --yes wrangler@4 d1 execute "$temp" --remote --json --command "SELECT count(*) AS n FROM \"$t\"" | jq -r '.[0].results[0].n')
+            echo "| $t | $esperado | $obtido |" >> "$GITHUB_STEP_SUMMARY"
+            if [ "$esperado" != "$obtido" ]; then
+              echo "::error::Tabela $t: backup tem $esperado linhas, restaurado tem $obtido."
+              falhas=$((falhas + 1))
+            fi
+          done < tabelas.txt
+          if [ "$falhas" -gt 0 ]; then
+            echo "::error::Teste de restore falhou em $falhas tabela(s). O arquivo foi enviado, mas não confie nele."
+            exit 1
+          fi
+          echo "restore conferido: todas as tabelas batem" | tee -a "$GITHUB_STEP_SUMMARY"
+
+      - name: Apagar o banco temporário
+        if: always() && env.TEMP_DB != ''
+        run: npx --yes wrangler@4 d1 delete "$TEMP_DB" --skip-confirmation
+
+      - name: Limpar arquivos locais
+        if: always()
+        run: rm -rf "$RUNNER_TEMP/bkp"
