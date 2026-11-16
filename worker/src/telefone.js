@@ -25,7 +25,14 @@ function brasileiroPlausivel(digitos) {
   return digitos.length === 11 ? assinante.startsWith('9') : /^[2-5]/.test(assinante);
 }
 
-export function normalizarTelefoneE164(bruto) {
+/**
+ * @param {string|number} bruto telefone como veio do checkout ou formulário
+ * @param {{ paisIso?: string }} [contexto] país do comprador informado pelo próprio checkout
+ *   (Hotmart: buyer.address.country_iso). Com "BR", um número nacional brasileiro sem DDI
+ *   recebe o +55: o país declarado é a prova que falta para desfazer a ambiguidade
+ *   (ex.: "31987654321" é BH ou +31 Holanda). Sem país, a ambiguidade continua dando null.
+ */
+export function normalizarTelefoneE164(bruto, { paisIso } = {}) {
   if (typeof bruto !== 'string' && typeof bruto !== 'number') return null;
   const original = String(bruto).trim();
   if (!original) return null;
@@ -36,6 +43,10 @@ export function normalizarTelefoneE164(bruto) {
   if (!digitos) return null;
 
   if (!comDDI) {
+    if (String(paisIso ?? '').trim().toUpperCase() === 'BR') {
+      const semZero = digitos.replace(/^0+/, ''); // tronco brasileiro: 0 + DDD + número
+      if (brasileiroPlausivel(semZero)) return `+${DDI_BR}${semZero}`;
+    }
     if (brasileiroPlausivel(digitos)) return null;
     const candidatos = new Set();
     for (const [ddi, maxNacional] of DDIS_CONHECIDOS) {

@@ -230,4 +230,47 @@ describe('telefone internacional', () => {
   ] as [string, string | null][])('normaliza %s para %s', (entrada, esperado) => {
     expect(telefoneDoComprador(entrada)).toBe(esperado);
   });
+
+  test.each([
+    // país declarado BR desfaz a ambiguidade do número nacional sem DDI
+    ['11987654321', 'BR', '+5511987654321'],
+    ['(11) 3456-7890', 'BR', '+551134567890'],
+    ['011987654321', 'BR', '+5511987654321'],
+    ['31987654321', 'br', '+5531987654321'],
+    ['5511987654321', 'BR', '+5511987654321'],
+    ['+35699506350', 'BR', '+35699506350'], // DDI explícito sempre manda
+    ['35699506350', 'BR', '+35699506350'], // não tem formato brasileiro: segue a regra de DDI
+    // país diferente de BR (ou ausente) mantém a recusa segura
+    ['11987654321', 'US', null],
+    ['31987654321', 'NL', null],
+    ['11987654321', '', null],
+    ['12345', 'BR', null],
+  ] as [string, string, string | null][])('com país %s/%s normaliza para %s', (entrada, pais, esperado) => {
+    expect(telefoneDoComprador(entrada, pais)).toBe(esperado);
+  });
+
+  teste('comprador do Brasil com número sem DDI recebe o serial no +55', async () => {
+    const env = ambiente();
+    const r = await (await hotmart(env, evento('PURCHASE_APPROVED', {
+      buyer: { checkout_phone: '11987654321', address: { country_iso: 'BR' } },
+      product: { id: 111 },
+      purchase: { transaction: 'HP-BR-SEM-DDI', price: { value: 19.97 } },
+    }))).json();
+    expect(r.plano).toBe('monthly');
+    expect(r.pendente).toBeUndefined();
+    const msgs = await puxarVencidos(env, Date.now() + 1000);
+    expect(msgs).toHaveLength(2);
+    expect(msgs[0].texto).toContain('Pagamento confirmado');
+    expect(msgs[1].telefone).toBe('5511987654321');
+  });
+
+  teste('número sem DDI e sem país continua pendente (não adivinha)', async () => {
+    const env = ambiente();
+    const r = await (await hotmart(env, evento('PURCHASE_APPROVED', {
+      buyer: { checkout_phone: '11987654321' },
+      product: { id: 111 },
+      purchase: { transaction: 'HP-SEM-PAIS', price: { value: 19.97 } },
+    }))).json();
+    expect(r.pendente).toBe('sem_telefone');
+  });
 });

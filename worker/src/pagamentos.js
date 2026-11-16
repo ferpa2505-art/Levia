@@ -51,8 +51,8 @@ export async function lerCorpo(request) {
 }
 
 /** Telefone do comprador em E.164: respeita o DDI que veio no checkout (ver telefone.js). */
-export function telefoneDoComprador(bruto) {
-  return normalizarTelefoneE164(bruto);
+export function telefoneDoComprador(bruto, paisIso) {
+  return normalizarTelefoneE164(bruto, { paisIso });
 }
 
 /**
@@ -179,7 +179,7 @@ export async function processarPagamento(env, provedor, tipo, dados, corpo, agor
 }
 
 async function processarEventoRegistrado(env, db, provedor, tipo, dados, iso, agora, estado) {
-  const telefone = telefoneDoComprador(dados.telefone);
+  const telefone = telefoneDoComprador(dados.telefone, dados.paisIso);
   if (!telefone) {
     await concluir(db, provedor, dados.idEvento, tipo, 'sem_telefone', iso);
     console.error(`${provedor}: compra sem telefone válido`, dados.idEvento);
