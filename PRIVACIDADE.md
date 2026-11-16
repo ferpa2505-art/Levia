@@ -41,9 +41,11 @@ O acesso ao Leviã é liberado por um **serial** enviado pelo WhatsApp. O atendi
 
 - nome, número de telefone, e-mail (se informado), objetivo escolhido, data e canal do consentimento;
 - a etapa da conversa e identificadores de mensagens, para não repetir respostas;
-- uma conta com marcas irreversíveis (hash) do telefone e do e-mail, sem o serial em texto: do serial guardamos apenas o hash;
+- uma conta com marcas irreversíveis (hash) do telefone e do e-mail e o hash do serial para validação; o serial de pagamento pode constar temporariamente em texto na fila de mensagens `wa_outbox` para envio;
 - os aparelhos ativados (um código aleatório por instalação, no máximo 2 por serial), as datas de uso e o período de teste ou assinatura;
 - contadores técnicos para limitar abuso, que incluem o endereço IP e são apagados automaticamente depois de cerca de 31 dias.
+
+Se você recusar o consentimento, não criamos um novo cadastro nem pedimos nome, e-mail ou objetivo. Um identificador técnico da mensagem é guardado para evitar processamento duplicado.
 
 **Lembretes:** se você parar de responder, o LEVI pode enviar até 3 mensagens (30 segundos, 3 minutos e, no dia seguinte às 19h no fuso do país do seu número); quem já consentiu também pode receber um vídeo de apresentação. Responda **PARAR** e não escrevemos mais.
 
@@ -104,7 +106,7 @@ Alguns desses prestadores processam dados fora do Brasil. Fazemos isso para pres
 
 ## 7. Backup, relatórios e exportação
 
-O arquivo de backup ou relatório é criado no seu aparelho e só sai dele para o destino que você escolher. O backup pode ser protegido com senha (AES-256-GCM); nós não temos a senha nem como recuperá-la. O identificador de instalação e a licença não entram no backup. **Atenção:** no Android as fotos dos pratos não entram no backup; no PWA elas ficam dentro do registro da refeição e **entram no arquivo**. Guarde o arquivo com cuidado, de preferência com senha.
+O arquivo de backup ou relatório é criado no seu aparelho e só sai dele para o destino que você escolher. O backup pode ser protegido com senha (AES-256-GCM); nós não temos a senha nem como recuperá-la. O identificador de instalação, a licença e a configuração de segurança do cofre não entram no backup. Para restaurar, inclusive em outro aparelho, é preciso primeiro criar e desbloquear o cofre nesse aparelho. A restauração não é transacional: uma falha ou interrupção durante as gravações pode deixar os dados parcialmente restaurados. **Atenção:** no Android as fotos dos pratos não entram no backup; no PWA elas ficam dentro do registro da refeição e **entram no arquivo**. Guarde o arquivo com cuidado, de preferência com senha.
 
 ## 8. Por quanto tempo guardamos
 
@@ -118,7 +120,7 @@ Pelo art. 18 da LGPD você pode pedir confirmação do tratamento, acesso, corre
 
 ## 10. Segurança
 
-Usamos conexão cifrada (HTTPS), guardamos o serial e as marcas de telefone e e-mail apenas como hash, assinamos as licenças, limitamos tentativas, registramos o acesso às rotas administrativas (seção 4.5) e mantemos as chaves fora do código. Nenhum sistema é 100% seguro; em caso de incidente que possa causar dano relevante, avisaremos você e a ANPD conforme a lei.
+Usamos conexão cifrada (HTTPS), guardamos as marcas de telefone e e-mail e o hash do serial para validação; o serial de pagamento pode constar temporariamente em texto na fila `wa_outbox` (seção 4.1). Assinamos as licenças, limitamos tentativas, registramos o acesso às rotas administrativas (seção 4.5) e mantemos as chaves fora do código. Nenhum sistema é 100% seguro; em caso de incidente que possa causar dano relevante, avisaremos você e a ANPD conforme a lei.
 
 ## 11. Crianças e aviso de saúde
 

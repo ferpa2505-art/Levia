@@ -4,7 +4,7 @@
  * Etapas (a autorização vem ANTES de qualquer dado pessoal):
  *   sem sessão     → LEVI se apresenta e pergunta o idioma (1 BR, 2 PT, 3 EN, 4 ES, 5 IT)
  *   idioma         → pede o consentimento (1 = SIM, 2 = NÃO), já no idioma escolhido
- *   consentimento  → 1: pede o nome | 2: encerra sem guardar nada
+ *   consentimento  → 1: pede o nome | 2: encerra sem criar cadastro
  *   nome           → pede o e-mail (opcional: 2 pula)
  *   e-mail         → pede o objetivo (opções numeradas)
  *   objetivo       → cria o lead; manda o serial em mensagens separadas (explicação, serial sozinho, como usar) e o vídeo
@@ -355,6 +355,12 @@ export async function processarMensagemWhatsApp(env, phone, texto, messageId, ag
     return { tipo, resposta };
   };
 
+  // parar: nada de lembretes nem novas mensagens por iniciativa do LEVI
+  if (COMANDOS_PARAR.includes(comando)) {
+    await limparSessao(db, phoneFormatado);
+    return { tipo: 'parou', resposta: T.parar };
+  }
+
   // apagar: pede confirmação e só então exclui
   if (estadoAtual === ESTADOS.CONFIRMAR_APAGAR) {
     const r = respostaSimNao(texto);
@@ -373,12 +379,6 @@ export async function processarMensagemWhatsApp(env, phone, texto, messageId, ag
   if (COMANDOS_APAGAR.includes(comando)) {
     await salvarSessao(db, phoneFormatado, ESTADOS.CONFIRMAR_APAGAR, estadoAtual ? { voltarPara: estadoAtual, dadosAnteriores: dados, idioma } : { idioma });
     return { tipo: 'confirmar_apagar', resposta: T.confirmarApagar };
-  }
-
-  // parar: nada de lembretes nem novas mensagens por iniciativa do LEVI
-  if (COMANDOS_PARAR.includes(comando)) {
-    await limparSessao(db, phoneFormatado);
-    return { tipo: 'parou', resposta: T.parar };
   }
 
   // pediu para falar com uma pessoa: passa na hora e avisa a equipe (vale até para quem já se cadastrou)
@@ -417,7 +417,7 @@ export async function processarMensagemWhatsApp(env, phone, texto, messageId, ag
       const r = respostaSimNao(texto);
       if (r === 'nao') {
         await limparSessao(db, phoneFormatado);
-        return { tipo: 'cancelado', resposta: T.consentimentoNegado };
+        return { tipo: 'cancelado', resposta: T.consentimentoNegado(linkPolitica(env)) };
       }
       if (r !== 'sim') {
         // "oi", "ok?" etc.: repete a pergunta com o aviso, sem avançar

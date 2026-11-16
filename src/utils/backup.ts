@@ -10,7 +10,7 @@ import { suspenderBloqueio } from '@utils/bloqueioSuspenso';
 import { getRandomBytes } from 'expo-crypto';
 import { cifrar, decifrar, DadosCifrados } from '@utils/cifraBackup';
 import { cofre } from '@utils/cofre';
-import { CHAVE_SAL, ehSensivel } from '@utils/cofreDados';
+import { CHAVE_CABECALHO, CHAVE_SAL, ehSensivel } from '@utils/cofreDados';
 
 /**
  * Backup completo dos dados do Leviã num arquivo .json que a pessoa guarda
@@ -21,7 +21,7 @@ import { CHAVE_SAL, ehSensivel } from '@utils/cofreDados';
 const FORMATO = 1;
 const FORMATO_CIFRADO = 2;
 /** Chaves que não entram no backup nem na restauração: cache, id do aparelho, licença do serial, consentimento da IA e configuração de segurança (um arquivo de fora não decide isso) */
-const IGNORAR = new Set(['levia:news_cache', 'levia:instalacao', 'levia:licenca', 'levia:consentimentoIA', 'levia:seguranca', CHAVE_SAL]);
+const IGNORAR = new Set(['levia:news_cache', 'levia:instalacao', 'levia:licenca', 'levia:consentimentoIA', 'levia:seguranca', CHAVE_SAL, CHAVE_CABECALHO]);
 /** Depois de restaurar, as medicações reagendam os lembretes ao abrir */
 export const CHAVE_REAGENDAR = 'levia:reagendarLembretes';
 
@@ -82,8 +82,10 @@ export type BackupLido =
   | { ok: false; motivo: 'cancelado' | 'invalido' };
 
 function filtrarDados(dados: unknown): Record<string, string> | null {
-  if (typeof dados !== 'object' || !dados) return null;
-  return Object.fromEntries(Object.entries(dados).filter(([k, v]) => chaveDoLevia(k) && typeof v === 'string')) as Record<string, string>;
+  if (typeof dados !== 'object' || !dados || Array.isArray(dados)) return null;
+  const filtrados = Object.fromEntries(Object.entries(dados).filter(([k, v]) => chaveDoLevia(k) && typeof v === 'string')) as Record<string, string>;
+  // Um backup vazio (inclusive após excluir chaves internas) não pode substituir os dados atuais.
+  return Object.keys(filtrados).length > 0 ? filtrados : null;
 }
 
 /** Abre um backup com senha. null = senha errada ou arquivo alterado. */
@@ -120,14 +122,16 @@ export async function escolherBackup(): Promise<BackupLido> {
 }
 
 /** Substitui os dados atuais pelos do backup. Depois disso o app precisa reiniciar. */
-export async function aplicarBackup(dados: Record<string, string>) {
+export async function aplicarBackup(dados: unknown) {
+  const filtrados = filtrarDados(dados);
+  if (!filtrados) throw new Error('backup inválido');
   // antes de apagar qualquer coisa: restaurar exige o cofre aberto, senão os dados novos ficariam sem cifra
-  if ((await cofre.temCofre()) && !cofre.estaDesbloqueado()) throw new Error('cofre bloqueado');
+  if (!(await cofre.temCofre()) || !cofre.estaDesbloqueado()) throw new Error('cofre ausente ou bloqueado');
   const atuais = (await AsyncStorage.getAllKeys()).filter(chaveDoLevia);
   await AsyncStorage.multiRemove(atuais);
-  const simples = Object.entries(dados).filter(([k]) => !ehSensivel(k));
+  const simples = Object.entries(filtrados).filter(([k]) => !ehSensivel(k));
   await AsyncStorage.multiSet([...simples, [CHAVE_REAGENDAR, '1']]);
-  for (const [k, v] of Object.entries(dados)) {
+  for (const [k, v] of Object.entries(filtrados)) {
     if (ehSensivel(k)) await cofre.gravarDado(k, v);
   }
   // lembretes antigos deste aparelho não valem mais; as medicações reagendam ao abrir

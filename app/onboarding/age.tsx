@@ -7,6 +7,7 @@ import { ThemedText } from '@components/ThemedText';
 import { useProfile } from '@context/ProfileContext';
 import { spacing } from '@constants/colors';
 import { useT } from '@context/PreferencesContext';
+import { idadeValida } from '@utils/idade';
 
 export default function OnboardingAge() {
   const t = useT();
@@ -14,12 +15,11 @@ export default function OnboardingAge() {
   const { profile, updateProfile } = useProfile();
   const [idade, setIdade] = useState(profile.idade ? String(profile.idade) : '');
 
-  const idadeNum = parseInt(idade, 10);
-  const valido = !isNaN(idadeNum) && idadeNum >= 13 && idadeNum <= 100;
+  const valido = idadeValida(idade);
 
   function handleNext() {
     if (!valido) return;
-    updateProfile({ idade: idadeNum });
+    updateProfile({ idade: Number(idade) });
     router.push('/onboarding/sex');
   }
 
