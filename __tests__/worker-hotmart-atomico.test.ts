@@ -33,6 +33,60 @@ const evento = (event: string, extra: any = {}) => ({
 });
 const contar = (env: any, tabela: string) => Number(env.LEVIA_DB.sql(`SELECT COUNT(*) AS n FROM ${tabela}`)[0].n);
 
+describe('Hotmart: estorno revoga pela transação, não pelo telefone', () => {
+  teste('estorno com telefone irreconhecível ainda revoga o acesso e o serial', async () => {
+    const env = ambiente();
+    await hotmart(env, evento('PURCHASE_APPROVED', { purchase: { transaction: 'HP-EST-1', price: { value: 191.71 } } }));
+    expect(env.LEVIA_DB.sql('SELECT status FROM entitlements')[0].status).toBe('active');
+    const estorno = evento('PURCHASE_REFUNDED', {
+      buyer: { checkout_phone: 'abc' },
+      purchase: { transaction: 'HP-EST-1' },
+    });
+    expect(await (await hotmart(env, estorno)).json()).toEqual({ ok: true, revogado: true });
+    expect(env.LEVIA_DB.sql('SELECT status FROM entitlements')[0].status).toBe('revoked');
+    const codigos = env.LEVIA_DB.sql('SELECT invalidated_at FROM activation_codes');
+    expect(codigos.length).toBeGreaterThan(0);
+    expect(codigos.every((c: any) => c.invalidated_at)).toBe(true);
+  });
+
+  teste('chargeback sem telefone algum também revoga', async () => {
+    const env = ambiente();
+    await hotmart(env, evento('PURCHASE_APPROVED', { purchase: { transaction: 'HP-EST-2', price: { value: 191.71 } } }));
+    const corpo = await (await hotmart(env, evento('PURCHASE_CHARGEBACK', {
+      buyer: {}, purchase: { transaction: 'HP-EST-2' },
+    }))).json();
+    expect(corpo.revogado).toBe(true);
+    expect(env.LEVIA_DB.sql('SELECT status FROM entitlements')[0].status).toBe('revoked');
+  });
+
+  teste('estorno sem acesso para revogar avisa a equipe uma vez, sem dados pessoais', async () => {
+    const env = ambiente();
+    env.ALERTA_WHATSAPP = '+35699506350';
+    const estorno = evento('PURCHASE_REFUNDED', {
+      buyer: { checkout_phone: 'abc', name: 'Pessoa fictícia' },
+      purchase: { transaction: 'HP-EST-3' },
+    });
+    expect(await (await hotmart(env, estorno)).json()).toEqual({ ok: true, pendente: 'nada_a_revogar' });
+    const filas = env.LEVIA_DB.sql('SELECT id, phone, texto FROM wa_outbox');
+    expect(filas).toHaveLength(1);
+    expect(filas[0].id).toMatch(/^alerta-estorno-/);
+    expect(filas[0].phone).toBe('+35699506350');
+    expect(filas[0].texto).toContain('Estorno sem acesso para revogar');
+    expect(filas[0].texto).toContain('HP-EST-3');
+    expect(filas[0].texto).not.toMatch(/Pessoa fictícia/);
+    // reenvio do provedor: duplicado, sem segundo alerta
+    expect((await (await hotmart(env, estorno)).json()).duplicado).toBe(true);
+    expect(contar(env, 'wa_outbox')).toBe(1);
+  });
+
+  teste('estorno de outra compra não mexe no acesso desta', async () => {
+    const env = ambiente();
+    await hotmart(env, evento('PURCHASE_APPROVED', { purchase: { transaction: 'HP-EST-4', price: { value: 191.71 } } }));
+    await hotmart(env, evento('PURCHASE_REFUNDED', { purchase: { transaction: 'HP-OUTRA' } }));
+    expect(env.LEVIA_DB.sql('SELECT status FROM entitlements')[0].status).toBe('active');
+  });
+});
+
 describe('Hotmart: acesso pago nunca fica sem serial', () => {
   teste('telefone ambíguo fica pendente sem conta, direito ou serial e alerta sem dados pessoais', async () => {
     const env = ambiente();
