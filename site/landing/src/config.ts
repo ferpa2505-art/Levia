@@ -41,3 +41,7 @@ export const whatsappWithText = (text: string) => {
 
 export const TRIAL_MESSAGE = "Olá, LEVI! Quero começar meu teste grátis de 7 dias do Leviã.";
 export const WHATSAPP_TRIAL = whatsappWithText(TRIAL_MESSAGE);
+export const WHATSAPP_TRIAL_INTERNATIONAL = {
+  en: whatsappWithText("Hello, LEVI! I would like to start the free 7-day Leviã trial. Please help me in English."),
+  es: whatsappWithText("Hola, LEVI. Quiero empezar la prueba gratuita de 7 días de Leviã. Por favor, ayúdame en español."),
+};

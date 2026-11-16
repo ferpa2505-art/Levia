@@ -1,11 +1,8 @@
 /**
  * Telefone em E.164 (+DDI…), para compradores de qualquer país.
  *
- * O DDI explícito manda: "+356 9950 6350" e "00356 9950 6350" ficam como Malta, nunca viram
- * brasileiro. Só quando o campo vem sem DDI é que se tenta o Brasil — e mesmo aí apenas se o
- * número tem cara de brasileiro (DDD válido e celular começando com 9, ou fixo começando com
- * 2–5). O que não dá para interpretar devolve null: quem chama registra a compra como "sem
- * telefone" e avisa a equipe, em vez de mandar o serial para um número de outro país.
+ * O DDI explícito manda. Sem + ou 00, números que também parecem nacionais brasileiros
+ * ficam pendentes: a lista de DDIs abaixo não é completa e não prova ausência de conflito.
  */
 const DDI_BR = '55';
 // DDI conhecidos (espelha a lista de fusos de lembretes.js) com o tamanho máximo do número
@@ -15,7 +12,7 @@ const DDIS_CONHECIDOS = [
   ['351', 9], ['353', 9], ['356', 8], ['352', 9], ['34', 9], ['33', 9], ['39', 10], ['49', 11],
   ['44', 10], ['31', 9], ['32', 8], ['41', 9], ['43', 11], ['30', 10], ['46', 9], ['45', 8],
   ['47', 8], ['48', 9], ['54', 10], ['55', 11], ['1', 10],
-].sort((a, b) => String(b[0]).length - String(a[0]).length);
+];
 const MIN_COM_DDI = 8; // menor número nacional realista (o E.164 vai até 15)
 const MAX_E164 = 15;
 
@@ -39,21 +36,17 @@ export function normalizarTelefoneE164(bruto) {
   if (!digitos) return null;
 
   if (!comDDI) {
-    const semZero = digitos.replace(/^0+/, ''); // tronco brasileiro: 0 + DDD + número
-    if (semZero.startsWith(DDI_BR) && brasileiroPlausivel(semZero.slice(DDI_BR.length))) {
-      digitos = semZero; // já veio com o 55 na frente
-    } else if (brasileiroPlausivel(semZero)) {
-      digitos = `${DDI_BR}${semZero}`;
-    } else {
-      // sem "+", mas começando com um DDI conhecido: "35699506350" é Malta (356 + 99506350)
-      const achado = DDIS_CONHECIDOS.find(([ddi, maxNacional]) => {
-        if (!semZero.startsWith(ddi)) return false;
-        const nacional = semZero.slice(String(ddi).length).length;
-        return nacional >= 7 && nacional <= maxNacional;
-      });
-      if (!achado) return null; // não há como saber o país
-      digitos = semZero;
+    if (brasileiroPlausivel(digitos)) return null;
+    const candidatos = new Set();
+    for (const [ddi, maxNacional] of DDIS_CONHECIDOS) {
+      if (!digitos.startsWith(ddi)) continue;
+      const nacional = digitos.slice(ddi.length);
+      if (ddi === DDI_BR ? brasileiroPlausivel(nacional) : nacional.length >= 7 && nacional.length <= maxNacional) {
+        candidatos.add(digitos);
+      }
     }
+    if (candidatos.size !== 1) return null;
+    digitos = [...candidatos][0];
   }
 
   const minimo = comDDI ? MIN_COM_DDI : MIN_COM_DDI + 2;
