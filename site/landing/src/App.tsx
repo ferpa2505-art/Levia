@@ -9,6 +9,17 @@ import { International } from "./International";
 
 type Idioma = "pt" | "en" | "es";
 
+/**
+ * Idioma inicial: português, que é o público principal (e o que os anúncios e buscadores
+ * esperam ver). Só abre em inglês/espanhol quando o navegador da pessoa está nesse idioma.
+ * Nunca abre numa tela vazia pedindo para escolher.
+ */
+function idiomaInicial(): Idioma {
+  const nav = typeof navigator !== "undefined" ? (navigator.languages?.[0] ?? navigator.language ?? "") : "";
+  const base = nav.toLowerCase().slice(0, 2);
+  return base === "en" ? "en" : base === "es" ? "es" : "pt";
+}
+
 function MobileCta() {
   const [show, setShow] = useState(false);
   useEffect(() => {
@@ -29,7 +40,7 @@ function MobileCta() {
 }
 
 export default function App() {
-  const [idioma, setIdioma] = useState<Idioma | null>(null);
+  const [idioma, setIdioma] = useState<Idioma>(idiomaInicial);
   useEffect(() => {
     iniciarPixel();
   }, []);
@@ -41,20 +52,14 @@ export default function App() {
     <>
       <div className="bg-salvia-900 px-5 py-3 text-center text-sm text-marfim">
         <label htmlFor="idioma">Idioma / Language / Idioma: </label>
-        <select id="idioma" value={idioma ?? ""} onChange={(e) => setIdioma(e.target.value as Idioma)}
+        <select id="idioma" value={idioma} onChange={(e) => setIdioma(e.target.value as Idioma)}
           className="rounded-md bg-marfim px-3 py-1 text-salvia-900">
-          {!idioma && <option value="" disabled>Escolha / Choose / Elige</option>}
           <option value="pt" lang="pt-BR">Português</option>
           <option value="en" lang="en-GB">English</option>
           <option value="es" lang="es-ES">Español</option>
         </select>
       </div>
-      {!idioma ? (
-        <main className="mx-auto max-w-3xl px-5 py-20 text-center">
-          <h1 className="font-serif text-4xl text-salvia-900">Leviã</h1>
-          <p className="mt-5 text-lg">Escolha seu idioma acima. <span lang="en-GB">Choose your language above.</span> <span lang="es-ES">Elige tu idioma arriba.</span></p>
-        </main>
-      ) : idioma !== "pt" ? <International idioma={idioma} /> : (
+      {idioma !== "pt" ? <International idioma={idioma} /> : (
       <>
       <a href="#conteudo" className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[60] focus:rounded-full focus:bg-white focus:px-4 focus:py-2">
         Pular para o conteúdo
