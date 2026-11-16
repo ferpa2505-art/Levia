@@ -22,6 +22,8 @@ function extrair(corpo) {
     hottok: primeiro(corpo.hottok),
     idEvento: primeiro(compra.transaction),
     telefone: primeiro(comprador.checkout_phone, comprador.phone),
+    // país declarado no checkout: confirma o +55 de número brasileiro digitado sem DDI
+    paisIso: texto(comprador.address?.country_iso).toUpperCase(),
     produtos: [d.product?.id, d.product?.ucode, compra.offer?.code, d.product?.name]
       .map((v) => texto(v).toLowerCase()).filter(Boolean),
     valorCentavos: Math.round(valor * 100) || 0,
