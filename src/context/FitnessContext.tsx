@@ -6,6 +6,7 @@ import type {
   DadosFitness,
   Equipamento,
   Exercicio,
+  GrupoMuscular,
   Pesagem,
   Plano,
   Rotina,
@@ -190,7 +191,8 @@ export function FitnessProvider({ children }: { children: ReactNode }) {
 
   async function adicionarPersonalizado(entrada: { nome: string; grupo: Exercicio['grupo']; equipamento: Equipamento; tipo: Exercicio['tipo'] }) {
     const id = `custom-${gerarId()}`;
-    const novo: Exercicio = { id, nome: entrada.nome.trim(), grupo: entrada.grupo, equipamento: entrada.equipamento, tipo: entrada.tipo, personalizado: true };
+    const gruposMusculares: GrupoMuscular[] = [entrada.grupo];
+    const novo: Exercicio = { id, nome: entrada.nome.trim(), grupo: entrada.grupo, equipamento: entrada.equipamento, tipo: entrada.tipo, gruposMusculares, personalizado: true };
     await persistir({ ...dados, personalizados: [...dados.personalizados, novo] });
     return id;
   }
