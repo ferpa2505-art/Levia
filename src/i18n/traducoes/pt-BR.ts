@@ -784,6 +784,8 @@ const ptBR = {
   "fitness.descansando": "Descanso",
   "fitness.pular": "Pular",
   "fitness.concluirTreino": "Concluir treino",
+  "fitness.marcarTodas": "Marcar todas as séries como feitas",
+  "fitness.legendaSeries": "Reps = repetições · kg = carga · RIR = repetições que sobraram no fim da série (toque para mudar de 0 a 4) · ✓ = série feita",
   "fitness.semSeriesFeitas": "Marque pelo menos uma série como feita antes de concluir.",
   "fitness.semHistorico": "Nenhum treino registrado ainda.",
   "fitness.adicionarExercicioAgora": "Adicionar exercício agora",

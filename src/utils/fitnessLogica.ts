@@ -426,6 +426,11 @@ export const DISTRIBUICAO_GRUPOS_POR_EXERCICIO: Record<string, Partial<Record<Gr
   danca: { core: 0.5, quadriceps: 0.5, posteriores: 0.3, panturrilha: 0.5, gluteos: 0.4, ombros: 0.2 },
 };
 
+/** Nome do esporte em minúsculas e sem acento, para casar com as chaves da distribuição ("Natação" -> "natacao"). */
+export function chaveSemAcento(nome: string): string {
+  return nome.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
+}
+
 /**
  * Agrega exercícios do Records (atividades gerais) por grupo muscular na semana.
  * Usa mapeamento automático por tipo de exercício (DISTRIBUICAO_GRUPOS_POR_EXERCICIO).
@@ -465,7 +470,7 @@ export function seriesPorGrupoRecords(
     }
 
     // 2. Fallback: distribuição automática baseada no tipo de exercício (id ou nome)
-    const distAuto = DISTRIBUICAO_GRUPOS_POR_EXERCICIO[e.nome.toLowerCase()] ?? DISTRIBUICAO_GRUPOS_POR_EXERCICIO[e.id];
+    const distAuto = DISTRIBUICAO_GRUPOS_POR_EXERCICIO[chaveSemAcento(e.nome)] ?? DISTRIBUICAO_GRUPOS_POR_EXERCICIO[e.id];
 
     if (distAuto && Object.keys(distAuto).length > 0) {
       // Usa distribuição automática: cada grupo recebe peso * 1 (série equivalente)
