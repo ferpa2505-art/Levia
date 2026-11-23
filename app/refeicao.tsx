@@ -85,6 +85,7 @@ export default function RefeicaoScreen() {
 
   // busca de alimentos
   const [busca, setBusca] = useState('');
+  const [textoRefeicao, setTextoRefeicao] = useState('');
   const [escolhido, setEscolhido] = useState<Opcao | null>(null);
   /** quantidade na medida escolhida (em g/ml, é a própria quantidade) */
   const [gramas, setGramas] = useState('');
@@ -332,6 +333,17 @@ export default function RefeicaoScreen() {
       </ThemedView>
 
       <Dica id="ref.foto" texto="dica.foto" />
+
+      {/* Descrição digitada (fase 1 da voz: sem microfone) */}
+      <ThemedView variant="surface" style={[styles.card, styles.cardShadow]}>
+        <View style={styles.linha}>
+          <PencilLine size={18} color={colors.primary} strokeWidth={2} />
+          <ThemedText variant="subheading" color="text" style={{ marginLeft: spacing.sm }}>{t('ref.textoTitulo')}</ThemedText>
+        </View>
+        <ThemedText variant="caption" color="textSecondary" style={{ marginTop: spacing.xs }}>{t('ref.textoDesc')}</ThemedText>
+        <Input value={textoRefeicao} onChangeText={setTextoRefeicao} placeholder={t('ref.textoPh')} style={[styles.input, { marginTop: spacing.md }]} />
+        <AnaliseIAPrato texto={textoRefeicao} onAdicionar={(novos) => setItens((l) => [...l, ...novos])} />
+      </ThemedView>
 
       {/* Foto do prato */}
       <ThemedView variant="surface" style={[styles.card, styles.cardShadow]}>

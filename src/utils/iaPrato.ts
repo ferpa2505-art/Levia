@@ -115,16 +115,42 @@ export function ligarAoBanco(item: ItemIA, idioma: IdiomaAlimentos): SugestaoIA 
   };
 }
 
+const URL_IA_TEXTO = 'https://levia-ia-worker.ferpa2505.workers.dev/v1/analisar-texto';
+
 export async function analisarFotoDoPrato(uri: string, idioma: IdiomaAlimentos): Promise<ResultadoIA> {
   const licenca = await lerLicenca();
   if (!licenca) return { ok: false, motivo: 'licenca' };
+  let imagem: string;
+  let instalacao: string;
+  try {
+    [imagem, instalacao] = await Promise.all([fotoReduzidaBase64(uri), idDaInstalacao()]);
+  } catch {
+    return { ok: false, motivo: 'rede' };
+  }
+  return enviarParaIA(URL_IA, { imagem, instalacao, idioma, licenca: licenca.licenca }, idioma);
+}
+
+/** Descrição digitada da refeição (ex.: "200 g de arroz e uma latinha de Coca Zero"). Mesmo caminho da foto, sem áudio. */
+export async function analisarTextoDaRefeicao(texto: string, idioma: IdiomaAlimentos): Promise<ResultadoIA> {
+  const licenca = await lerLicenca();
+  if (!licenca) return { ok: false, motivo: 'licenca' };
+  let instalacao: string;
+  try {
+    instalacao = await idDaInstalacao();
+  } catch {
+    return { ok: false, motivo: 'rede' };
+  }
+  return enviarParaIA(URL_IA_TEXTO, { texto: texto.trim(), instalacao, idioma, licenca: licenca.licenca }, idioma);
+}
+
+/** Envia o pedido ao Worker e interpreta a resposta (cota, licença, falhas), igual para foto e texto. */
+async function enviarParaIA(url: string, corpo: object, idioma: IdiomaAlimentos): Promise<ResultadoIA> {
   let resposta: Response;
   try {
-    const [imagem, instalacao] = await Promise.all([fotoReduzidaBase64(uri), idDaInstalacao()]);
-    resposta = await fetch(URL_IA, {
+    resposta = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ imagem, instalacao, idioma, licenca: licenca.licenca }),
+      body: JSON.stringify(corpo),
     });
   } catch {
     return { ok: false, motivo: 'rede' };
