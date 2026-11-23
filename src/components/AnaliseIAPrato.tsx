@@ -9,7 +9,10 @@ import { usePreferences } from '@context/PreferencesContext';
 import { idiomaDosAlimentos } from '@constants/alimentosGlobais';
 import { valoresDaPorcao } from '@models/ingredients';
 import { ItemRefeicao } from '@models/records';
-import { analisarFotoDoPrato, analisarTextoDaRefeicao, darConsentimentoIA, temConsentimentoIA, SugestaoIA } from '@utils/iaPrato';
+import {
+  analisarFotoDoPrato, analisarTextoDaRefeicao, darConsentimentoIA, temConsentimentoIA,
+  darConsentimentoIATexto, temConsentimentoIATexto, SugestaoIA,
+} from '@utils/iaPrato';
 import { lerLicenca } from '@utils/licenca';
 import { textoNutrientes } from '@utils/textoNutrientes';
 import { colors, spacing, radius } from '@constants/colors';
@@ -70,17 +73,22 @@ export function AnaliseIAPrato({ fotoUri, texto, onAdicionar }: { fotoUri?: stri
 
   async function pedirAnalise() {
     if (!(await lerLicenca())) return pedirSerial();
-    if (await temConsentimentoIA()) return analisar();
-    Alert.alert(t('ia.consentTitulo'), t('ia.consentMsg'), [
-      { text: t('comum.cancelar'), style: 'cancel' },
-      {
-        text: t('ia.consentOk'),
-        onPress: async () => {
-          await darConsentimentoIA();
-          analisar();
+    const ehTexto = !fotoUri;
+    if (await (ehTexto ? temConsentimentoIATexto() : temConsentimentoIA())) return analisar();
+    Alert.alert(
+      t(ehTexto ? 'ia.consentTextoTitulo' : 'ia.consentTitulo'),
+      t(ehTexto ? 'ia.consentTextoMsg' : 'ia.consentMsg'),
+      [
+        { text: t('comum.cancelar'), style: 'cancel' },
+        {
+          text: t('ia.consentOk'),
+          onPress: async () => {
+            await (ehTexto ? darConsentimentoIATexto() : darConsentimentoIA());
+            analisar();
+          },
         },
-      },
-    ]);
+      ],
+    );
   }
 
   function adicionar() {

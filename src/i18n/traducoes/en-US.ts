@@ -573,6 +573,8 @@ const traducoes: Traducoes = {
   "ia.consentTitulo": "Analyze the photo with AI?",
   "ia.consentMsg": "The photo will be sent to Google Gemini only to identify the foods. Leviã doesn't keep it and it isn't used to train Google's AI. Don't photograph faces or documents.",
   "ia.consentOk": "I agree, analyze",
+  "ia.consentTextoTitulo": "Analyze the description with AI?",
+  "ia.consentTextoMsg": "By tapping I agree, we send the text you typed to the Leviã server on Cloudflare and to Google Gemini, only to identify the foods and amounts. We also send a random identifier for this installation, the language and technical data such as your IP. We do not send your name, weight, glucose or medications. Leviã does not store the text. You can skip this feature and log meals by hand.",
   "ia.cotaTitulo": "Free analyses used",
   "ia.cotaMsg": "You've used this week's free analyses. They come back on {data}. Meanwhile, log meals by searching for the food by name.",
   "ia.erro.naoComida": "The AI didn't find food in this photo. Try another one, taken from above in good light.",

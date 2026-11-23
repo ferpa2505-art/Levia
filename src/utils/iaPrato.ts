@@ -52,6 +52,21 @@ export async function revogarConsentimentoIA(): Promise<void> {
   await AsyncStorage.removeItem(CHAVE_CONSENTIMENTO);
 }
 
+// Consentimento separado para a descrição digitada (texto vai ao Google; a foto tem o seu próprio).
+const CHAVE_CONSENTIMENTO_TEXTO = 'levia:consentimentoIATexto';
+
+export async function temConsentimentoIATexto(): Promise<boolean> {
+  return (await AsyncStorage.getItem(CHAVE_CONSENTIMENTO_TEXTO)) === '1';
+}
+
+export async function darConsentimentoIATexto(): Promise<void> {
+  await AsyncStorage.setItem(CHAVE_CONSENTIMENTO_TEXTO, '1');
+}
+
+export async function revogarConsentimentoIATexto(): Promise<void> {
+  await AsyncStorage.removeItem(CHAVE_CONSENTIMENTO_TEXTO);
+}
+
 /** JPEG de no máximo 1024 px no lado maior: ~150–300 KB, suficiente para a IA */
 async function fotoReduzidaBase64(uri: string): Promise<string> {
   const ctx = ImageManipulator.manipulate(uri);
