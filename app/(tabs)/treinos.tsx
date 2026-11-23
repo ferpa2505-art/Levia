@@ -19,19 +19,22 @@ import { Button } from '@components/Button';
 import { useFitness } from '@context/FitnessContext';
 import { usePreferences } from '@context/PreferencesContext';
 import { colors, spacing, radius } from '@constants/colors';
-import { dataISO, diasComTreinoDesde, indicePlano, inicioDaSemanaISO, nomeDiaSemana, seriesPorGrupo } from '@utils/fitnessLogica';
+import { dataISO, diasComTreinoDesde, indicePlano, inicioDaSemanaISO, nomeDiaSemana, seriesPorGrupo, seriesPorGrupoRecords } from '@utils/fitnessLogica';
 import { MapaMuscular } from '@components/fitness/MapaMuscular';
+import { useRecords } from '@context/RecordsContext';
 import { useProfile } from '@context/ProfileContext';
 
 export default function TreinosTab() {
   const { t, idioma } = usePreferences();
   const router = useRouter();
   const { rotinas, plano, loading, sessoes, grupoDe, config } = useFitness();
+  const { exercicios: exerciciosRecords } = useRecords();
   const { profile } = useProfile();
   const sexo = profile.sexoBiologico ?? 'masculino';
   const inicioSemana = inicioDaSemanaISO(new Date(), config.inicioSemana);
   const diasTreinados = diasComTreinoDesde(sessoes, inicioSemana);
   const seriesSemana = seriesPorGrupo(sessoes, grupoDe, inicioSemana);
+  const seriesRecordsSemana = seriesPorGrupoRecords(exerciciosRecords, inicioSemana);
   const totalSeries = Object.values(seriesSemana).reduce((a, b) => a + (b ?? 0), 0);
   const diasSemana = Array.from({ length: 7 }, (_, i) => {
     const base = new Date(inicioSemana + 'T12:00:00');
@@ -82,7 +85,7 @@ export default function TreinosTab() {
             ))}
           </View>
           <ThemedText variant="small" color="textSecondary">{t('fitness.seriesDaSemana', { n: totalSeries })}</ThemedText>
-          <MapaMuscular sexo={sexo} series={seriesSemana} />
+          <MapaMuscular sexo={sexo} series={seriesSemana} seriesRecords={seriesRecordsSemana} />
         </ThemedView>
 
         {semPlano ? (

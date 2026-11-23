@@ -113,13 +113,26 @@ export function BonecoMuscular({
 export function MapaMuscular({
   sexo,
   series,
+  seriesRecords,
 }: {
   sexo: Sexo;
   series: Partial<Record<GrupoMuscular, number>>;
+  /** Séries vindas do módulo Records (atividades gerais como basquete, corrida, etc.) */
+  seriesRecords?: Partial<Record<GrupoMuscular, number>>;
 }) {
   const { t } = usePreferences();
   const [vista, setVista] = useState<Vista>('frente');
-  const intensidade = intensidadePorGrupo(series);
+
+  // Mescla séries do Fitness (treinos estruturados) + Records (atividades gerais)
+  const seriesMescladas: Partial<Record<GrupoMuscular, number>> = { ...series };
+  if (seriesRecords) {
+    for (const [grupo, valor] of Object.entries(seriesRecords)) {
+      const g = grupo as GrupoMuscular;
+      seriesMescladas[g] = (seriesMescladas[g] ?? 0) + valor;
+    }
+  }
+
+  const intensidade = intensidadePorGrupo(seriesMescladas);
   const musculos = vista === 'frente' ? MUSCULOS_FRENTE : MUSCULOS_COSTAS;
   const grupos = [...new Set(musculos.map((m) => grupoDoMusculo(m.id)).filter((g): g is GrupoMuscular => g !== null))];
 

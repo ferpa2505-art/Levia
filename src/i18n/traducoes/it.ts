@@ -275,7 +275,6 @@ const traducoes: TraducoesParciais = {
   "gl.max": "Massimo",
   "gl.homeVazio": "Tocca per registrare la prima misurazione",
   "abas.saude": "Salute",
-  "med.titulo": "Farmaci",
   "med.tituloTela": "Farmaco",
   "med.adicionar": "Aggiungi",
   "med.vazio": "Nessun farmaco. Tocca Aggiungi per inserire il primo.",
@@ -741,7 +740,6 @@ const traducoes: TraducoesParciais = {
   "fitness.grupo.biceps": "Bicipiti",
   "fitness.grupo.cardio": "Cardio",
   "fitness.grupo.core": "Core",
-  "fitness.grupo.corpoInteiro": "Corpo intero",
   "fitness.grupo.costas": "Schiena",
   "fitness.grupo.gluteos": "Glutei",
   "fitness.grupo.ombros": "Spalle",
@@ -828,6 +826,81 @@ const traducoes: TraducoesParciais = {
   "fitness.variacao": "Variazione",
   "fitness.volumePorGrupo": "Volume per gruppo muscolare",
   "home.saldoDetalhe": "Mangiate {ingeridas} − consumate {gastas} kcal",
+
+  // ConfiguradorAlarmesMedicacao.tsx
+  "med.alarme.titulo": "Promemoria farmaci",
+  "med.alarme.fecheApp": "Chiudi l'app ora: la notifica dovrebbe arrivare tra circa 10 secondi.",
+  "med.alarme.permitaNotificacoes": "Abilita le notifiche di Leviã in Impostazioni Android > App > Leviã > Notifiche.",
+  "med.alarme.campoObrigatorio": "Campo obbligatorio",
+  "med.alarme.nome": "Nome del farmaco",
+  "med.alarme.dose": "Dose",
+  "med.alarme.frequencia": "Frequenza",
+  "med.alarme.horario": "Orario",
+  "med.alarme.salvar": "Salva promemoria",
+  "med.alarme.excluir": "Elimina",
+  "med.alarme.confirmarExcluir": "Eliminare questo promemoria?",
+  "med.alarme.semLembretes": "Nessun promemoria configurato.",
+  "med.alarme.adicionar": "+ Aggiungi promemoria",
+  "med.alarme.editando": "Modificando promemoria",
+  "med.alarme.novo": "Nuovo promemoria",
+  "med.alarme.teste": "Invia prova",
+  "med.alarme.testeSucesso": "Prova inviata! Controlla le notifiche.",
+
+  // MenuOpcoes.tsx
+  "menu.revogarIa": "Revoca autorizzazione foto per IA",
+  "menu.revogarIaSucesso": "Autorizzazione IA revocata su questo dispositivo. Le analisi già inviate potrebbero essere state processate.",
+  "menu.revogarIaErro": "Non è stato possibile revocare ora. Riprova.",
+  "menu.termosServico": "Termini di Servizio",
+  "menu.politicaPrivacidade": "Informativa sulla Privacy",
+  "menu.sobre": "Su Leviã",
+  "menu.versao": "Versione {versao}",
+  "menu.compilar": "Compila per produzione",
+  "menu.limparCache": "Pulisci cache",
+  "menu.diagnostico": "Diagnostica",
+
+  // MedicacoesContext.tsx
+  "med.titulo": "Farmaci",
+
+  // NewsContext.tsx
+  "news.erroAtualizar": "Impossibile aggiornare le notizie ora. Controlla la connessione internet.",
+  "news.erroGenerico": "Impossibile",
+
+  // RecordsContext.tsx
+  "records.returnType": "ReturnType",
+
+  // QuizScreen.tsx
+  "onb.quiz.titulo": "Il tuo Profilo",
+
+  // ResultScreen.tsx
+  "onb.resultado.perfil": "il tuo profilo",
+  "onb.resultado.vamosComecar": "Iniziamo! 🚀",
+
+  // SplashScreen.tsx
+  "splash.bemVindo": "Benvenuto",
+
+  // diabetesNotifications.ts
+  "notif.med.canal": "Promemoria farmaci",
+  "notif.med.titulo": "Ora del farmaco",
+  "notif.med.corpo": "È ora di prendere il tuo farmaco",
+  "notif.med.medicacao": "farmaco",
+
+  // fitnessLogica.ts
+  "fitness.grupo.push": "Push (spinta)",
+  "fitness.grupo.legs": "Legs (gambe)",
+  "fitness.grupo.corpoInteiro": "Corpo intero",
+
+  // relatorio.ts
+  "rel.glp1": "GLP-1",
+
+  // app/termos.tsx
+  "termos.titulo": "Informativa sulla Privacy",
+  "termos.descricao": "Uno strumento di registrazione e organizzazione personale di peso, alimentazione, acqua, esercizi, GLP-1 e diabete.",
+  "termos.titulo2": "Informativa sulla Privacy",
+  "termos.titulo3": "Informativa sulla Privacy",
+  "termos.titulo4": "Informativa sulla Privacy",
+
+  // app/_layout.tsx
+  "layout.termosServico": "Termini di Servizio",
 };
 
 export default traducoes;

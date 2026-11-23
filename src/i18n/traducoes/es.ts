@@ -275,7 +275,6 @@ const traducoes: Traducoes = {
   "gl.max": "Máximo",
   "gl.homeVazio": "Toca para registrar tu primera medición",
   "abas.saude": "Salud",
-  "med.titulo": "Medicamentos",
   "med.tituloTela": "Medicamento",
   "med.adicionar": "Añadir",
   "med.vazio": "No hay medicamentos. Toca Añadir para incluir el primero.",
@@ -819,7 +818,6 @@ const traducoes: Traducoes = {
   "fitness.grupo.biceps": "Bíceps",
   "fitness.grupo.cardio": "Cardio",
   "fitness.grupo.core": "Core",
-  "fitness.grupo.corpoInteiro": "Cuerpo completo",
   "fitness.grupo.costas": "Espalda",
   "fitness.grupo.gluteos": "Glúteos",
   "fitness.grupo.ombros": "Hombros",
@@ -906,6 +904,82 @@ const traducoes: Traducoes = {
   "fitness.variacao": "Variación",
   "fitness.volumePorGrupo": "Volumen por grupo muscular",
   "home.saldoDetalhe": "Comidas {ingeridas} − gastadas {gastas} kcal",
+
+  // ConfiguradorAlarmesMedicacao.tsx
+  "med.alarme.titulo": "Recordatorios de medicación",
+  "med.alarme.testeEnviado": "Recordatorio de prueba enviado",
+  "med.alarme.fecheApp": "Cierra la app ahora: la notificación debería llegar en unos 10 segundos.",
+  "med.alarme.permitaNotificacoes": "Permite las notificaciones de Leviã en Ajustes de Android > Apps > Leviã > Notificaciones.",
+  "med.alarme.campoObrigatorio": "Campo obligatorio",
+  "med.alarme.nome": "Nombre del medicamento",
+  "med.alarme.dose": "Dosis",
+  "med.alarme.frequencia": "Frecuencia",
+  "med.alarme.horario": "Hora",
+  "med.alarme.salvar": "Guardar recordatorio",
+  "med.alarme.excluir": "Eliminar",
+  "med.alarme.confirmarExcluir": "¿Eliminar este recordatorio?",
+  "med.alarme.semLembretes": "No hay recordatorios configurados.",
+  "med.alarme.adicionar": "+ Añadir recordatorio",
+  "med.alarme.editando": "Editando recordatorio",
+  "med.alarme.novo": "Nuevo recordatorio",
+  "med.alarme.teste": "Enviar prueba",
+  "med.alarme.testeSucesso": "¡Prueba enviada! Revisa las notificaciones.",
+
+  // MenuOpcoes.tsx
+  "menu.revogarIa": "Revocar autorización de fotos por IA",
+  "menu.revogarIaSucesso": "Autorización de IA revocada en este dispositivo. Los análisis ya enviados pueden haber sido procesados.",
+  "menu.revogarIaErro": "No fue posible revocar ahora. Intenta de nuevo.",
+  "menu.termosServico": "Términos de Servicio",
+  "menu.politicaPrivacidade": "Política de Privacidad",
+  "menu.sobre": "Sobre Leviã",
+  "menu.versao": "Versión {versao}",
+  "menu.compilar": "Compilar para producción",
+  "menu.limparCache": "Limpiar caché",
+  "menu.diagnostico": "Diagnóstico",
+
+  // MedicacoesContext.tsx
+  "med.titulo": "Medicación",
+
+  // NewsContext.tsx
+  "news.erroAtualizar": "No fue posible actualizar las noticias ahora. Verifica tu conexión a internet.",
+  "news.erroGenerico": "No fue posible",
+
+  // RecordsContext.tsx
+  "records.returnType": "ReturnType",
+
+  // QuizScreen.tsx
+  "onb.quiz.titulo": "Tu Perfil",
+
+  // ResultScreen.tsx
+  "onb.resultado.perfil": "tu perfil",
+  "onb.resultado.vamosComecar": "¡Empecemos! 🚀",
+
+  // SplashScreen.tsx
+  "splash.bemVindo": "Bienvenido",
+
+  // diabetesNotifications.ts
+  "notif.med.canal": "Recordatorios de medicación",
+  "notif.med.titulo": "Hora de la medicación",
+  "notif.med.corpo": "Hora de tomar tu medicamento",
+  "notif.med.medicacao": "medicación",
+
+  // fitnessLogica.ts
+  "fitness.grupo.push": "Push (empujar)",
+  "fitness.grupo.legs": "Legs (piernas)",
+  "fitness.grupo.corpoInteiro": "Cuerpo entero",
+
+  // relatorio.ts
+  "rel.glp1": "GLP-1",
+
+  // app/termos.tsx
+  "termos.titulo": "Política de Privacidad",
+  "termos.descricao": "Una herramienta de registro y organización personal de peso, alimentación, agua, ejercicios, GLP-1 y diabetes.",
+  "termos.titulo2": "Política de Privacidad",
+  "termos.titulo3": "Política de Privacidad",
+  "termos.titulo4": "Política de Privacidad",
+
+  // app/_layout.tsx
+  "layout.termosServico": "Términos de Servicio",
 };
 
 export default traducoes;

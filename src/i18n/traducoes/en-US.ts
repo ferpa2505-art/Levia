@@ -275,7 +275,6 @@ const traducoes: Traducoes = {
   "gl.max": "Max",
   "gl.homeVazio": "Tap to log your first reading",
   "abas.saude": "Health",
-  "med.titulo": "Medications",
   "med.tituloTela": "Medication",
   "med.adicionar": "Add",
   "med.vazio": "No medications yet. Tap Add to include your first one.",
@@ -816,7 +815,6 @@ const traducoes: Traducoes = {
   "fitness.grupo.biceps": "Biceps",
   "fitness.grupo.cardio": "Cardio",
   "fitness.grupo.core": "Core",
-  "fitness.grupo.corpoInteiro": "Full body",
   "fitness.grupo.costas": "Back",
   "fitness.grupo.gluteos": "Glutes",
   "fitness.grupo.ombros": "Shoulders",
@@ -906,6 +904,82 @@ const traducoes: Traducoes = {
   "home.saldoDetalhe": "Eaten {ingeridas} − burned {gastas} kcal",
   "evo.kcalGastaMedia": "Exercise burn (average/day)",
   "evo.kcalSaldoMedia": "Balance: eaten − burned (average/day)",
+
+  // ConfiguradorAlarmesMedicacao.tsx
+  "med.alarme.titulo": "Medication reminders",
+  "med.alarme.testeEnviado": "Test reminder sent",
+  "med.alarme.fecheApp": "Close the app now: the notification should arrive in about 10 seconds.",
+  "med.alarme.permitaNotificacoes": "Allow Leviã notifications in Android Settings > Apps > Leviã > Notifications.",
+  "med.alarme.campoObrigatorio": "Required field",
+  "med.alarme.nome": "Medication name",
+  "med.alarme.dose": "Dose",
+  "med.alarme.frequencia": "Frequency",
+  "med.alarme.horario": "Time",
+  "med.alarme.salvar": "Save reminder",
+  "med.alarme.excluir": "Delete",
+  "med.alarme.confirmarExcluir": "Delete this reminder?",
+  "med.alarme.semLembretes": "No reminders configured.",
+  "med.alarme.adicionar": "+ Add reminder",
+  "med.alarme.editando": "Editing reminder",
+  "med.alarme.novo": "New reminder",
+  "med.alarme.teste": "Send test",
+  "med.alarme.testeSucesso": "Test sent! Check notifications.",
+
+  // MenuOpcoes.tsx
+  "menu.revogarIa": "Revoke AI photo authorization",
+  "menu.revogarIaSucesso": "AI authorization revoked on this device. Previously sent analyses may have been processed.",
+  "menu.revogarIaErro": "Could not revoke right now. Try again.",
+  "menu.termosServico": "Terms of Service",
+  "menu.politicaPrivacidade": "Privacy Policy",
+  "menu.sobre": "About Leviã",
+  "menu.versao": "Version {versao}",
+  "menu.compilar": "Build for production",
+  "menu.limparCache": "Clear cache",
+  "menu.diagnostico": "Diagnostics",
+
+  // MedicacoesContext.tsx
+  "med.titulo": "Medication",
+
+  // NewsContext.tsx
+  "news.erroAtualizar": "Couldn't update the news right now. Check your internet connection.",
+  "news.erroGenerico": "Couldn't",
+
+  // RecordsContext.tsx
+  "records.returnType": "ReturnType",
+
+  // QuizScreen.tsx
+  "onb.quiz.titulo": "Your Profile",
+
+  // ResultScreen.tsx
+  "onb.resultado.perfil": "your profile",
+  "onb.resultado.vamosComecar": "Let's get started! 🚀",
+
+  // SplashScreen.tsx
+  "splash.bemVindo": "Welcome",
+
+  // diabetesNotifications.ts
+  "notif.med.canal": "Medication reminders",
+  "notif.med.titulo": "Medication time",
+  "notif.med.corpo": "Time to take your medication",
+  "notif.med.medicacao": "medication",
+
+  // fitnessLogica.ts
+  "fitness.grupo.push": "Push",
+  "fitness.grupo.legs": "Legs",
+  "fitness.grupo.corpoInteiro": "Full body",
+
+  // relatorio.ts
+  "rel.glp1": "GLP-1",
+
+  // app/termos.tsx
+  "termos.titulo": "Privacy Policy",
+  "termos.descricao": "A personal tracking and organization tool for weight, food, water, exercise, GLP-1 and diabetes.",
+  "termos.titulo2": "Privacy Policy",
+  "termos.titulo3": "Privacy Policy",
+  "termos.titulo4": "Privacy Policy",
+
+  // app/_layout.tsx
+  "layout.termosServico": "Terms of Service",
 };
 
 export default traducoes;

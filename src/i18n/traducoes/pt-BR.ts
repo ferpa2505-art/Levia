@@ -274,7 +274,6 @@ const ptBR = {
   "gl.max": "Máximo",
   "gl.homeVazio": "Toque para registrar sua primeira medição",
   "abas.saude": "Saúde",
-  "med.titulo": "Medicações",
   "med.tituloTela": "Medicação",
   "med.adicionar": "Adicionar",
   "med.vazio": "Nenhuma medicação cadastrada. Toque em Adicionar para incluir a primeira.",
@@ -815,7 +814,6 @@ const ptBR = {
   "fitness.grupo.biceps": "Bíceps",
   "fitness.grupo.cardio": "Cardio",
   "fitness.grupo.core": "Core",
-  "fitness.grupo.corpoInteiro": "Corpo inteiro",
   "fitness.grupo.costas": "Costas",
   "fitness.grupo.gluteos": "Glúteos",
   "fitness.grupo.ombros": "Ombros",
@@ -842,13 +840,6 @@ const ptBR = {
   "fitness.meusDadosAviso": "Exporte um arquivo com rotinas, treinos, pesagens e configurações, ou importe um arquivo exportado antes.",
   "fitness.minhasRotinas": "Minhas rotinas",
   "fitness.minutosTotais": "Minutos treinados",
-  "fitness.motivo.corpo": "progride em repetições",
-  "fitness.motivo.mantem": "mantém a carga até fechar as repetições",
-  "fitness.motivo.primeira": "primeira vez: escolha a carga",
-  "fitness.motivo.reinicia": "bateu o topo da faixa: sobe a carga e volta ao mínimo",
-  "fitness.motivo.repsSobem": "suba uma repetição",
-  "fitness.motivo.semProgressao": "sem progressão: repete o último treino",
-  "fitness.motivo.sobe": "completou as séries: sobe a carga",
   "fitness.nenhumExercicio": "Nenhum exercício encontrado.",
   "fitness.nomeExercicio": "Nome do exercício",
   "fitness.novaRotina": "Nova rotina",
@@ -905,6 +896,100 @@ const ptBR = {
   "home.saldoDetalhe": "Consumidas {ingeridas} − gastas {gastas} kcal",
   "evo.kcalGastaMedia": "Gasto com exercício (média/dia)",
   "evo.kcalSaldoMedia": "Saldo: comido − gasto (média/dia)",
+
+  // ConfiguradorAlarmesMedicacao.tsx
+  "med.alarme.titulo": "Lembretes de medicação",
+  "med.alarme.testeEnviado": "Lembrete de teste enviado",
+  "med.alarme.fecheApp": "Feche o app agora: a notificação deve chegar em cerca de 10 segundos.",
+  "med.alarme.permitaNotificacoes": "Permita as notificações do Leviã em Configurações do Android > Apps > Leviã > Notificações.",
+  "med.alarme.campoObrigatorio": "Campo obrigatório",
+  "med.alarme.nome": "Nome do medicamento",
+  "med.alarme.dose": "Dose",
+  "med.alarme.frequencia": "Frequência",
+  "med.alarme.horario": "Horário",
+  "med.alarme.salvar": "Salvar lembrete",
+  "med.alarme.excluir": "Excluir",
+  "med.alarme.confirmarExcluir": "Excluir este lembrete?",
+  "med.alarme.semLembretes": "Nenhum lembrete configurado.",
+  "med.alarme.adicionar": "+ Adicionar lembrete",
+  "med.alarme.editando": "Editando lembrete",
+  "med.alarme.novo": "Novo lembrete",
+  "med.alarme.teste": "Enviar teste",
+  "med.alarme.testeSucesso": "Teste enviado! Verifique as notificações.",
+
+  // MenuOpcoes.tsx
+  "menu.revogarIa": "Revogar autorização de fotos por IA",
+  "menu.revogarIaSucesso": "Autorização de IA revogada neste aparelho. Análises já enviadas podem ter sido processadas.",
+  "menu.revogarIaErro": "Não foi possível revogar agora. Tente novamente.",
+  "menu.termosServico": "Termos de Serviço",
+  "menu.politicaPrivacidade": "Política de Privacidade",
+  "menu.sobre": "Sobre o Leviã",
+  "menu.versao": "Versão {versao}",
+  "menu.compilar": "Compilar para produção",
+  "menu.limparCache": "Limpar cache",
+  "menu.diagnostico": "Diagnóstico",
+
+  // MedicacoesContext.tsx
+  "med.titulo": "Medicação",
+
+  // NewsContext.tsx
+  "news.erroAtualizar": "Não foi possível atualizar as notícias agora. Verifique sua internet.",
+  "news.erroGenerico": "Não foi possível",
+
+  // RecordsContext.tsx
+  "records.returnType": "ReturnType",
+
+  // QuizScreen.tsx
+  "onb.quiz.titulo": "Seu Perfil",
+
+  // ResultScreen.tsx
+  "onb.resultado.perfil": "seu perfil",
+  "onb.resultado.titulo": "✓ Suas Metas Calculadas!",
+  "onb.resultado.subtitulo": "Com base em seu perfil, aqui estão suas metas diárias",
+  "onb.resultado.kcalPorDia": "kcal/dia",
+  "onb.resultado.gPorDia": "g/dia",
+  "onb.resultado.lPorDia": "L/dia",
+  "onb.resultado.sobreMetas": "ℹ️ Sobre suas metas",
+  "onb.resultado.descricaoMetas": "Estas metas foram calculadas e seguem diretrizes nutricionais de segurança.",
+  "onb.resultado.vamosComecar": "Vamos começar! 🚀",
+
+  // SplashScreen.tsx
+  "splash.bemVindo": "Bem-vindo",
+  "splash.titulo": "Bem-vindo à Levia",
+  "splash.tagline": "Mais leve a cada dia",
+
+  // diabetesNotifications.ts
+  "notif.med.canal": "Lembretes de medicação",
+  "notif.med.medicacao": "medicação",
+  "notif.med.tituloTeste": "💊 Lembrete de medicação (teste)",
+  "notif.med.corpoGlicemia": "Hora de tomar {medicamento} ({dosagem})",
+  "notif.med.titulo": "Hora do medicamento",
+  "notif.med.corpo": "Hora de tomar {medicamento}",
+
+  // fitnessLogica.ts
+  "fitness.grupo.push": "Push (empurrar)",
+  "fitness.grupo.legs": "Legs (pernas)",
+  "fitness.grupo.corpoInteiro": "Corpo inteiro",
+  "fitness.motivo.primeira": "primeira",
+  "fitness.motivo.sobe": "sobe",
+  "fitness.motivo.repsSobem": "reps sobem",
+  "fitness.motivo.reinicia": "reinicia",
+  "fitness.motivo.mantem": "mantém",
+  "fitness.motivo.semProgressao": "sem progressão",
+  "fitness.motivo.corpo": "corpo",
+
+  // relatorio.ts
+  "rel.glp1": "GLP-1",
+
+  // app/termos.tsx
+  "termos.titulo": "Política de Privacidade",
+  "termos.descricao": "Uma ferramenta de registro e organização pessoal de peso, alimentação, água, exercícios, GLP-1 e diabetes.",
+  "termos.titulo2": "Política de Privacidade",
+  "termos.titulo3": "Política de Privacidade",
+  "termos.titulo4": "Política de Privacidade",
+
+  // app/_layout.tsx
+  "layout.termosServico": "Termos de Serviço",
 };
 
 export type ChaveTraducao = keyof typeof ptBR;
