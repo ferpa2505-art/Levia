@@ -50,6 +50,12 @@
           "photosPermission": "O Leviã acessa suas fotos para você escolher a foto de um prato. A foto fica no seu aparelho, salvo se você pedir a análise opcional por IA."
         }
       ],
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "O Leviã usa a câmera para ler o código de barras do produto. A imagem não é guardada nem enviada."
+        }
+      ],
       "expo-sharing",
       "expo-secure-store",
       "expo-mail-composer",
