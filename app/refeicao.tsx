@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { View, Pressable, Switch, Alert, Image } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { Camera, ImagePlus, Sparkles, Trash2, X, Minus, Plus, PencilLine } from 'lucide-react-native';
+import { Camera, ImagePlus, Sparkles, Trash2, X, Minus, Plus, PencilLine, ScanBarcode } from 'lucide-react-native';
 import { TelaRolavel } from '@components/TelaRolavel';
 import { ThemedView } from '@components/ThemedView';
 import { ThemedText } from '@components/ThemedText';
@@ -472,9 +472,14 @@ export default function RefeicaoScreen() {
         ) : (
           <>
             <Input value={busca} onChangeText={setBusca} placeholder={t('ref.buscarPh')} style={[styles.input, { marginTop: spacing.md }]} />
-            <Pressable onPress={() => setLeitorAberto(true)} hitSlop={8} style={{ alignSelf: 'flex-start', marginTop: spacing.sm }}>
-              <ThemedText variant="small" color="primary">{t('ref.codigo.botao')}</ThemedText>
-            </Pressable>
+            <Button
+              label={t('ref.codigo.botao')}
+              variant="outline"
+              size="md"
+              icon={<ScanBarcode size={18} color={colors.primary} strokeWidth={2} />}
+              onPress={() => setLeitorAberto(true)}
+              style={{ marginTop: spacing.sm }}
+            />
             <LeitorCodigoBarras visivel={leitorAberto} onFechar={() => setLeitorAberto(false)} onLer={lerCodigo} />
             {(opcoes.length > 0 || atalhos.length > 0 || atalhosSalvos.length > 0) && (
               <View style={styles.sugestoes}>
