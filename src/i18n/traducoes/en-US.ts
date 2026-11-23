@@ -783,6 +783,8 @@ const traducoes: Traducoes = {
   "fitness.descansando": "Rest",
   "fitness.pular": "Skip",
   "fitness.concluirTreino": "Finish workout",
+  "fitness.marcarTodas": "Mark all sets as done",
+  "fitness.legendaSeries": "Reps = repetitions · kg = load · RIR = reps left in reserve at the end of the set (tap to change from 0 to 4) · ✓ = set done",
   "fitness.semSeriesFeitas": "Mark at least one set as done before finishing.",
   "fitness.semHistorico": "No workouts logged yet.",
   "fitness.adicionarExercicioAgora": "Add exercise now",

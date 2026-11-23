@@ -232,6 +232,11 @@ export default function ExecutarTreino() {
     };
   }
 
+  /** Marca todas as séries como feitas de uma vez (para quem já fez tudo conforme o plano). */
+  function marcarTodasSeries() {
+    setSeries((atual) => atual.map((s) => ({ ...s, feita: true })));
+  }
+
   async function concluir() {
     if (!series.some((s) => s.feita)) {
       Alert.alert(t('fitness.concluirTreino'), t('fitness.semSeriesFeitas'));
@@ -337,6 +342,10 @@ export default function ExecutarTreino() {
                 </ThemedText>
               )}
 
+              {linhas.length > 0 && (
+                <ThemedText variant="caption" color="textSecondary">{t('fitness.legendaSeries')}</ThemedText>
+              )}
+
               {linhas.map(({ s, indice }) => (
                 <View key={`${exercicioId}-${indice}`} style={[styles.linhaSerie, s.feita && { opacity: 0.7 }, s.tipo === 'aquecimento' && { backgroundColor: colors.background }]}>
                   <ThemedText variant="small" color="textSecondary" style={{ width: 44 }}>
@@ -405,6 +414,7 @@ export default function ExecutarTreino() {
           <Button label={t('fitness.adicionarExercicioAgora')} variant="outline" onPress={() => setAdicionando(true)} />
         )}
 
+        <Button label={t('fitness.marcarTodas')} variant="outline" onPress={marcarTodasSeries} />
         <Button label={t('fitness.concluirTreino')} onPress={concluir} />
         <View style={{ height: spacing.xl }} />
       </ThemedView>
