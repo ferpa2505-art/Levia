@@ -2,6 +2,8 @@ import type { TraducoesParciais } from './pt-BR';
 
 const traducoes: TraducoesParciais = {
   "comum.continuar": "계속",
+  "menu.analytics.titulo": "익명 사용 통계",
+  "menu.analytics.descricao": "익명 데이터로 앱 개선에 도움을 줍니다. 건강 데이터는 전송되지 않습니다. 언제든 끌 수 있습니다.",
   "comum.dias.dom": "일",
   "comum.dias.seg": "월",
   "comum.dias.ter": "화",

@@ -2,6 +2,8 @@ import type { TraducoesParciais } from './pt-BR';
 
 const traducoes: TraducoesParciais = {
   "comum.continuar": "متابعة",
+  "menu.analytics.titulo": "قياس الاستخدام المجهول",
+  "menu.analytics.descricao": "يساعد على تحسين التطبيق ببيانات مجهولة. لا تُرسل أي بيانات صحية. يمكنك إيقافه في أي وقت.",
   "comum.dias.dom": "أحد",
   "comum.dias.seg": "إثن",
   "comum.dias.ter": "ثلا",

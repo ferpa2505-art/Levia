@@ -2,6 +2,8 @@ import type { TraducoesParciais } from './pt-BR';
 
 const traducoes: TraducoesParciais = {
   "comum.continuar": "ต่อไป",
+  "menu.analytics.titulo": "การวัดการใช้งานแบบไม่ระบุตัวตน",
+  "menu.analytics.descricao": "ช่วยปรับปรุงแอปด้วยข้อมูลที่ไม่ระบุตัวตน ไม่มีการส่งข้อมูลสุขภาพ คุณปิดได้ทุกเมื่อ",
   "comum.dias.dom": "อา",
   "comum.dias.seg": "จ",
   "comum.dias.ter": "อ",

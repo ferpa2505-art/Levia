@@ -1,6 +1,8 @@
 // Idioma base do app. Todos os outros idiomas usam estas mesmas chaves.
 const ptBR = {
   "comum.continuar": "Continuar",
+  "menu.analytics.titulo": "Medição de uso anônima",
+  "menu.analytics.descricao": "Ajuda a melhorar o app com dados anônimos. Nenhum dado de saúde é enviado. Você pode desligar quando quiser.",
   "comum.dias.dom": "Dom",
   "comum.dias.seg": "Seg",
   "comum.dias.ter": "Ter",

@@ -2,6 +2,8 @@ import type { TraducoesParciais } from './pt-BR';
 
 const traducoes: TraducoesParciais = {
   "comum.continuar": "Doorgaan",
+  "menu.analytics.titulo": "Anonieme gebruiksstatistieken",
+  "menu.analytics.descricao": "Helpt de app te verbeteren met anonieme gegevens. Er worden geen gezondheidsgegevens verstuurd. Je kunt het altijd uitzetten.",
   "comum.dias.dom": "Zo",
   "comum.dias.seg": "Ma",
   "comum.dias.ter": "Di",

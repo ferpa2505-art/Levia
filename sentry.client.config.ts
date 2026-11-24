@@ -3,7 +3,6 @@
  * Este arquivo é importado no entry point do app (expo-router/entry)
  */
 import * as Sentry from '@sentry/react-native';
-import { Platform } from 'react-native';
 import Constants from 'expo-constants';
 
 const SENTRY_DSN = Constants.expoConfig?.extra?.sentryDsn ?? process.env.SENTRY_DSN;
@@ -34,12 +33,7 @@ if (SENTRY_DSN) {
       return event;
     },
 
-    // Configurações específicas de plataforma
-    ...(Platform.OS === 'web' && {
-      // Web-specific config
-      replaysOnErrorSampleRate: 1.0,
-      replaysSessionSampleRate: 0.1,
-    }),
+    // Replay de sessão desligado: uma tela de refeição ou medicação pode mostrar dados de saúde.
   });
 
   // Define usuário se autenticado (chamado após login)

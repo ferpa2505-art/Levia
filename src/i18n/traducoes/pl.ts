@@ -2,6 +2,8 @@ import type { TraducoesParciais } from './pt-BR';
 
 const traducoes: TraducoesParciais = {
   "comum.continuar": "Dalej",
+  "menu.analytics.titulo": "Anonimowe statystyki użycia",
+  "menu.analytics.descricao": "Pomaga ulepszać aplikację anonimowymi danymi. Nie wysyłamy danych zdrowotnych. Możesz to wyłączyć w każdej chwili.",
   "comum.dias.dom": "Nd",
   "comum.dias.seg": "Pn",
   "comum.dias.ter": "Wt",

@@ -2,6 +2,8 @@ import type { Traducoes } from './pt-BR';
 
 const traducoes: Traducoes = {
   "comum.continuar": "Continue",
+  "menu.analytics.titulo": "Anonymous usage analytics",
+  "menu.analytics.descricao": "Helps improve the app with anonymous data. No health data is sent. You can turn it off anytime.",
   "comum.dias.dom": "Sun",
   "comum.dias.seg": "Mon",
   "comum.dias.ter": "Tue",

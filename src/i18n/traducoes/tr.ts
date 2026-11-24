@@ -2,6 +2,8 @@ import type { TraducoesParciais } from './pt-BR';
 
 const traducoes: TraducoesParciais = {
   "comum.continuar": "Devam",
+  "menu.analytics.titulo": "Anonim kullanım ölçümü",
+  "menu.analytics.descricao": "Uygulamayı anonim verilerle geliştirmeye yardımcı olur. Sağlık verisi gönderilmez. İstediğiniz zaman kapatabilirsiniz.",
   "comum.dias.dom": "Paz",
   "comum.dias.seg": "Pzt",
   "comum.dias.ter": "Sal",

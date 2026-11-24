@@ -2,6 +2,8 @@ import type { Traducoes } from './pt-BR';
 
 const traducoes: Traducoes = {
   "comum.continuar": "Continuar",
+  "menu.analytics.titulo": "Medición de uso anónima",
+  "menu.analytics.descricao": "Ayuda a mejorar la app con datos anónimos. No se envían datos de salud. Puedes desactivarlo cuando quieras.",
   "comum.dias.dom": "Dom",
   "comum.dias.seg": "Lun",
   "comum.dias.ter": "Mar",

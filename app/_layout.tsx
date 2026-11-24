@@ -20,6 +20,7 @@ import { AvisoNovaVersao } from '@components/AvisoNovaVersao';
 import { useVerificarAtualizacao } from '@hooks/useVerificarAtualizacao';
 import { PreferencesProvider, usePreferences } from '@context/PreferencesContext';
 import { aoMudarLicenca, lerLicenca } from '@utils/licenca';
+import { iniciarMedicaoSeAutorizada } from '@utils/analytics';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -35,6 +36,10 @@ function RootNavigation() {
   const { carregado: segurancaCarregada } = useSeguranca();
   const [temLicenca, setTemLicenca] = useState<boolean | null>(EXIGIR_SERIAL ? null : true);
   const loading = carregandoPerfil || !segurancaCarregada || temLicenca === null;
+
+  useEffect(() => {
+    iniciarMedicaoSeAutorizada().catch(() => {});
+  }, []);
 
   useEffect(() => {
     if (!EXIGIR_SERIAL) return;

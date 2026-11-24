@@ -40,7 +40,8 @@ export async function initAnalytics(userConsent: boolean): Promise<void> {
     const apiKey = Constants.expoConfig?.extra?.posthogApiKey || process.env.EXPO_PUBLIC_POSTHOG_API_KEY;
     const host = Constants.expoConfig?.extra?.posthogHost || 'https://app.posthog.com';
 
-    if (!apiKey) {
+    // Chave de exemplo (placeholder) não inicia o cliente: nenhum evento sai sem chave real.
+    if (!apiKey || apiKey.startsWith('YOUR')) {
       console.warn('[Analytics] PostHog API key not configured - analytics disabled');
       return;
     }
@@ -270,4 +271,26 @@ export function isAnalyticsEnabled(): boolean {
  */
 export function getPostHog(): any {
   return posthog;
+}
+
+const CHAVE_CONSENTIMENTO_USO = 'levia:analyticsConsent';
+
+/** Autorização de medição de uso guardada neste aparelho (padrão: desligada). */
+export async function lerConsentimentoUso(): Promise<boolean> {
+  const { default: AsyncStorage } = await import('@react-native-async-storage/async-storage');
+  return (await AsyncStorage.getItem(CHAVE_CONSENTIMENTO_USO)) === '1';
+}
+
+/** Liga ou desliga a medição de uso e guarda a escolha. Desligar apaga o identificador no PostHog. */
+export async function salvarConsentimentoUso(ativo: boolean): Promise<void> {
+  const { default: AsyncStorage } = await import('@react-native-async-storage/async-storage');
+  await AsyncStorage.setItem(CHAVE_CONSENTIMENTO_USO, ativo ? '1' : '0');
+  await setConsent(ativo);
+}
+
+/** Na abertura do app: inicia a medição só se o usuário já tiver autorizado. */
+export async function iniciarMedicaoSeAutorizada(): Promise<void> {
+  if (await lerConsentimentoUso()) {
+    await setConsent(true);
+  }
 }

@@ -2,6 +2,8 @@ import type { TraducoesParciais } from './pt-BR';
 
 const traducoes: TraducoesParciais = {
   "comum.continuar": "जारी रखें",
+  "menu.analytics.titulo": "गुमनाम उपयोग मापन",
+  "menu.analytics.descricao": "गुमनाम डेटा से ऐप सुधारने में मदद करता है। कोई स्वास्थ्य डेटा नहीं भेजा जाता। आप इसे कभी भी बंद कर सकते हैं।",
   "comum.dias.dom": "रवि",
   "comum.dias.seg": "सोम",
   "comum.dias.ter": "मंग",

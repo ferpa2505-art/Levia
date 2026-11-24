@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { lerConsentimentoUso, salvarConsentimentoUso } from '@utils/analytics';
 import { Alert, Linking, Modal, Pressable, ScrollView, Switch, View, useWindowDimensions } from 'react-native';
 import Constants from 'expo-constants';
 import { useRouter } from 'expo-router';
@@ -42,7 +43,12 @@ export function MenuOpcoes() {
   const bkp = useBackupDados();
   const [aberto, setAberto] = useState(false);
   const [tela, setTela] = useState<Tela>('principal');
+  const [usoAtivo, setUsoAtivo] = useState(false);
   const { height } = useWindowDimensions();
+
+  useEffect(() => {
+    lerConsentimentoUso().then(setUsoAtivo).catch(() => setUsoAtivo(false));
+  }, []);
 
   const nomeIdiomaAtual = IDIOMAS.find((i) => i.codigo === idioma)?.nome ?? idioma;
 
@@ -152,6 +158,20 @@ export function MenuOpcoes() {
                     <ThemedText variant="small" color="textSecondary">{t('menu.ia.revogarDescricao')}</ThemedText>
                   </View>
                 </Pressable>
+
+                <View style={styles.item}>
+                  <ShieldCheck size={20} color={colors.primary} strokeWidth={2} />
+                  <View style={styles.itemTextos}>
+                    <ThemedText variant="body" color="text">{t('menu.analytics.titulo')}</ThemedText>
+                    <ThemedText variant="small" color="textSecondary">{t('menu.analytics.descricao')}</ThemedText>
+                  </View>
+                  <Switch
+                    value={usoAtivo}
+                    onValueChange={(v) => { setUsoAtivo(v); salvarConsentimentoUso(v).catch(() => setUsoAtivo(!v)); }}
+                    trackColor={{ true: colors.primary, false: colors.border }}
+                    accessibilityLabel={t('menu.analytics.titulo')}
+                  />
+                </View>
 
                 <Pressable style={styles.item} onPress={() => {
                     suspenderBloqueio();

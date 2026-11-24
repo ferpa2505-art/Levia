@@ -2,6 +2,8 @@ import type { TraducoesParciais } from './pt-BR';
 
 const traducoes: TraducoesParciais = {
   "comum.continuar": "Tiếp tục",
+  "menu.analytics.titulo": "Đo lường sử dụng ẩn danh",
+  "menu.analytics.descricao": "Giúp cải thiện ứng dụng bằng dữ liệu ẩn danh. Không gửi dữ liệu sức khỏe. Bạn có thể tắt bất cứ lúc nào.",
   "comum.dias.dom": "CN",
   "comum.dias.seg": "T2",
   "comum.dias.ter": "T3",

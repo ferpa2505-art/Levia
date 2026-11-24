@@ -90,6 +90,14 @@ Base legal: legítimo interesse e segurança (LGPD, art. 7º, IX), usando só o 
 
 Quando você informa seu e-mail, ele pode ser usado para enviar o acesso de teste e avisos importantes sobre a sua conta. O envio é feito pela **Resend**. A equipe também recebe por e-mail alertas internos (por exemplo, pedido de atendimento humano ou falha de pagamento), que podem conter o necessário para resolver o seu caso.
 
+### 4.7 Relatórios de erro e medição de uso
+
+**Relatórios de erro (Sentry).** Quando o app está configurado para isso, ele envia ao Sentry relatórios de falhas e de desempenho, para encontrar e corrigir erros. Esses relatórios contêm: o tipo do erro e a trilha técnica (stack), o modelo e o sistema operacional do aparelho, a versão do app, o idioma e, por padrão do provedor, o endereço IP. Não enviamos nome, e-mail, peso, glicemia, medicações, refeições nem o texto que você digita. Medimos desempenho em uma parte das sessões (10%). Os relatórios são guardados por 180 dias, nos servidores do Sentry na região do projeto configurado (União Europeia ou Estados Unidos).
+
+**Medição de uso (PostHog).** Somente se você autorizar, em **Opções → Medição de uso anônima**. Quando autorizada, o app envia eventos anônimos de uso, como abertura de telas, uso de funções e tempo de carregamento. O identificador é um código aleatório guardado no seu aparelho, sem ligação com seu nome, e-mail ou telefone. Propriedades que possam conter dado pessoal ou de saúde são removidas antes do envio. Os dados são guardados nos servidores do PostHog, nos Estados Unidos, por 180 dias. Essa transferência para fora do Brasil está descrita na seção 6. Ao desligar a opção, nenhum novo evento é enviado.
+
+**Base legal:** legítimo interesse para os relatórios de erro (LGPD art. 7º, IX), com medidas para minimizar os dados; consentimento para a medição de uso (LGPD art. 7º, I).
+
 ## 5. Base legal
 
 - **Consentimento específico e destacado** (LGPD, arts. 7º, I e 11, I): guardar nome, telefone, e-mail e objetivo no atendimento pelo WhatsApp (o objetivo pode revelar dado de saúde); enviar fotos à IA (seção 4.2); pixel de medição da página de vendas (seção 4.4). Você pode revogar a qualquer momento (seção 9), sem prejuízo do que já foi feito.
@@ -110,6 +118,8 @@ Usamos estes prestadores para operar o serviço, cada um só com o necessário:
 | **Hotmart** | pagamentos | dados da compra (seção 4.3) |
 | **Resend** | envio de e-mail | e-mail e conteúdo da mensagem |
 | **Expo** | atualizações do aplicativo | dados técnicos do aparelho; nenhum registro seu |
+| **Sentry** | relatórios de erro e desempenho (seção 4.7) | tipo do erro, trilha técnica, aparelho, versão, IP |
+| **PostHog** (Estados Unidos) | medição de uso anônima, só se você autorizar (seção 4.7) | eventos anônimos, identificador aleatório |
 
 Também baixamos notícias públicas de sites de saúde; nenhum registro seu vai nessas requisições. Não vendemos nem alugamos dados.
 
