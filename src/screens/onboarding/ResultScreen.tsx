@@ -6,10 +6,12 @@ import { Button } from '@components/Button';
 import { spacing, radius } from '@constants/colors';
 import { lightTheme } from '@theme/colors';
 import { OnboardingStackParamList } from '../OnboardingStack';
+import { usePreferences } from '@context/PreferencesContext';
 
 type ResultScreenProps = NativeStackScreenProps<OnboardingStackParamList, 'Result'>;
 
 export function ResultScreen({ route, navigation }: ResultScreenProps) {
+  const { t } = usePreferences();
   const { calorieGoal, proteinGoal, waterGoal } = route.params;
 
   return (
@@ -21,10 +23,10 @@ export function ResultScreen({ route, navigation }: ResultScreenProps) {
         {/* Header */}
         <View style={styles.header}>
           <ThemedText variant="title" color="success" style={{ marginBottom: spacing.md }}>
-            ✓ Suas Metas Calculadas!
+            {t('onb.resultado.titulo')}
           </ThemedText>
           <ThemedText variant="body" color="textSecondary">
-            Com base em seu perfil, aqui estão suas metas diárias
+            {t('onb.resultado.subtitulo')}
           </ThemedText>
         </View>
 
@@ -39,7 +41,7 @@ export function ResultScreen({ route, navigation }: ResultScreenProps) {
               {calorieGoal.toLocaleString('pt-BR')}
             </ThemedText>
             <ThemedText variant="body" color="textSecondary">
-              kcal/dia
+              {t('onb.resultado.kcalPorDia')}
             </ThemedText>
           </ThemedView>
 
@@ -58,7 +60,7 @@ export function ResultScreen({ route, navigation }: ResultScreenProps) {
               {proteinGoal.toLocaleString('pt-BR')}
             </ThemedText>
             <ThemedText variant="body" color="textSecondary">
-              g/dia
+              {t('onb.resultado.gPorDia')}
             </ThemedText>
           </ThemedView>
 
@@ -77,7 +79,7 @@ export function ResultScreen({ route, navigation }: ResultScreenProps) {
               {(waterGoal / 1000).toFixed(1)}
             </ThemedText>
             <ThemedText variant="body" color="textSecondary">
-              L/dia
+              {t('onb.resultado.lPorDia')}
             </ThemedText>
           </ThemedView>
         </View>
@@ -85,16 +87,16 @@ export function ResultScreen({ route, navigation }: ResultScreenProps) {
         {/* Info Box */}
         <ThemedView variant="surface" style={styles.infoBox}>
           <ThemedText variant="body" color="text" style={{ marginBottom: spacing.sm }}>
-            ℹ️ Sobre suas metas
+            {t('onb.resultado.sobreMetas')}
           </ThemedText>
           <ThemedText variant="small" color="textSecondary">
-            Estas metas foram calculadas e seguem diretrizes nutricionais de segurança.
+            {t('onb.resultado.descricaoMetas')}
           </ThemedText>
         </ThemedView>
 
         {/* CTA */}
         <Button
-          label="Vamos começar! 🚀"
+          label={t('onb.resultado.vamosComecar')}
           variant="primary"
           size="lg"
           onPress={() => {

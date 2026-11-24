@@ -1,4 +1,6 @@
 import '@utils/alertaWeb';
+// Sentry deve ser inicializado o mais cedo possível
+import { sentryInitialized } from '../sentry.client.config';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect, useState } from 'react';

@@ -5,6 +5,7 @@ import { colors } from '@constants/colors';
 import { Clock, Bell } from 'lucide-react-native';
 import { gerarHorariosPorFrequencia, normalizarHorario } from '@hooks/useMedicacaoAlarmes';
 import { enviarLembreteTeste } from '@utils/diabetesNotifications';
+import { usePreferences } from '@context/PreferencesContext';
 
 interface Props {
   medicacao: RegistroMedicacao;
@@ -12,35 +13,36 @@ interface Props {
   onCancel: () => void;
 }
 
-const FREQUENCIAS: { label: string; value: FrequenciaAlarme }[] = [
-  { label: 'A cada hora', value: 'hora' },
-  { label: 'A cada 2 horas', value: '2h' },
-  { label: 'A cada 3 horas', value: '3h' },
-  { label: 'A cada 4 horas', value: '4h' },
-  { label: 'A cada 6 horas', value: '6h' },
-  { label: 'A cada 8 horas', value: '8h' },
-  { label: 'A cada 12 horas', value: '12h' },
-  { label: 'Diária', value: 'diaria' },
-  { label: 'Semanal', value: 'semanal' },
-  { label: 'Quinzenal', value: 'quinzenal' },
-  { label: 'Mensal', value: 'mensal' },
-];
-
-const DIAS_SEMANA = [
-  { label: 'Dom', value: 0 },
-  { label: 'Seg', value: 1 },
-  { label: 'Ter', value: 2 },
-  { label: 'Qua', value: 3 },
-  { label: 'Qui', value: 4 },
-  { label: 'Sex', value: 5 },
-  { label: 'Sab', value: 6 },
-];
-
 export const ConfiguradorAlarmesMedicacao: React.FC<Props> = ({
   medicacao,
   onConfirm,
   onCancel,
 }) => {
+  const { t } = usePreferences();
+
+  const FREQUENCIAS: { label: string; value: FrequenciaAlarme }[] = [
+    { label: t('med.frequencia.hora'), value: 'hora' },
+    { label: t('med.frequencia.2h'), value: '2h' },
+    { label: t('med.frequencia.3h'), value: '3h' },
+    { label: t('med.frequencia.4h'), value: '4h' },
+    { label: t('med.frequencia.6h'), value: '6h' },
+    { label: t('med.frequencia.8h'), value: '8h' },
+    { label: t('med.frequencia.12h'), value: '12h' },
+    { label: t('med.frequencia.diaria'), value: 'diaria' },
+    { label: t('med.frequencia.semanal'), value: 'semanal' },
+    { label: t('med.frequencia.quinzenal'), value: 'quinzenal' },
+    { label: t('med.frequencia.mensal'), value: 'mensal' },
+  ];
+
+  const DIAS_SEMANA = [
+    { label: t('comum.dias.dom'), value: 0 },
+    { label: t('comum.dias.seg'), value: 1 },
+    { label: t('comum.dias.ter'), value: 2 },
+    { label: t('comum.dias.qua'), value: 3 },
+    { label: t('comum.dias.qui'), value: 4 },
+    { label: t('comum.dias.sex'), value: 5 },
+    { label: t('comum.dias.sab'), value: 6 },
+  ];
   const [alarme, setAlarme] = useState<ConfiguracaoAlarme>(
     medicacao.alarme || {
       ativado: false,
@@ -68,10 +70,10 @@ export const ConfiguradorAlarmesMedicacao: React.FC<Props> = ({
   const handleTestar = async () => {
     const ok = await enviarLembreteTeste(medicacao);
     Alert.alert(
-      ok ? 'Lembrete de teste enviado' : 'Notificações bloqueadas',
+      ok ? t('med.alarme.testeEnviado') : t('med.alarme.notificacoesBloqueadas'),
       ok
-        ? 'Feche o app agora: a notificação deve chegar em cerca de 10 segundos.'
-        : 'Permita as notificações do Leviã em Configurações do Android > Apps > Leviã > Notificações.'
+        ? t('med.alarme.fecheApp')
+        : t('med.alarme.permitaNotificacoes')
     );
   };
 
@@ -84,7 +86,7 @@ export const ConfiguradorAlarmesMedicacao: React.FC<Props> = ({
 
   const handleAtivarAlarme = (ativo: boolean) => {
     if (ativo && frequenciaObrigatoria && !alarme.frequencia) {
-      Alert.alert('Campo obrigatório', 'Selecione a frequência do alarme');
+      Alert.alert(t('med.alarme.campoObrigatorio'), t('med.alarme.selecioneFrequencia'));
       return;
     }
     setAlarme({ ...alarme, ativado: ativo });
@@ -108,22 +110,22 @@ export const ConfiguradorAlarmesMedicacao: React.FC<Props> = ({
     }
 
     if (frequenciaObrigatoria && !alarme.frequencia) {
-      Alert.alert('Erro', 'Frequência é obrigatória para esta medicação');
+      Alert.alert(t('comum.erro'), t('med.alarme.frequenciaObrigatoria'));
       return;
     }
 
     if (notificacaoObrigatoria && !alarme.notificacaoAtivada) {
-      Alert.alert('Erro', 'Notificações são obrigatórias para esta medicação');
+      Alert.alert(t('comum.erro'), t('med.alarme.notificacaoObrigatoria'));
       return;
     }
 
     if (!horarioValido) {
-      Alert.alert('Horário inválido', 'Digite o horário no formato HH:MM, por exemplo 07:30');
+      Alert.alert(t('med.alarme.horarioInvalido'), t('med.alarme.formatoHorario'));
       return;
     }
 
     if (!alarme.horarios || alarme.horarios.length === 0) {
-      Alert.alert('Erro', 'Configure pelo menos um horário');
+      Alert.alert(t('comum.erro'), t('med.alarme.minimoUmHorario'));
       return;
     }
 
@@ -132,18 +134,18 @@ export const ConfiguradorAlarmesMedicacao: React.FC<Props> = ({
 
   return (
     <View style={styles.container}>
-      <Text style={styles.titulo}>⏰ Configurar Alarme</Text>
+      <Text style={styles.titulo}>{t('med.alarme.titulo')}</Text>
       <Text style={styles.medicamento}>{medicacao.medicamento} - {medicacao.dosagem}</Text>
 
       <ScrollView style={styles.conteudo} showsVerticalScrollIndicator={false}>
-        {/* Seção: Tipo de Medicação */}
+        {/* Section: Medication Type */}
         <View style={styles.secao}>
           <Text style={styles.tipoMedicacao}>
-            {ehMedicacaoDiabetes ? '💉 Medicação de Diabetes' : '💊 Outra Medicação'}
+            {ehMedicacaoDiabetes ? t('med.tipo.diabetes') : t('med.tipo.outra')}
           </Text>
           {!ehMedicacaoDiabetes && (
             <View style={styles.campoContinuo}>
-              <Text style={styles.label}>Uso contínuo?</Text>
+              <Text style={styles.label}>{t('med.usoContinuo')}</Text>
               <View style={styles.switchContainer}>
                 <Switch
                   value={alarme.usoContinuo}
@@ -154,7 +156,7 @@ export const ConfiguradorAlarmesMedicacao: React.FC<Props> = ({
                   thumbColor={alarme.usoContinuo ? colors.success : colors.textSecondary}
                 />
                 <Text style={styles.labelContinuo}>
-                  {alarme.usoContinuo ? 'Sim, uso contínuo' : 'Não, ocasional'}
+                  {alarme.usoContinuo ? t('med.simUsoContinuo') : t('med.naoOcasional')}
                 </Text>
               </View>
             </View>
@@ -171,7 +173,7 @@ export const ConfiguradorAlarmesMedicacao: React.FC<Props> = ({
               thumbColor={alarme.ativado ? colors.success : colors.textSecondary}
             />
             <Text style={styles.label}>
-              {alarme.ativado ? '✓ Alarme ativado' : 'Alarme desativado'}
+              {alarme.ativado ? t('med.alarme.ativado') : t('med.alarme.desativado')}
             </Text>
           </View>
         </View>
@@ -181,7 +183,7 @@ export const ConfiguradorAlarmesMedicacao: React.FC<Props> = ({
             {/* Seção: Frequência (obrigatória se diabetes ou uso contínuo) */}
             <View style={styles.secao}>
               <Text style={[styles.label, frequenciaObrigatoria && styles.obrigatorio]}>
-                Frequência {frequenciaObrigatoria ? '(obrigatório)' : '(opcional)'}
+                {t('med.alarme.frequencia')} {frequenciaObrigatoria ? t('comum.obrigatorio') : t('comum.opcional')}
               </Text>
               <ScrollView
                 horizontal
@@ -212,7 +214,7 @@ export const ConfiguradorAlarmesMedicacao: React.FC<Props> = ({
 
             {/* Seção: Primeiro horário (os demais são calculados a partir dele) */}
             <View style={styles.secao}>
-              <Text style={styles.label}>Primeiro horário do dia (HH:MM):</Text>
+              <Text style={styles.label}>{t('med.alarme.horario')} (HH:MM):</Text>
               <TextInput
                 value={primeiroHorario}
                 onChangeText={handleMudarHorario}
@@ -226,7 +228,7 @@ export const ConfiguradorAlarmesMedicacao: React.FC<Props> = ({
 
             {/* Seção: Horários Sugeridos */}
             <View style={styles.secao}>
-              <Text style={styles.label}>Horários para tomar:</Text>
+              <Text style={styles.label}>{t('med.horariosParaTomar') || 'Horários para tomar:'}</Text>
               <View style={styles.horariosContainer}>
                 {alarme.horarios?.map((horario, idx) => (
                   <View key={idx} style={styles.horarioTag}>
@@ -244,7 +246,7 @@ export const ConfiguradorAlarmesMedicacao: React.FC<Props> = ({
                   value={alarme.notificacaoAtivada}
                   onValueChange={(val) => {
                     if (!val && notificacaoObrigatoria) {
-                      Alert.alert('Não permitido', 'Notificações são obrigatórias para esta medicação');
+                      Alert.alert(t('comum.naoPermitido'), t('med.alarme.notificacaoObrigatoria'));
                       return;
                     }
                     setAlarme({ ...alarme, notificacaoAtivada: val });
@@ -256,17 +258,17 @@ export const ConfiguradorAlarmesMedicacao: React.FC<Props> = ({
                 <View style={styles.notificacaoLabel}>
                   <Bell size={16} color={colors.primary} />
                   <Text style={[styles.label, notificacaoObrigatoria && styles.obrigatorio]}>
-                    Notificação {notificacaoObrigatoria ? '(obrigatório)' : '(opcional)'}
+                    {t('med.notificacao')} {notificacaoObrigatoria ? t('comum.obrigatorio') : t('comum.opcional')}
                   </Text>
                 </View>
               </View>
               {alarme.notificacaoAtivada && (
                 <Text style={styles.textoAjuda}>
-                  💬 Você receberá lembretes nos horários configurados
+                  💬 {t('med.voceReceberaLembretes')}
                 </Text>
               )}
               <TouchableOpacity style={styles.botaoTeste} onPress={handleTestar}>
-                <Text style={styles.botaoTesteTexto}>🔔 Enviar lembrete de teste</Text>
+                <Text style={styles.botaoTesteTexto}>🔔 {t('med.alarme.teste')}</Text>
               </TouchableOpacity>
             </View>
           </>
@@ -276,10 +278,10 @@ export const ConfiguradorAlarmesMedicacao: React.FC<Props> = ({
       {/* Botões de Ação */}
       <View style={styles.botoes}>
         <TouchableOpacity style={styles.btnCancelar} onPress={onCancel}>
-          <Text style={styles.textoCancelar}>Cancelar</Text>
+          <Text style={styles.textoCancelar}>{t('comum.cancelar')}</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.btnConfirmar} onPress={handleConfirm}>
-          <Text style={styles.textoConfirmar}>Salvar Alarme</Text>
+          <Text style={styles.textoConfirmar}>{t('med.alarme.salvar')}</Text>
         </TouchableOpacity>
       </View>
     </View>
