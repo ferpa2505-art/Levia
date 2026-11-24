@@ -4,12 +4,12 @@ import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { ThemedText } from '@components/ThemedText';
 import { lightTheme } from '@theme/colors';
 import { OnboardingStackParamList } from '../OnboardingStack';
-import { useTranslation } from '@/i18n';
+import { usePreferences } from '@context/PreferencesContext';
 
 type SplashScreenProps = NativeStackScreenProps<OnboardingStackParamList, 'Splash'>;
 
 export function SplashScreen({ navigation }: SplashScreenProps) {
-  const { t } = useTranslation();
+  const { t } = usePreferences();
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const scaleAnim = useRef(new Animated.Value(0.8)).current;
   const translateYAnim = useRef(new Animated.Value(30)).current;

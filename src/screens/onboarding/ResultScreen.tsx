@@ -6,12 +6,12 @@ import { Button } from '@components/Button';
 import { spacing, radius } from '@constants/colors';
 import { lightTheme } from '@theme/colors';
 import { OnboardingStackParamList } from '../OnboardingStack';
-import { useTranslation } from '@/i18n';
+import { usePreferences } from '@context/PreferencesContext';
 
 type ResultScreenProps = NativeStackScreenProps<OnboardingStackParamList, 'Result'>;
 
 export function ResultScreen({ route, navigation }: ResultScreenProps) {
-  const { t } = useTranslation();
+  const { t } = usePreferences();
   const { calorieGoal, proteinGoal, waterGoal } = route.params;
 
   return (

@@ -20,7 +20,6 @@ import { AvisoNovaVersao } from '@components/AvisoNovaVersao';
 import { useVerificarAtualizacao } from '@hooks/useVerificarAtualizacao';
 import { PreferencesProvider, usePreferences } from '@context/PreferencesContext';
 import { aoMudarLicenca, lerLicenca } from '@utils/licenca';
-import { useTranslation } from '@/i18n';
 
 SplashScreen.preventAutoHideAsync();
 

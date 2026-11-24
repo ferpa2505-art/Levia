@@ -5,7 +5,7 @@ import { colors } from '@constants/colors';
 import { Clock, Bell } from 'lucide-react-native';
 import { gerarHorariosPorFrequencia, normalizarHorario } from '@hooks/useMedicacaoAlarmes';
 import { enviarLembreteTeste } from '@utils/diabetesNotifications';
-import { useTranslation } from '@/i18n';
+import { usePreferences } from '@context/PreferencesContext';
 
 interface Props {
   medicacao: RegistroMedicacao;
@@ -18,7 +18,7 @@ export const ConfiguradorAlarmesMedicacao: React.FC<Props> = ({
   onConfirm,
   onCancel,
 }) => {
-  const { t } = useTranslation();
+  const { t } = usePreferences();
 
   const FREQUENCIAS: { label: string; value: FrequenciaAlarme }[] = [
     { label: t('med.frequencia.hora'), value: 'hora' },

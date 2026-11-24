@@ -3,7 +3,7 @@ import { NoticiaItem } from '@models/news';
 import { parseRss } from '@utils/rssParser';
 import { carregarNoticiasCache, salvarNoticiasCache } from '@utils/newsStorage';
 import { fontesNoticias, eRelevante } from '@constants/newsFeeds';
-import { useTranslation } from '@/i18n';
+import { usePreferences } from '@context/PreferencesContext';
 
 interface NewsContextValue {
   noticias: NoticiaItem[];
@@ -17,7 +17,7 @@ interface NewsContextValue {
 const NewsContext = createContext<NewsContextValue | undefined>(undefined);
 
 export function NewsProvider({ children }: { children: ReactNode }) {
-  const { t } = useTranslation();
+  const { t } = usePreferences();
   const [noticias, setNoticias] = useState<NoticiaItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [atualizando, setAtualizando] = useState(false);

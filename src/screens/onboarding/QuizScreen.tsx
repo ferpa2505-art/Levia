@@ -7,7 +7,7 @@ import { Button } from '@components/Button';
 import { spacing, radius } from '@constants/colors';
 import { lightTheme } from '@theme/colors';
 import { OnboardingStackParamList } from '../OnboardingStack';
-import { useTranslation } from '@/i18n';
+import { usePreferences } from '@context/PreferencesContext';
 
 type QuizScreenProps = NativeStackScreenProps<OnboardingStackParamList, 'Quiz'>;
 
@@ -17,7 +17,7 @@ interface QuizState {
 
 export function QuizScreen({ navigation }: QuizScreenProps) {
   const [quiz, setQuiz] = useState<QuizState>({ step: 0 });
-  const { t } = useTranslation();
+  const { t } = usePreferences();
 
   const handleNext = () => {
     if (quiz.step < 7) {
