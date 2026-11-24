@@ -16,7 +16,7 @@ import { IDIOMAS } from '@/i18n';
 import { colors, spacing, radius, NomeTema } from '@constants/colors';
 import { estilosTema } from '@theme/estilos';
 import { suspenderBloqueio } from '@utils/bloqueioSuspenso';
-import { revogarConsentimentoIA } from '@utils/iaPrato';
+import { revogarConsentimentoIA, revogarConsentimentoIATexto } from '@utils/iaPrato';
 
 const URL_PRIVACIDADE = 'https://ferpa2505-art.github.io/levia-policies/privacidade.html';
 
@@ -81,6 +81,7 @@ export function MenuOpcoes() {
   async function revogarIA() {
     try {
       await revogarConsentimentoIA();
+      await revogarConsentimentoIATexto();
       Alert.alert(textoIA.titulo, textoIA.sucesso);
     } catch {
       Alert.alert(textoIA.titulo, textoIA.erro);
