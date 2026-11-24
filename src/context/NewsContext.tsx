@@ -3,6 +3,7 @@ import { NoticiaItem } from '@models/news';
 import { parseRss } from '@utils/rssParser';
 import { carregarNoticiasCache, salvarNoticiasCache } from '@utils/newsStorage';
 import { fontesNoticias, eRelevante } from '@constants/newsFeeds';
+import { useTranslation } from '@/i18n';
 
 interface NewsContextValue {
   noticias: NoticiaItem[];
@@ -16,6 +17,7 @@ interface NewsContextValue {
 const NewsContext = createContext<NewsContextValue | undefined>(undefined);
 
 export function NewsProvider({ children }: { children: ReactNode }) {
+  const { t } = useTranslation();
   const [noticias, setNoticias] = useState<NoticiaItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [atualizando, setAtualizando] = useState(false);
@@ -56,7 +58,7 @@ export function NewsProvider({ children }: { children: ReactNode }) {
       await salvarNoticiasCache(itens);
       setAtualizadoEm(new Date().toISOString());
     } catch {
-      setErro('Não foi possível atualizar as notícias agora. Verifique sua internet.');
+      setErro(t('news.erroAtualizar'));
     } finally {
       setAtualizando(false);
     }

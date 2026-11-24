@@ -1,6 +1,7 @@
 import { Platform } from 'react-native';
 import type { RegistroMedicacao } from '@models/diabetes';
 import { getNotifications, solicitarPermissaoNotificacao } from '@utils/glp1Notifications';
+import { traduzirAtual as t } from '@/i18n';
 
 /**
  * Lembretes de medicação agendados no próprio aparelho, para tocarem mesmo
@@ -16,7 +17,7 @@ async function garantirCanal() {
   if (!Notifications || canalCriado || Platform.OS !== 'android') return;
   canalCriado = true;
   await Notifications.setNotificationChannelAsync(CANAL, {
-    name: 'Lembretes de medicação',
+    name: t('notif.med.canal'),
     importance: Notifications.AndroidImportance.HIGH,
   }).catch(() => {});
 }
@@ -30,8 +31,8 @@ export async function enviarLembreteTeste(medicacao: RegistroMedicacao): Promise
   try {
     await Notifications.scheduleNotificationAsync({
       content: {
-        title: '💊 Lembrete de medicação (teste)',
-        body: `Hora de tomar ${medicacao.medicamento} (${medicacao.dosagem})`,
+        title: t('notif.med.tituloTeste'),
+        body: t('notif.med.corpoGlicemia', { medicamento: medicacao.medicamento, dosagem: medicacao.dosagem }),
         ...(Platform.OS === 'android' ? { channelId: CANAL } : null),
       },
       trigger: {
@@ -139,8 +140,8 @@ export async function agendarAlarmesMedicacao(medicacao: RegistroMedicacao): Pro
       try {
         const id = await Notifications.scheduleNotificationAsync({
           content: {
-            title: '💊 Lembrete de medicação',
-            body: `Hora de tomar ${medicacao.medicamento} (${medicacao.dosagem})`,
+            title: t('notif.med.titulo'),
+            body: t('notif.med.corpo', { medicamento: medicacao.medicamento, dosagem: medicacao.dosagem }),
             data: { medicacaoId: medicacao.id },
             ...(Platform.OS === 'android' ? { channelId: CANAL } : null),
           },

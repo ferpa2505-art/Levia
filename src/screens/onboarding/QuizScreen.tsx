@@ -7,6 +7,7 @@ import { Button } from '@components/Button';
 import { spacing, radius } from '@constants/colors';
 import { lightTheme } from '@theme/colors';
 import { OnboardingStackParamList } from '../OnboardingStack';
+import { useTranslation } from '@/i18n';
 
 type QuizScreenProps = NativeStackScreenProps<OnboardingStackParamList, 'Quiz'>;
 
@@ -16,6 +17,7 @@ interface QuizState {
 
 export function QuizScreen({ navigation }: QuizScreenProps) {
   const [quiz, setQuiz] = useState<QuizState>({ step: 0 });
+  const { t } = useTranslation();
 
   const handleNext = () => {
     if (quiz.step < 7) {
@@ -37,7 +39,7 @@ export function QuizScreen({ navigation }: QuizScreenProps) {
   };
 
   return (
-    <ScrollView 
+    <ScrollView
       style={{ backgroundColor: lightTheme.background }}
       contentContainerStyle={styles.scrollContent}
     >
@@ -45,20 +47,20 @@ export function QuizScreen({ navigation }: QuizScreenProps) {
         {/* Header */}
         <View style={styles.header}>
           <ThemedText variant="heading" color="primary">
-            Seu Perfil
+            {t('onb.quiz.titulo')}
           </ThemedText>
-          <ThemedText 
-            variant="body" 
+          <ThemedText
+            variant="body"
             color="textSecondary"
             style={{ marginTop: spacing.sm }}
           >
-            Etapa {quiz.step + 1} de 8
+            {t('onb.quiz.etapa', { current: quiz.step + 1, total: 8 })}
           </ThemedText>
         </View>
 
         {/* Barra de progresso */}
         <View style={styles.progressBar}>
-          <View 
+          <View
             style={[
               styles.progressFill,
               { width: `${((quiz.step + 1) / 8) * 100}%` },
@@ -69,10 +71,10 @@ export function QuizScreen({ navigation }: QuizScreenProps) {
         {/* Conteúdo */}
         <View style={styles.content}>
           <ThemedText variant="subheading" style={{ marginBottom: spacing.lg }}>
-            Passo {quiz.step + 1}: Configuração de Perfil
+            {t('onb.quiz.passo', { step: quiz.step + 1 })}
           </ThemedText>
           <ThemedText variant="body" color="textSecondary">
-            Complete todas as 8 etapas para calcular suas metas personalizadas.
+            {t('onb.quiz.completeTodasEtapas', { total: 8 })}
           </ThemedText>
         </View>
 
@@ -80,14 +82,14 @@ export function QuizScreen({ navigation }: QuizScreenProps) {
         <View style={styles.buttons}>
           {quiz.step > 0 && (
             <Button
-              label="← Voltar"
+              label={t('onb.quiz.voltar')}
               variant="outline"
               onPress={handleBack}
               style={{ marginBottom: spacing.md }}
             />
           )}
           <Button
-            label={quiz.step === 7 ? 'Calcular Metas' : 'Próximo →'}
+            label={quiz.step === 7 ? t('onb.quiz.calcularMetas') : t('onb.quiz.proximo')}
             variant="primary"
             onPress={handleNext}
           />

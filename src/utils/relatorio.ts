@@ -214,7 +214,7 @@ ${resumo([
 ${
     comResumoDiario
       ? `<h2>${esc(t('rel.resumoDiario'))}</h2>${tabela(
-          [t('rel.data'), 'kcal', t('rel.colProt'), t('rel.colCarb'), t('rel.colGord'), t('rel.colFibra'), t('rel.colAgua'), t('rel.colExerc'), 'kg', t('rel.colGlic'), 'GLP-1'],
+          [t('rel.data'), 'kcal', t('rel.colProt'), t('rel.colCarb'), t('rel.colGord'), t('rel.colFibra'), t('rel.colAgua'), t('rel.colExerc'), 'kg', t('rel.colGlic'), t('rel.glp1')],
           linhasDiarias,
           t('rel.semRegistros')
         ).replace('<table>', '<table class="diario">')}`

@@ -1,6 +1,6 @@
 // Mesmos atalhos de import do tsconfig.json (@utils/…, @constants/…)
 module.exports = {
-  testPathIgnorePatterns: ['/node_modules/', '/worker/'],
+  testPathIgnorePatterns: ['/node_modules/', '/worker/', '/e2e/'],
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',
     '^@components/(.*)$': '<rootDir>/src/components/$1',

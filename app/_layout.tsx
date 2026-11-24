@@ -1,4 +1,6 @@
 import '@utils/alertaWeb';
+// Sentry deve ser inicializado o mais cedo possível
+import { sentryInitialized } from '../sentry.client.config';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect, useState } from 'react';
@@ -18,6 +20,7 @@ import { AvisoNovaVersao } from '@components/AvisoNovaVersao';
 import { useVerificarAtualizacao } from '@hooks/useVerificarAtualizacao';
 import { PreferencesProvider, usePreferences } from '@context/PreferencesContext';
 import { aoMudarLicenca, lerLicenca } from '@utils/licenca';
+import { useTranslation } from '@/i18n';
 
 SplashScreen.preventAutoHideAsync();
 

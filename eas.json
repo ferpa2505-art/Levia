@@ -31,6 +31,27 @@
     }
   },
   "submit": {
-    "production": {}
+    "production": {
+      "ios": {
+        "appleId": "YOUR_APPLE_ID@example.com",        // REPLACE: Your Apple ID email
+        "ascAppId": "YOUR_ASC_APP_ID",                // REPLACE: App Store Connect App ID
+        "appleTeamId": "YOUR_TEAM_ID"                 // REPLACE: Apple Developer Team ID
+      },
+      "android": {
+        "serviceAccountKeyPath": "./fastlane/google-play-credentials.json", // REPLACE: Path to service account JSON
+        "track": "production"
+      }
+    },
+    "beta": {
+      "ios": {
+        "appleId": "YOUR_APPLE_ID@example.com",        // REPLACE: Your Apple ID email
+        "ascAppId": "YOUR_ASC_APP_ID",                // REPLACE: App Store Connect App ID
+        "appleTeamId": "YOUR_TEAM_ID"                 // REPLACE: Apple Developer Team ID
+      },
+      "android": {
+        "serviceAccountKeyPath": "./fastlane/google-play-credentials.json", // REPLACE: Path to service account JSON
+        "track": "internal"
+      }
+    }
   }
 }

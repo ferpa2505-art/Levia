@@ -17,3 +17,15 @@ web-build/
 build/
 serial-*.sql
 worker/baileys/media/
+
+# Fastlane
+fastlane/google-play-credentials.json
+fastlane/*.pem
+fastlane/*.p12
+fastlane/*.cer
+fastlane/*.mobileprovision
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/screenshots/
+fastlane/readme.md
+Gemfile.lock

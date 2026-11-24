@@ -9,7 +9,71 @@
       "**/*"
     ],
     "ios": {
-      "bundleIdentifier": "com.ferpa2505art.levia"
+      "bundleIdentifier": "com.ferpa2505art.levia",
+      "privacyManifest": {
+        "NSPrivacyTracking": false,
+        "NSPrivacyTrackingDomains": [],
+        "NSPrivacyCollectedDataTypes": [
+          {
+            "NSPrivacyCollectedDataType": "NSPrivacyCollectedDataTypeHealth",
+            "NSPrivacyCollectedDataTypeLinked": true,
+            "NSPrivacyCollectedDataTypeTracking": false,
+            "NSPrivacyCollectedDataTypePurposes": [
+              "NSPrivacyCollectedDataTypePurposeAppFunctionality"
+            ]
+          },
+          {
+            "NSPrivacyCollectedDataType": "NSPrivacyCollectedDataTypeIdentifiers",
+            "NSPrivacyCollectedDataTypeLinked": true,
+            "NSPrivacyCollectedDataTypeTracking": false,
+            "NSPrivacyCollectedDataTypePurposes": [
+              "NSPrivacyCollectedDataTypePurposeAppFunctionality"
+            ]
+          },
+          {
+            "NSPrivacyCollectedDataType": "NSPrivacyCollectedDataTypeUsageData",
+            "NSPrivacyCollectedDataTypeLinked": false,
+            "NSPrivacyCollectedDataTypeTracking": false,
+            "NSPrivacyCollectedDataTypePurposes": [
+              "NSPrivacyCollectedDataTypePurposeAnalytics"
+            ]
+          },
+          {
+            "NSPrivacyCollectedDataType": "NSPrivacyCollectedDataTypeDiagnostics",
+            "NSPrivacyCollectedDataTypeLinked": false,
+            "NSPrivacyCollectedDataTypeTracking": false,
+            "NSPrivacyCollectedDataTypePurposes": [
+              "NSPrivacyCollectedDataTypePurposeAppFunctionality"
+            ]
+          }
+        ],
+        "NSPrivacyAccessedAPITypes": [
+          {
+            "NSPrivacyAccessedAPIType": "NSPrivacyAccessedAPICategoryFileTimestamp",
+            "NSPrivacyAccessedAPITypeReasons": [
+              "NSPrivacyAccessedAPIReasonC7D4.1"
+            ]
+          },
+          {
+            "NSPrivacyAccessedAPIType": "NSPrivacyAccessedAPICategorySystemBootTime",
+            "NSPrivacyAccessedAPITypeReasons": [
+              "NSPrivacyAccessedAPIReasonC7D4.1"
+            ]
+          },
+          {
+            "NSPrivacyAccessedAPIType": "NSPrivacyAccessedAPICategoryDiskSpace",
+            "NSPrivacyAccessedAPITypeReasons": [
+              "NSPrivacyAccessedAPIReasonC7D4.1"
+            ]
+          },
+          {
+            "NSPrivacyAccessedAPIType": "NSPrivacyAccessedAPICategoryUserDefaults",
+            "NSPrivacyAccessedAPITypeReasons": [
+              "NSPrivacyAccessedAPIReasonC7D4.1"
+            ]
+          }
+        ]
+      }
     },
     "android": {
       "package": "com.ferpa2505art.levia",
@@ -71,7 +135,15 @@
     "extra": {
       "eas": {
         "projectId": "c19a5f1e-5fbd-4100-ad78-43b05b47a977"
-      }
+      },
+      "sentryDsn": "https://YOUR_SENTRY_DSN@o1.ingest.sentry.io/PROJECT_ID",
+      "sentryEnvironment": "production",
+      "posthogApiKey": "YOUR_POSTHOG_API_KEY",
+      "posthogHost": "https://app.posthog.com",
+      "privacyPolicyUrl": "https://ferpa2505-art.github.io/levia/index.html",
+      "termsOfServiceUrl": "https://ferpa2505-art.github.io/levia/termos.html",
+      "supportUrl": "https://leviapp.org/suporte",
+      "marketingUrl": "https://leviapp.org"
     },
     "owner": "ferpa2505-art",
     "updates": {
