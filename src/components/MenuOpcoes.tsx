@@ -20,28 +20,6 @@ import { revogarConsentimentoIA, revogarConsentimentoIATexto } from '@utils/iaPr
 
 const URL_PRIVACIDADE = 'https://ferpa2505-art.github.io/levia-policies/privacidade.html';
 
-// Os idiomas ainda sem texto específico usam inglês. A retirada vale somente neste aparelho.
-const TEXTO_REVOGAR_IA = {
-  pt: {
-    titulo: 'Revogar autorização de fotos por IA',
-    descricao: 'Não apaga seus dados. O aviso será exibido novamente antes da próxima análise.',
-    sucesso: 'Autorização de IA revogada neste aparelho. Análises já enviadas podem ter sido processadas.',
-    erro: 'Não foi possível revogar agora. Tente novamente.',
-  },
-  es: {
-    titulo: 'Retirar autorización de fotos por IA',
-    descricao: 'No borra tus datos. Se volverá a pedir autorización antes del próximo análisis.',
-    sucesso: 'Autorización de IA retirada en este dispositivo. Los análisis ya enviados pueden haberse procesado.',
-    erro: 'No se pudo retirar la autorización. Inténtalo de nuevo.',
-  },
-  en: {
-    titulo: 'Withdraw AI photo consent',
-    descricao: 'Your data stays on this device. You will be asked again before the next analysis.',
-    sucesso: 'AI consent withdrawn on this device. Analyses already sent may have been processed.',
-    erro: 'Could not withdraw consent. Please try again.',
-  },
-} as const;
-
 type Tela = 'principal' | 'tema' | 'idioma' | 'atualizacoes' | 'backup' | 'fontes';
 
 // Cores de amostra de cada tema (bolinha ao lado do nome)
@@ -67,7 +45,6 @@ export function MenuOpcoes() {
   const { height } = useWindowDimensions();
 
   const nomeIdiomaAtual = IDIOMAS.find((i) => i.codigo === idioma)?.nome ?? idioma;
-  const textoIA = idioma.startsWith('pt') ? TEXTO_REVOGAR_IA.pt : idioma === 'es' ? TEXTO_REVOGAR_IA.es : TEXTO_REVOGAR_IA.en;
 
   function abrir() {
     setTela('principal');
@@ -82,9 +59,9 @@ export function MenuOpcoes() {
     try {
       await revogarConsentimentoIA();
       await revogarConsentimentoIATexto();
-      Alert.alert(textoIA.titulo, textoIA.sucesso);
+      Alert.alert(t('menu.ia.revogarTitulo'), t('menu.ia.revogarSucesso'));
     } catch {
-      Alert.alert(textoIA.titulo, textoIA.erro);
+      Alert.alert(t('menu.ia.revogarTitulo'), t('menu.ia.revogarErro'));
     }
   }
 
@@ -168,11 +145,11 @@ export function MenuOpcoes() {
                   <ChevronRight size={20} color={colors.textSecondary} strokeWidth={2} />
                 </Pressable>
 
-                <Pressable style={styles.item} accessibilityRole="button" accessibilityLabel={textoIA.titulo} onPress={revogarIA}>
+                <Pressable style={styles.item} accessibilityRole="button" accessibilityLabel={t('menu.ia.revogarTitulo')} onPress={revogarIA}>
                   <ShieldCheck size={20} color={colors.primary} strokeWidth={2} />
                   <View style={styles.itemTextos}>
-                    <ThemedText variant="body" color="text">{textoIA.titulo}</ThemedText>
-                    <ThemedText variant="small" color="textSecondary">{textoIA.descricao}</ThemedText>
+                    <ThemedText variant="body" color="text">{t('menu.ia.revogarTitulo')}</ThemedText>
+                    <ThemedText variant="small" color="textSecondary">{t('menu.ia.revogarDescricao')}</ThemedText>
                   </View>
                 </Pressable>
 
