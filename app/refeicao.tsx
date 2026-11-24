@@ -25,6 +25,7 @@ import { estilosTema } from '@theme/estilos';
 import { buscarPorNome } from '@utils/buscaAlimentos';
 import { buscarProdutoPorCodigo } from '@utils/codigoBarras';
 import { LeitorCodigoBarras } from '@components/LeitorCodigoBarras';
+import { BotaoFalar } from '@components/BotaoFalar';
 import {
   AlimentoSalvo,
   UNIDADES,
@@ -342,6 +343,7 @@ export default function RefeicaoScreen() {
         </View>
         <ThemedText variant="caption" color="textSecondary" style={{ marginTop: spacing.xs }}>{t('ref.textoDesc')}</ThemedText>
         <Input value={textoRefeicao} onChangeText={setTextoRefeicao} placeholder={t('ref.textoPh')} style={[styles.input, { marginTop: spacing.md }]} />
+        <BotaoFalar onTexto={setTextoRefeicao} />
         <AnaliseIAPrato texto={textoRefeicao} onAdicionar={(novos) => setItens((l) => [...l, ...novos])} />
       </ThemedView>
 

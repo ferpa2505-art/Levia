@@ -56,6 +56,13 @@
           "cameraPermission": "O Leviã usa a câmera para ler o código de barras do produto. A imagem não é guardada nem enviada."
         }
       ],
+      [
+        "expo-speech-recognition",
+        {
+          "microphonePermission": "O Leviã usa o microfone só quando você toca em Falar, para transcrever a descrição da refeição. O áudio não é guardado pelo Leviã; o reconhecimento pode ser feito pelo serviço de voz do seu aparelho.",
+          "speechRecognitionPermission": "O Leviã usa o reconhecimento de voz para transcrever a descrição da refeição quando você toca em Falar."
+        }
+      ],
       "expo-sharing",
       "expo-secure-store",
       "expo-mail-composer",
@@ -65,7 +72,8 @@
           "faceIDPermission": "O Leviã usa o reconhecimento facial para desbloquear o app com segurança."
         }
       ],
-      "expo-status-bar"
+      "expo-status-bar",
+      "expo-speech-recognition"
     ],
     "scheme": "levia",
     "extra": {
