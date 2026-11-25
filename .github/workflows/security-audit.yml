@@ -127,7 +127,7 @@ jobs:
             else
               emoji="⚠️"
             fi
-            echo "| $job | $emoji $status |" >> $GITHUB_STEP_SUMMARY
+            echo "| $job | $emoji $status |" >> "$GITHUB_STEP_SUMMARY"
           done
           
           {
