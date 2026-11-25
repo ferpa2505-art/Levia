@@ -1,8 +1,8 @@
 import * as ImagePicker from 'expo-image-picker';
 import * as FileSystem from 'expo-file-system/legacy';
 import { Platform } from 'react-native';
-import { ImageManipulator, SaveFormat } from 'expo-image-manipulator';
 import { suspenderBloqueio } from '@utils/bloqueioSuspenso';
+import { dimensoesReduzidas } from '@utils/dimensoesFoto';
 
 /**
  * Fotos dos pratos: tiradas pela câmera ou escolhidas na galeria e copiadas
@@ -10,8 +10,19 @@ import { suspenderBloqueio } from '@utils/bloqueioSuspenso';
  * antes de enviar uma cópia reduzida da foto para o serviço de análise.
  */
 const PASTA = `${FileSystem.documentDirectory}refeicoes/`;
+const LADO_MAXIMO_WEB = 512;
 
 export type ResultadoFoto = { uri: string } | { negado: true } | null;
+
+/** O pedaço do navegador usado na versão web (o projeto não carrega os tipos do DOM). */
+interface ImagemWeb { src: string; naturalWidth: number; naturalHeight: number; decode(): Promise<void> }
+interface TelaWeb {
+  width: number;
+  height: number;
+  getContext(tipo: '2d'): { drawImage(imagem: ImagemWeb, x: number, y: number, l: number, a: number): void } | null;
+  toDataURL(tipo: string, qualidade: number): string;
+}
+interface Navegador { Image: new () => ImagemWeb; document: { createElement(nome: 'canvas'): TelaWeb } }
 
 async function guardar(uriTemporaria: string): Promise<string> {
   if (Platform.OS === 'web') return guardarNaWeb(uriTemporaria);
@@ -21,21 +32,24 @@ async function guardar(uriTemporaria: string): Promise<string> {
   return destino;
 }
 
-export async function fotografarPrato(): Promise<ResultadoFoto> {
+/** `aoEscolher` avisa que a foto já foi escolhida e começou a ser preparada. */
+export async function fotografarPrato(aoEscolher?: () => void): Promise<ResultadoFoto> {
   const perm = await ImagePicker.requestCameraPermissionsAsync();
   if (!perm.granted) return { negado: true };
   suspenderBloqueio();
   const r = await ImagePicker.launchCameraAsync({ mediaTypes: ['images'], quality: 0.6, allowsEditing: false });
   if (r.canceled || !r.assets?.[0]) return null;
+  aoEscolher?.();
   return { uri: await guardar(r.assets[0].uri) };
 }
 
-export async function escolherFotoDaGaleria(): Promise<ResultadoFoto> {
+export async function escolherFotoDaGaleria(aoEscolher?: () => void): Promise<ResultadoFoto> {
   const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
   if (!perm.granted) return { negado: true };
   suspenderBloqueio();
   const r = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], quality: 0.6 });
   if (r.canceled || !r.assets?.[0]) return null;
+  aoEscolher?.();
   return { uri: await guardar(r.assets[0].uri) };
 }
 
@@ -49,13 +63,19 @@ export async function apagarFoto(uri?: string) {
  * A análise da IA usa essa mesma foto.
  */
 async function guardarNaWeb(uri: string): Promise<string> {
-  const ctx = ImageManipulator.manipulate(uri);
-  const original = await ctx.renderAsync();
-  const deitada = original.width >= original.height;
-  const lado = deitada ? original.width : original.height;
-  if (lado > 512) ctx.resize(deitada ? { width: 512 } : { height: 512 });
-  const img = lado > 512 ? await ctx.renderAsync() : original;
-  const salva = await img.saveAsync({ format: SaveFormat.JPEG, compress: 0.6, base64: true });
-  if (!salva.base64) return uri;
-  return `data:image/jpeg;base64,${salva.base64}`;
+  const navegador = globalThis as unknown as Navegador;
+  const original = new navegador.Image();
+  original.src = uri;
+  await original.decode(); // falha aqui quando o navegador não abre o formato (ex.: HEIC)
+  // desenha direto no tamanho final: sem cópias da foto em tamanho cheio, que demoravam em fotos grandes
+  const { largura, altura } = dimensoesReduzidas(original.naturalWidth, original.naturalHeight, LADO_MAXIMO_WEB);
+  const tela = navegador.document.createElement('canvas');
+  tela.width = largura;
+  tela.height = altura;
+  const desenho = tela.getContext('2d');
+  if (!desenho) throw new Error('navegador sem canvas');
+  desenho.drawImage(original, 0, 0, largura, altura);
+  const dados = tela.toDataURL('image/jpeg', 0.6);
+  if (!dados.startsWith('data:image/jpeg')) throw new Error('foto não convertida');
+  return dados;
 }

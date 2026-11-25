@@ -384,6 +384,8 @@ const ptBR = {
   "ref.horarioInvalido": "Digite o horário no formato HH:MM, por exemplo 12:30.",
   "ref.fotoTitulo": "Foto do prato",
   "ref.fotoDesc": "Fotografe o prato: a IA identifica os alimentos e você confere.",
+  "ref.fotoErro": "Não consegui abrir essa foto. Escolha outra (JPG ou PNG) ou tire uma nova pela câmera.",
+  "ref.fotoPreparando": "Preparando a foto…",
   "ref.textoTitulo": "Descreva o que comeu",
   "ref.textoDesc": "Ex.: 200 g de arroz, 100 g de feijão e uma latinha de Coca Zero. A IA identifica e você confere.",
   "ref.textoPh": "Ex.: 200 g de arroz, 100 g de feijão",

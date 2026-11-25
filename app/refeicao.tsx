@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { View, Pressable, Switch, Alert, Image } from 'react-native';
+import { View, Pressable, Switch, Alert, Image, ActivityIndicator } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Camera, ImagePlus, Sparkles, Trash2, X, Minus, Plus, PencilLine, ScanBarcode } from 'lucide-react-native';
 import { TelaRolavel } from '@components/TelaRolavel';
@@ -80,6 +80,7 @@ export default function RefeicaoScreen() {
         : [])
   );
   const [foto, setFoto] = useState<string | undefined>(existente?.fotoUri);
+  const [preparandoFoto, setPreparandoFoto] = useState(false);
   const [obs, setObs] = useState(existente?.observacoes ?? '');
   const [lembrete, setLembrete] = useState(false);
   const [horasLembrete, setHorasLembrete] = useState(3);
@@ -245,12 +246,15 @@ export default function RefeicaoScreen() {
 
   async function handleFoto(origem: 'camera' | 'galeria') {
     let r;
+    const aoEscolher = () => setPreparandoFoto(true);
     try {
-      r = origem === 'camera' ? await fotografarPrato() : await escolherFotoDaGaleria();
+      r = origem === 'camera' ? await fotografarPrato(aoEscolher) : await escolherFotoDaGaleria(aoEscolher);
     } catch {
       // antes, uma falha aqui (ex.: formato de imagem que o navegador não converte) não mostrava nada
-      Alert.alert(t('ia.erro.servidor' as never));
+      Alert.alert(t('ref.fotoErro'));
       return;
+    } finally {
+      setPreparandoFoto(false);
     }
     if (!r) return;
     if ('negado' in r) {
@@ -377,6 +381,12 @@ export default function RefeicaoScreen() {
             <ThemedText variant="small" color="textSecondary" style={{ marginTop: spacing.xs }}>
               {t('ref.fotoDesc')}
             </ThemedText>
+            {preparandoFoto && (
+              <View style={[styles.linha, { marginTop: spacing.sm }]}>
+                <ActivityIndicator color={colors.primary} />
+                <ThemedText variant="small" color="textSecondary" style={{ marginLeft: spacing.sm }}>{t('ref.fotoPreparando')}</ThemedText>
+              </View>
+            )}
             <View style={[styles.linha, { marginTop: spacing.md, gap: spacing.sm }]}>
               <Pressable style={styles.botaoFoto} onPress={() => handleFoto('camera')}>
                 <Camera size={18} color={colors.primary} strokeWidth={2} />
