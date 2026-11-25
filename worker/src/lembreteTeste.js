@@ -38,7 +38,7 @@ export function montarEmailTeste(dias) {
     'Não deixe o controle da sua alimentação escapar. Com o Leviã você:',
     ...beneficios.map((b) => `- ${b}`),
     '',
-    'Continue sem interrupção por menos de R$ 1 por dia.',
+    'Continue sem interrupção por menos de R$ 0,67 por dia.',
     '',
     `Escolha seu plano: ${URL_PLANOS}`,
     '',
@@ -55,7 +55,7 @@ export function montarEmailTeste(dias) {
 <h1 style="font-size:24px;margin:0 0 16px">Seu teste ${quando}.</h1>
 <p style="font-size:16px;line-height:1.5;margin:0 0 12px">Não deixe o controle da sua alimentação escapar. Com o Leviã você:</p>
 <ul style="font-size:16px;line-height:1.6;padding-left:20px;margin:0 0 16px">${beneficios.map((b) => `<li>${b}</li>`).join('')}</ul>
-<p style="font-size:16px;line-height:1.5;margin:0 0 20px"><strong>Continue sem interrupção por menos de R$ 1 por dia.</strong></p>
+<p style="font-size:16px;line-height:1.5;margin:0 0 20px"><strong>Continue sem interrupção por menos de R$ 0,67 por dia.</strong></p>
 <p style="margin:0 0 24px"><a href="${URL_PLANOS}" style="background:#2f7d5b;color:#ffffff;text-decoration:none;padding:14px 22px;border-radius:8px;font-weight:bold;display:inline-block">Escolher meu plano</a></p>
 <p style="font-size:12px;color:#5b6b61;line-height:1.5;margin:0">Estimativas. Não substitui orientação profissional.</p>
 <p style="font-size:12px;color:#5b6b61;line-height:1.5;margin:12px 0 0">Não quer mais receber estes e-mails? Responda <strong>SAIR</strong> a esta mensagem.<br>Leviã · contato@leviapp.org</p>

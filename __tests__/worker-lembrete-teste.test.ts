@@ -53,8 +53,8 @@ describe('e-mail do lembrete', () => {
     expect(montarEmailTeste(1).assunto).toContain('Último dia');
   });
 
-  it('o preço citado é "menos de R$ 1 por dia" (verdadeiro para mensal e anual)', () => {
-    expect(montarEmailTeste(2).texto).toContain('menos de R$ 1 por dia');
+  it('o preço citado é "menos de R$ 1 por dia", verdadeiro para mensal (R$ 0,67) e anual (R$ 0,52)', () => {
+    expect(montarEmailTeste(2).texto).toContain('menos de R$ 0,67 por dia');
   });
 
   it('arredonda os dias restantes para cima', () => {
