@@ -1,0 +1,272 @@
+name: Production Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Release version (e.g., 1.0.0)'
+        required: true
+        type: string
+
+permissions:
+  contents: write
+  id-token: write
+
+jobs:
+  # Determine release info from tag or workflow_dispatch
+  determine-release:
+    name: Determine Release Info
+    runs-on: ubuntu-26.04
+    outputs:
+      version: ${{ steps.parse.outputs.version }}
+      tag: ${{ steps.parse.outputs.tag }}
+    steps:
+      - name: Parse version from tag or input
+        id: parse
+        run: |
+          if [[ "${{ github.event_name }}" == "push" && "${{ github.ref }}" == refs/tags/v* ]]; then
+            VERSION="${{ github.ref_name }}"
+            VERSION="${VERSION#v}"
+            TAG="${{ github.ref_name }}"
+          else
+            VERSION="${{ github.event.inputs.version }}"
+            TAG="v${VERSION}"
+          fi
+          echo "version=${VERSION}" >> $GITHUB_OUTPUT
+          echo "tag=${TAG}" >> $GITHUB_OUTPUT
+
+  # iOS Production Build & Submit
+  ios-release:
+    name: iOS Production Release
+    needs: determine-release
+    runs-on: macos-14
+    timeout-minutes: 60
+    permissions:
+      contents: write
+      id-token: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Setup Expo & EAS
+        uses: expo/expo-github-action@8d2d9c0c6d8c8b8e8c8b8e8c8b8e8c8b8e8c8b8e8
+        with:
+          expo-version: latest
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Setup Fastlane Match (certificates)
+        run: |
+          cd fastlane
+          bundle install
+          bundle exec fastlane ios certificates
+        env:
+          MATCH_GIT_URL: ${{ secrets.MATCH_GIT_URL }}
+          MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
+          MATCH_APP_IDENTIFIER: com.ferpa2505art.levia
+          MATCH_USERNAME: ${{ secrets.APPLE_ID }}
+          MATCH_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+
+      - name: Build iOS with EAS (Production - App Store)
+        run: |
+          eas build --platform ios --profile production --non-interactive
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Submit to App Store Connect
+        run: |
+          eas submit --platform ios --profile production --non-interactive
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+          ASC_API_KEY_ID: ${{ secrets.ASC_API_KEY_ID }}
+          ASC_API_KEY_ISSUER: ${{ secrets.ASC_API_KEY_ISSUER }}
+          ASC_API_KEY_CONTENT: ${{ secrets.ASC_API_KEY_CONTENT }}
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@1.2
+        with:
+          tag_name: ${{ needs.determine-release.outputs.tag }}
+          generate_release_notes: true
+          draft: false
+          prerelease: false
+
+  # Android Production Build & Submit
+  android-release:
+    name: Android Production Release
+    needs: determine-release
+    runs-on: ubuntu-26.04
+    timeout-minutes: 60
+    permissions:
+      contents: write
+      id-token: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Setup Expo & EAS
+        uses: expo/expo-github-action@8d2d9c0c6d8c8b8e8c8b8e8c8b8e8c8b8e8c8b8e8
+        with:
+          expo-version: latest
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Decode Android Keystore
+        run: |
+          echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 -d > android/keystore.jks
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+
+      - name: Verify Keystore
+        run: |
+          keytool -list -v -keystore android/keystore.jks -storepass "${{ secrets.ANDROID_KEYSTORE_PASSWORD }}" -alias "${{ secrets.ANDROID_KEY_ALIAS }}"
+        env:
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+
+      - name: Build Android with EAS (Production - AAB)
+        run: |
+          eas build --platform android --profile production --non-interactive
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Submit to Google Play Console (Production)
+        run: |
+          eas submit --platform android --profile production --non-interactive
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+          GOOGLE_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}
+
+  # Sentry Sourcemap Upload & Release Creation
+  sentry-release:
+    name: Sentry Release & Sourcemaps
+    needs: [determine-release, ios-release, android-release]
+    runs-on: ubuntu-26.04
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Sentry CLI
+        run: npm install -g @sentry/cli@3.8.2
+
+      - name: Create Sentry Release
+        run: |
+          sentry-cli releases new ${{ needs.determine-release.outputs.version }} \
+            --org ${{ secrets.SENTRY_ORG }} \
+            --project ${{ secrets.SENTRY_PROJECT }} \
+            --auth-token ${{ secrets.SENTRY_AUTH_TOKEN }}
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
+          SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
+
+      - name: Set Sentry Release Commits
+        run: |
+          sentry-cli releases set-commits ${{ needs.determine-release.outputs.version }} \
+            --auto \
+            --org ${{ secrets.SENTRY_ORG }} \
+            --project ${{ secrets.SENTRY_PROJECT }} \
+            --auth-token ${{ secrets.SENTRY_AUTH_TOKEN }}
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
+          SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
+
+      - name: Upload Sourcemaps to Sentry
+        run: |
+          # Build web bundle to generate sourcemaps
+          npx expo export --platform web --output-dir dist/web
+
+          # Upload web sourcemaps
+          sentry-cli sourcemaps upload \
+            --org ${{ secrets.SENTRY_ORG }} \
+            --project ${{ secrets.SENTRY_PROJECT }} \
+            --auth-token ${{ secrets.SENTRY_AUTH_TOKEN }} \
+            --release ${{ needs.determine-release.outputs.version }} \
+            --dist ${{ needs.determine-release.outputs.version }} \
+            dist/web
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
+          SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
+
+      - name: Finalize Sentry Release
+        run: |
+          sentry-cli releases finalize ${{ needs.determine-release.outputs.version }} \
+            --org ${{ secrets.SENTRY_ORG }} \
+            --project ${{ secrets.SENTRY_PROJECT }} \
+            --auth-token ${{ secrets.SENTRY_AUTH_TOKEN }}
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
+          SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
+
+  # Notify on completion (optional - add Slack/Teams webhook if desired)
+  notify:
+    name: Notify Completion
+    needs: [ios-release, android-release, sentry-release]
+    if: always()
+    runs-on: ubuntu-26.04
+    steps:
+      - name: Summary
+        run: |
+          echo "🎉 Production Release Complete!"
+          echo "Version: ${{ needs.determine-release.outputs.version }}"
+          echo "Tag: ${{ needs.determine-release.outputs.tag }}"
+          echo "iOS: ${{ needs.ios-release.result }}"
+          echo "Android: ${{ needs.android-release.result }}"
+          echo "Sentry: ${{ needs.sentry-release.result }}"
+
+      - name: Notify Slack (if configured)
+        if: env.SLACK_WEBHOOK_URL != ''
+        run: |
+          curl -X POST -H 'Content-type: application/json' \
+            --data "{\"text\":\"🚀 Leviã ${{ needs.determine-release.outputs.version }} released to App Store & Play Store!\"}" \
+            $SLACK_WEBHOOK_URL
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}

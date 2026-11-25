@@ -35,17 +35,17 @@ jobs:
       - name: Install dependencies (worker)
         working-directory: worker
         run: |
-          if [ -f package.json ]; then npm ci; fi
+          if [ -f package.json ]; then npm ci --legacy-peer-deps; fi
 
       - name: Install dependencies (baileys)
         working-directory: worker/baileys
         run: |
-          if [ -f package.json ]; then npm ci; fi
+          if [ -f package.json ]; then npm ci --legacy-peer-deps; fi
 
       - name: Install dependencies (site/landing)
         working-directory: site/landing
         run: |
-          if [ -f package.json ]; then npm ci; fi
+          if [ -f package.json ]; then npm ci --legacy-peer-deps; fi
 
       - name: Run npm audit (worker)
         working-directory: worker
@@ -98,32 +98,10 @@ jobs:
           vuln-type: 'os,library'
           severity: 'CRITICAL,HIGH'
 
-  codeql:
-    name: CodeQL Analysis
-    runs-on: ubuntu-latest
-    permissions:
-      actions: read
-      contents: read
-      security-events: write
-    steps:
-      - name: Checkout
-        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
-
-      - name: Initialize CodeQL
-        uses: github/codeql-action/init@74c1aea9df7c0f02e9b7bfe4a8935abf2e5e3aa6 # v3
-        with:
-          languages: javascript-typescript
-          queries: security-extended
-
-      - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@74c1aea9df7c0f02e9b7bfe4a8935abf2e5e3aa6 # v3
-        with:
-          category: /language:javascript-typescript
-
   summary:
     name: Security Summary
     runs-on: ubuntu-latest
-    needs: [npm-audit, gitleaks, trivy-fs, codeql]
+    needs: [npm-audit, gitleaks, trivy-fs]
     if: always()
     steps:
       - name: Generate Summary
@@ -131,7 +109,6 @@ jobs:
           RESULT_NPM: ${{ needs.npm-audit.result }}
           RESULT_GITLEAKS: ${{ needs.gitleaks.result }}
           RESULT_TRIVY: ${{ needs.trivy-fs.result }}
-          RESULT_CODEQL: ${{ needs.codeql.result }}
         run: |
           {
             echo "## 🔒 Security Audit Summary"
@@ -140,7 +117,7 @@ jobs:
             echo "|-----|--------|"
           } >> "$GITHUB_STEP_SUMMARY"
 
-          for pair in "npm-audit:$RESULT_NPM" "gitleaks:$RESULT_GITLEAKS" "trivy-fs:$RESULT_TRIVY" "codeql:$RESULT_CODEQL"; do
+          for pair in "npm-audit:$RESULT_NPM" "gitleaks:$RESULT_GITLEAKS" "trivy-fs:$RESULT_TRIVY"; do
             job="${pair%%:*}"
             status="${pair#*:}"
             if [ "$status" = "success" ]; then

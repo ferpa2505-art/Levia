@@ -1,0 +1,283 @@
+name: Release Automation
+
+on:
+  workflow_dispatch:
+    inputs:
+      platform:
+        description: 'Platform to deploy'
+        required: true
+        type: choice
+        options:
+          - ios
+          - android
+          - both
+        default: 'both'
+      track:
+        description: 'Release track'
+        required: true
+        type: choice
+        options:
+          - beta
+          - production
+        default: 'beta'
+      version_bump:
+        description: 'Version bump type (for production)'
+        required: false
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+        default: 'patch'
+
+  # Auto-trigger on tags like v1.0.0
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+  id-token: write
+
+jobs:
+  # Determine release type from tag or workflow_dispatch
+  determine-release:
+    name: Determine Release Type
+    runs-on: ubuntu-26.04
+    outputs:
+      is_production: ${{ steps.check.outputs.is_production }}
+      platform: ${{ steps.check.outputs.platform }}
+      version_bump: ${{ steps.check.outputs.version_bump }}
+    steps:
+      - name: Check trigger type
+        id: check
+        run: |
+          if [[ "${{ github.event_name }}" == "push" && "${{ github.ref }}" == refs/tags/v* ]]; then
+            echo "is_production=true" >> $GITHUB_OUTPUT
+            echo "platform=both" >> $GITHUB_OUTPUT
+            echo "version_bump=patch" >> $GITHUB_OUTPUT
+          else
+            echo "is_production=${{ github.event.inputs.track == 'production' }}" >> $GITHUB_OUTPUT
+            echo "platform=${{ github.event.inputs.platform }}" >> $GITHUB_OUTPUT
+            echo "version_bump=${{ github.event.inputs.version_bump }}" >> $GITHUB_OUTPUT
+          fi
+
+  # iOS Release
+  ios-release:
+    name: iOS Release
+    needs: determine-release
+    if: needs.determine-release.outputs.platform == 'ios' || needs.determine-release.outputs.platform == 'both'
+    runs-on: macos-14
+    timeout-minutes: 60
+    permissions:
+      contents: write
+      id-token: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Setup Expo & EAS
+        uses: expo/expo-github-action@8d2d9c0c6d8c8b8e8c8b8e8c8b8e8c8b8e8c8b8e8
+        with:
+          expo-version: latest
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Setup Match (certificates)
+        if: needs.determine-release.outputs.is_production == 'true'
+        run: |
+          cd fastlane
+          bundle install
+          bundle exec fastlane ios certificates
+        env:
+          MATCH_GIT_URL: ${{ secrets.MATCH_GIT_URL }}
+          MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
+          MATCH_APP_IDENTIFIER: com.ferpa2505art.levia
+          MATCH_USERNAME: ${{ secrets.APPLE_ID }}
+          MATCH_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+
+      - name: Build iOS with EAS
+        run: |
+          eas build --platform ios --profile production --non-interactive
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Submit to TestFlight / App Store
+        if: needs.determine-release.outputs.is_production == 'false'
+        run: |
+          eas submit --platform ios --profile production --non-interactive
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+          ASC_API_KEY_ID: ${{ secrets.ASC_API_KEY_ID }}
+          ASC_API_KEY_ISSUER: ${{ secrets.ASC_API_KEY_ISSUER }}
+          ASC_API_KEY_CONTENT: ${{ secrets.ASC_API_KEY_CONTENT }}
+
+      - name: Submit to App Store (Production)
+        if: needs.determine-release.outputs.is_production == 'true'
+        run: |
+          eas submit --platform ios --profile production --non-interactive
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+          ASC_API_KEY_ID: ${{ secrets.ASC_API_KEY_ID }}
+          ASC_API_KEY_ISSUER: ${{ secrets.ASC_API_KEY_ISSUER }}
+          ASC_API_KEY_CONTENT: ${{ secrets.ASC_API_KEY_CONTENT }}
+
+      - name: Create GitHub Release
+        if: needs.determine-release.outputs.is_production == 'true'
+        uses: softprops/action-gh-release@1.2
+        with:
+          tag_name: ${{ github.ref_name }}
+          generate_release_notes: true
+          draft: false
+          prerelease: false
+
+  # Android Release
+  android-release:
+    name: Android Release
+    needs: determine-release
+    if: needs.determine-release.outputs.platform == 'android' || needs.determine-release.outputs.platform == 'both'
+    runs-on: ubuntu-26.04
+    timeout-minutes: 60
+    permissions:
+      contents: write
+      id-token: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Setup Expo & EAS
+        uses: expo/expo-github-action@8d2d9c0c6d8c8b8e8c8b8e8c8b8e8c8b8e8c8b8e8
+        with:
+          expo-version: latest
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Decode Keystore
+        if: needs.determine-release.outputs.is_production == 'true'
+        run: |
+          echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 -d > android/keystore.jks
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+
+      - name: Build Android with EAS
+        run: |
+          eas build --platform android --profile production --non-interactive
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Submit to Play Store Internal Testing
+        if: needs.determine-release.outputs.is_production == 'false'
+        run: |
+          eas submit --platform android --profile production --non-interactive
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+          GOOGLE_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}
+
+      - name: Submit to Play Store Production
+        if: needs.determine-release.outputs.is_production == 'true'
+        run: |
+          eas submit --platform android --profile production --non-interactive
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+          GOOGLE_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}
+
+      - name: Create GitHub Release
+        if: needs.determine-release.outputs.is_production == 'true'
+        uses: softprops/action-gh-release@1.2
+        with:
+          tag_name: ${{ github.ref_name }}
+          generate_release_notes: true
+          draft: false
+          prerelease: false
+
+  # Fastlane-based release (alternative, more control)
+  fastlane-release:
+    name: Fastlane Release (Advanced)
+    needs: determine-release
+    if: needs.determine-release.outputs.is_production == 'true'
+    runs-on: ${{ needs.determine-release.outputs.platform == 'ios' && 'macos-14' || 'ubuntu-26.04' }}
+    timeout-minutes: 90
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@1.2
+        with:
+          ruby-version: '3.2'
+          bundler-cache: true
+          working-directory: ./fastlane
+
+      - name: Fastlane iOS Release
+        if: needs.determine-release.outputs.platform == 'ios' || needs.determine-release.outputs.platform == 'both'
+        run: |
+          bundle exec fastlane ios release
+        env:
+          MATCH_GIT_URL: ${{ secrets.MATCH_GIT_URL }}
+          MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
+          MATCH_APP_IDENTIFIER: com.ferpa2505art.levia
+          MATCH_USERNAME: ${{ secrets.APPLE_ID }}
+          MATCH_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          ANDROID_KEYSTORE_PATH: ${{ secrets.ANDROID_KEYSTORE_PATH }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+      - name: Fastlane Android Release
+        if: needs.determine-release.outputs.platform == 'android' || needs.determine-release.outputs.platform == 'both'
+        run: |
+          bundle exec fastlane android release
+        env:
+          MATCH_GIT_URL: ${{ secrets.MATCH_GIT_URL }}
+          MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
+          MATCH_APP_IDENTIFIER: com.ferpa2505art.levia
+          MATCH_USERNAME: ${{ secrets.APPLE_ID }}
+          MATCH_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          ANDROID_KEYSTORE_PATH: ${{ secrets.ANDROID_KEYSTORE_PATH }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
