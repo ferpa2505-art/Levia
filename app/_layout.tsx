@@ -1,6 +1,5 @@
 import '@utils/alertaWeb';
 // Sentry deve ser inicializado o mais cedo possível
-import { sentryInitialized } from '../sentry.client.config';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect, useState } from 'react';
@@ -20,7 +19,6 @@ import { AvisoNovaVersao } from '@components/AvisoNovaVersao';
 import { useVerificarAtualizacao } from '@hooks/useVerificarAtualizacao';
 import { PreferencesProvider, usePreferences } from '@context/PreferencesContext';
 import { aoMudarLicenca, lerLicenca } from '@utils/licenca';
-import { iniciarMedicaoSeAutorizada } from '@utils/analytics';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -36,10 +34,6 @@ function RootNavigation() {
   const { carregado: segurancaCarregada } = useSeguranca();
   const [temLicenca, setTemLicenca] = useState<boolean | null>(EXIGIR_SERIAL ? null : true);
   const loading = carregandoPerfil || !segurancaCarregada || temLicenca === null;
-
-  useEffect(() => {
-    iniciarMedicaoSeAutorizada().catch(() => {});
-  }, []);
 
   useEffect(() => {
     if (!EXIGIR_SERIAL) return;

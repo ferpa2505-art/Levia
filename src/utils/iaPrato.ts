@@ -171,7 +171,7 @@ async function enviarParaIA(url: string, corpo: object, idioma: IdiomaAlimentos)
     return { ok: false, motivo: 'rede' };
   }
   let dados: { erro?: string; liberaEm?: string; ehComida?: boolean; itens?: ItemIA[]; restantes?: number } = {};
-  try { dados = await resposta.json(); } catch { return { ok: false, motivo: 'servidor' }; }
+  try { dados = (await resposta.json()) as typeof dados; } catch { return { ok: false, motivo: 'servidor' }; }
   // o servidor não reconhece mais a licença (revogada, adulterada, aparelho trocado): pede o serial de novo
   if (resposta.status === 401 || resposta.status === 403) {
     await limparLicenca();
