@@ -385,6 +385,8 @@ const traducoes: Traducoes = {
   "ref.horarioInvalido": "Enter the time as HH:MM, e.g. 12:30.",
   "ref.fotoTitulo": "Plate photo",
   "ref.fotoDesc": "Snap your plate: the AI identifies the foods and you check them.",
+  "ref.fotoErro": "I couldn't open this photo. Pick another one (JPG or PNG) or take a new one with the camera.",
+  "ref.fotoPreparando": "Preparing the photo…",
   "ref.textoTitulo": "Describe what you ate",
   "ref.textoDesc": "E.g.: 200 g rice, 100 g beans and a can of Coke Zero. The AI identifies them and you check.",
   "ref.textoPh": "E.g.: 200 g rice, 100 g beans",

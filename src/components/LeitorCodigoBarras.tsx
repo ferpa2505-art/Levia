@@ -7,12 +7,13 @@ import { Button } from '@components/Button';
 import { Input } from '@components/Input';
 import { usePreferences } from '@context/PreferencesContext';
 import { colors, spacing, radius } from '@constants/colors';
+import { podeLerComCamera } from '@utils/cameraCodigoBarras';
 
 const TIPOS_LIDOS = ['ean13', 'ean8', 'upc_a'] as const;
 
 /**
- * Leitor de código de barras em janela. No celular usa a câmera; na web (PWA) e sem permissão,
- * mostra só o campo para digitar o código. Entrega o código uma única vez por abertura.
+ * Leitor de código de barras em janela. Usa a câmera no app instalado e na PWA em navegador com
+ * leitor nativo; nos outros casos mostra só o campo para digitar. Entrega o código uma única vez por abertura.
  */
 export function LeitorCodigoBarras({
   visivel,
@@ -27,7 +28,7 @@ export function LeitorCodigoBarras({
   const [permissao, pedirPermissao] = useCameraPermissions();
   const [digitado, setDigitado] = useState('');
   const jaLeu = useRef(false);
-  const usaCamera = Platform.OS !== 'web';
+  const usaCamera = podeLerComCamera(Platform.OS);
 
   function entregar(codigo: string) {
     if (jaLeu.current) return;
