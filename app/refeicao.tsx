@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { View, Pressable, Switch, Alert, Image } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { Camera, ImagePlus, Sparkles, Trash2, X, Minus, Plus, PencilLine } from 'lucide-react-native';
+import { Camera, ImagePlus, Sparkles, Trash2, X, Minus, Plus, PencilLine, ScanBarcode } from 'lucide-react-native';
 import { TelaRolavel } from '@components/TelaRolavel';
 import { ThemedView } from '@components/ThemedView';
 import { ThemedText } from '@components/ThemedText';
@@ -23,6 +23,9 @@ import { SeletorHorario } from '@components/forms/SeletorHorario';
 import { MensagemErro } from '@components/forms/MensagemErro';
 import { estilosTema } from '@theme/estilos';
 import { buscarPorNome } from '@utils/buscaAlimentos';
+import { buscarProdutoPorCodigo } from '@utils/codigoBarras';
+import { LeitorCodigoBarras } from '@components/LeitorCodigoBarras';
+import { BotaoFalar } from '@components/BotaoFalar';
 import {
   AlimentoSalvo,
   UNIDADES,
@@ -40,6 +43,13 @@ import {
 import { enviarAlimentoParaEquipe } from '@utils/emailAlimento';
 
 type Opcao = { tipo: 'por100'; alimento: AlimentoPor100g; rotulo: string; salvo?: AlimentoSalvo };
+
+const CHAVE_ERRO_CODIGO = {
+  invalido: 'ref.codigo.invalido',
+  naoEncontrado: 'ref.codigo.naoEncontrado',
+  rede: 'ref.codigo.rede',
+  dadosIncompletos: 'ref.codigo.dadosIncompletos',
+} as const;
 
 const arred = (n: number, casas = 0) => Math.round(n * 10 ** casas) / 10 ** casas;
 
@@ -76,6 +86,7 @@ export default function RefeicaoScreen() {
 
   // busca de alimentos
   const [busca, setBusca] = useState('');
+  const [textoRefeicao, setTextoRefeicao] = useState('');
   const [escolhido, setEscolhido] = useState<Opcao | null>(null);
   /** quantidade na medida escolhida (em g/ml, é a própria quantidade) */
   const [gramas, setGramas] = useState('');
@@ -113,6 +124,19 @@ export default function RefeicaoScreen() {
   // com a busca vazia, atalhos para as receitas salvas
   const atalhos = !busca.trim() && !escolhido ? receitasPersonalizadas.slice(-4).reverse() : [];
   const atalhosSalvos = !busca.trim() && !escolhido ? recentes(salvos, 6) : [];
+
+  const [leitorAberto, setLeitorAberto] = useState(false);
+
+  async function lerCodigo(codigo: string) {
+    setLeitorAberto(false);
+    const r = await buscarProdutoPorCodigo(codigo);
+    if (!r.ok) {
+      Alert.alert(t(CHAVE_ERRO_CODIGO[r.motivo]));
+      return;
+    }
+    const rotulo = r.fonte === 'openfoodfacts' ? `${r.alimento.nome} (${t('ref.codigo.fonte')})` : r.alimento.nome;
+    escolher({ tipo: 'por100', alimento: { ...r.alimento, porcaoPadraoG: r.alimento.gramaPadrao }, rotulo });
+  }
 
   function escolher(o: Opcao) {
     setEscolhido(o);
@@ -311,6 +335,18 @@ export default function RefeicaoScreen() {
 
       <Dica id="ref.foto" texto="dica.foto" />
 
+      {/* Descrição digitada (fase 1 da voz: sem microfone) */}
+      <ThemedView variant="surface" style={[styles.card, styles.cardShadow]}>
+        <View style={styles.linha}>
+          <PencilLine size={18} color={colors.primary} strokeWidth={2} />
+          <ThemedText variant="subheading" color="text" style={{ marginLeft: spacing.sm }}>{t('ref.textoTitulo')}</ThemedText>
+        </View>
+        <ThemedText variant="caption" color="textSecondary" style={{ marginTop: spacing.xs }}>{t('ref.textoDesc')}</ThemedText>
+        <Input value={textoRefeicao} onChangeText={setTextoRefeicao} placeholder={t('ref.textoPh')} style={[styles.input, { marginTop: spacing.md }]} />
+        <BotaoFalar onTexto={setTextoRefeicao} />
+        <AnaliseIAPrato texto={textoRefeicao} onAdicionar={(novos) => setItens((l) => [...l, ...novos])} />
+      </ThemedView>
+
       {/* Foto do prato */}
       <ThemedView variant="surface" style={[styles.card, styles.cardShadow]}>
         <View style={styles.linha}>
@@ -438,6 +474,15 @@ export default function RefeicaoScreen() {
         ) : (
           <>
             <Input value={busca} onChangeText={setBusca} placeholder={t('ref.buscarPh')} style={[styles.input, { marginTop: spacing.md }]} />
+            <Button
+              label={t('ref.codigo.botao')}
+              variant="outline"
+              size="md"
+              icon={<ScanBarcode size={18} color={colors.primary} strokeWidth={2} />}
+              onPress={() => setLeitorAberto(true)}
+              style={{ marginTop: spacing.sm }}
+            />
+            <LeitorCodigoBarras visivel={leitorAberto} onFechar={() => setLeitorAberto(false)} onLer={lerCodigo} />
             {(opcoes.length > 0 || atalhos.length > 0 || atalhosSalvos.length > 0) && (
               <View style={styles.sugestoes}>
                 {atalhosSalvos.length > 0 && (

@@ -12,6 +12,8 @@ import type {
   SerieRealizada,
   Sessao,
 } from '@/types/fitness';
+import type { RegistroExercicio } from '@/types/records';
+import { NOME_PARA_ID_EXERCICIO } from '@/constants/exerciseTypes';
 
 export const LIBRAS_POR_KG = 2.20462;
 
@@ -341,6 +343,148 @@ export function seriesPorGrupo(
 /** Datas ISO dos dias da semana que têm sessão. */
 export function diasComTreinoDesde(sessoes: Sessao[], desdeISO: string): Set<string> {
   return new Set(sessoes.filter((s) => s.data >= desdeISO).map((s) => s.data));
+}
+
+/** Mapeia string livre do Records para GrupoMuscular do Fitness (ou null se não reconhecido). */
+export function mapearGrupoRecords(grupo: string | undefined): GrupoMuscular | null {
+  if (!grupo) return null;
+  const g = grupo.toLowerCase().trim();
+  const mapa: Record<string, GrupoMuscular> = {
+    peito: 'peito',
+    chest: 'peito',
+    costas: 'costas',
+    back: 'costas',
+    lats: 'costas',
+    ombros: 'ombros',
+    shoulders: 'ombros',
+    deltoide: 'ombros',
+    biceps: 'biceps',
+    bicep: 'biceps',
+    triceps: 'triceps',
+    tricep: 'triceps',
+    antebraco: 'antebraco',
+    forearm: 'antebraco',
+    core: 'core',
+    abs: 'core',
+    abdominal: 'core',
+    quadriceps: 'quadriceps',
+    quads: 'quadriceps',
+    coxa: 'quadriceps',
+    posteriores: 'posteriores',
+    hamstrings: 'posteriores',
+    hamstring: 'posteriores',
+    gluteos: 'gluteos',
+    glutes: 'gluteos',
+    bumbum: 'gluteos',
+    panturrilha: 'panturrilha',
+    calves: 'panturrilha',
+    panturrilhas: 'panturrilha',
+    cardio: 'cardio',
+    aerobico: 'cardio',
+    aeróbico: 'cardio',
+    corpointeiro: 'corpoInteiro',
+    'corpo inteiro': 'corpoInteiro',
+    fullbody: 'corpoInteiro',
+    'full body': 'corpoInteiro',
+    funcional: 'corpoInteiro',
+  };
+  return mapa[g] ?? null;
+}
+
+/**
+ * Distribuição de grupos musculares por tipo de exercício (Records).
+ * Cada entrada define quais grupos são trabalhados e com que peso relativo (0-1).
+ * A soma dos pesos pode ser > 1 pois um exercício trabalha múltiplos grupos simultaneamente.
+ * O peso reflete a intensidade relativa do trabalho no grupo muscular.
+ */
+export const DISTRIBUICAO_GRUPOS_POR_EXERCICIO: Record<string, Partial<Record<GrupoMuscular, number>>> = {
+  // Cardio puro - foco membros inferiores + core
+  caminhada: { core: 0.3, quadriceps: 0.6, posteriores: 0.4, panturrilha: 0.5, gluteos: 0.3 },
+  corrida: { core: 0.4, quadriceps: 0.8, posteriores: 0.7, panturrilha: 0.7, gluteos: 0.6 },
+  ciclismo: { core: 0.3, quadriceps: 0.9, posteriores: 0.5, panturrilha: 0.4, gluteos: 0.7 },
+  eliptico: { core: 0.4, quadriceps: 0.7, posteriores: 0.5, panturrilha: 0.4, gluteos: 0.5, ombros: 0.2, peito: 0.1, costas: 0.1 },
+  'pular-corda': { core: 0.5, quadriceps: 0.6, posteriores: 0.4, panturrilha: 0.9, ombros: 0.4, antebraco: 0.3 },
+  escadas: { core: 0.4, quadriceps: 0.9, posteriores: 0.6, panturrilha: 0.6, gluteos: 0.8 },
+  natacao: { peito: 0.6, costas: 0.8, ombros: 0.9, biceps: 0.5, triceps: 0.6, core: 0.7, quadriceps: 0.4, posteriores: 0.4, gluteos: 0.3, panturrilha: 0.3 },
+
+  // Esportes coletivos - cardio + membros inferiores + core + alguns superiores
+  futebol: { core: 0.5, quadriceps: 0.8, posteriores: 0.7, panturrilha: 0.6, gluteos: 0.6, ombros: 0.2 },
+  basquete: { core: 0.5, quadriceps: 0.7, posteriores: 0.5, panturrilha: 0.7, gluteos: 0.5, ombros: 0.5, biceps: 0.2, triceps: 0.2, antebraco: 0.3 },
+  volei: { core: 0.5, quadriceps: 0.8, posteriores: 0.4, panturrilha: 0.6, gluteos: 0.6, ombros: 0.7, triceps: 0.4, antebraco: 0.3 },
+  tenis: { core: 0.6, quadriceps: 0.6, posteriores: 0.4, panturrilha: 0.5, gluteos: 0.4, ombros: 0.8, biceps: 0.3, triceps: 0.4, antebraco: 0.7, costas: 0.3, peito: 0.3 },
+
+  // Treinos de força/condicionamento - corpo inteiro com diferentes ênfases
+  musculacao: {}, // Usa seleção manual do usuário (opcoesGrupoMuscular)
+  funcional: { peito: 0.4, costas: 0.5, ombros: 0.5, biceps: 0.3, triceps: 0.4, core: 0.7, quadriceps: 0.6, posteriores: 0.5, gluteos: 0.5, panturrilha: 0.3, antebraco: 0.2 },
+  hiit: { peito: 0.3, costas: 0.3, ombros: 0.4, biceps: 0.2, triceps: 0.3, core: 0.7, quadriceps: 0.7, posteriores: 0.5, gluteos: 0.6, panturrilha: 0.4 },
+  crossfit: { peito: 0.5, costas: 0.6, ombros: 0.7, biceps: 0.4, triceps: 0.5, core: 0.8, quadriceps: 0.8, posteriores: 0.7, gluteos: 0.7, panturrilha: 0.4, antebraco: 0.4 },
+
+  // Mobilidade/baixa intensidade - contribuição mínima para hipertrofia
+  yoga: { core: 0.3, ombros: 0.3, posteriores: 0.2, gluteos: 0.2 },
+  pilates: { core: 0.6, ombros: 0.2, posteriores: 0.2, gluteos: 0.3, quadriceps: 0.2 },
+  alongamento: {}, // Não gera estímulo hipertrofico significativo
+  danca: { core: 0.5, quadriceps: 0.5, posteriores: 0.3, panturrilha: 0.5, gluteos: 0.4, ombros: 0.2 },
+};
+
+/** Nome do esporte em minúsculas e sem acento, para casar com as chaves da distribuição ("Natação" -> "natacao"). */
+export function chaveSemAcento(nome: string): string {
+  return nome.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
+}
+
+/**
+ * Agrega exercícios do Records (atividades gerais) por grupo muscular na semana.
+ * Usa mapeamento automático por tipo de exercício (DISTRIBUICAO_GRUPOS_POR_EXERCICIO).
+ * Se o exercício tiver grupoMuscular selecionado manualmente, usa esse como prioridade.
+ * Cada registro conta como "1 série" equivalente, ponderada pela distribuição do exercício.
+ */
+export function seriesPorGrupoRecords(
+  exercicios: RegistroExercicio[],
+  desdeISO: string,
+): Partial<Record<GrupoMuscular, number>> {
+  const total: Partial<Record<GrupoMuscular, number>> = {};
+
+  // Grupos associados para distribuição (mesma lógica do MapaMuscular) - fallback
+  const GRUPOS_CARDIO: GrupoMuscular[] = ['core', 'quadriceps', 'posteriores', 'panturrilha'];
+  const GRUPOS_CORPO_INTEIRO: GrupoMuscular[] = [
+    'peito', 'costas', 'ombros', 'biceps', 'triceps', 'core', 'quadriceps', 'posteriores', 'gluteos', 'panturrilha'
+  ];
+
+  for (const e of exercicios) {
+    if (e.data < desdeISO) continue;
+
+    // 1. Prioridade: grupoMuscular manual selecionado pelo usuário
+    const grupoManual = mapearGrupoRecords(e.grupoMuscular);
+    if (grupoManual) {
+      if (grupoManual === 'cardio') {
+        for (const g of GRUPOS_CARDIO) {
+          total[g] = (total[g] ?? 0) + 0.5;
+        }
+      } else if (grupoManual === 'corpoInteiro') {
+        for (const g of GRUPOS_CORPO_INTEIRO) {
+          total[g] = (total[g] ?? 0) + 0.5;
+        }
+      } else {
+        total[grupoManual] = (total[grupoManual] ?? 0) + 1;
+      }
+      continue;
+    }
+
+    // 2. Fallback: distribuição automática baseada no tipo de exercício (id ou nome)
+    const distAuto = DISTRIBUICAO_GRUPOS_POR_EXERCICIO[chaveSemAcento(e.nome)] ?? DISTRIBUICAO_GRUPOS_POR_EXERCICIO[e.id];
+
+    if (distAuto && Object.keys(distAuto).length > 0) {
+      // Usa distribuição automática: cada grupo recebe peso * 1 (série equivalente)
+      for (const [grupo, peso] of Object.entries(distAuto)) {
+        const g = grupo as GrupoMuscular;
+        total[g] = (total[g] ?? 0) + peso;
+      }
+      continue;
+    }
+
+    // 3. Se não tem nem grupo manual nem distribuição automática, ignora (ex.: alongamento)
+  }
+
+  return total;
 }
 
 /**

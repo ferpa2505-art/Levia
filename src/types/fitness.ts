@@ -38,6 +38,7 @@ export interface Exercicio {
   grupo: GrupoMuscular;
   equipamento: Equipamento;
   tipo: TipoExercicio;
+  gruposMusculares: GrupoMuscular[];
   personalizado?: boolean;
 }
 

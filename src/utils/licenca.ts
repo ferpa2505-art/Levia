@@ -68,7 +68,7 @@ export async function ativarSerial(serial: string): Promise<ResultadoAtivacao> {
     return { ok: false, motivo: 'rede' };
   }
   let dados: { erro?: string; licenca?: string; plano?: Licenca['plano']; acessoAte?: string } = {};
-  try { dados = await resposta.json(); } catch { return { ok: false, motivo: 'servidor' }; }
+  try { dados = (await resposta.json()) as typeof dados; } catch { return { ok: false, motivo: 'servidor' }; }
 
   if (resposta.ok && dados.licenca && dados.plano) {
     const nova: Licenca = { licenca: dados.licenca, plano: dados.plano, acessoAte: dados.acessoAte ?? '' };

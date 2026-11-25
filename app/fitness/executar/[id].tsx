@@ -232,6 +232,11 @@ export default function ExecutarTreino() {
     };
   }
 
+  /** Marca todas as séries como feitas de uma vez (para quem já fez tudo conforme o plano). */
+  function marcarTodasSeries() {
+    setSeries((atual) => atual.map((s) => ({ ...s, feita: true })));
+  }
+
   async function concluir() {
     if (!series.some((s) => s.feita)) {
       Alert.alert(t('fitness.concluirTreino'), t('fitness.semSeriesFeitas'));
@@ -289,7 +294,7 @@ export default function ExecutarTreino() {
           </ThemedView>
         )}
 
-        {(
+        {series.some((s) => exercicioPorId(s.exercicioId)?.tipo === 'corpo') && (
           <ThemedView variant="surface" style={styles.card}>
             <ThemedText variant="small" color="textSecondary">{t('fitness.pesoCorpoHoje')} ({unidade})</ThemedText>
             <CampoNumero
@@ -335,6 +340,19 @@ export default function ExecutarTreino() {
                   {meta.cargaKg !== undefined ? ` · ${pesoParaExibir(meta.cargaKg, unidade)} ${unidade}` : ''}
                   {' · '}{t(chaveMotivo(meta.motivo))}
                 </ThemedText>
+              )}
+
+              {linhas.length > 0 && (
+                <View style={styles.cabecalhoSeries}>
+                  <View style={{ width: 44 }} />
+                  <ThemedText variant="caption" color="textSecondary" style={[styles.cabecalhoCelula, { width: 70 }]}>{t('fitness.colReps')}</ThemedText>
+                  {!tempo && (
+                    <ThemedText variant="caption" color="textSecondary" style={[styles.cabecalhoCelula, { width: 80 }]}>{t('fitness.colCarga')}</ThemedText>
+                  )}
+                  <ThemedText variant="caption" color="textSecondary" style={[styles.cabecalhoCelula, { width: 64 }]}>{t('fitness.colRir')}</ThemedText>
+                  <ThemedText variant="caption" color="textSecondary" style={[styles.cabecalhoCelula, { width: 36 }]}>{t('fitness.colFeita')}</ThemedText>
+                  <View style={{ width: 14 }} />
+                </View>
               )}
 
               {linhas.map(({ s, indice }) => (
@@ -405,6 +423,15 @@ export default function ExecutarTreino() {
           <Button label={t('fitness.adicionarExercicioAgora')} variant="outline" onPress={() => setAdicionando(true)} />
         )}
 
+        {series.length > 0 && (
+          <View style={styles.legenda}>
+            <ThemedText variant="caption" color="textSecondary">{t('fitness.legReps')}</ThemedText>
+            <ThemedText variant="caption" color="textSecondary">{t('fitness.legCarga')}</ThemedText>
+            <ThemedText variant="caption" color="textSecondary">{t('fitness.legRir')}</ThemedText>
+            <ThemedText variant="caption" color="textSecondary">{t('fitness.legFeita')}</ThemedText>
+          </View>
+        )}
+        <Button label={t('fitness.marcarTodas')} variant="outline" onPress={marcarTodasSeries} />
         <Button label={t('fitness.concluirTreino')} onPress={concluir} />
         <View style={{ height: spacing.xl }} />
       </ThemedView>
@@ -418,7 +445,10 @@ const styles = StyleSheet.create({
   linhaTopo: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
   linhaCampos: { flexDirection: 'row', gap: spacing.sm },
   linhaSerie: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, borderRadius: radius.md, paddingVertical: spacing.xs },
-  rir: { width: 40, height: 36, borderRadius: radius.md, borderWidth: 1, borderColor: colors.border, alignItems: 'center', justifyContent: 'center' },
+  rir: { width: 64, height: 36, borderRadius: radius.md, borderWidth: 1, borderColor: colors.border, alignItems: 'center', justifyContent: 'center' },
+  cabecalhoSeries: { flexDirection: 'row', alignItems: 'flex-end', gap: spacing.sm, paddingBottom: spacing.xs },
+  cabecalhoCelula: { textAlign: 'center' },
+  legenda: { gap: spacing.xs, paddingHorizontal: spacing.xs, marginBottom: spacing.md },
   check: { width: 36, height: 36, borderRadius: 18, borderWidth: 1, borderColor: colors.border, alignItems: 'center', justifyContent: 'center' },
   acoesExercicio: { flexDirection: 'row', gap: spacing.lg, marginTop: spacing.xs },
   acao: { flexDirection: 'row', alignItems: 'center', gap: 4 },

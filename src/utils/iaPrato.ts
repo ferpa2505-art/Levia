@@ -52,6 +52,21 @@ export async function revogarConsentimentoIA(): Promise<void> {
   await AsyncStorage.removeItem(CHAVE_CONSENTIMENTO);
 }
 
+// Consentimento separado para a descrição digitada (texto vai ao Google; a foto tem o seu próprio).
+const CHAVE_CONSENTIMENTO_TEXTO = 'levia:consentimentoIATexto';
+
+export async function temConsentimentoIATexto(): Promise<boolean> {
+  return (await AsyncStorage.getItem(CHAVE_CONSENTIMENTO_TEXTO)) === '1';
+}
+
+export async function darConsentimentoIATexto(): Promise<void> {
+  await AsyncStorage.setItem(CHAVE_CONSENTIMENTO_TEXTO, '1');
+}
+
+export async function revogarConsentimentoIATexto(): Promise<void> {
+  await AsyncStorage.removeItem(CHAVE_CONSENTIMENTO_TEXTO);
+}
+
 /** JPEG de no máximo 1024 px no lado maior: ~150–300 KB, suficiente para a IA */
 async function fotoReduzidaBase64(uri: string): Promise<string> {
   const ctx = ImageManipulator.manipulate(uri);
@@ -115,22 +130,48 @@ export function ligarAoBanco(item: ItemIA, idioma: IdiomaAlimentos): SugestaoIA 
   };
 }
 
+const URL_IA_TEXTO = 'https://levia-ia-worker.ferpa2505.workers.dev/v1/analisar-texto';
+
 export async function analisarFotoDoPrato(uri: string, idioma: IdiomaAlimentos): Promise<ResultadoIA> {
   const licenca = await lerLicenca();
   if (!licenca) return { ok: false, motivo: 'licenca' };
+  let imagem: string;
+  let instalacao: string;
+  try {
+    [imagem, instalacao] = await Promise.all([fotoReduzidaBase64(uri), idDaInstalacao()]);
+  } catch {
+    return { ok: false, motivo: 'rede' };
+  }
+  return enviarParaIA(URL_IA, { imagem, instalacao, idioma, licenca: licenca.licenca }, idioma);
+}
+
+/** Descrição digitada da refeição (ex.: "200 g de arroz e uma latinha de Coca Zero"). Mesmo caminho da foto, sem áudio. */
+export async function analisarTextoDaRefeicao(texto: string, idioma: IdiomaAlimentos): Promise<ResultadoIA> {
+  const licenca = await lerLicenca();
+  if (!licenca) return { ok: false, motivo: 'licenca' };
+  let instalacao: string;
+  try {
+    instalacao = await idDaInstalacao();
+  } catch {
+    return { ok: false, motivo: 'rede' };
+  }
+  return enviarParaIA(URL_IA_TEXTO, { texto: texto.trim(), instalacao, idioma, licenca: licenca.licenca }, idioma);
+}
+
+/** Envia o pedido ao Worker e interpreta a resposta (cota, licença, falhas), igual para foto e texto. */
+async function enviarParaIA(url: string, corpo: object, idioma: IdiomaAlimentos): Promise<ResultadoIA> {
   let resposta: Response;
   try {
-    const [imagem, instalacao] = await Promise.all([fotoReduzidaBase64(uri), idDaInstalacao()]);
-    resposta = await fetch(URL_IA, {
+    resposta = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ imagem, instalacao, idioma, licenca: licenca.licenca }),
+      body: JSON.stringify(corpo),
     });
   } catch {
     return { ok: false, motivo: 'rede' };
   }
   let dados: { erro?: string; liberaEm?: string; ehComida?: boolean; itens?: ItemIA[]; restantes?: number } = {};
-  try { dados = await resposta.json(); } catch { return { ok: false, motivo: 'servidor' }; }
+  try { dados = (await resposta.json()) as typeof dados; } catch { return { ok: false, motivo: 'servidor' }; }
   // o servidor não reconhece mais a licença (revogada, adulterada, aparelho trocado): pede o serial de novo
   if (resposta.status === 401 || resposta.status === 403) {
     await limparLicenca();

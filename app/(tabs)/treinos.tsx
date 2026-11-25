@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { View, Pressable, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
 import {
@@ -19,20 +20,26 @@ import { Button } from '@components/Button';
 import { useFitness } from '@context/FitnessContext';
 import { usePreferences } from '@context/PreferencesContext';
 import { colors, spacing, radius } from '@constants/colors';
-import { dataISO, diasComTreinoDesde, indicePlano, inicioDaSemanaISO, nomeDiaSemana, seriesPorGrupo } from '@utils/fitnessLogica';
+import { dataISO, diasComTreinoDesde, indicePlano, inicioDaSemanaISO, nomeDiaSemana, seriesPorGrupo, seriesPorGrupoRecords } from '@utils/fitnessLogica';
 import { MapaMuscular } from '@components/fitness/MapaMuscular';
+import { useRecords } from '@context/RecordsContext';
 import { useProfile } from '@context/ProfileContext';
 
 export default function TreinosTab() {
   const { t, idioma } = usePreferences();
   const router = useRouter();
   const { rotinas, plano, loading, sessoes, grupoDe, config } = useFitness();
+  const { exercicios: exerciciosRecords } = useRecords();
   const { profile } = useProfile();
   const sexo = profile.sexoBiologico ?? 'masculino';
+  const [modoMapa, setModoMapa] = useState<'diario' | 'semanal'>('semanal');
   const inicioSemana = inicioDaSemanaISO(new Date(), config.inicioSemana);
   const diasTreinados = diasComTreinoDesde(sessoes, inicioSemana);
   const seriesSemana = seriesPorGrupo(sessoes, grupoDe, inicioSemana);
-  const totalSeries = Object.values(seriesSemana).reduce((a, b) => a + (b ?? 0), 0);
+  const seriesRecordsSemana = seriesPorGrupoRecords(exerciciosRecords, inicioSemana);
+  const hojeISO = dataISO(new Date());
+  const seriesHoje = seriesPorGrupo(sessoes, grupoDe, hojeISO);
+  const seriesRecordsHoje = seriesPorGrupoRecords(exerciciosRecords, hojeISO);
   const diasSemana = Array.from({ length: 7 }, (_, i) => {
     const base = new Date(inicioSemana + 'T12:00:00');
     const d = new Date(base.getFullYear(), base.getMonth(), base.getDate() + i);
@@ -81,8 +88,24 @@ export default function TreinosTab() {
               </View>
             ))}
           </View>
-          <ThemedText variant="small" color="textSecondary">{t('fitness.seriesDaSemana', { n: totalSeries })}</ThemedText>
-          <MapaMuscular sexo={sexo} series={seriesSemana} />
+          <View style={styles.alternaMapa}>
+            <Pressable onPress={() => setModoMapa('diario')} accessibilityRole="button" accessibilityState={{ selected: modoMapa === 'diario' }} style={[styles.opcaoMapa, modoMapa === 'diario' && styles.opcaoMapaAtiva]}>
+              <ThemedText variant="small" color={modoMapa === 'diario' ? 'background' : 'textSecondary'}>{t('fitness.mapaDiario')}</ThemedText>
+            </Pressable>
+            <Pressable onPress={() => setModoMapa('semanal')} accessibilityRole="button" accessibilityState={{ selected: modoMapa === 'semanal' }} style={[styles.opcaoMapa, modoMapa === 'semanal' && styles.opcaoMapaAtiva]}>
+              <ThemedText variant="small" color={modoMapa === 'semanal' ? 'background' : 'textSecondary'}>{t('fitness.mapaSemanal')}</ThemedText>
+            </Pressable>
+          </View>
+          {modoMapa === 'semanal' && (
+            <ThemedText variant="caption" color="textSecondary" style={styles.notaSemana}>
+              {t('fitness.notaInicioSemana', { dia: t(config.inicioSemana === 'dom' ? 'fitness.inicioSemanaDom' : 'fitness.inicioSemanaSeg') })}
+            </ThemedText>
+          )}
+          <MapaMuscular
+            sexo={sexo}
+            series={modoMapa === 'diario' ? seriesHoje : seriesSemana}
+            seriesRecords={modoMapa === 'diario' ? seriesRecordsHoje : seriesRecordsSemana}
+          />
         </ThemedView>
 
         {semPlano ? (
@@ -165,6 +188,10 @@ const styles = StyleSheet.create({
   },
   grade: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
   semana: { flexDirection: 'row', justifyContent: 'space-between' },
+  alternaMapa: { flexDirection: 'row', alignSelf: 'center', borderRadius: radius.lg, borderWidth: 1, borderColor: colors.border, overflow: 'hidden' },
+  opcaoMapa: { paddingVertical: spacing.xs, paddingHorizontal: spacing.lg },
+  opcaoMapaAtiva: { backgroundColor: colors.primary },
+  notaSemana: { textAlign: 'center' },
   diaSemana: { alignItems: 'center', gap: 4 },
   numeroDia: { width: 30, height: 30, borderRadius: 15, alignItems: 'center', justifyContent: 'center' },
   ponto: { width: 5, height: 5, borderRadius: 3 },

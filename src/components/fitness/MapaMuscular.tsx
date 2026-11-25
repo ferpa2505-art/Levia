@@ -35,8 +35,15 @@ export function grupoDoMusculo(id: string): GrupoMuscular | null {
   if (id.startsWith('gluteus-')) return 'gluteos';
   if (id.startsWith('calves-')) return 'panturrilha';
   if (id.startsWith('lats-') || id.startsWith('traps-') || id === 'spine' || id.startsWith('lower-back-') || id === 'nape') return 'costas';
+  if (id.startsWith('cardio-')) return 'cardio';
+  if (id.startsWith('full-body-')) return 'corpoInteiro';
+  if (id.startsWith('heart-')) return 'cardio';
+  if (id.startsWith('body-')) return 'corpoInteiro';
   return null;
 }
+
+const GRUPOS_CARDIO: GrupoMuscular[] = ['core', 'quadriceps', 'posteriores', 'panturrilha'];
+const GRUPOS_CORPO_INTEIRO: GrupoMuscular[] = ['peito', 'costas', 'ombros', 'biceps', 'triceps', 'core', 'quadriceps', 'posteriores', 'gluteos', 'panturrilha'];
 
 /** Intensidade 0–1 por grupo: séries feitas na semana ÷ 10 séries por grupo. */
 export function intensidadePorGrupo(series: Partial<Record<GrupoMuscular, number>>, metaSeries = 10): Partial<Record<GrupoMuscular, number>> {
@@ -82,6 +89,17 @@ export function BonecoMuscular({
         {/* músculos treinados na semana, pintados pelo grupo */}
         {musculos.map((m) => {
           const grupo = grupoDoMusculo(m.id);
+          // Se o grupo muscular for cardio ou corpoInteiro, distribuímos a intensidade para os grupos musculares associados
+          if (grupo === 'cardio' || grupo === 'corpoInteiro') {
+            const f = intensidade[grupo] ?? 0;
+            if (f <= 0) return null;
+            // Distribuímos a intensidade para os grupos musculares associados
+            const gruposAssociados: GrupoMuscular[] = grupo === 'cardio' ? GRUPOS_CARDIO : GRUPOS_CORPO_INTEIRO;
+            gruposAssociados.forEach((g) => {
+              if (intensidade[g] === undefined) intensidade[g] = 0;
+              intensidade[g] += f * 0.5; // Distribuímos 50% da intensidade para cada grupo associado
+            });
+          }
           const f = grupo ? intensidade[grupo] ?? 0 : 0;
           if (f <= 0) return null;
           return <Path key={`cor-${m.id}`} d={m.d} transform={transformaPara(m.d)} fill={colors.primary} fillOpacity={0.25 + 0.75 * f} />;
@@ -95,13 +113,26 @@ export function BonecoMuscular({
 export function MapaMuscular({
   sexo,
   series,
+  seriesRecords,
 }: {
   sexo: Sexo;
   series: Partial<Record<GrupoMuscular, number>>;
+  /** Séries vindas do módulo Records (atividades gerais como basquete, corrida, etc.) */
+  seriesRecords?: Partial<Record<GrupoMuscular, number>>;
 }) {
   const { t } = usePreferences();
   const [vista, setVista] = useState<Vista>('frente');
-  const intensidade = intensidadePorGrupo(series);
+
+  // Mescla séries do Fitness (treinos estruturados) + Records (atividades gerais)
+  const seriesMescladas: Partial<Record<GrupoMuscular, number>> = { ...series };
+  if (seriesRecords) {
+    for (const [grupo, valor] of Object.entries(seriesRecords)) {
+      const g = grupo as GrupoMuscular;
+      seriesMescladas[g] = (seriesMescladas[g] ?? 0) + valor;
+    }
+  }
+
+  const intensidade = intensidadePorGrupo(seriesMescladas);
   const musculos = vista === 'frente' ? MUSCULOS_FRENTE : MUSCULOS_COSTAS;
   const grupos = [...new Set(musculos.map((m) => grupoDoMusculo(m.id)).filter((g): g is GrupoMuscular => g !== null))];
 

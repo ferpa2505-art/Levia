@@ -148,3 +148,8 @@ export const tiposExercicio: TipoExercicio[] = [
     kcalPorMinutoBase: 7,
   },
 ];
+
+// Mapeamento de nomes legíveis para IDs (para busca case-insensitive)
+export const NOME_PARA_ID_EXERCICIO: Record<string, string> = Object.fromEntries(
+  tiposExercicio.map((t) => [t.nome.toLowerCase(), t.id])
+);

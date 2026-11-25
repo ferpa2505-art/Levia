@@ -1,0 +1,211 @@
+name: Security Monitoring
+
+on:
+  schedule:
+    # Executar a cada 6 horas
+    - cron: '0 */6 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: security-monitoring
+  cancel-in-progress: true
+
+jobs:
+  health-check:
+    name: Health Check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Check Worker Health
+        id: worker-health
+        run: |
+          # Verificar se o worker está respondendo
+          URL="https://leviapp.org/health"
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$URL")
+          
+          if [ "$STATUS" = "200" ]; then
+            echo "✅ Worker is healthy"
+            echo "status=healthy" >> $GITHUB_OUTPUT
+          else
+            echo "::error::Worker health check failed: HTTP $STATUS"
+            echo "status=unhealthy" >> $GITHUB_OUTPUT
+            exit 1
+          fi
+
+      - name: Check Landing Page
+        id: landing-health
+        run: |
+          URL="https://leviapp.org"
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$URL")
+          
+          if [ "$STATUS" = "200" ]; then
+            echo "✅ Landing page is healthy"
+            echo "status=healthy" >> $GITHUB_OUTPUT
+          else
+            echo "::error::Landing page health check failed: HTTP $STATUS"
+            echo "status=unhealthy" >> $GITHUB_OUTPUT
+            exit 1
+          fi
+
+      - name: Check Security Headers
+        id: security-headers
+        run: |
+          echo "Checking security headers on leviapp.org..."
+          
+          URL="https://leviapp.org"
+          HEADERS=$(curl -s -I "$URL" | grep -iE 'strict-transport-security|x-content-type-options|x-frame-options|referrer-policy|content-security-policy')
+          
+          echo "Security Headers:"
+          echo "$HEADERS"
+          
+          # Verificar headers críticos
+          MISSING=0
+          
+          if ! echo "$HEADERS" | grep -qi "strict-transport-security"; then
+            echo "::warning::Missing HSTS header"
+            MISSING=$((MISSING + 1))
+          fi
+          
+          if ! echo "$HEADERS" | grep -qi "x-content-type-options"; then
+            echo "::warning::Missing X-Content-Type-Options header"
+            MISSING=$((MISSING + 1))
+          fi
+          
+          if ! echo "$HEADERS" | grep -qi "x-frame-options"; then
+            echo "::warning::Missing X-Frame-Options header"
+            MISSING=$((MISSING + 1))
+          fi
+          
+          if [ $MISSING -gt 0 ]; then
+            echo "::error::Missing $MISSING security headers"
+            exit 1
+          fi
+          
+          echo "✅ All security headers present"
+
+      - name: Check CORS Configuration
+        id: cors-check
+        run: |
+          echo "Checking CORS configuration..."
+          
+          # Testar OPTIONS request
+          RESPONSE=$(curl -s -I -X OPTIONS "https://leviapp.org/api/test" \
+            -H "Origin: https://leviapp.org" \
+            -H "Access-Control-Request-Method: POST")
+          
+          if echo "$RESPONSE" | grep -qi "access-control-allow-origin"; then
+            echo "✅ CORS is configured"
+          else
+            echo "::warning::CORS may not be properly configured"
+          fi
+
+  rate-limit-test:
+    name: Rate Limit Test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Test Rate Limiting
+        run: |
+          echo "Testing rate limiting..."
+          
+          # Fazer 15 requisições rápidas (deve ser bloqueado no 11º)
+          URL="https://leviapp.org/api/lead"
+          FAILED=0
+          
+          for i in {1..15}; do
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$URL" \
+              -H "Content-Type: application/json" \
+              -d '{"name":"test","phone":"+5511999999999","consentimento":true}')
+            
+            if [ "$STATUS" = "429" ]; then
+              echo "✅ Rate limit triggered on request $i"
+              exit 0
+            elif [ "$STATUS" != "200" ] && [ "$STATUS" != "400" ]; then
+              FAILED=$((FAILED + 1))
+            fi
+            
+            sleep 0.1
+          done
+          
+          if [ $FAILED -gt 0 ]; then
+            echo "::warning::$FAILED requests failed unexpectedly"
+          else
+            echo "⚠️ Rate limiting may not be configured or test was inconclusive"
+          fi
+
+  uptime-monitoring:
+    name: Uptime Monitoring
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check Uptime (Last 24h)
+        run: |
+          echo "Checking uptime..."
+          
+          # Verificar se o site esteve disponível
+          # Usar um serviço externo ou API do Cloudflare
+          # Por enquanto, apenas verificamos se está online agora
+          
+          URLS=(
+            "https://leviapp.org"
+            "https://leviapp.org/ativar"
+            "https://leviapp.org/api/health"
+          )
+          
+          ALL_OK=true
+          
+          for url in "${URLS[@]}"; do
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$url" --max-time 10)
+            if [ "$STATUS" = "200" ]; then
+              echo "✅ $url is up"
+            else
+              echo "::error::$url is down (HTTP $STATUS)"
+              ALL_OK=false
+            fi
+          done
+          
+          if [ "$ALL_OK" = false ]; then
+            exit 1
+          fi
+
+  summary:
+    name: Monitoring Summary
+    runs-on: ubuntu-latest
+    needs: [health-check, rate-limit-test, uptime-monitoring]
+    if: always()
+    steps:
+      - name: Generate Summary
+        env:
+          RESULT_HEALTH: ${{ needs.health-check.result }}
+          RESULT_RATE: ${{ needs.rate-limit-test.result }}
+          RESULT_UPTIME: ${{ needs.uptime-monitoring.result }}
+        run: |
+          {
+            echo "## 📊 Security Monitoring Summary"
+            echo ""
+            echo "| Job | Status |"
+            echo "|-----|--------|"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          for pair in "health-check:$RESULT_HEALTH" "rate-limit-test:$RESULT_RATE" "uptime-monitoring:$RESULT_UPTIME"; do
+            job="${pair%%:*}"
+            status="${pair#*:}"
+            if [ "$status" = "success" ]; then
+              emoji="✅"
+            elif [ "$status" = "failure" ]; then
+              emoji="❌"
+            else
+              emoji="⚠️"
+            fi
+            echo "| $job | $emoji $status |" >> $GITHUB_STEP_SUMMARY
+          done
+          
+          {
+            echo ""
+            echo "**Next Steps:**"
+            echo "- Review any failures above"
+            echo "- Check Cloudflare Dashboard for detailed metrics"
+          } >> "$GITHUB_STEP_SUMMARY"

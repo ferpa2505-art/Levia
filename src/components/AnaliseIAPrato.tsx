@@ -9,7 +9,10 @@ import { usePreferences } from '@context/PreferencesContext';
 import { idiomaDosAlimentos } from '@constants/alimentosGlobais';
 import { valoresDaPorcao } from '@models/ingredients';
 import { ItemRefeicao } from '@models/records';
-import { analisarFotoDoPrato, darConsentimentoIA, temConsentimentoIA, SugestaoIA } from '@utils/iaPrato';
+import {
+  analisarFotoDoPrato, analisarTextoDaRefeicao, darConsentimentoIA, temConsentimentoIA,
+  darConsentimentoIATexto, temConsentimentoIATexto, SugestaoIA,
+} from '@utils/iaPrato';
 import { lerLicenca } from '@utils/licenca';
 import { textoNutrientes } from '@utils/textoNutrientes';
 import { colors, spacing, radius } from '@constants/colors';
@@ -21,7 +24,8 @@ type Linha = SugestaoIA & { marcado: boolean; gramasTexto: string };
  * Botão de análise. Só funciona com a licença do serial ativado (assinada pelo Worker e presa
  * a esta instalação); sem ela, leva à tela de ativação. Nenhuma credencial fixa vai no app.
  */
-export function AnaliseIAPrato({ fotoUri, onAdicionar }: { fotoUri: string; onAdicionar: (itens: ItemRefeicao[]) => void }) {
+/** Analisa a foto do prato ou, se `texto` vier no lugar, a descrição digitada da refeição. */
+export function AnaliseIAPrato({ fotoUri, texto, onAdicionar }: { fotoUri?: string; texto?: string; onAdicionar: (itens: ItemRefeicao[]) => void }) {
   const { t, idioma } = usePreferences();
   const router = useRouter();
   const [estado, setEstado] = useState<'inicio' | 'analisando' | 'resultado'>('inicio');
@@ -40,7 +44,9 @@ export function AnaliseIAPrato({ fotoUri, onAdicionar }: { fotoUri: string; onAd
   async function analisar() {
     setEstado('analisando');
     try {
-      const r = await analisarFotoDoPrato(fotoUri, idiomaDosAlimentos(idioma));
+      const r = fotoUri
+        ? await analisarFotoDoPrato(fotoUri, idiomaDosAlimentos(idioma))
+        : await analisarTextoDaRefeicao(texto ?? '', idiomaDosAlimentos(idioma));
       if (!r.ok) {
         setEstado('inicio');
         if (r.motivo === 'licenca') {
@@ -67,17 +73,22 @@ export function AnaliseIAPrato({ fotoUri, onAdicionar }: { fotoUri: string; onAd
 
   async function pedirAnalise() {
     if (!(await lerLicenca())) return pedirSerial();
-    if (await temConsentimentoIA()) return analisar();
-    Alert.alert(t('ia.consentTitulo'), t('ia.consentMsg'), [
-      { text: t('comum.cancelar'), style: 'cancel' },
-      {
-        text: t('ia.consentOk'),
-        onPress: async () => {
-          await darConsentimentoIA();
-          analisar();
+    const ehTexto = !fotoUri;
+    if (await (ehTexto ? temConsentimentoIATexto() : temConsentimentoIA())) return analisar();
+    Alert.alert(
+      t(ehTexto ? 'ia.consentTextoTitulo' : 'ia.consentTitulo'),
+      t(ehTexto ? 'ia.consentTextoMsg' : 'ia.consentMsg'),
+      [
+        { text: t('comum.cancelar'), style: 'cancel' },
+        {
+          text: t('ia.consentOk'),
+          onPress: async () => {
+            await (ehTexto ? darConsentimentoIATexto() : darConsentimentoIA());
+            analisar();
+          },
         },
-      },
-    ]);
+      ],
+    );
   }
 
   function adicionar() {
@@ -104,9 +115,9 @@ export function AnaliseIAPrato({ fotoUri, onAdicionar }: { fotoUri: string; onAd
 
   if (estado === 'inicio') {
     return (
-      <Pressable style={styles.botaoIA} onPress={pedirAnalise}>
+      <Pressable style={[styles.botaoIA, !fotoUri && (texto ?? '').trim().length < 2 && { opacity: 0.5 }]} disabled={!fotoUri && (texto ?? '').trim().length < 2} onPress={pedirAnalise}>
         <Sparkles size={18} color={colors.background} strokeWidth={2} />
-        <ThemedText variant="body" color="background" style={{ marginLeft: spacing.xs }}>{t('ia.analisar')}</ThemedText>
+        <ThemedText variant="body" color="background" style={{ marginLeft: spacing.xs }}>{t(fotoUri ? 'ia.analisar' : 'ia.analisarTexto')}</ThemedText>
       </Pressable>
     );
   }

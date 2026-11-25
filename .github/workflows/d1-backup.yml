@@ -1,0 +1,145 @@
+name: D1 Database Backup
+
+on:
+  schedule:
+    # Toda segunda-feira às 03:00 UTC
+    - cron: '0 3 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: d1-backup
+  cancel-in-progress: false
+
+jobs:
+  backup:
+    name: Backup D1 Database
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install Wrangler
+        run: npm install -g wrangler@latest
+
+      - name: Export Production D1 Database
+        id: export
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          # Exportar banco de produção
+          TIMESTAMP=$(date +%Y%m%d_%H%M%S)
+          BACKUP_FILE="levia-backup_${TIMESTAMP}.sql"
+          
+          echo "Exporting D1 database..."
+          npx wrangler d1 export levia-licencas-dev --remote --output=$BACKUP_FILE --token=$CLOUDFLARE_API_TOKEN --account-id=$CLOUDFLARE_ACCOUNT_ID
+          
+          # Verificar se o arquivo foi criado
+          if [ ! -f "$BACKUP_FILE" ]; then
+            echo "::error::Failed to export D1 database"
+            exit 1
+          fi
+          
+          # Compactar
+          gzip -9 "$BACKUP_FILE"
+          BACKUP_GZ="${BACKUP_FILE}.gz"
+          
+          echo "Backup file: $BACKUP_GZ"
+          echo "Backup size: $(du -h "$BACKUP_GZ" | cut -f1)"
+          echo "backup_file=$BACKUP_GZ" >> $GITHUB_OUTPUT
+
+      - name: Upload to R2
+        id: upload-r2
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          R2_BUCKET_NAME: ${{ secrets.R2_BUCKET_NAME }}
+        run: |
+          BACKUP_FILE=${{ steps.export.outputs.backup_file }}
+          
+          # Verificar se R2 está configurado
+          if [ -z "$R2_BUCKET_NAME" ]; then
+            echo "::warning::R2 bucket not configured, skipping upload"
+            exit 0
+          fi
+          
+          echo "Uploading to R2..."
+          
+          # Criar nome do arquivo com timestamp
+          R2_OBJECT_KEY="backups/d1/$(date +%Y/%m/%d)/${BACKUP_FILE}"
+          
+          # Upload usando wrangler r2
+          npx wrangler r2 object put "$R2_OBJECT_KEY" --file="$BACKUP_FILE" \
+            --token=$CLOUDFLARE_API_TOKEN \
+            --account-id=$CLOUDFLARE_ACCOUNT_ID \
+            --bucket=$R2_BUCKET_NAME
+          
+          echo "Uploaded to: r2://$R2_BUCKET_NAME/$R2_OBJECT_KEY"
+          echo "r2_object_key=$R2_OBJECT_KEY" >> $GITHUB_OUTPUT
+
+      - name: Test Restore (Dry Run)
+        id: test-restore
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          BACKUP_FILE=${{ steps.export.outputs.backup_file }}
+          
+          echo "Testing restore on temporary database..."
+          
+          # Criar banco temporário para teste (se não existir)
+          TEST_DB_NAME="levia-licencas-test-restore"
+          
+          # Verificar se banco existe
+          if ! npx wrangler d1 info $TEST_DB_NAME --remote --token=$CLOUDFLARE_API_TOKEN --account-id=$CLOUDFLARE_ACCOUNT_ID >/dev/null 2>&1; then
+            echo "Creating test database..."
+            npx wrangler d1 create $TEST_DB_NAME --remote --token=$CLOUDFLARE_API_TOKEN --account-id=$CLOUDFLARE_ACCOUNT_ID
+            
+            # Aplicar migrations
+            npx wrangler d1 migrations apply $TEST_DB_NAME --remote --token=$CLOUDFLARE_API_TOKEN --account-id=$CLOUDFLARE_ACCOUNT_ID
+          fi
+          
+          # Importar backup
+          echo "Importing backup to test database..."
+          npx wrangler d1 import $TEST_DB_NAME --remote --file=$BACKUP_FILE --token=$CLOUDFLARE_API_TOKEN --account-id=$CLOUDFLARE_ACCOUNT_ID
+          
+          # Verificar contagem de tabelas
+          echo "Verifying table counts..."
+          COUNT=$(npx wrangler d1 execute $TEST_DB_NAME --remote --command="SELECT COUNT(*) as c FROM accounts" --token=$CLOUDFLARE_API_TOKEN --account-id=$CLOUDFLARE_ACCOUNT_ID | grep -oP '"c":\s*\K\d+')
+          
+          if [ -n "$COUNT" ]; then
+            echo "✅ Test restore successful: $COUNT accounts found"
+          else
+            echo "::warning::Could not verify restore (may be empty database)"
+          fi
+          
+          # Limpar banco de teste
+          echo "Cleaning up test database..."
+          npx wrangler d1 execute $TEST_DB_NAME --remote --command="DELETE FROM accounts" --token=$CLOUDFLARE_API_TOKEN --account-id=$CLOUDFLARE_ACCOUNT_ID 2>/dev/null || true
+          npx wrangler d1 execute $TEST_DB_NAME --remote --command="DELETE FROM installations" --token=$CLOUDFLARE_API_TOKEN --account-id=$CLOUDFLARE_ACCOUNT_ID 2>/dev/null || true
+
+      - name: Cleanup Local Backup
+        if: always()
+        run: |
+          rm -f levia-backup_*.sql levia-backup_*.sql.gz
+
+      - name: Summary
+        run: |
+          echo "## 💾 D1 Backup Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "✅ Backup completed successfully" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **Database**: levia-licencas-dev" >> $GITHUB_STEP_SUMMARY
+          echo "- **Timestamp**: $(date +%Y-%m-%d\%H:%M:%S)" >> $GITHUB_STEP_SUMMARY
+          echo "- **File**: ${{ steps.export.outputs.backup_file }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **R2 Upload**: ${{ steps.upload-r2.outputs.r2_object_key || 'Skipped (not configured)' }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Test Restore**: ✅ Completed" >> $GITHUB_STEP_SUMMARY

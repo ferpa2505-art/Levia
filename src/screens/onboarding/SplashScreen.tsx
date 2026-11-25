@@ -4,10 +4,12 @@ import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { ThemedText } from '@components/ThemedText';
 import { lightTheme } from '@theme/colors';
 import { OnboardingStackParamList } from '../OnboardingStack';
+import { usePreferences } from '@context/PreferencesContext';
 
 type SplashScreenProps = NativeStackScreenProps<OnboardingStackParamList, 'Splash'>;
 
 export function SplashScreen({ navigation }: SplashScreenProps) {
+  const { t } = usePreferences();
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const scaleAnim = useRef(new Animated.Value(0.8)).current;
   const translateYAnim = useRef(new Animated.Value(30)).current;
@@ -67,21 +69,21 @@ export function SplashScreen({ navigation }: SplashScreenProps) {
         </View>
 
         {/* Texto principal */}
-        <ThemedText 
-          variant="title" 
+        <ThemedText
+          variant="title"
           color="text"
           style={styles.mainText}
         >
-          Bem-vindo à Levia
+          {t('splash.titulo')}
         </ThemedText>
 
         {/* Tagline */}
-        <ThemedText 
-          variant="body" 
+        <ThemedText
+          variant="body"
           color="textSecondary"
           style={styles.tagline}
         >
-          Mais leve a cada dia
+          {t('splash.tagline')}
         </ThemedText>
       </Animated.View>
 

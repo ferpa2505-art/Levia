@@ -9,7 +9,71 @@
       "**/*"
     ],
     "ios": {
-      "bundleIdentifier": "com.ferpa2505art.levia"
+      "bundleIdentifier": "com.ferpa2505art.levia",
+      "privacyManifest": {
+        "NSPrivacyTracking": false,
+        "NSPrivacyTrackingDomains": [],
+        "NSPrivacyCollectedDataTypes": [
+          {
+            "NSPrivacyCollectedDataType": "NSPrivacyCollectedDataTypeHealth",
+            "NSPrivacyCollectedDataTypeLinked": true,
+            "NSPrivacyCollectedDataTypeTracking": false,
+            "NSPrivacyCollectedDataTypePurposes": [
+              "NSPrivacyCollectedDataTypePurposeAppFunctionality"
+            ]
+          },
+          {
+            "NSPrivacyCollectedDataType": "NSPrivacyCollectedDataTypeIdentifiers",
+            "NSPrivacyCollectedDataTypeLinked": true,
+            "NSPrivacyCollectedDataTypeTracking": false,
+            "NSPrivacyCollectedDataTypePurposes": [
+              "NSPrivacyCollectedDataTypePurposeAppFunctionality"
+            ]
+          },
+          {
+            "NSPrivacyCollectedDataType": "NSPrivacyCollectedDataTypeUsageData",
+            "NSPrivacyCollectedDataTypeLinked": false,
+            "NSPrivacyCollectedDataTypeTracking": false,
+            "NSPrivacyCollectedDataTypePurposes": [
+              "NSPrivacyCollectedDataTypePurposeAnalytics"
+            ]
+          },
+          {
+            "NSPrivacyCollectedDataType": "NSPrivacyCollectedDataTypeDiagnostics",
+            "NSPrivacyCollectedDataTypeLinked": false,
+            "NSPrivacyCollectedDataTypeTracking": false,
+            "NSPrivacyCollectedDataTypePurposes": [
+              "NSPrivacyCollectedDataTypePurposeAppFunctionality"
+            ]
+          }
+        ],
+        "NSPrivacyAccessedAPITypes": [
+          {
+            "NSPrivacyAccessedAPIType": "NSPrivacyAccessedAPICategoryFileTimestamp",
+            "NSPrivacyAccessedAPITypeReasons": [
+              "NSPrivacyAccessedAPIReasonC7D4.1"
+            ]
+          },
+          {
+            "NSPrivacyAccessedAPIType": "NSPrivacyAccessedAPICategorySystemBootTime",
+            "NSPrivacyAccessedAPITypeReasons": [
+              "NSPrivacyAccessedAPIReasonC7D4.1"
+            ]
+          },
+          {
+            "NSPrivacyAccessedAPIType": "NSPrivacyAccessedAPICategoryDiskSpace",
+            "NSPrivacyAccessedAPITypeReasons": [
+              "NSPrivacyAccessedAPIReasonC7D4.1"
+            ]
+          },
+          {
+            "NSPrivacyAccessedAPIType": "NSPrivacyAccessedAPICategoryUserDefaults",
+            "NSPrivacyAccessedAPITypeReasons": [
+              "NSPrivacyAccessedAPIReasonC7D4.1"
+            ]
+          }
+        ]
+      }
     },
     "android": {
       "package": "com.ferpa2505art.levia",
@@ -50,6 +114,19 @@
           "photosPermission": "O Leviã acessa suas fotos para você escolher a foto de um prato. A foto fica no seu aparelho, salvo se você pedir a análise opcional por IA."
         }
       ],
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "O Leviã usa a câmera para ler o código de barras do produto. A imagem não é guardada nem enviada."
+        }
+      ],
+      [
+        "expo-speech-recognition",
+        {
+          "microphonePermission": "O Leviã usa o microfone só quando você toca em Falar, para transcrever a descrição da refeição. O áudio não é guardado pelo Leviã; o reconhecimento pode ser feito pelo serviço de voz do seu aparelho.",
+          "speechRecognitionPermission": "O Leviã usa o reconhecimento de voz para transcrever a descrição da refeição quando você toca em Falar."
+        }
+      ],
       "expo-sharing",
       "expo-secure-store",
       "expo-mail-composer",
@@ -59,13 +136,22 @@
           "faceIDPermission": "O Leviã usa o reconhecimento facial para desbloquear o app com segurança."
         }
       ],
-      "expo-status-bar"
+      "expo-status-bar",
+      "expo-speech-recognition"
     ],
     "scheme": "levia",
     "extra": {
       "eas": {
         "projectId": "c19a5f1e-5fbd-4100-ad78-43b05b47a977"
-      }
+      },
+      "sentryDsn": "https://YOUR_SENTRY_DSN@o1.ingest.sentry.io/PROJECT_ID",
+      "sentryEnvironment": "production",
+      "posthogApiKey": "YOUR_POSTHOG_API_KEY",
+      "posthogHost": "https://app.posthog.com",
+      "privacyPolicyUrl": "https://ferpa2505-art.github.io/levia/index.html",
+      "termsOfServiceUrl": "https://ferpa2505-art.github.io/levia/termos.html",
+      "supportUrl": "https://leviapp.org/suporte",
+      "marketingUrl": "https://leviapp.org"
     },
     "owner": "ferpa2505-art",
     "updates": {

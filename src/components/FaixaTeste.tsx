@@ -55,11 +55,14 @@ export function FaixaTeste() {
 
   if (!forte) {
     return (
-      <View style={styles.linha}>
-        <ThemedText variant="small" color="textSecondary" style={{ flex: 1 }}>{titulo}</ThemedText>
-        <Pressable onPress={abrirPlanos} accessibilityRole="link" accessibilityLabel={t('teste.verPlanos')} hitSlop={8}>
-          <ThemedText variant="small" color="primary" style={styles.link}>{t('teste.verPlanos')}</ThemedText>
-        </Pressable>
+      <View>
+        <View style={styles.linha}>
+          <ThemedText variant="small" color="textSecondary" style={{ flex: 1 }}>{titulo}</ThemedText>
+          <Pressable onPress={abrirPlanos} accessibilityRole="link" accessibilityLabel={t('teste.verPlanos')} hitSlop={8}>
+            <ThemedText variant="small" color="primary" style={styles.link}>{t('teste.verPlanos')}</ThemedText>
+          </Pressable>
+        </View>
+        <ThemedText variant="caption" color="textSecondary" style={{ marginTop: spacing.xs }}>{t('teste.convite')}</ThemedText>
       </View>
     );
   }

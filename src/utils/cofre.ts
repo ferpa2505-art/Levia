@@ -16,7 +16,10 @@ const chaveSistema: ProvedorChaveSistema | undefined = Platform.OS === 'web'
   ? undefined
   : {
       async ler() {
-        const v = await SecureStore.getItemAsync(CHAVE_KEK_SISTEMA);
+        const v = await SecureStore.getItemAsync(CHAVE_KEK_SISTEMA, {
+          requireAuthentication: true,
+          authenticationPrompt: 'Autenticação biométrica necessária para acessar o cofre',
+        });
         return v ? deBase64(v) : null;
       },
       async gravar(chave) {
