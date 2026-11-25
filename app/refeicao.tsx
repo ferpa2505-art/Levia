@@ -23,7 +23,7 @@ import { SeletorHorario } from '@components/forms/SeletorHorario';
 import { MensagemErro } from '@components/forms/MensagemErro';
 import { estilosTema } from '@theme/estilos';
 import { buscarPorNome } from '@utils/buscaAlimentos';
-import { buscarProdutoPorCodigo } from '@utils/codigoBarras';
+import { buscarProdutoPorCodigo, normalizarCodigo } from '@utils/codigoBarras';
 import { LeitorCodigoBarras } from '@components/LeitorCodigoBarras';
 import { BotaoFalar } from '@components/BotaoFalar';
 import {
@@ -126,6 +126,8 @@ export default function RefeicaoScreen() {
   const atalhosSalvos = !busca.trim() && !escolhido ? recentes(salvos, 6) : [];
 
   const [leitorAberto, setLeitorAberto] = useState(false);
+  // a busca aceita nome ou código de barras: 8, 12, 13 ou 14 dígitos viram busca por código
+  const codigoDigitado = !escolhido ? normalizarCodigo(busca) : null;
 
   async function lerCodigo(codigo: string) {
     setLeitorAberto(false);
@@ -473,7 +475,24 @@ export default function RefeicaoScreen() {
           </View>
         ) : (
           <>
-            <Input value={busca} onChangeText={setBusca} placeholder={t('ref.buscarPh')} style={[styles.input, { marginTop: spacing.md }]} />
+            <Input
+              value={busca}
+              onChangeText={setBusca}
+              onSubmitEditing={() => { if (codigoDigitado) lerCodigo(codigoDigitado); }}
+              returnKeyType={codigoDigitado ? 'search' : 'done'}
+              placeholder={t('ref.buscarPh')}
+              style={[styles.input, { marginTop: spacing.md }]}
+            />
+            {codigoDigitado && (
+              <Button
+                label={`${t('ref.codigo.buscar')}: ${codigoDigitado}`}
+                variant="outline"
+                size="md"
+                icon={<ScanBarcode size={18} color={colors.primary} strokeWidth={2} />}
+                onPress={() => lerCodigo(codigoDigitado)}
+                style={{ marginTop: spacing.sm }}
+              />
+            )}
             <Button
               label={t('ref.codigo.botao')}
               variant="outline"
