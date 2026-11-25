@@ -7,6 +7,7 @@ import { Button } from '@components/Button';
 import { Input } from '@components/Input';
 import { usePreferences } from '@context/PreferencesContext';
 import { ativarSerial, lerLicenca, Licenca } from '@utils/licenca';
+import { formatarDataAcesso } from '@utils/dataAcesso';
 import { spacing } from '@constants/colors';
 import { estilosTema } from '@theme/estilos';
 
@@ -24,12 +25,8 @@ export default function Ativar() {
 
   useEffect(() => { lerLicenca().then(setLicenca); }, []);
 
-  const data = (iso: string) => {
-    // acesso vitalício vem sem data de fim: new Date('') daria "Invalid Date"
-    const d = new Date(iso);
-    if (!iso || Number.isNaN(d.getTime())) return '';
-    try { return d.toLocaleDateString(idioma, { day: '2-digit', month: '2-digit', year: 'numeric' }); } catch { return ''; }
-  };
+  // acesso vitalício vem sem data de fim: formatarDataAcesso devolve vazio nesse caso
+  const data = (iso: string) => formatarDataAcesso(iso, idioma);
 
   async function ativar() {
     if (ativando || serial.trim().length === 0) return;
