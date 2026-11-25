@@ -178,14 +178,21 @@ jobs:
     if: always()
     steps:
       - name: Generate Summary
+        env:
+          RESULT_HEALTH: ${{ needs.health-check.result }}
+          RESULT_RATE: ${{ needs.rate-limit-test.result }}
+          RESULT_UPTIME: ${{ needs.uptime-monitoring.result }}
         run: |
-          echo "## 📊 Security Monitoring Summary" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "| Job | Status |" >> $GITHUB_STEP_SUMMARY
-          echo "|-----|--------|" >> $GITHUB_STEP_SUMMARY
-          
-          for job in health-check rate-limit-test uptime-monitoring; do
-            status="${{ needs.$job.result }}"
+          {
+            echo "## 📊 Security Monitoring Summary"
+            echo ""
+            echo "| Job | Status |"
+            echo "|-----|--------|"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          for pair in "health-check:$RESULT_HEALTH" "rate-limit-test:$RESULT_RATE" "uptime-monitoring:$RESULT_UPTIME"; do
+            job="${pair%%:*}"
+            status="${pair#*:}"
             if [ "$status" = "success" ]; then
               emoji="✅"
             elif [ "$status" = "failure" ]; then
@@ -196,7 +203,9 @@ jobs:
             echo "| $job | $emoji $status |" >> $GITHUB_STEP_SUMMARY
           done
           
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**Next Steps:**" >> $GITHUB_STEP_SUMMARY
-          echo "- Review any failures above" >> $GITHUB_STEP_SUMMARY
-          echo "- Check Cloudflare Dashboard for detailed metrics" >> $GITHUB_STEP_SUMMARY
+          {
+            echo ""
+            echo "**Next Steps:**"
+            echo "- Review any failures above"
+            echo "- Check Cloudflare Dashboard for detailed metrics"
+          } >> "$GITHUB_STEP_SUMMARY"
