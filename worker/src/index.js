@@ -5,7 +5,7 @@ import { puxarVencidos } from './lembretes';
 import { enviarLembretesTeste } from './lembreteTeste';
 import { limparVencidos } from './retencao';
 import { alertarPagamentosPresos, provarEnvioDoAlerta } from './alertaFila';
-import { reservarCotaFoto, reservarEscopos } from './cotas';
+import { liberarCotaFoto, reservarCotaFoto, reservarEscopos } from './cotas';
 import { ativarSerial, validarLicenca } from './serial';
 import { receberWebhookHotmart } from './hotmart';
 import { publicarPost, obterInsights, ehTokenInvalido } from './facebook';
@@ -206,7 +206,7 @@ async function analisarTexto(request, env) {
   const acesso = await validarLicenca(env, licenca, instalacao);
   if (!acesso.ok) return json(acesso.corpo, acesso.status);
 
-  const reserva = await reservarCotaFoto(env, { instalacao, conta: acesso.conta, ip: request.headers.get('cf-connecting-ip') ?? 'sem-ip' });
+  const reserva = await reservarCotaFoto(env, { instalacao, conta: { ...acesso.conta, plano: acesso.plano }, ip: request.headers.get('cf-connecting-ip') ?? 'sem-ip' });
   if (!reserva.ok) return json(reserva.corpo, reserva.status);
   let resultado;
   try {
@@ -217,6 +217,7 @@ async function analisarTexto(request, env) {
   }
   if (!resultado || resultado.falha) {
     if (resultado?.falha) console.error('falha_ia:', String(resultado.falha).slice(0, 200));
+    await liberarCotaFoto(env, reserva.ids);
     return json({ erro: 'falha_ia' }, 502);
   }
   return json({ ...resultado, restantes: reserva.restantes });
@@ -236,7 +237,7 @@ async function analisarPrato(request, env) {
   if (!acesso.ok) return json(acesso.corpo, acesso.status);
 
   // Reserva a cota ANTES da chamada externa (falhas do Gemini também contam) e de forma atômica.
-  const reserva = await reservarCotaFoto(env, { instalacao, conta: acesso.conta, ip: request.headers.get('cf-connecting-ip') ?? 'sem-ip' });
+  const reserva = await reservarCotaFoto(env, { instalacao, conta: { ...acesso.conta, plano: acesso.plano }, ip: request.headers.get('cf-connecting-ip') ?? 'sem-ip' });
   if (!reserva.ok) return json(reserva.corpo, reserva.status);
   let resultado;
   try {
@@ -248,6 +249,7 @@ async function analisarPrato(request, env) {
   // o detalhe técnico da falha fica no log do Worker, não na resposta
   if (!resultado || resultado.falha) {
     if (resultado?.falha) console.error('falha_ia:', String(resultado.falha).slice(0, 200));
+    await liberarCotaFoto(env, reserva.ids);
     return json({ erro: 'falha_ia' }, 502);
   }
   return json({ ...resultado, restantes: reserva.restantes });

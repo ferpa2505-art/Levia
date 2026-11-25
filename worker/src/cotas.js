@@ -22,7 +22,13 @@ async function reservarNoD1(db, escopos, agora) {
     for (const id of feitas) await db.prepare('DELETE FROM cotas_uso WHERE id = ?').bind(id).run();
     return { ok: false, escopo: e };
   }
-  return { ok: true };
+  return { ok: true, ids: feitas };
+}
+
+/** Devolve a cota de uma análise que falhou (ex.: Gemini indisponível). Sem isso, a falha gasta o limite do teste. */
+export async function liberarCotaFoto(env, ids) {
+  if (!env.LEVIA_DB || !Array.isArray(ids)) return;
+  for (const id of ids) await env.LEVIA_DB.prepare('DELETE FROM cotas_uso WHERE id = ?').bind(id).run();
 }
 
 /** Plano B (sem D1): contadores no KV. NÃO é atômico — use só em desenvolvimento. */
@@ -64,18 +70,21 @@ async function usoDoEscopo(env, escopo, agora) {
  * Devolve { ok:true, restantes } ou { ok:false, status, corpo } pronto para responder.
  */
 export async function reservarCotaFoto(env, { instalacao, ip, conta, agora = Date.now() }) {
-  const titular = conta
+  // Plano pago (mensal, anual ou vitalício): sem cota por conta. Ficam só os limites técnicos (IP e serviço).
+  const planoPago = conta?.plano === 'assinatura';
+  const titular = conta && !planoPago
     ? { nome: 'inst', chave: `conta:${conta.id}`, limite: Number(conta.limite), janelaMs: Number(conta.janelaMs) }
-    : { nome: 'inst', chave: `inst:${instalacao}`, limite: Number(env.FOTOS_GRATIS_7D || 2), janelaMs: SETE_DIAS_MS };
+    : (!conta ? { nome: 'inst', chave: `inst:${instalacao}`, limite: Number(env.FOTOS_GRATIS_7D || 2), janelaMs: SETE_DIAS_MS } : null);
   const escopos = [
-    titular,
+    ...(titular ? [titular] : []),
     { nome: 'ip', chave: `ip:${ip}`, limite: Number(env.MAX_FOTOS_IP_HORA || 20), janelaMs: UMA_HORA_MS },
     { nome: 'dia', chave: 'dia:global', limite: Number(env.MAX_FOTOS_DIA || 300), janelaMs: UM_DIA_MS },
   ];
   const r = await reservarEscopos(env, escopos, agora);
   if (r.ok) {
+    if (!titular) return { ok: true, restantes: null, ids: r.ids ?? [] };
     const { n } = await usoDoEscopo(env, titular, agora);
-    return { ok: true, restantes: Math.max(0, titular.limite - n) };
+    return { ok: true, restantes: Math.max(0, titular.limite - n), ids: r.ids ?? [] };
   }
   if (r.escopo.nome === 'dia') return { ok: false, status: 429, corpo: { erro: 'limite_servico' } };
   if (r.escopo.nome === 'ip') return { ok: false, status: 429, corpo: { erro: 'muitas_tentativas' } };
