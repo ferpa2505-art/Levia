@@ -9,6 +9,7 @@ import { usePreferences } from '@context/PreferencesContext';
 import { colors, spacing, radius } from '@constants/colors';
 import { podeLerComCamera } from '@utils/cameraCodigoBarras';
 import { criarEntregaUnica } from '@utils/entregaUnica';
+import { LeitorCameraWeb } from '@components/LeitorCameraWeb';
 
 const TIPOS_LIDOS = ['ean13', 'ean8', 'upc_a'] as const;
 
@@ -52,7 +53,9 @@ export function LeitorCodigoBarras({
       <ThemedView style={styles.container}>
         <ThemedText variant="heading">{t('ref.codigo.titulo')}</ThemedText>
 
-        {usaCamera && permissao?.granted ? (
+        {usaCamera && Platform.OS === 'web' ? (
+          <LeitorCameraWeb ativo={visivel} onCodigo={entregar} />
+        ) : usaCamera && permissao?.granted ? (
           <View style={styles.camera}>
             <CameraView
               style={StyleSheet.absoluteFill}
