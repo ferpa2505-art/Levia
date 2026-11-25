@@ -2,6 +2,7 @@ import { iniciarTeste } from './licencas';
 import { turnstileSitekey } from './turnstile';
 import { processarMensagemWhatsApp } from './fluxo';
 import { puxarVencidos } from './lembretes';
+import { enviarLembretesTeste } from './lembreteTeste';
 import { limparVencidos } from './retencao';
 import { alertarPagamentosPresos, provarEnvioDoAlerta } from './alertaFila';
 import { reservarCotaFoto, reservarEscopos } from './cotas';
@@ -667,6 +668,7 @@ const app = {
   // cron diário (wrangler.toml [triggers]): retenção de conversas e da auditoria administrativa
   async scheduled(_evento, env, ctx) {
     ctx.waitUntil(limparVencidos(env));
+    ctx.waitUntil(enviarLembretesTeste(env).then((r) => console.log('lembrete_teste', JSON.stringify(r))).catch((e) => console.error('lembrete_teste erro', e?.message)));
     const resultado = await limparAuditoriaAntiga(env);
     console.log('auditoria_retencao', JSON.stringify(resultado));
   },
