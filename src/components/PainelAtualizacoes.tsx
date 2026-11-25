@@ -6,6 +6,7 @@ import { ThemedText } from '@components/ThemedText';
 import { Button } from '@components/Button';
 import { usePreferences } from '@context/PreferencesContext';
 import { colors, spacing } from '@constants/colors';
+import { TrocaSerial } from '@components/TrocaSerial';
 
 type Estado = 'parado' | 'procurando' | 'atualizado' | 'baixando' | 'pronto' | 'erro';
 
@@ -56,6 +57,7 @@ export function PainelAtualizacoes() {
 
   return (
     <View style={{ paddingHorizontal: spacing.lg, paddingVertical: spacing.md }}>
+      <TrocaSerial />
       <Linha rotulo={t('atu.versao')} valor={versao} />
       <Linha rotulo={t('atu.ultima')} valor={textoData} />
 
