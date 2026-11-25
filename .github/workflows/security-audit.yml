@@ -127,14 +127,22 @@ jobs:
     if: always()
     steps:
       - name: Generate Summary
+        env:
+          RESULT_NPM: ${{ needs.npm-audit.result }}
+          RESULT_GITLEAKS: ${{ needs.gitleaks.result }}
+          RESULT_TRIVY: ${{ needs.trivy-fs.result }}
+          RESULT_CODEQL: ${{ needs.codeql.result }}
         run: |
-          echo "## 🔒 Security Audit Summary" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "| Job | Status |" >> $GITHUB_STEP_SUMMARY
-          echo "|-----|--------|" >> $GITHUB_STEP_SUMMARY
-          
-          for job in npm-audit gitleaks trivy-fs codeql; do
-            status="${{ needs.$job.result }}"
+          {
+            echo "## 🔒 Security Audit Summary"
+            echo ""
+            echo "| Job | Status |"
+            echo "|-----|--------|"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          for pair in "npm-audit:$RESULT_NPM" "gitleaks:$RESULT_GITLEAKS" "trivy-fs:$RESULT_TRIVY" "codeql:$RESULT_CODEQL"; do
+            job="${pair%%:*}"
+            status="${pair#*:}"
             if [ "$status" = "success" ]; then
               emoji="✅"
             elif [ "$status" = "failure" ]; then
@@ -145,8 +153,10 @@ jobs:
             echo "| $job | $emoji $status |" >> $GITHUB_STEP_SUMMARY
           done
           
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**Recomendações:**" >> $GITHUB_STEP_SUMMARY
-          echo "- Revise falhas nos jobs acima" >> $GITHUB_STEP_SUMMARY
-          echo "- Atualize dependências com vulnerabilidades" >> $GITHUB_STEP_SUMMARY
-          echo "- Remova secrets detectados" >> $GITHUB_STEP_SUMMARY
+          {
+            echo ""
+            echo "**Recomendações:**"
+            echo "- Revise falhas nos jobs acima"
+            echo "- Atualize dependências com vulnerabilidades"
+            echo "- Remova secrets detectados"
+          } >> "$GITHUB_STEP_SUMMARY"
