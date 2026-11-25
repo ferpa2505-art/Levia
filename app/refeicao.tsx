@@ -18,6 +18,7 @@ import { AnaliseIAPrato } from '@components/AnaliseIAPrato';
 import { Dica } from '@components/Dica';
 import { dataDeHoje, horarioAgora } from '@utils/recordsStorage';
 import { fotografarPrato, escolherFotoDaGaleria } from '@utils/fotosRefeicao';
+import { diagnosticoFoto } from '@utils/erroFoto';
 import { colors, spacing, radius } from '@constants/colors';
 import { SeletorHorario } from '@components/forms/SeletorHorario';
 import { MensagemErro } from '@components/forms/MensagemErro';
@@ -249,9 +250,9 @@ export default function RefeicaoScreen() {
     const aoEscolher = () => setPreparandoFoto(true);
     try {
       r = origem === 'camera' ? await fotografarPrato(aoEscolher) : await escolherFotoDaGaleria(aoEscolher);
-    } catch {
-      // antes, uma falha aqui (ex.: formato de imagem que o navegador não converte) não mostrava nada
-      Alert.alert(t('ref.fotoErro'));
+    } catch (e) {
+      // a foto falhou antes da IA: diz que não abriu e mostra só a etapa técnica (sem nome, caminho ou conteúdo)
+      Alert.alert(t('ref.fotoErro'), diagnosticoFoto(e));
       return;
     } finally {
       setPreparandoFoto(false);
