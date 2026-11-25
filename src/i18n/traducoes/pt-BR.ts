@@ -721,7 +721,7 @@ const ptBR = {
   "teste.restam": "Faltam {dias} dias do seu teste grátis",
   "teste.ultimoDia": "Hoje é o último dia do seu teste grátis",
   "teste.terminou": "Seu teste grátis terminou",
-  "teste.convite": "Continue analisando fotos de pratos com IA e usando tudo no Leviã. Veja os planos.",
+  "teste.convite": "Não fique sem o controle e a ajuda do Leviã. Continue por menos de R$ 0,67 por dia.",
   "teste.conviteFim": "Para continuar analisando fotos com IA, escolha um plano.",
   "teste.verPlanos": "Ver planos",
   "teste.dispensar": "Dispensar",

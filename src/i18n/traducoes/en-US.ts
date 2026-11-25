@@ -722,7 +722,7 @@ const traducoes: Traducoes = {
   "teste.restam": "{dias} days left in your free trial",
   "teste.ultimoDia": "Today is the last day of your free trial",
   "teste.terminou": "Your free trial has ended",
-  "teste.convite": "Keep analyzing meal photos with AI and using everything in Leviã. See the plans.",
+  "teste.convite": "Don't lose control or Leviã's help. Keep going for less than R$ 0.67 a day.",
   "teste.conviteFim": "To keep analyzing photos with AI, choose a plan.",
   "teste.verPlanos": "See plans",
   "teste.dispensar": "Dismiss",
