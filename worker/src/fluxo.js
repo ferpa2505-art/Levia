@@ -198,6 +198,19 @@ async function salvarSessao(db, phone, estado, data) {
   }
 }
 
+/** Guarda a recusa (PARAR) para que nenhum lembrete seja enfileirado depois. */
+async function registrarRecusa(db, phone) {
+  if (!db) return false;
+  try {
+    await db.prepare('INSERT OR REPLACE INTO wa_optout (phone, criado_em) VALUES (?, ?)')
+      .bind(phone, new Date().toISOString()).run();
+    return true;
+  } catch (e) {
+    console.error('registrarRecusa:', e?.message);
+    return false;
+  }
+}
+
 async function limparSessao(db, phone) {
   if (!db) return false;
   try {
@@ -357,6 +370,7 @@ export async function processarMensagemWhatsApp(env, phone, texto, messageId, ag
 
   // parar: nada de lembretes nem novas mensagens por iniciativa do LEVI
   if (COMANDOS_PARAR.includes(comando)) {
+    await registrarRecusa(db, phoneFormatado);
     await limparSessao(db, phoneFormatado);
     return { tipo: 'parou', resposta: T.parar };
   }
