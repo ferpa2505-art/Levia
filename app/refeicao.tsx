@@ -242,7 +242,14 @@ export default function RefeicaoScreen() {
   }
 
   async function handleFoto(origem: 'camera' | 'galeria') {
-    const r = origem === 'camera' ? await fotografarPrato() : await escolherFotoDaGaleria();
+    let r;
+    try {
+      r = origem === 'camera' ? await fotografarPrato() : await escolherFotoDaGaleria();
+    } catch {
+      // antes, uma falha aqui (ex.: formato de imagem que o navegador não converte) não mostrava nada
+      Alert.alert(t('ia.erro.servidor' as never));
+      return;
+    }
     if (!r) return;
     if ('negado' in r) {
       Alert.alert(t('ref.semPermissaoFoto'));
