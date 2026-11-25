@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Modal, Platform, View, Pressable, StyleSheet } from 'react-native';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import { ThemedText } from '@components/ThemedText';
@@ -8,6 +8,7 @@ import { Input } from '@components/Input';
 import { usePreferences } from '@context/PreferencesContext';
 import { colors, spacing, radius } from '@constants/colors';
 import { podeLerComCamera } from '@utils/cameraCodigoBarras';
+import { criarEntregaUnica } from '@utils/entregaUnica';
 
 const TIPOS_LIDOS = ['ean13', 'ean8', 'upc_a'] as const;
 
@@ -27,17 +28,21 @@ export function LeitorCodigoBarras({
   const { t } = usePreferences();
   const [permissao, pedirPermissao] = useCameraPermissions();
   const [digitado, setDigitado] = useState('');
-  const jaLeu = useRef(false);
+  const entrega = useRef(criarEntregaUnica()).current;
   const usaCamera = podeLerComCamera(Platform.OS);
 
+  // cada abertura do leitor aceita uma nova leitura (antes a trava só soltava no "Fechar")
+  useEffect(() => {
+    if (!visivel) return;
+    entrega.reabrir();
+    setDigitado('');
+  }, [visivel, entrega]);
+
   function entregar(codigo: string) {
-    if (jaLeu.current) return;
-    jaLeu.current = true;
-    onLer(codigo);
+    entrega.entregar(codigo, onLer);
   }
 
   function aoFechar() {
-    jaLeu.current = false;
     setDigitado('');
     onFechar();
   }
