@@ -128,15 +128,22 @@ async function assinarLicenca(env, contaId, instalacao, agora) {
 const PLANO_PAGO_ATIVO = `SELECT 1 AS ok FROM entitlements
   WHERE account_id = ? AND status IN ('active', 'trialing') AND (current_period_end IS NULL OR current_period_end > ?) LIMIT 1`;
 
+// fim do melhor plano pago ativo da conta: '9999…' para vitalício (sem fim), null se não há plano pago ativo
+const FIM_DO_PLANO = `SELECT MAX(COALESCE(current_period_end, '9999-12-31T23:59:59.999Z')) AS fim FROM entitlements
+  WHERE account_id = ? AND status IN ('active', 'trialing') AND (current_period_end IS NULL OR current_period_end > ?)`;
+
 /**
- * Teste grátis → plano pago: o aparelho ligado a uma conta SÓ com teste passa para a conta do serial pago
- * (mensal, anual ou vitalício), sem reinstalar. Nunca tira o aparelho de uma conta que tem plano pago ativo,
- * nem troca um teste por outro teste, e respeita o limite de aparelhos da conta paga.
+ * Troca para um plano melhor sem reinstalar: o aparelho passa para a conta do serial pago quando esse plano
+ * vai mais longe que o atual (teste → mensal/anual/vitalício, mensal → anual, mensal/anual → vitalício).
+ * Nunca rebaixa (vitalício → anual, anual → mensal), nunca troca teste por teste, e respeita o limite de
+ * aparelhos da conta de destino.
  */
 async function moverParaPlanoPago(db, { instalacao, de, para, iso, max }) {
   if (de.revoked_at) return { erro: 'instalacao_em_uso' };
-  const pago = (conta) => db.prepare(PLANO_PAGO_ATIVO).bind(conta, iso).first();
-  if (!(await pago(para)) || (await pago(de.account_id))) return { erro: 'instalacao_em_uso' };
+  const fim = async (conta) => (await db.prepare(FIM_DO_PLANO).bind(conta, iso).first())?.fim ?? null;
+  const fimPara = await fim(para);
+  const fimDe = await fim(de.account_id);
+  if (!fimPara || (fimDe && fimPara <= fimDe)) return { erro: 'instalacao_em_uso' };
   const r = await db.prepare(
     `UPDATE installations SET account_id = ?1, last_seen_at = ?2
      WHERE id = ?3 AND account_id = ?4 AND revoked_at IS NULL

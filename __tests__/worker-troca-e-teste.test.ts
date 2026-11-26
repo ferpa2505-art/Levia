@@ -63,12 +63,29 @@ describe('troca do serial do teste por um plano pago', () => {
     expect(c.contaDo(A)).toBe('paga');
   });
 
-  teste('não tira o aparelho de quem já tem plano pago', async () => {
+  teste('plano pago de mesmo alcance não puxa o aparelho de outra conta paga', async () => {
     const c = await cenario();
+    c.db.sql("UPDATE entitlements SET current_period_end = ? WHERE id = 'ent-paga2'", FIM);
     expect((await c.ativar(SERIAL_PAGO)).status).toBe(200);
     const r = await c.ativar(SERIAL_PAGO_2);
     expect(r.status).toBe(409);
     expect(((await r.json()) as any).erro).toBe('instalacao_em_uso');
+    expect(c.contaDo(A)).toBe('paga');
+  });
+
+  teste('mensal/anual comprado → serial vitalício passa o aparelho para o vitalício', async () => {
+    const c = await cenario();
+    c.db.sql("UPDATE entitlements SET current_period_end = NULL WHERE id = 'ent-paga2'");
+    expect((await c.ativar(SERIAL_PAGO)).status).toBe(200);
+    expect((await c.ativar(SERIAL_PAGO_2)).status).toBe(200);
+    expect(c.contaDo(A)).toBe('paga2');
+  });
+
+  teste('vitalício nunca é rebaixado para um plano com fim', async () => {
+    const c = await cenario();
+    c.db.sql("UPDATE entitlements SET current_period_end = NULL WHERE id = 'ent-paga'");
+    expect((await c.ativar(SERIAL_PAGO)).status).toBe(200);
+    expect((await c.ativar(SERIAL_PAGO_2)).status).toBe(409);
     expect(c.contaDo(A)).toBe('paga');
   });
 
