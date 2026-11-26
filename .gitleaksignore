@@ -1,0 +1,35 @@
+# Achados do Gitleaks já revisados (26/11/2026). Formato: commit:arquivo:regra:linha.
+# Cada linha vale só para aquele commit e aquela linha: qualquer achado NOVO continua falhando.
+# Nenhum valor de segredo é guardado aqui.
+
+# Chaves FALSAS de teste (fixtures dos testes do Worker; não existem em produção)
+14cdf53bd00bb7a8869e98d4e57807df4a5eb5b9:__tests__/worker-api-synthetic.test.ts:generic-api-key:15
+14cdf53bd00bb7a8869e98d4e57807df4a5eb5b9:__tests__/worker-api-synthetic.test.ts:levia-hmac-key:15
+1fc92a28f6262e6fd79982b849b90da3998e2d6b:__tests__/worker-api-synthetic.test.ts:generic-api-key:11
+4bf36c3ad5e0b9865ae63c16217a9c108a0cc780:__tests__/worker-api-synthetic.test.ts:levia-licenca-token-key:26
+eb1f2d4a6d88e7370319963f3a3d69e24c02e14d:__tests__/worker-api-synthetic.test.ts:levia-licenca-token-key:26
+23be7884d8eb8be1b92ed65df5d95e876864c4dc:__tests__/worker-serial.test.ts:generic-api-key:211
+9fe12f5a6e1369fd6ba3e8180eb6b16e3ce85997:__tests__/worker-serial.test.ts:generic-api-key:211
+4bf36c3ad5e0b9865ae63c16217a9c108a0cc780:__tests__/worker-serial.test.ts:generic-api-key:210
+eb1f2d4a6d88e7370319963f3a3d69e24c02e14d:__tests__/worker-serial.test.ts:generic-api-key:210
+ef961362078943ea0e1cdc71c683de87eb3f7381:__tests__/worker-serial.test.ts:generic-api-key:213
+5a6cab553a1326cfb93c677ddadde4d7566f3225:__tests__/worker-reembolso-ativacao-concorrente.test.ts:levia-hmac-key:18
+5a6cab553a1326cfb93c677ddadde4d7566f3225:__tests__/worker-reembolso-ativacao-concorrente.test.ts:levia-hmac-key:19
+5a6cab553a1326cfb93c677ddadde4d7566f3225:__tests__/worker-reembolso-ativacao-concorrente.test.ts:levia-licenca-token-key:17
+6a23e939596d4674afe6786e2cf4341e0c5570e9:__tests__/worker-reembolso-ativacao-concorrente.test.ts:levia-hmac-key:17
+a385faebc4b50fd70404a33584a91ec52e826af6:__tests__/worker-reembolso-ativacao-concorrente.test.ts:levia-hmac-key:17
+a385faebc4b50fd70404a33584a91ec52e826af6:__tests__/worker-reembolso-ativacao-concorrente.test.ts:levia-licenca-token-key:16
+a728035c62a8b122458839c53bcb5358887bd59f:__tests__/worker-analisar-texto.test.ts:levia-licenca-token-key:17
+b7b4a45ef17cf69b082bbe916e74d3701abb72f1:__tests__/worker-analisar-texto.test.ts:levia-licenca-token-key:17
+
+# database_id do D1 no wrangler.toml: identificador obrigatório da Cloudflare, não é credencial
+# (sem o token da API, o ID não dá acesso a nada)
+37f9ef9a2aa210931c8b51bb83180305cec445f8:worker/wrangler.toml:levia-d1-credentials:29
+902fe6d287e3f06a80a55a572c5ad746084ed628:worker/wrangler.toml:levia-d1-credentials:29
+53855c9b11559275d50d0c7f5888b8a6fdd9b416:worker/wrangler.toml:levia-d1-credentials:106
+acd57d70096d0ac99bf3b2c32619abd2574521ea:worker/wrangler.toml:levia-d1-credentials:106
+
+# TOKEN_APP antigo do PWA (outubro/2026): estava no código público do app, foi removido em 27/10 (#33)
+# quando a análise passou a usar Turnstile no servidor; o Worker atual não aceita mais esse token.
+9f9fa7db5f0170002ff60c538cf594a6e9e0297b:src/utils/iaPrato.ts:generic-api-key:18
+f8910e70d4e4a1a70945eb9b4a84d157bb502cf5:src/utils/iaPrato.ts:generic-api-key:18
