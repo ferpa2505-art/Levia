@@ -734,6 +734,7 @@ const traducoes: TraducoesParciais = {
   "ref.textoFalar": "Parler",
   "ref.textoOuvindo": "Écoute… touchez pour arrêter",
   "ref.semMicrofone": "Autorisez le micro dans les réglages de l'appareil pour dicter le repas.",
+  "ref.vozTecladoIOS": "Sur iPhone, Leviã installé ne peut pas utiliser la reconnaissance vocale de Safari. Touchez le champ ci-dessus et utilisez le micro 🎤 du clavier pour dicter le repas.",
   "menu.ia.revogarTitulo": "Withdraw AI photo consent",
   "menu.ia.revogarDescricao": "Your data stays on this device. You will be asked again before the next analysis.",
   "menu.ia.revogarSucesso": "AI consent withdrawn on this device. Analyses already sent may have been processed.",

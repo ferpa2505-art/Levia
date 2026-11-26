@@ -834,6 +834,7 @@ const ptBR = {
   "ref.textoFalar": "Falar",
   "ref.textoOuvindo": "Ouvindo… toque para parar",
   "ref.semMicrofone": "Permita o microfone nas configurações do aparelho para falar a refeição.",
+  "ref.vozTecladoIOS": "No iPhone, o Leviã instalado não consegue usar o reconhecimento de voz do Safari. Toque no campo acima e use o microfone 🎤 do teclado para ditar a refeição.",
   "menu.ia.revogarTitulo": "Revogar autorização de fotos por IA",
   "menu.ia.revogarDescricao": "Não apaga seus dados. O aviso será exibido novamente antes da próxima análise.",
   "menu.ia.revogarSucesso": "Autorização de IA revogada neste aparelho. Análises já enviadas podem ter sido processadas.",

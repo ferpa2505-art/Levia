@@ -835,6 +835,7 @@ const traducoes: Traducoes = {
   "ref.textoFalar": "Speak",
   "ref.textoOuvindo": "Listening… tap to stop",
   "ref.semMicrofone": "Allow the microphone in device settings to speak your meal.",
+  "ref.vozTecladoIOS": "On iPhone, the installed Leviã can't use Safari's speech recognition. Tap the field above and use the keyboard's 🎤 microphone to dictate your meal.",
   "menu.ia.revogarTitulo": "Withdraw AI photo consent",
   "menu.ia.revogarDescricao": "Your data stays on this device. You will be asked again before the next analysis.",
   "menu.ia.revogarSucesso": "AI consent withdrawn on this device. Analyses already sent may have been processed.",
