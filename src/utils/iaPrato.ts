@@ -1,7 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ImageManipulator, SaveFormat } from 'expo-image-manipulator';
 import { idDaInstalacao, lerLicenca, limparLicenca } from '@utils/licenca';
-import { buscarAlimentosGlobais, buscarAlimentoPorId, AlimentoGlobal, IdiomaAlimentos } from '@constants/alimentosGlobais';
+import { buscarAlimentosGlobais, buscarAlimentoPorId, carregarEstendido, AlimentoGlobal, IdiomaAlimentos } from '@constants/alimentosGlobais';
 import { ingredientes } from '@constants/ingredients';
 import { AlimentoPor100g, Ingrediente } from '@models/ingredients';
 import { normalizarTexto } from '@utils/buscaAlimentos';
@@ -81,6 +81,7 @@ async function fotoReduzidaBase64(uri: string): Promise<string> {
 }
 
 const palavras = (s: string) => normalizarTexto(s).split(/[\s/(),-]+/).filter(Boolean);
+const PESO_INDUSTRIALIZADO = 150;
 
 /**
  * Entre os candidatos da busca, o mais parecido com o nome da IA: nome igual
@@ -99,7 +100,10 @@ function melhorCandidato(nome: string, candidatos: Ingrediente[]): Ingrediente |
     const ehPrato = /^[PBVSW]\d/.test(id) || /\b(com|with|con|avec)\b|,/.test(n);
     const sobra = palavras(c.nome).filter((w) => !pAlvo.some((a) => w.startsWith(a) || a.startsWith(w))).length;
     if (ehPrato && !combinacao) continue;
-    const nota = (n === alvo ? -100 : 0) + sobra * 10;
+    // produto industrializado (catálogo Open Food Facts, id "O…") só ganha de um alimento do banco curado
+    // (TACO, CIQUAL, USDA…) quando o nome casa exatamente e o curado é bem pior: a IA descreve comida genérica
+    const industrializado = /^O\d/.test(id) ? PESO_INDUSTRIALIZADO : 0;
+    const nota = (n === alvo ? -100 : 0) + sobra * 10 + industrializado;
     if (nota < melhorNota) { melhorNota = nota; melhor = c; }
   }
   return melhor;
@@ -182,5 +186,6 @@ async function enviarParaIA(url: string, corpo: object, idioma: IdiomaAlimentos)
   if (resposta.status === 429) return { ok: false, motivo: 'limite' };
   if (!resposta.ok) return { ok: false, motivo: 'servidor' };
   if (!dados.ehComida || !dados.itens?.length) return { ok: false, motivo: 'naoComida' };
+  await carregarEstendido(); // na PWA o banco local é baixado sob demanda; sem ele o resultado usa só o curado
   return { ok: true, restantes: dados.restantes ?? 0, sugestoes: dados.itens.map((i) => ligarAoBanco(i, idioma)) };
 }

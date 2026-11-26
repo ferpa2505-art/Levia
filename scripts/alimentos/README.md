@@ -37,7 +37,7 @@ python3 build.py   # gera out/alimentosGlobais.json e out/alimentosGlobais_revis
 
 ## Banco estendido (produtos industrializados) e pratos extras
 
-- `off_estendido.py` → `src/data/alimentosEstendidos.json` (~50 mil produtos). Fonte: export global do
+- `off_estendido.py` → `public/dados/alimentosEstendidos.json` (versão original, ~50 mil produtos, a partir do CSV). Fonte: export global do
   **Open Food Facts** (ODbL 1.0; crédito obrigatório e o arquivo derivado continua ODbL, por isso fica
   separado do banco curado e o crédito está em `CREDITO_FONTES_ALIMENTOS`). O CSV bruto (~1,5 GB,
   https://static.openfoodfacts.org/data/en.openfoodfacts.org.products.csv.gz) **não entra no Git**.
@@ -45,6 +45,15 @@ python3 build.py   # gera out/alimentosGlobais.json e out/alimentosGlobais_revis
   confundido com kcal, kcal coerente com 4/4/9 em ±25%), nome legível, código de barras válido,
   sem duplicados; vagas por país (BR 10 mil, FR 6 mil, ES/IT/DE/GB/US 5 mil, PT 4 mil, MX 3 mil…) escolhidas
   pelos produtos mais escaneados. Nomes ficam na língua do produto (não são traduzidos).
+- `off_estendido_jsonl.py` → amplia `public/dados/alimentosEstendidos.json` a partir do export **JSONL** do
+  Open Food Facts (`openfoodfacts-products.jsonl.gz`, ≈13 GB, **não entra no Git**) **sem tirar nenhum item atual**:
+  só acrescenta códigos novos, sem duplicar nome + valores. As cotas são o total final por país, contando os que
+  já existiam (BR 20 mil, FR 20 mil, ES/IT/GB 15 mil, PT 13 mil, DE 10 mil, MT 1,3 mil…). O Open Food Facts passou
+  a guardar os valores no campo `nutrition` (o antigo `nutriments` vem vazio na maioria): o script lê os dois e,
+  no novo, só aceita valores do rótulo. Mesmos filtros de qualidade do `off_estendido.py`. Leva ≈1 h.
+- **Onde o app lê:** `public/dados/alimentosEstendidos.json`. Na PWA o arquivo é baixado só quando precisa
+  (tela de refeição, busca ou código de barras) e fica fora do JS de abertura; no app instalado vai junto
+  (`src/constants/estendidoFonte.ts` e `estendidoFonte.web.ts`).
 - `pratos_extras.py` → `src/data/alimentosPratos.json`: 66 pratos prontos brasileiros e do mundo, em 5 idiomas,
   com macros típicos estimados pelo Levia (kcal calculada por Atwater). São estimativas, não medições.
 - No app o estendido só é carregado na primeira busca (`src/constants/alimentosGlobais.ts`) e vem depois do

@@ -7,7 +7,7 @@ import {
   CREDITO_FONTES_ALIMENTOS,
 } from '../src/constants/alimentosGlobais';
 
-const estendido = require('../src/data/alimentosEstendidos.json');
+const estendido = require('../public/dados/alimentosEstendidos.json');
 const pratos = require('../src/data/alimentosPratos.json');
 
 describe('banco estendido (Open Food Facts, ODbL)', () => {

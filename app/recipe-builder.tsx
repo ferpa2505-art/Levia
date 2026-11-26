@@ -15,9 +15,11 @@ import { useRecords } from '@context/RecordsContext';
 import { colors, spacing, radius } from '@constants/colors';
 import { estilosTema } from '@theme/estilos';
 import { usePreferences } from '@context/PreferencesContext';
+import { useCatalogoEstendido } from '@/hooks/useCatalogoEstendido';
 
 export default function RecipeBuilderScreen() {
   const { t, tc, idioma } = usePreferences();
+  useCatalogoEstendido(); // na PWA baixa os produtos industrializados e redesenha a busca quando chegam
   const router = useRouter();
   const { receitasPersonalizadas, criarReceita, removerReceita, atualizarPorcaoPadrao } = useCustomRecipes();
   const { adicionarRefeicao } = useRecords();
