@@ -123,8 +123,12 @@ describe('ativação: guardas de entitlement, trial e corrida', () => {
     const iso = new Date(AGORA).toISOString();
     const estrangeira = await cenario();
     estrangeira.db.sql("INSERT INTO accounts(id,email_hash,status,created_at,updated_at) VALUES ('other-acct','other-mail','active',?,?)", iso, iso);
+    // a outra conta tem plano pago ativo: o aparelho dela nunca é puxado (o caso "só teste → plano pago" está em worker-troca-e-teste)
+    estrangeira.db.sql(`INSERT INTO entitlements(id,account_id,plan,status,photo_limit,current_period_end,last_payment_id,created_at,updated_at)
+      VALUES ('other-paid','other-acct','annual','active',100,?,'other-event',?,?)`, FIM, iso, iso);
     estrangeira.db.sql("INSERT INTO installations(id,account_id,first_seen_at,last_seen_at) VALUES (?, 'other-acct', ?, ?)", DEVICE_A, iso, iso);
     expect((await ativar(estrangeira)).status).toBe(409);
+    expect(estrangeira.db.sql('SELECT account_id FROM installations')[0].account_id).toBe('other-acct');
     expect(estrangeira.db.sql('SELECT used_at FROM activation_codes')[0].used_at).toBeNull();
     const revogada = await cenario();
     revogada.db.sql("INSERT INTO installations(id,account_id,first_seen_at,last_seen_at,revoked_at) VALUES (?, 'acct', ?, ?, ?)", DEVICE_A, iso, iso, iso);

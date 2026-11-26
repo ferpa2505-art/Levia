@@ -12,7 +12,7 @@
  * Quem para de responder recebe lembretes (ver lembretes.js). Os textos estão em textos.js.
  */
 
-import { apagarContaPorTelefone, emitirSerial } from './serial';
+import { apagarContaPorTelefone, emitirSerial, testeJaUsadoSemPlano } from './serial';
 import { agendarLembretes, cancelarLembretes } from './lembretes';
 import { avisarEquipe, pedeAtendente } from './avisos';
 import {
@@ -198,6 +198,19 @@ async function salvarSessao(db, phone, estado, data) {
   }
 }
 
+/** Guarda a recusa (PARAR) para que nenhum lembrete seja enfileirado depois. */
+async function registrarRecusa(db, phone) {
+  if (!db) return false;
+  try {
+    await db.prepare('INSERT OR REPLACE INTO wa_optout (phone, criado_em) VALUES (?, ?)')
+      .bind(phone, new Date().toISOString()).run();
+    return true;
+  } catch (e) {
+    console.error('registrarRecusa:', e?.message);
+    return false;
+  }
+}
+
 async function limparSessao(db, phone) {
   if (!db) return false;
   try {
@@ -357,6 +370,7 @@ export async function processarMensagemWhatsApp(env, phone, texto, messageId, ag
 
   // parar: nada de lembretes nem novas mensagens por iniciativa do LEVI
   if (COMANDOS_PARAR.includes(comando)) {
+    await registrarRecusa(db, phoneFormatado);
     await limparSessao(db, phoneFormatado);
     return { tipo: 'parou', resposta: T.parar };
   }
@@ -388,6 +402,9 @@ export async function processarMensagemWhatsApp(env, phone, texto, messageId, ag
   const leadExistente = await buscarLeadPorTelefone(db, phoneFormatado);
   if (leadExistente) {
     if (comando === 'serial') {
+      if (await testeJaUsadoSemPlano(env, phoneFormatado, agora)) {
+        return { tipo: 'teste_ja_usado', resposta: T.testeJaUsado(`${linkSite(env)}/#planos`), leadId: leadExistente };
+      }
       const emissao = await emitirSerial(env, { telefone: phoneFormatado });
       if (emissao.ok) return varias('serial_novo', [T.serialNovoIntro, T.serialNovoUso(linkApp(env)), emissao.serial], { leadId: leadExistente });
       if (emissao.motivo === 'limite') return { tipo: 'serial_limite', resposta: T.serialLimite };
@@ -458,6 +475,10 @@ ${perguntaDaEtapa(estadoAtual, dados, env, idioma)}`, 'objetivo_invalido');
       if (!leadId) return { tipo: 'erro', resposta: T.erro };
 
       await limparSessao(db, phoneFormatado);
+      // o teste grátis vale uma vez por número: quem já usou (mesmo tendo apagado os dados) recebe o link dos planos
+      if (await testeJaUsadoSemPlano(env, phoneFormatado, agora)) {
+        return { tipo: 'teste_ja_usado', resposta: T.testeJaUsado(`${linkSite(env)}/#planos`), leadId };
+      }
       const emissao = await emitirSerial(env, { telefone: phoneFormatado });
       if (!emissao.ok) {
         // o lead já existe: quem digitar SERIAL depois tenta de novo

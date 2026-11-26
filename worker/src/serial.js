@@ -125,6 +125,53 @@ async function assinarLicenca(env, contaId, instalacao, agora) {
   return `${corpo}.${await hmacHex(env.LICENCA_TOKEN_KEY, corpo)}`;
 }
 
+const PLANO_PAGO_ATIVO = `SELECT 1 AS ok FROM entitlements
+  WHERE account_id = ? AND status IN ('active', 'trialing') AND (current_period_end IS NULL OR current_period_end > ?) LIMIT 1`;
+
+// fim do melhor plano pago ativo da conta: '9999…' para vitalício (sem fim), null se não há plano pago ativo
+const FIM_DO_PLANO = `SELECT MAX(COALESCE(current_period_end, '9999-12-31T23:59:59.999Z')) AS fim FROM entitlements
+  WHERE account_id = ? AND status IN ('active', 'trialing') AND (current_period_end IS NULL OR current_period_end > ?)`;
+
+/**
+ * Troca para um plano melhor sem reinstalar: o aparelho passa para a conta do serial pago quando esse plano
+ * vai mais longe que o atual (teste → mensal/anual/vitalício, mensal → anual, mensal/anual → vitalício).
+ * Nunca rebaixa (vitalício → anual, anual → mensal), nunca troca teste por teste, e respeita o limite de
+ * aparelhos da conta de destino.
+ */
+async function moverParaPlanoPago(db, { instalacao, de, para, iso, max }) {
+  if (de.revoked_at) return { erro: 'instalacao_em_uso' };
+  const fim = async (conta) => (await db.prepare(FIM_DO_PLANO).bind(conta, iso).first())?.fim ?? null;
+  const fimPara = await fim(para);
+  const fimDe = await fim(de.account_id);
+  if (!fimPara || (fimDe && fimPara <= fimDe)) return { erro: 'instalacao_em_uso' };
+  const r = await db.prepare(
+    `UPDATE installations SET account_id = ?1, last_seen_at = ?2
+     WHERE id = ?3 AND account_id = ?4 AND revoked_at IS NULL
+       AND (SELECT COUNT(*) FROM installations i WHERE i.account_id = ?1 AND i.revoked_at IS NULL) < ?5`,
+  ).bind(para, iso, instalacao, de.account_id, max).run();
+  if (Number(r?.meta?.changes ?? 0) !== 1) return { erro: 'limite_dispositivos' };
+  return { account_id: para, revoked_at: null };
+}
+
+/**
+ * true se este telefone já usou o teste grátis, o teste acabou (ou a conta foi apagada) e não há plano pago ativo:
+ * o bot manda o link dos planos em vez de um serial que não ativaria. Durante o teste, o SERIAL continua funcionando.
+ */
+export async function testeJaUsadoSemPlano(env, telefone, agora = Date.now()) {
+  if (!env.LEVIA_DB || !env.TYPEBOT_PHONE_HMAC_KEY) return false;
+  const iso = new Date(agora).toISOString();
+  const hash = await hmacHex(env.TYPEBOT_PHONE_HMAC_KEY, telefone);
+  const usado = await env.LEVIA_DB.prepare('SELECT 1 AS ok FROM testes_usados WHERE phone_hash = ?').bind(hash).first();
+  if (!usado) return false;
+  const conta = await env.LEVIA_DB.prepare('SELECT id FROM accounts WHERE phone_hash = ?').bind(hash).first();
+  if (!conta) return true;
+  if (await env.LEVIA_DB.prepare(PLANO_PAGO_ATIVO).bind(conta.id, iso).first()) return false;
+  const emTeste = await env.LEVIA_DB.prepare(
+    "SELECT 1 AS ok FROM trials WHERE account_id = ? AND status = 'active' AND expires_at > ?",
+  ).bind(conta.id, iso).first();
+  return !emTeste;
+}
+
 /** POST /v1/ativar { serial, instalacao } → { ok, licenca, plano, acessoAte } */
 export async function ativarSerial(request, env, agora = Date.now()) {
   if (!env.LEVIA_DB || !env.LICENCA_TOKEN_KEY) return resposta({ erro: 'nao_configurado' }, 503);
@@ -158,8 +205,15 @@ export async function ativarSerial(request, env, agora = Date.now()) {
   ).bind(await sha256(codigo), iso).first();
   if (!linha || linha.conta_status !== 'active') return resposta({ erro: 'serial_invalido' }, 403);
 
-  const existente = await db.prepare('SELECT account_id, revoked_at FROM installations WHERE id = ?').bind(instalacao).first();
-  if (existente && existente.account_id !== linha.conta_id) return resposta({ erro: 'instalacao_em_uso' }, 409);
+  let existente = await db.prepare('SELECT account_id, revoked_at FROM installations WHERE id = ?').bind(instalacao).first();
+  if (existente && existente.account_id !== linha.conta_id) {
+    // aparelho no teste grátis + serial de plano pago (mensal, anual, vitalício) de outra conta: muda de conta
+    const movida = await moverParaPlanoPago(db, {
+      instalacao, de: existente, para: linha.conta_id, iso, max: Number(env.MAX_DISPOSITIVOS || 2),
+    });
+    if (movida.erro) return resposta({ erro: movida.erro }, 409);
+    existente = movida;
+  }
   if (existente?.revoked_at) return resposta({ erro: 'aparelho_revogado' }, 403);
 
   // O batch é o ponto de decisão da ativação. Cada escrita revalida a autorização.
@@ -219,8 +273,16 @@ export async function ativarSerial(request, env, agora = Date.now()) {
      WHERE ${validadeCodigo}
        AND c.entitlement_id IS NULL
        AND NOT EXISTS (SELECT 1 FROM trials t WHERE t.account_id = c.account_id)
+       AND NOT EXISTS (SELECT 1 FROM testes_usados u WHERE u.phone_hash = a.phone_hash)
        AND EXISTS (SELECT 1 FROM installations i WHERE i.id = ? AND i.account_id = c.account_id AND i.revoked_at IS NULL)`,
   ).bind(iso, fimTeste, Number(env.FOTOS_GRATIS_7D || 2), iso, iso, ...argumentos, instalacao));
+  // o teste fica marcado pelo telefone (hash), e a marca sobrevive ao APAGAR: o teste grátis vale uma vez por número
+  comandos.push(db.prepare(
+    `INSERT OR IGNORE INTO testes_usados (phone_hash, primeiro_teste_em)
+     SELECT a.phone_hash, t.started_at
+     FROM trials t JOIN accounts a ON a.id = t.account_id
+     WHERE t.account_id = ? AND a.phone_hash IS NOT NULL`,
+  ).bind(linha.conta_id));
   comandos.push(db.prepare(
     `UPDATE activation_codes SET used_at = COALESCE(used_at, ?)
      WHERE id = ?
