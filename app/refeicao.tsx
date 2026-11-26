@@ -26,6 +26,7 @@ import { buscarPorNome } from '@utils/buscaAlimentos';
 import { buscarProdutoPorCodigo, normalizarCodigo } from '@utils/codigoBarras';
 import { LeitorCodigoBarras } from '@components/LeitorCodigoBarras';
 import { BotaoFalar } from '@components/BotaoFalar';
+import { useCatalogoEstendido } from '@/hooks/useCatalogoEstendido';
 import {
   AlimentoSalvo,
   UNIDADES,
@@ -55,6 +56,7 @@ const arred = (n: number, casas = 0) => Math.round(n * 10 ** casas) / 10 ** casa
 
 export default function RefeicaoScreen() {
   const { t } = usePreferences();
+  useCatalogoEstendido(); // na PWA baixa os produtos industrializados e redesenha a busca quando chegam
   const router = useRouter();
   const params = useLocalSearchParams<{ id?: string; data?: string; tipo?: TipoRefeicao }>();
   const { refeicoes, salvarRefeicao, removerRefeicao } = useRecords();

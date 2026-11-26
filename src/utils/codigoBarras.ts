@@ -1,4 +1,4 @@
-import { AlimentoGlobal, buscarAlimentoPorId } from '@constants/alimentosGlobais';
+import { AlimentoGlobal, buscarAlimentoPorId, carregarEstendido } from '@constants/alimentosGlobais';
 
 /**
  * Leitura de código de barras: primeiro o banco local (`alimentosEstendidos`), depois Open Food Facts.
@@ -89,6 +89,7 @@ export async function buscarNaOpenFoodFacts(codigo: string, fetchFn: Fetch = fet
 export async function buscarProdutoPorCodigo(bruto: string, fetchFn?: Fetch): Promise<ResultadoCodigo> {
   const codigo = normalizarCodigo(bruto);
   if (!codigo) return { ok: false, motivo: 'invalido' };
+  await carregarEstendido(); // na PWA o banco local é baixado sob demanda
   const local = buscarAlimentoPorId(`O${codigo}`);
   if (local) return { ok: true, alimento: local, fonte: 'local' };
   return buscarNaOpenFoodFacts(codigo, fetchFn);

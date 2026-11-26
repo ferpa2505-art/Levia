@@ -1,7 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ImageManipulator, SaveFormat } from 'expo-image-manipulator';
 import { idDaInstalacao, lerLicenca, limparLicenca } from '@utils/licenca';
-import { buscarAlimentosGlobais, buscarAlimentoPorId, AlimentoGlobal, IdiomaAlimentos } from '@constants/alimentosGlobais';
+import { buscarAlimentosGlobais, buscarAlimentoPorId, carregarEstendido, AlimentoGlobal, IdiomaAlimentos } from '@constants/alimentosGlobais';
 import { ingredientes } from '@constants/ingredients';
 import { AlimentoPor100g, Ingrediente } from '@models/ingredients';
 import { normalizarTexto } from '@utils/buscaAlimentos';
@@ -182,5 +182,6 @@ async function enviarParaIA(url: string, corpo: object, idioma: IdiomaAlimentos)
   if (resposta.status === 429) return { ok: false, motivo: 'limite' };
   if (!resposta.ok) return { ok: false, motivo: 'servidor' };
   if (!dados.ehComida || !dados.itens?.length) return { ok: false, motivo: 'naoComida' };
+  await carregarEstendido(); // na PWA o banco local é baixado sob demanda; sem ele o resultado usa só o curado
   return { ok: true, restantes: dados.restantes ?? 0, sugestoes: dados.itens.map((i) => ligarAoBanco(i, idioma)) };
 }

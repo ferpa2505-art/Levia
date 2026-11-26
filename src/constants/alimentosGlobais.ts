@@ -1,6 +1,7 @@
 import { Ingrediente } from '@models/ingredients';
 import { normalizarTexto } from '@utils/buscaAlimentos';
 import { obterIdiomaAtual, CodigoIdioma } from '@/i18n';
+import { bancoEstendidoImediato, lerBancoEstendido, type BancoEstendido } from '@constants/estendidoFonte';
 
 /**
  * Banco global de alimentos e pratos prontos do Levia, em 5 idiomas.
@@ -50,36 +51,72 @@ const banco: BancoAlimentos = require('../data/alimentosGlobais.json');
 
 /**
  * Banco ESTENDIDO: produtos industrializados mais populares de cada país (Open Food Facts, ODbL 1.0),
- * gerado por scripts/alimentos/off_estendido.py. Fica em arquivo separado por causa da licença
- * (crédito + o arquivo derivado continua ODbL) e é carregado só na primeira busca que precisar dele.
- * Linha: [id "O"+código de barras, categoria, kcal, proteína, carboidrato, gordura, fibra, porçãoG, nome, país]
+ * gerado por scripts/alimentos/off_estendido_jsonl.py. Fica em arquivo separado por causa da licença
+ * (crédito + o arquivo derivado continua ODbL). No app instalado vem no pacote; na PWA é baixado só quando
+ * precisa (ver estendidoFonte.web.ts), para não pesar na abertura. Enquanto não chega, a busca usa o banco curado.
  */
-type LinhaEstendida = [string, CategoriaAlimento, number, number, number, number, number, number, string, string];
-interface BancoEstendido { itens: LinhaEstendida[] }
-
 let estendido: AlimentoGlobal[] | null = null;
 let indiceEstendido: Indexado[] | null = null;
+let carregando: Promise<void> | null = null;
+const ouvintesEstendido = new Set<() => void>();
+
+function converterEstendido(b: BancoEstendido): AlimentoGlobal[] {
+  return b.itens.map((l): AlimentoGlobal => ({
+    id: l[0], categoria: l[1] as CategoriaAlimento, nome: l[8],
+    kcalPor100g: l[2], proteinaGPor100g: l[3], carboidratoGPor100g: l[4], gorduraGPor100g: l[5], fibraGPor100g: l[6],
+    gramaPadrao: l[7], unidadeComum: `${l[7]} g`,
+  }));
+}
+
+/** Carrega o banco estendido uma vez. Se falhar (ex.: sem internet na PWA), a próxima chamada tenta de novo. */
+export function carregarEstendido(): Promise<void> {
+  if (estendido) return Promise.resolve();
+  if (!carregando) {
+    carregando = lerBancoEstendido()
+      .then((b) => {
+        estendido = b ? converterEstendido(b) : [];
+        indiceEstendido = null;
+        ouvintesEstendido.forEach((fn) => fn());
+      })
+      .catch(() => {
+        carregando = null;
+      });
+  }
+  return carregando;
+}
+
+/** Avisa quando o banco estendido terminar de carregar. Devolve como parar de ouvir. */
+export function aoCarregarEstendido(fn: () => void): () => void {
+  ouvintesEstendido.add(fn);
+  return () => { ouvintesEstendido.delete(fn); };
+}
+
+export function estendidoCarregado(): boolean {
+  return estendido !== null;
+}
 
 function itensEstendidos(): AlimentoGlobal[] {
   if (estendido) return estendido;
   try {
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
-    const b: BancoEstendido = require('../data/alimentosEstendidos.json');
-    estendido = b.itens.map((l): AlimentoGlobal => ({
-      id: l[0], categoria: l[1], nome: l[8],
-      kcalPor100g: l[2], proteinaGPor100g: l[3], carboidratoGPor100g: l[4], gorduraGPor100g: l[5], fibraGPor100g: l[6],
-      gramaPadrao: l[7], unidadeComum: `${l[7]} g`,
-    }));
+    const imediato = bancoEstendidoImediato();
+    if (imediato) {
+      estendido = converterEstendido(imediato);
+      return estendido;
+    }
   } catch {
     estendido = []; // sem o arquivo estendido o app segue só com o banco curado
+    return estendido;
   }
-  return estendido;
+  void carregarEstendido();
+  return [];
 }
 
 function indiceDoEstendido(): Indexado[] {
   if (indiceEstendido) return indiceEstendido;
+  const itens = itensEstendidos();
+  if (!estendido) return []; // ainda carregando na PWA: não guarda um índice vazio
   // depois de TODO o banco curado no desempate (ordem alta)
-  indiceEstendido = itensEstendidos().map((item, i) => {
+  indiceEstendido = itens.map((item, i) => {
     const nome = normalizarTexto(item.nome);
     return { item, ordem: 9_000_000 + i, nome, palavras: separarPalavras(nome) };
   });
