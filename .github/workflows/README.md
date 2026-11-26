@@ -14,6 +14,7 @@ Lista dos workflows que estão no repositório. Cada um tem o gatilho descrito a
 |---|---|---|
 | [`security-audit.yml`](security-audit.yml) | npm audit, gitleaks e trivy | Push/PR na `main`, diário às 02:00 UTC |
 | [`backup-d1.yml`](backup-d1.yml) | Exporta o D1 de produção, envia ao R2 e testa a restauração | Domingo às 02:41 UTC |
+| [`monitor.yml`](monitor.yml) | Monitor externo: smoke somente leitura; abre/fecha a issue "Leviã fora do ar" | A cada 15 minutos |
 
 ## Qualidade
 | Workflow | O que faz | Gatilho |

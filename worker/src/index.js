@@ -19,7 +19,16 @@ import { normalizarTelefoneE164 } from './telefone';
 const TAMANHO_MAX_BASE64 = 2_000_000;
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const IDIOMAS = { pt: 'português do Brasil', en: 'English', es: 'español', fr: 'français', it: 'italiano' };
-const ORIGENS_WEB = ['https://leviapp.org', 'https://www.leviapp.org', 'http://localhost:8081', 'https://typebot.com', 'https://app.typebot.io'];
+const ORIGENS_WEB = ['https://leviapp.org', 'https://www.leviapp.org', 'https://typebot.com', 'https://app.typebot.io'];
+// só em desenvolvimento local (wrangler dev com PERMITIR_LOCALHOST=1 no .dev.vars); nunca em produção
+const ORIGENS_DEV = ['http://localhost:8081'];
+
+/** Origem do pedido que pode receber CORS, ou null. */
+function origemDoPedido(request, env) {
+  const origem = request.headers.get('Origin');
+  if (ORIGENS_DEV.includes(origem)) return env?.PERMITIR_LOCALHOST === '1' ? origem : null;
+  return origem;
+}
 const APP_BASE_URL_DEFAULT = 'https://leviapp.org';
 // O Worker só devolve JSON: nenhuma página, script, estilo ou frame. Por isso a CSP pode ser a mais
 // restritiva possível. Sem includeSubDomains no HSTS de propósito: o Worker também responde em
@@ -46,7 +55,7 @@ function comSeguranca(resposta) {
 }
 
 function cabecalhosCors(origem) {
-  if (!origem || !ORIGENS_WEB.includes(origem)) return {};
+  if (!origem || !(ORIGENS_WEB.includes(origem) || ORIGENS_DEV.includes(origem))) return {};
   return {
     'Access-Control-Allow-Origin': origem,
     'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
@@ -674,7 +683,7 @@ const app = {
   },
   async fetch(request, env) {
     const { pathname } = new URL(request.url);
-    const origem = request.headers.get('Origin');
+    const origem = origemDoPedido(request, env);
     if ((pathname === '/v1/analisar-prato' || pathname === '/v1/analisar-texto' || pathname === '/v1/ativar' || pathname === '/v1/turnstile/sitekey' || pathname === '/api/lead') && request.method === 'OPTIONS') {
       return new Response(null, { status: 204, headers: cabecalhosCors(origem) });
     }
