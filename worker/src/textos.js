@@ -56,7 +56,7 @@ export const TEXTOS = {
       `Vale para 2 aparelhos e não deve ser compartilhado.\n\nEle chega na *última mensagem*, sozinho, para ficar fácil de copiar 👇`,
     serialUso: (link) =>
       `Para usar: abra ${link}, toque em "Ativar" e cole o serial que vou te mandar a seguir. O teste de 7 dias começa na ativação.\n\n` +
-      `Perdeu o serial? Digite *SERIAL*. Para apagar seus dados, digite *APAGAR*. Seus registros de saúde ficam só no seu aparelho.`,
+      `Perdeu o serial? Digite *SERIAL*. Seus registros de saúde ficam só no seu aparelho.`,
     serialNovoIntro: 'Aqui está o seu novo serial (o anterior deixou de valer). Ele chega na *última mensagem*, sozinho, para ficar fácil de copiar 👇',
     serialNovoUso: (link) => `Ative em ${link}. Os aparelhos que você já ativou continuam funcionando.`,
     prontoDados: (nome) => `Pronto, ${nome}! ✅ Guardei seus dados só para liberar o seu acesso. 👇`,
@@ -64,7 +64,12 @@ export const TEXTOS = {
     serialIndisponivel: 'Seu cadastro foi feito, mas não consegui gerar o serial agora. Digite *SERIAL* em alguns minutos para tentar de novo.',
     serialLimite: 'Você já pediu serial 3 vezes hoje. Tente de novo amanhã.',
     erro: 'Ops, ocorreu um erro. Tente de novo em instantes ou digite *MENU* para recomeçar.',
-    jaFinalizado: 'Você já completou o cadastro! 🎉\n\nPara um novo serial, digite *SERIAL*. Para apagar seus dados, digite *APAGAR*.',
+    jaFinalizado: 'Você já completou o cadastro! 🎉\n\nPara um novo serial, digite *SERIAL*.',
+    testeJaUsado: (link) => `Este número já usou o teste grátis de 7 dias do Leviã. 💚
+
+Para continuar, escolha um plano (mensal, anual ou vitalício): ${link}
+
+Depois da compra, o serial chega aqui no WhatsApp.`,
     parar: 'Combinado! Não vou mais te escrever. Se quiser voltar, é só mandar um oi. 👋',
     confirmarApagar: `Tem certeza? Vou apagar seu cadastro e seus dados, e o serial e os aparelhos ativados deixam de valer.\n\n${NUMEROS[0]} DIGITE *1* PARA *APAGAR TUDO*\n${NUMEROS[1]} DIGITE *2* PARA *CANCELAR*`,
     apagado: 'Pronto! Apaguei seu cadastro e os dados que eu tinha de você. Se quiser voltar, é só mandar um oi. 👋',
@@ -106,7 +111,7 @@ export const TEXTOS = {
       `Vale para 2 dispositivos e não deve ser partilhado.\n\nChega na *última mensagem*, sozinho, para ser fácil de copiar 👇`,
     serialUso: (link) =>
       `Para usar: abra ${link}, toque em "Ativar" e cole o número de série que lhe vou enviar a seguir. O teste de 7 dias começa na ativação.\n\n` +
-      `Perdeu o número de série? Escreva *SERIAL*. Para apagar os seus dados, escreva *APAGAR*. Os seus registos de saúde ficam só no seu telemóvel.`,
+      `Perdeu o número de série? Escreva *SERIAL*. Os seus registos de saúde ficam só no seu telemóvel.`,
     serialNovoIntro: 'Aqui está o seu novo número de série (o anterior deixou de valer). Chega na *última mensagem*, sozinho, para ser fácil de copiar 👇',
     serialNovoUso: (link) => `Ative em ${link}. Os dispositivos já ativados continuam a funcionar.`,
     prontoDados: (nome) => `Pronto, ${nome}! ✅ Guardei os seus dados apenas para ativar o seu acesso. 👇`,
@@ -114,7 +119,12 @@ export const TEXTOS = {
     serialIndisponivel: 'O seu registo foi feito, mas não consegui gerar o número de série agora. Escreva *SERIAL* daqui a uns minutos para tentar de novo.',
     serialLimite: 'Já pediu número de série 3 vezes hoje. Tente novamente amanhã.',
     erro: 'Ups, ocorreu um erro. Tente de novo daqui a pouco ou escreva *MENU* para recomeçar.',
-    jaFinalizado: 'Já concluiu o registo! 🎉\n\nPara um novo número de série, escreva *SERIAL*. Para apagar os seus dados, escreva *APAGAR*.',
+    jaFinalizado: 'Já concluiu o registo! 🎉\n\nPara um novo número de série, escreva *SERIAL*.',
+    testeJaUsado: (link) => `Este número já usou o teste grátis de 7 dias do Leviã. 💚
+
+Para continuar, escolha um plano (mensal, anual ou vitalício): ${link}
+
+Depois da compra, o número de série chega aqui no WhatsApp.`,
     parar: 'Combinado! Não volto a escrever-lhe. Se quiser voltar, basta enviar um olá. 👋',
     confirmarApagar: `Tem a certeza? Vou apagar o seu registo e os seus dados, e o número de série e os dispositivos ativados deixam de valer.\n\n${NUMEROS[0]} ESCREVA *1* PARA *APAGAR TUDO*\n${NUMEROS[1]} ESCREVA *2* PARA *CANCELAR*`,
     apagado: 'Pronto! Apaguei o seu registo e os dados que tinha sobre si. Se quiser voltar, basta enviar um olá. 👋',
@@ -156,7 +166,7 @@ export const TEXTOS = {
       `It works on 2 devices and shouldn't be shared.\n\nIt arrives in the *last message*, on its own, so it's easy to copy 👇`,
     serialUso: (link) =>
       `To use it: open ${link}, tap "Activate" and paste the serial I'll send next. The 7-day trial starts when you activate.\n\n` +
-      `Lost the serial? Type *SERIAL*. To delete your data, type *DELETE*. Your health records stay only on your device.`,
+      `Lost the serial? Type *SERIAL*. Your health records stay only on your device.`,
     serialNovoIntro: "Here is your new serial (the old one no longer works). It arrives in the *last message*, on its own, so it's easy to copy 👇",
     serialNovoUso: (link) => `Activate at ${link}. Devices you already activated keep working.`,
     prontoDados: (nome) => `Done, ${nome}! ✅ I saved your details only to set up your access. 👇`,
@@ -164,7 +174,12 @@ export const TEXTOS = {
     serialIndisponivel: "Your sign-up is done, but I couldn't generate the serial right now. Type *SERIAL* in a few minutes to try again.",
     serialLimite: "You've already asked for a serial 3 times today. Please try again tomorrow.",
     erro: 'Oops, something went wrong. Try again in a moment or type *MENU* to start over.',
-    jaFinalizado: "You've already completed your sign-up! 🎉\n\nFor a new serial, type *SERIAL*. To delete your data, type *DELETE*.",
+    jaFinalizado: "You've already completed your sign-up! 🎉\n\nFor a new serial, type *SERIAL*.",
+    testeJaUsado: (link) => `This number has already used Leviã's 7-day free trial. 💚
+
+To continue, choose a plan (monthly, yearly or lifetime): ${link}
+
+After purchase, your serial arrives here on WhatsApp.`,
     parar: "Understood! I won't message you anymore. If you want to come back, just say hi. 👋",
     confirmarApagar: `Are you sure? I'll delete your sign-up and your data, and the serial and activated devices will stop working.\n\n${NUMEROS[0]} TYPE *1* TO *DELETE EVERYTHING*\n${NUMEROS[1]} TYPE *2* TO *CANCEL*`,
     apagado: 'Done! I deleted your sign-up and the data I had about you. If you want to come back, just say hi. 👋',
@@ -206,7 +221,7 @@ export const TEXTOS = {
       `Vale para 2 dispositivos y no debe compartirse.\n\nLlega en el *último mensaje*, solo, para que sea fácil de copiar 👇`,
     serialUso: (link) =>
       `Para usarlo: abre ${link}, toca "Activar" y pega el número de serie que te enviaré a continuación. La prueba de 7 días empieza al activar.\n\n` +
-      `¿Perdiste el número de serie? Escribe *SERIAL*. Para borrar tus datos, escribe *BORRAR*. Tus registros de salud se quedan solo en tu dispositivo.`,
+      `¿Perdiste el número de serie? Escribe *SERIAL*. Tus registros de salud se quedan solo en tu dispositivo.`,
     serialNovoIntro: 'Aquí tienes tu nuevo número de serie (el anterior dejó de valer). Llega en el *último mensaje*, solo, para que sea fácil de copiar 👇',
     serialNovoUso: (link) => `Actívalo en ${link}. Los dispositivos que ya activaste siguen funcionando.`,
     prontoDados: (nome) => `¡Listo, ${nome}! ✅ Guardé tus datos solo para activar tu acceso. 👇`,
@@ -214,7 +229,12 @@ export const TEXTOS = {
     serialIndisponivel: 'Tu registro está hecho, pero no pude generar el número de serie ahora. Escribe *SERIAL* en unos minutos para intentarlo de nuevo.',
     serialLimite: 'Ya pediste un número de serie 3 veces hoy. Inténtalo de nuevo mañana.',
     erro: 'Ups, ocurrió un error. Inténtalo de nuevo en un momento o escribe *MENU* para empezar otra vez.',
-    jaFinalizado: '¡Ya completaste el registro! 🎉\n\nPara un nuevo número de serie, escribe *SERIAL*. Para borrar tus datos, escribe *BORRAR*.',
+    jaFinalizado: '¡Ya completaste el registro! 🎉\n\nPara un nuevo número de serie, escribe *SERIAL*.',
+    testeJaUsado: (link) => `Este número ya usó la prueba gratis de 7 días de Leviã. 💚
+
+Para continuar, elige un plan (mensual, anual o vitalicio): ${link}
+
+Después de la compra, el número de serie llega aquí por WhatsApp.`,
     parar: '¡De acuerdo! No te escribiré más. Si quieres volver, solo manda un hola. 👋',
     confirmarApagar: `¿Seguro? Voy a borrar tu registro y tus datos, y el número de serie y los dispositivos activados dejarán de valer.\n\n${NUMEROS[0]} ESCRIBE *1* PARA *BORRAR TODO*\n${NUMEROS[1]} ESCRIBE *2* PARA *CANCELAR*`,
     apagado: '¡Listo! Borré tu registro y los datos que tenía sobre ti. Si quieres volver, solo manda un hola. 👋',
@@ -256,7 +276,7 @@ export const TEXTOS = {
       `Vale per 2 dispositivi e non va condiviso.\n\nArriva nell'*ultimo messaggio*, da solo, così è facile da copiare 👇`,
     serialUso: (link) =>
       `Per usarlo: apri ${link}, tocca "Attiva" e incolla il seriale che ti mando subito dopo. La prova di 7 giorni inizia con l'attivazione.\n\n` +
-      `Hai perso il seriale? Scrivi *SERIAL*. Per cancellare i tuoi dati, scrivi *CANCELLA*. I tuoi dati sanitari restano solo sul tuo dispositivo.`,
+      `Hai perso il seriale? Scrivi *SERIAL*. I tuoi dati sanitari restano solo sul tuo dispositivo.`,
     serialNovoIntro: "Ecco il tuo nuovo seriale (quello vecchio non vale più). Arriva nell'*ultimo messaggio*, da solo, così è facile da copiare 👇",
     serialNovoUso: (link) => `Attivalo su ${link}. I dispositivi già attivati continuano a funzionare.`,
     prontoDados: (nome) => `Fatto, ${nome}! ✅ Ho salvato i tuoi dati solo per attivare il tuo accesso. 👇`,
@@ -264,7 +284,12 @@ export const TEXTOS = {
     serialIndisponivel: 'La tua registrazione è completa, ma ora non riesco a generare il seriale. Scrivi *SERIAL* tra qualche minuto per riprovare.',
     serialLimite: 'Hai già richiesto il seriale 3 volte oggi. Riprova domani.',
     erro: 'Ops, si è verificato un errore. Riprova tra poco o scrivi *MENU* per ricominciare.',
-    jaFinalizado: 'Hai già completato la registrazione! 🎉\n\nPer un nuovo seriale, scrivi *SERIAL*. Per cancellare i tuoi dati, scrivi *CANCELLA*.',
+    jaFinalizado: 'Hai già completato la registrazione! 🎉\n\nPer un nuovo seriale, scrivi *SERIAL*.',
+    testeJaUsado: (link) => `Questo numero ha già usato la prova gratuita di 7 giorni di Leviã. 💚
+
+Per continuare, scegli un piano (mensile, annuale o a vita): ${link}
+
+Dopo l'acquisto, il seriale arriva qui su WhatsApp.`,
     parar: "D'accordo! Non ti scriverò più. Se vuoi tornare, basta un ciao. 👋",
     confirmarApagar: `Sei sicuro/a? Cancellerò la tua registrazione e i tuoi dati, e il seriale e i dispositivi attivati smetteranno di funzionare.\n\n${NUMEROS[0]} SCRIVI *1* PER *CANCELLARE TUTTO*\n${NUMEROS[1]} SCRIVI *2* PER *ANNULLARE*`,
     apagado: 'Fatto! Ho cancellato la tua registrazione e i dati che avevo su di te. Se vuoi tornare, basta un ciao. 👋',
