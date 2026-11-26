@@ -811,6 +811,7 @@ const traducoes: Traducoes = {
   "ref.textoFalar": "Hablar",
   "ref.textoOuvindo": "Escuchando… toca para parar",
   "ref.semMicrofone": "Permite el micrófono en la configuración del dispositivo para dictar la comida.",
+  "ref.vozTecladoIOS": "En el iPhone, Leviã instalado no puede usar el reconocimiento de voz de Safari. Toca el campo de arriba y usa el micrófono 🎤 del teclado para dictar la comida.",
   "menu.ia.revogarTitulo": "Retirar autorización de fotos por IA",
   "menu.ia.revogarDescricao": "No borra tus datos. Se volverá a pedir autorización antes del próximo análisis.",
   "menu.ia.revogarSucesso": "Autorización de IA retirada en este dispositivo. Los análisis ya enviados pueden haberse procesado.",

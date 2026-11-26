@@ -3,7 +3,7 @@ import { View, StyleSheet } from 'react-native';
 import { ThemedText } from '@components/ThemedText';
 import { Button } from '@components/Button';
 import { usePreferences } from '@context/PreferencesContext';
-import { escolherFormatos, primeiroCodigo } from '@utils/leitorWeb';
+import { escolherFormatos, localizarArquivoLeitor, primeiroCodigo } from '@utils/leitorWeb';
 import { colors, radius, spacing } from '@constants/colors';
 
 /** O pedaço do navegador usado aqui (o projeto não carrega os tipos do DOM). */
@@ -49,6 +49,26 @@ const TAMANHO_MAX_DIAG = 160;
 
 const textoErro = (e: unknown) => (e instanceof Error ? `${e.name}: ${e.message}` : 'erro').slice(0, 80);
 
+interface LeitorProprio {
+  BarcodeDetector: ClasseDetector;
+  setZXingModuleOverrides(opcoes: { locateFile: (arquivo: string, prefixo: string) => string }): void;
+}
+
+/**
+ * Leitor nativo do navegador (Chrome do Android) quando ele lê códigos de embalagem; senão, o leitor
+ * próprio (zxing-wasm), carregado só agora e com o .wasm servido pelo leviapp.org (Safari do iPhone).
+ */
+async function escolherLeitor(nav: Navegador): Promise<{ Classe: ClasseDetector; formatos: string[] }> {
+  const Nativo = nav.BarcodeDetector;
+  if (Nativo) {
+    const formatos = escolherFormatos(await Nativo.getSupportedFormats());
+    if (formatos.length) return { Classe: Nativo, formatos };
+  }
+  const proprio = (await import('barcode-detector/ponyfill')) as unknown as LeitorProprio;
+  proprio.setZXingModuleOverrides({ locateFile: localizarArquivoLeitor });
+  return { Classe: proprio.BarcodeDetector, formatos: escolherFormatos(await proprio.BarcodeDetector.getSupportedFormats()) };
+}
+
 /**
  * Leitor por câmera na PWA. Usa o leitor de códigos do próprio navegador (BarcodeDetector) sobre vídeo
  * em alta resolução da câmera traseira, e oferece "Tirar foto do código" (foto parada, mais nítida).
@@ -77,9 +97,7 @@ export function LeitorCameraWeb({ ativo, onCodigo }: { ativo: boolean; onCodigo:
 
     (async () => {
       try {
-        const Classe = nav.BarcodeDetector;
-        if (!Classe) throw new Error('navegador sem leitor de código');
-        const formatos = escolherFormatos(await Classe.getSupportedFormats());
+        const { Classe, formatos } = await escolherLeitor(nav);
         if (!formatos.length) throw new Error('aparelho não lê códigos de embalagem');
         detector.current = new Classe({ formats: formatos });
         setPodeFoto(true);

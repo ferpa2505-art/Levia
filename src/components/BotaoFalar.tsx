@@ -5,6 +5,9 @@ import { ExpoSpeechRecognitionModule, useSpeechRecognitionEvent } from 'expo-spe
 import { ThemedText } from '@components/ThemedText';
 import { usePreferences } from '@context/PreferencesContext';
 import { colors, radius, spacing } from '@constants/colors';
+import { ehIOS } from '@utils/leitorWeb';
+
+const TEMPO_MAX_SEM_RESPOSTA_MS = 10000;
 
 interface WebResultado { results: ArrayLike<ArrayLike<{ transcript: string }>> }
 interface WebReconhecimento {
@@ -13,7 +16,7 @@ interface WebReconhecimento {
   continuous: boolean;
   onresult: (e: WebResultado) => void;
   onend: () => void;
-  onerror: () => void;
+  onerror: (e?: { error?: string }) => void;
   start: () => void;
   stop: () => void;
 }
@@ -43,9 +46,13 @@ export function BotaoFalar({ onTexto }: { onTexto: (texto: string) => void }) {
   useSpeechRecognitionEvent('error', () => setOuvindo(false));
 
   function alternarNoNavegador() {
+    // No iPhone, o Leviã instalado na tela inicial não tem o reconhecimento de voz do Safari: pede o
+    // microfone e não devolve nada. Nesse caso a saída é o ditado do teclado do próprio iPhone.
+    const ios = ehIOS((globalThis as { navigator?: { userAgent?: string; maxTouchPoints?: number } }).navigator ?? {});
+    const avisarFalha = () => Alert.alert(t(ios ? 'ref.vozTecladoIOS' : 'ref.semMicrofone'));
     const Reconhecimento = webReconhecimento();
     if (!Reconhecimento) {
-      Alert.alert(t('ref.semMicrofone'));
+      avisarFalha();
       return;
     }
     if (ouvindo) {
@@ -53,21 +60,40 @@ export function BotaoFalar({ onTexto }: { onTexto: (texto: string) => void }) {
       return;
     }
     const r = new Reconhecimento();
+    let ouviu = false;
+    let falhou = false;
+    // sem resposta nenhuma em alguns segundos (iPhone), encerra e mostra a orientação
+    const limite = setTimeout(() => { if (!ouviu) r.stop(); }, TEMPO_MAX_SEM_RESPOSTA_MS);
     r.lang = idioma;
     r.interimResults = false;
     r.continuous = false;
     r.onresult = (e) => {
       const transcricao = e.results[0]?.[0]?.transcript ?? '';
-      if (transcricao) onTexto(transcricao);
+      if (transcricao) {
+        ouviu = true;
+        onTexto(transcricao);
+      }
     };
-    r.onend = () => setOuvindo(false);
-    r.onerror = () => {
+    r.onend = () => {
+      clearTimeout(limite);
       setOuvindo(false);
-      Alert.alert(t('ref.semMicrofone'));
+      if (ios && !ouviu && !falhou) avisarFalha();
+    };
+    r.onerror = (e) => {
+      falhou = true;
+      clearTimeout(limite);
+      setOuvindo(false);
+      if (e?.error !== 'aborted') avisarFalha();
     };
     reconhecimentoWeb.current = r;
     setOuvindo(true);
-    r.start();
+    try {
+      r.start();
+    } catch {
+      clearTimeout(limite);
+      setOuvindo(false);
+      avisarFalha();
+    }
   }
 
   async function alternar() {
