@@ -112,6 +112,12 @@ def avaliar(d):
     marca = str(d.get('brands') or '').split(',')[0].strip()
     if marca and normalizar(marca) not in normalizar(nome) and len(nome) + len(marca) + 3 <= 78:
         nome = f'{nome} ({marca})'
+    # confere de novo com os valores ARREDONDADOS, que são os gravados (kcal inteira, macros com 1 casa):
+    # em produtos de poucas calorias o arredondamento sozinho podia passar do limite de Atwater
+    kr, pr, cr, gr = round(kcal), round(p, 1), round(c, 1), round(g, 1)
+    estimado_r = 4 * pr + 4 * cr + 9 * gr
+    if abs(kr - estimado_r) / max(kr, estimado_r, 30) > 0.25 or pr + cr + gr > 100.5:
+        return None, 'atwater', origem
     porcao = num(d.get('serving_quantity'))
     if porcao is None or not (5 <= porcao <= 500):
         porcao = 100

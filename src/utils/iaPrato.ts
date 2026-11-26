@@ -81,6 +81,7 @@ async function fotoReduzidaBase64(uri: string): Promise<string> {
 }
 
 const palavras = (s: string) => normalizarTexto(s).split(/[\s/(),-]+/).filter(Boolean);
+const PESO_INDUSTRIALIZADO = 150;
 
 /**
  * Entre os candidatos da busca, o mais parecido com o nome da IA: nome igual
@@ -99,7 +100,10 @@ function melhorCandidato(nome: string, candidatos: Ingrediente[]): Ingrediente |
     const ehPrato = /^[PBVSW]\d/.test(id) || /\b(com|with|con|avec)\b|,/.test(n);
     const sobra = palavras(c.nome).filter((w) => !pAlvo.some((a) => w.startsWith(a) || a.startsWith(w))).length;
     if (ehPrato && !combinacao) continue;
-    const nota = (n === alvo ? -100 : 0) + sobra * 10;
+    // produto industrializado (catálogo Open Food Facts, id "O…") só ganha de um alimento do banco curado
+    // (TACO, CIQUAL, USDA…) quando o nome casa exatamente e o curado é bem pior: a IA descreve comida genérica
+    const industrializado = /^O\d/.test(id) ? PESO_INDUSTRIALIZADO : 0;
+    const nota = (n === alvo ? -100 : 0) + sobra * 10 + industrializado;
     if (nota < melhorNota) { melhorNota = nota; melhor = c; }
   }
   return melhor;
