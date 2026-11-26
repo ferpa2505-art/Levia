@@ -1,0 +1,58 @@
+name: Monitor de disponibilidade
+
+# Monitor externo (roda fora da Cloudflare): a cada 15 minutos confere a produção com o smoke test
+# SOMENTE DE LEITURA (GET, HEAD e OPTIONS, sem token e sem dados). Se falhar duas vezes seguidas,
+# abre uma issue "Leviã fora do ar" (o GitHub avisa o dono por e-mail e no app). Quando volta,
+# comenta e fecha a issue. Obs.: o agendamento do GitHub pode atrasar alguns minutos.
+on:
+  schedule:
+    - cron: "*/15 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: monitor-disponibilidade
+  cancel-in-progress: false
+
+jobs:
+  monitor:
+    runs-on: ubuntu-26.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+      - name: Conferir a produção (com uma nova tentativa)
+        id: smoke
+        run: |
+          if node scripts/smoke.cjs > smoke.txt 2>&1; then echo "ok=true" >> "$GITHUB_OUTPUT"; exit 0; fi
+          sleep 60
+          if node scripts/smoke.cjs > smoke.txt 2>&1; then echo "ok=true" >> "$GITHUB_OUTPUT"; else echo "ok=false" >> "$GITHUB_OUTPUT"; fi
+      - name: Abrir, atualizar ou fechar o alerta
+        env:
+          GH_TOKEN: ${{ github.token }}
+          OK: ${{ steps.smoke.outputs.ok }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          titulo="Leviã fora do ar (monitor)"
+          aberta=$(gh issue list --repo "$GITHUB_REPOSITORY" --state open --search "\"$titulo\" in:title" --json number --jq '.[0].number // empty')
+          if [ "$OK" = "true" ]; then
+            if [ -n "$aberta" ]; then
+              gh issue comment "$aberta" --repo "$GITHUB_REPOSITORY" --body "✅ Voltou ao ar. Conferido em $RUN_URL"
+              gh issue close "$aberta" --repo "$GITHUB_REPOSITORY"
+            fi
+            exit 0
+          fi
+          { echo "🔴 O smoke test somente leitura falhou duas vezes seguidas."; echo; echo "Execução: $RUN_URL"; echo; echo '```'; tail -n 40 smoke.txt; echo '```'; } > corpo.md
+          if [ -n "$aberta" ]; then
+            gh issue comment "$aberta" --repo "$GITHUB_REPOSITORY" --body-file corpo.md
+          else
+            gh issue create --repo "$GITHUB_REPOSITORY" --title "$titulo" --body-file corpo.md
+          fi
+          exit 1

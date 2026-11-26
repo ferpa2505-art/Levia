@@ -114,6 +114,13 @@ describe('Cloudflare Worker API (synthetic, offline)', () => {
     expect(response.headers.get('Access-Control-Allow-Origin')).toBe('https://leviapp.org');
   });
 
+  test('localhost só recebe CORS quando PERMITIR_LOCALHOST=1 (desenvolvimento)', async () => {
+    const pedido = () => makeRequest('/v1/ativar', { method: 'OPTIONS', headers: { Origin: 'http://localhost:8081' } });
+    expect((await send(pedido())).headers.get('Access-Control-Allow-Origin')).toBeNull();
+    const dev = await send(pedido(), createEnv({ PERMITIR_LOCALHOST: '1' }));
+    expect(dev.headers.get('Access-Control-Allow-Origin')).toBe('http://localhost:8081');
+  });
+
   const ORIGENS_ESTRANHAS = [
     'https://evil.example',
     'https://leviapp.org.evil.example',
